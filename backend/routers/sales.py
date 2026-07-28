@@ -49,12 +49,21 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
     if existing:
         return {"status": "ALREADY_EXISTS", "sale_id": existing.id}
 
-    # Run EET Fiscal Signing
+    # Retrieve store config
     config = db.query(StoreConfigModel).first()
     store_dict = {
         "storeName": config.store_name if config else "Himmel Home s.r.o.",
-        "dic": config.dic if config else "CZ12345678"
+        "eic_popl": config.dic if config else "CZ00000019",
+        "dic": config.dic if config else "CZ00000019",
+        "id_jednotky": config.id_provozovny if config else "11",
+        "id_provozovny": config.id_provozovny if config else "11",
+        "id_pokl": config.id_pokl if config else "1",
+        "eet_cert_path": config.eet_cert_path if config else "",
+        "eet_cert_password": config.eet_cert_password if config else "",
+        "eet_environment": config.eet_environment if config else "playground"
     }
+
+    # Run EET Fiscal Signing
     eet_res = eet_service.sign_and_submit_sale(sale.model_dump(), store_dict)
 
     # Save to SQLite DB
@@ -70,7 +79,13 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         change_due=sale.changeDue,
         tax_summary=sale.taxSummary,
         fik_code=eet_res.get("fik"),
-        bkp_code=eet_res.get("bkp")
+        bkp_code=eet_res.get("bkp"),
+        pkp_code=eet_res.get("pkp"),
+        eet_status=eet_res.get("eet_status", "EVD_OK"),
+        eic_popl=store_dict["dic"],
+        id_provozovny=store_dict["id_provozovny"],
+        id_pokl=store_dict["id_pokl"],
+        is_sent_to_eet=eet_res.get("is_sent_to_eet", True)
     )
 
     db.add(db_sale)
@@ -96,7 +111,9 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         "sale_id": db_sale.id,
         "receipt_number": db_sale.receipt_number,
         "fik": db_sale.fik_code,
-        "bkp": db_sale.bkp_code
+        "bkp": db_sale.bkp_code,
+        "pkp": db_sale.pkp_code,
+        "eet_status": db_sale.eet_status
     }
 
 

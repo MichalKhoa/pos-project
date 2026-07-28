@@ -20,6 +20,12 @@ class SaleModel(Base):
     tax_summary = Column(JSON, nullable=False)       # Grouped VAT breakdown
     fik_code = Column(String, nullable=True)          # Czech EET FIK code
     bkp_code = Column(String, nullable=True)          # Czech EET BKP code
+    pkp_code = Column(String, nullable=True)          # Czech EET PKP RSA signature
+    eet_status = Column(String, default="EVD_OK")     # 'EVD_OK', 'OFFLINE_PENDING', 'VERIFIED_ONLY', 'ERROR'
+    eic_popl = Column(String, nullable=True)
+    id_provozovny = Column(String, default="11")
+    id_pokl = Column(String, default="1")
+    is_sent_to_eet = Column(Boolean, default=True)
 
     items = relationship("SaleItemModel", back_populates="sale", cascade="all, delete-orphan")
 
@@ -55,3 +61,13 @@ class StoreConfigModel(Base):
     receipt_footer = Column(String, default="Děkujeme za váš nákup!")
     printer_interface = Column(String, default="USB") # 'USB', 'NETWORK', 'SERIAL'
     printer_address = Column(String, default="/dev/usb/lp0")
+    printer_paper_width = Column(String, default="80") # '58' or '80' mm
+
+    # EET 2.0 Configuration
+    eet_cert_path = Column(String, default="")
+    eet_cert_password = Column(String, default="")
+    eet_environment = Column(String, default="playground") # 'playground', 'production'
+    eet_mode = Column(Integer, default=0) # 0 = standard online, 1 = simplified offline
+    id_provozovny = Column(String, default="11")
+    id_pokl = Column(String, default="1")
+

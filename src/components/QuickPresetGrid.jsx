@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator, GripVertical, MoveLeft, MoveRight } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 
 const COLOR_OPTIONS = [
@@ -22,6 +22,7 @@ export default function QuickPresetGrid({
   onAddPreset,
   onUpdatePreset,
   onDeletePreset,
+  onReorderPresets,
   keypadAmount = '',
   onClearKeypadAmount
 }) {
@@ -47,6 +48,106 @@ export default function QuickPresetGrid({
   const filteredPresets = activeCategory === 'all'
     ? presets
     : presets.filter(p => p.category === activeCategory);
+
+  // Drag and Drop state
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const isDraggingRef = useRef(false);
+
+  const handleDragStart = (e, index) => {
+    if (!isEditMode) return;
+    isDraggingRef.current = true;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e, index) => {
+    if (!isEditMode || draggedIndex === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e, index) => {
+    if (dragOverIndex === index) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (!isEditMode || draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newFiltered = Array.from(filteredPresets);
+    const [movedItem] = newFiltered.splice(draggedIndex, 1);
+    newFiltered.splice(dropIndex, 0, movedItem);
+
+    let newFullPresets;
+    if (activeCategory === 'all') {
+      newFullPresets = newFiltered;
+    } else {
+      let subIdx = 0;
+      newFullPresets = presets.map(p => {
+        if (p.category === activeCategory) {
+          const replacement = newFiltered[subIdx];
+          subIdx++;
+          return replacement;
+        }
+        return p;
+      });
+    }
+
+    if (onReorderPresets) {
+      onReorderPresets(newFullPresets);
+    }
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 120);
+  };
+
+  const handleMovePosition = (index, direction, e) => {
+    if (e) e.stopPropagation();
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= filteredPresets.length) return;
+
+    const newFiltered = Array.from(filteredPresets);
+    const [movedItem] = newFiltered.splice(index, 1);
+    newFiltered.splice(targetIndex, 0, movedItem);
+
+    let newFullPresets;
+    if (activeCategory === 'all') {
+      newFullPresets = newFiltered;
+    } else {
+      let subIdx = 0;
+      newFullPresets = presets.map(p => {
+        if (p.category === activeCategory) {
+          const replacement = newFiltered[subIdx];
+          subIdx++;
+          return replacement;
+        }
+        return p;
+      });
+    }
+
+    if (onReorderPresets) {
+      onReorderPresets(newFullPresets);
+    }
+  };
 
   const handleCreateCategory = (e) => {
     e.preventDefault();
@@ -89,6 +190,7 @@ export default function QuickPresetGrid({
   };
 
   const handleCardClick = (preset) => {
+    if (isDraggingRef.current) return;
     if (isEditMode) {
       handleOpenEditModal(preset);
     } else {
@@ -235,53 +337,115 @@ export default function QuickPresetGrid({
           gap: '0.5rem'
         }}>
           <Edit3 size={14} />
-          <span>Režim úprav: Kliknutím na tlačítko můžete změnit jeho cenu, název, nastavit otevřenou cenu nebo ho smazat.</span>
+          <span>Režim úprav: Přetáhněte tlačítko (Drag & Drop) nebo použijte šipky pro změnu pozice. Kliknutím upravíte cenu a název.</span>
         </div>
       )}
 
       <div className="preset-grid">
-        {filteredPresets.map(preset => (
-          <button
-            key={preset.id}
-            className={`preset-card ${isEditMode ? 'edit-mode' : ''}`}
-            style={{
-              '--card-accent': preset.color || '#3b82f6',
-              outline: isEditMode ? '2px dashed var(--accent-amber)' : 'none'
-            }}
-            onClick={() => handleCardClick(preset)}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flex: 1 }}>
-              <div className="preset-name">{preset.name}</div>
-              {isEditMode && (
-                <div style={{ display: 'flex', gap: '2px', flexShrink: 0, marginLeft: '4px' }}>
-                  <span style={{ background: 'var(--accent-amber)', color: '#000', borderRadius: '4px', padding: '3px' }} title="Upravit">
-                    <Edit3 size={14} />
-                  </span>
-                  <span
-                    style={{ background: 'var(--accent-rose)', color: '#fff', borderRadius: '4px', padding: '3px', marginLeft: '2px' }}
-                    onClick={(e) => handleDelete(preset.id, e)}
-                    title="Smazat"
-                  >
-                    <Trash2 size={14} />
-                  </span>
-                </div>
-              )}
-            </div>
+        {filteredPresets.map((preset, index) => {
+          const isDraggingThis = draggedIndex === index;
+          const isDragOverThis = dragOverIndex === index;
 
-            <div className="preset-footer" style={{ marginTop: 'auto', paddingTop: '0.4rem' }}>
-              {!preset.isOpenPrice ? (
-                <>
-                  <div className="preset-price">{preset.price} Kč</div>
-                  <div className="preset-vat">DPH {preset.vat}%</div>
-                </>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-                  <div className="preset-vat">DPH {preset.vat}%</div>
-                </div>
-              )}
-            </div>
-          </button>
-        ))}
+          return (
+            <button
+              key={preset.id}
+              draggable={isEditMode}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={(e) => handleDragLeave(e, index)}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
+              className={`preset-card ${isEditMode ? 'edit-mode' : ''} ${isDraggingThis ? 'dragging' : ''} ${isDragOverThis ? 'drag-over' : ''}`}
+              style={{
+                '--card-accent': preset.color || '#3b82f6',
+                outline: isEditMode
+                  ? (isDragOverThis ? '2px solid var(--accent-blue)' : '2px dashed var(--accent-amber)')
+                  : 'none',
+                opacity: isDraggingThis ? 0.4 : 1,
+                cursor: isEditMode ? 'grab' : 'pointer'
+              }}
+              onClick={() => handleCardClick(preset)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flex: 1, width: '100%' }}>
+                {isEditMode && (
+                  <div
+                    className="drag-handle"
+                    title="Chytit a přetáhnout"
+                    style={{ marginRight: '6px', display: 'inline-flex', alignItems: 'center', cursor: 'grab' }}
+                  >
+                    <GripVertical size={16} />
+                  </div>
+                )}
+                <div className="preset-name" style={{ flex: 1 }}>{preset.name}</div>
+                {isEditMode && (
+                  <div style={{ display: 'flex', gap: '2px', flexShrink: 0, marginLeft: '4px', alignItems: 'center' }}>
+                    <span
+                      type="button"
+                      style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        color: index === 0 ? 'var(--text-muted)' : '#fff',
+                        borderRadius: '4px',
+                        padding: '2px 4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        opacity: index === 0 ? 0.35 : 1,
+                        cursor: index === 0 ? 'default' : 'pointer'
+                      }}
+                      onClick={(e) => handleMovePosition(index, -1, e)}
+                      title="Posunout vlevo"
+                    >
+                      <MoveLeft size={12} />
+                    </span>
+                    <span
+                      type="button"
+                      style={{
+                        background: 'rgba(255,255,255,0.1)',
+                        color: index === filteredPresets.length - 1 ? 'var(--text-muted)' : '#fff',
+                        borderRadius: '4px',
+                        padding: '2px 4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        opacity: index === filteredPresets.length - 1 ? 0.35 : 1,
+                        cursor: index === filteredPresets.length - 1 ? 'default' : 'pointer'
+                      }}
+                      onClick={(e) => handleMovePosition(index, 1, e)}
+                      title="Posunout vpravo"
+                    >
+                      <MoveRight size={12} />
+                    </span>
+                    <span
+                      style={{ background: 'var(--accent-amber)', color: '#000', borderRadius: '4px', padding: '3px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                      onClick={(e) => handleOpenEditModal(preset, e)}
+                      title="Upravit"
+                    >
+                      <Edit3 size={14} />
+                    </span>
+                    <span
+                      style={{ background: 'var(--accent-rose)', color: '#fff', borderRadius: '4px', padding: '3px', marginLeft: '2px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                      onClick={(e) => handleDelete(preset.id, e)}
+                      title="Smazat"
+                    >
+                      <Trash2 size={14} />
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="preset-footer" style={{ marginTop: 'auto', paddingTop: '0.4rem' }}>
+                {!preset.isOpenPrice ? (
+                  <>
+                    <div className="preset-price">{preset.price} Kč</div>
+                    <div className="preset-vat">DPH {preset.vat}%</div>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                    <div className="preset-vat">DPH {preset.vat}%</div>
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
 
         <button className="preset-card preset-add-card" onClick={handleOpenAddModal}>
           <Plus size={24} />

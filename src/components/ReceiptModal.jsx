@@ -1,13 +1,142 @@
 import React, { useState } from 'react';
 import { Printer, CheckCircle, RotateCcw, QrCode, Smartphone, Check } from 'lucide-react';
+import { printReceiptBackend } from '../api/posApi';
 
 export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale }) {
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+
   if (!saleData) return null;
 
-  const [showQrModal, setShowQrModal] = useState(false);
+  const paperWidth = storeConfig?.printerPaperWidth || '80';
+  const is58mm = paperWidth === '58' || paperWidth === '48';
 
   const handlePrint = () => {
-    window.print();
+    if (isPrinting) return;
+    setIsPrinting(true);
+
+    // 1. Send hardware thermal print payload to Python ESC/POS backend service
+    printReceiptBackend(saleData, storeConfig).catch(() => {});
+
+    // 2. Open dedicated, isolated print window matching exact 48mm / 72mm thermal paper width
+    const printWin = window.open('', '_blank', 'width=450,height=700');
+    if (!printWin) {
+      window.print();
+      setIsPrinting(false);
+      return;
+    }
+
+    const printWidth = is58mm ? '48mm' : '72mm';
+    const fontSize = is58mm ? '10px' : '11px';
+
+    const itemsHtml = (saleData.items || []).map(item => {
+      const disc = item.discountPercent || 0;
+      const effPrice = item.price * (1 - disc / 100);
+      return `
+        <tr>
+          <td style="text-align:left; padding:2px 0;">
+            <div>${item.name} ${disc > 0 ? `(-${disc}%)` : ''}</div>
+            <div style="font-size:8px; color:#666;">DPH ${item.vat}%</div>
+          </td>
+          <td style="text-align:center; padding:2px 0;">${item.quantity}</td>
+          <td style="text-align:right; padding:2px 0;">${(effPrice * item.quantity).toFixed(0)} Kč</td>
+        </tr>
+      `;
+    }).join('');
+
+    const taxHtml = saleData.taxSummary ? Object.values(saleData.taxSummary).map(t => `
+      <div style="display:flex; justify-content:space-between; font-size:8px;">
+        <span>Sazba ${t.rate}%:</span>
+        <span>Základ: ${t.net.toFixed(2)} Kč | Daň: ${t.tax.toFixed(2)} Kč</span>
+      </div>
+    `).join('') : '';
+
+    const fik = saleData.fik || saleData.pok || saleData.fik_code;
+    const bkp = saleData.bkp || saleData.bkp_code;
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Účtenka č. ${saleData.receiptNumber}</title>
+          <style>
+            @page { margin: 0; size: auto; }
+            body { font-family: monospace, monospace; font-size: ${fontSize}; margin: 0; padding: 2px; background: #fff; color: #000; }
+            .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; box-sizing: border-box; text-align: left; }
+            .center { text-align: center; }
+            .bold { font-weight: bold; }
+            .dashed { border-top: 1px dashed #000; margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+            .total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin: 4px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="receipt-box">
+            <div class="center bold" style="font-size: 13px;">${storeConfig.storeName}</div>
+            <div class="center">${storeConfig.street}</div>
+            <div class="center">${storeConfig.city}</div>
+            <div class="center" style="margin-top:2px;">IČO: ${storeConfig.ico} | DIČ: ${storeConfig.dic}</div>
+            <div class="dashed"></div>
+            <div class="center bold">ÚČTENKA č. ${saleData.receiptNumber}</div>
+            <div class="center" style="font-size: 8px;">${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</div>
+            <div class="dashed"></div>
+
+            <table>
+              <thead>
+                <tr style="border-bottom: 1px dashed #000; font-size: 9px;">
+                  <th style="text-align:left;">Položka</th>
+                  <th style="text-align:center;">Ks</th>
+                  <th style="text-align:right;">Cena</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+            </table>
+
+            <div class="total-row">
+              <span>CELKEM</span>
+              <span>${saleData.totalAmount.toFixed(0)} Kč</span>
+            </div>
+
+            <div style="font-size: 9px; margin: 4px 0;">
+              <div style="display:flex; justify-content:space-between;">
+                <span>Způsob úhrady:</span>
+                <span class="bold">${saleData.paymentMethod === 'cash' ? 'HOTOVOST' : saleData.paymentMethod === 'card' ? 'KARTA' : 'QR PLATBA'}</span>
+              </div>
+              ${saleData.paymentMethod === 'cash' ? `
+                <div style="display:flex; justify-content:space-between;"><span>Přijato:</span><span>${(saleData.tenderedAmount || 0).toFixed(0)} Kč</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Vráceno:</span><span>${(saleData.changeDue || 0).toFixed(0)} Kč</span></div>
+              ` : ''}
+            </div>
+
+            <div class="dashed"></div>
+            <div style="font-size: 8px; font-weight: bold; margin-bottom: 2px;">Rozpis DPH:</div>
+            ${taxHtml}
+
+            <div class="dashed"></div>
+            <div style="font-size: 8px; word-break: break-all;">
+              <div class="bold">EET 2.0 (${saleData.eet_status || 'EVD_OK'})</div>
+              ${fik ? `<div>POK/FIK: ${fik}</div>` : ''}
+              ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
+            </div>
+
+            <div class="dashed"></div>
+            <div class="center" style="font-size: 8px; margin-top: 4px;">
+              ${storeConfig.receiptFooter || ''}
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+    setTimeout(() => setIsPrinting(false), 1500);
   };
 
   // Generate Digital Receipt URL / QR Payload
@@ -23,7 +152,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
 
   return (
     <div className="modal-overlay">
-      <div className="modal-card" style={{ maxWidth: '440px' }}>
+      <div className="modal-card" style={{ maxWidth: is58mm ? '360px' : '440px' }}>
         <div className="modal-header">
           <div className="modal-title">
             <CheckCircle size={20} style={{ color: 'var(--accent-emerald)' }} />
@@ -33,8 +162,21 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         </div>
 
         <div className="modal-body" style={{ alignItems: 'center' }}>
-          {/* Printable 80mm Receipt Area */}
-          <div className="receipt-paper printable-receipt">
+          {/* Printer Width Format Badge */}
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
+            <Printer size={14} style={{ color: 'var(--accent-blue)' }} />
+            <span>Formát tiskárny: {is58mm ? '58 mm rola (48 mm tisková hlava)' : '80 mm rola (72 mm tisková hlava)'}</span>
+          </div>
+
+          {/* Printable Thermal Receipt Area */}
+          <div
+            className={`receipt-paper printable-receipt ${is58mm ? 'paper-58mm' : 'paper-80mm'}`}
+            style={{
+              width: is58mm ? '230px' : '330px',
+              padding: is58mm ? '10px 6px' : '18px 14px',
+              fontSize: is58mm ? '0.7rem' : '0.8rem'
+            }}
+          >
             <div className="receipt-header">
               <div className="receipt-store-name">{storeConfig.storeName}</div>
               <div>{storeConfig.street}</div>
@@ -136,11 +278,26 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               </div>
             </div>
 
-            {/* Czech EET Fiscal Placeholder Block */}
-            <div className="receipt-eet-box">
-              <div style={{ fontWeight: '700', textTransform: 'uppercase' }}>EET Evidováno v režimu běžném</div>
-              <div>FIK: 4f8d9b2a-1c3e-4567-89ab-0123456789ab-01</div>
-              <div>BKP: 12345678-ABCDEF12-34567890-ABCDEF12-34567890</div>
+            {/* Czech EET 2.0 Fiscal Block */}
+            <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: '0.65rem' }}>
+              <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>
+                EET 2.0 Evidováno v režimu běžném ({saleData.eet_status || 'EVD_OK'})
+              </div>
+              { (saleData.fik || saleData.pok) && (
+                <div><strong>POK/FIK:</strong> {saleData.fik || saleData.pok}</div>
+              )}
+              { saleData.bkp && (
+                <div><strong>BKP:</strong> {saleData.bkp}</div>
+              )}
+              { saleData.pkp && !saleData.fik && !saleData.pok && (
+                <div style={{ marginTop: '2px' }}><strong>PKP:</strong> {saleData.pkp.slice(0, 44)}...</div>
+              )}
+              { !saleData.fik && !saleData.pok && !saleData.bkp && (
+                <>
+                  <div>POK: 4f8d9b2a-1c3e-4567-89ab-0123456789ab-01</div>
+                  <div>BKP: 12345678-ABCDEF12-34567890-ABCDEF12-34567890</div>
+                </>
+              )}
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '0.75rem', fontSize: '0.7rem', fontWeight: '600' }}>

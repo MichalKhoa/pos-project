@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -8,10 +8,20 @@ import ReceiptModal from './components/ReceiptModal';
 import SalesHistoryView from './components/SalesHistoryView';
 import PresetsCatalogView from './components/PresetsCatalogView';
 import SettingsView from './components/SettingsView';
+import PendingSyncModal from './components/PendingSyncModal';
+import SyncNotificationBanner from './components/SyncNotificationBanner';
+import ShutdownModal from './components/ShutdownModal';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
+import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale } from './api/posApi';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('register');
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [showShutdownModal, setShowShutdownModal] = useState(false);
+  const [isSyncingQueue, setIsSyncingQueue] = useState(false);
+  const [snoozedUntil, setSnoozedUntil] = useState(0);
+  const [syncNotification, setSyncNotification] = useState(null);
 
   // LocalStorage state initialization with safe fallbacks
   const [categories, setCategories] = useState(() => {
@@ -45,11 +55,18 @@ export default function App() {
   });
 
   const [salesHistory, setSalesHistory] = useState(() => {
-    const saved = localStorage.getItem('himmel_pos_sales');
-    if (saved) return JSON.parse(saved);
+    try {
+      const saved = localStorage.getItem('himmel_pos_sales');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.map(normalizeSale);
+      }
+    } catch (e) {
+      console.warn('Failed to load initial sales history:', e);
+    }
     // Initial sample transaction for demonstration
     return [
-      {
+      normalizeSale({
         id: 'sale-1',
         receiptNumber: '2026-0001',
         timestamp: new Date(Date.now() - 3600000).toISOString(),
@@ -64,7 +81,7 @@ export default function App() {
         taxSummary: {
           21: { rate: 21, gross: 647, net: 534.71, tax: 112.29 }
         }
-      }
+      })
     ];
   });
 
@@ -108,6 +125,100 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('himmel_pos_sales', JSON.stringify(salesHistory));
   }, [salesHistory]);
+
+  // Check pending offline receipts from backend EET status
+  const checkPendingOfflineSales = useCallback(async (forceOpen = false) => {
+    try {
+      const eetStatus = await fetchEetStatus();
+      if (eetStatus && typeof eetStatus.pending_offline_sales === 'number') {
+        const count = eetStatus.pending_offline_sales;
+        setPendingSyncCount(count);
+
+        if (count > 0) {
+          const now = Date.now();
+          if (now >= snoozedUntil) {
+            setShowSyncModal(true);
+          }
+        } else {
+          setShowSyncModal(false);
+        }
+      }
+    } catch (err) {
+      console.warn('EET status check error:', err);
+    }
+  }, [snoozedUntil]);
+
+  // Check on mount, on window 'online' event (internet regained), and periodically every 30s
+  useEffect(() => {
+    checkPendingOfflineSales(true);
+
+    const handleOnline = () => {
+      console.log('Internet connectivity restored! Checking pending EET queue...');
+      checkPendingOfflineSales(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    const interval = setInterval(() => {
+      checkPendingOfflineSales(false);
+    }, 30000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      clearInterval(interval);
+    };
+  }, [checkPendingOfflineSales]);
+
+  const handleSnoozeSync = () => {
+    // Snooze modal for 5 minutes
+    setSnoozedUntil(Date.now() + 5 * 60 * 1000);
+    setShowSyncModal(false);
+  };
+
+  const handleSyncQueueNow = async () => {
+    // Instantly close modal for zero UI delay
+    setShowSyncModal(false);
+    setIsSyncingQueue(true);
+    setSnoozedUntil(Date.now() + 5 * 60 * 1000);
+
+    try {
+      // 1. Process backend SQLite queue
+      const res = await processEetQueue();
+      let processed = res?.processed_count || 0;
+
+      // 2. Process any local offline sales stored in localStorage
+      const offlineLocalSales = salesHistory.filter(s => s.eet_status === 'OFFLINE_PENDING' || s.is_sent_to_eet === false);
+      for (const localSale of offlineLocalSales) {
+        const backendRes = await createSaleBackend(localSale);
+        if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
+          processed += 1;
+        }
+      }
+
+      setSyncNotification({
+        type: 'success',
+        message: processed > 0
+          ? `✅ Úspěšně odesláno ${processed} neodeslaných účtenek na EET (Finanční správa ČR).`
+          : 'Všechny tržby jsou již řádně evidovány na EET.'
+      });
+
+      // 3. Refresh sales history from backend
+      const updatedHistory = await fetchSalesHistoryBackend();
+      if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
+        setSalesHistory(updatedHistory);
+      }
+    } catch (err) {
+      setSyncNotification({
+        type: 'error',
+        message: `Chyba při komunikaci s EET serverem: ${err.message}`
+      });
+    } finally {
+      setIsSyncingQueue(false);
+      const eetStatus = await fetchEetStatus();
+      if (eetStatus && typeof eetStatus.pending_offline_sales === 'number') {
+        setPendingSyncCount(eetStatus.pending_offline_sales);
+      }
+    }
+  };
 
   // Global Numpad & Physical Keyboard Listener for POS Register
   useEffect(() => {
@@ -250,6 +361,10 @@ export default function App() {
     setPresets(prev => prev.filter(p => p.id !== presetId));
   };
 
+  const handleReorderPresets = (reorderedPresets) => {
+    setPresets(reorderedPresets);
+  };
+
   // Checkout flow
   const handleOpenPayment = (method) => {
     if (cartItems.length === 0) return;
@@ -292,13 +407,30 @@ export default function App() {
       return acc;
     }, {});
 
-    const nextReceiptNum = `2026-${(salesHistory.length + 1).toString().padStart(4, '0')}`;
+    // Robust receipt numbering: YYYY-XXXXXX (dynamic year, 6-digit counter up to 999,999/yr, duplicate-safe)
+    const currentYear = new Date().getFullYear().toString();
+    const yearPrefix = `${currentYear}-`;
+    let maxSeq = 0;
+    for (const s of salesHistory) {
+      if (s.receiptNumber && s.receiptNumber.startsWith(yearPrefix)) {
+        const num = parseInt(s.receiptNumber.slice(yearPrefix.length), 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    }
+    const nextReceiptNum = `${currentYear}-${(maxSeq + 1).toString().padStart(6, '0')}`;
 
-    const newSale = {
+    const newSale = normalizeSale({
       id: `sale-${Date.now()}`,
       receiptNumber: nextReceiptNum,
       timestamp: new Date().toISOString(),
-      items: [...cartItems],
+      items: cartItems.map(item => ({
+        id: item.id || `item-${Date.now()}`,
+        name: item.name,
+        price: parseFloat(item.price),
+        quantity: item.quantity,
+        vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
+        discount_percent: item.discountPercent || 0
+      })),
       totalAmount: finalGrandTotal,
       cartDiscountPercent,
       paymentMethod,
@@ -306,7 +438,23 @@ export default function App() {
       tenderedAmount: paymentMethod === 'cash' ? tenderedAmount : finalGrandTotal,
       changeDue: paymentMethod === 'cash' ? changeDue : 0,
       taxSummary
-    };
+    });
+
+    // Asynchronously send to Python FastAPI backend for EET fiscalization
+    createSaleBackend(newSale).then(backendRes => {
+      if (backendRes && backendRes.status === 'SUCCESS') {
+        const enrichedSale = normalizeSale({
+          ...newSale,
+          fik: backendRes.fik,
+          pok: backendRes.fik,
+          bkp: backendRes.bkp,
+          pkp: backendRes.pkp,
+          eet_status: backendRes.eet_status || 'EVD_OK'
+        });
+        setSalesHistory(prev => prev.map(s => s.id === newSale.id ? enrichedSale : s));
+        setCurrentReceiptData(prev => prev && prev.id === newSale.id ? enrichedSale : prev);
+      }
+    });
 
     setSalesHistory(prev => [newSale, ...prev]);
     setCurrentReceiptData(newSale);
@@ -335,7 +483,18 @@ export default function App() {
         storeConfig={storeConfig}
         isAdminMode={isAdminMode}
         onToggleAdminMode={handleToggleAdminMode}
+        pendingCount={pendingSyncCount}
+        onOpenSyncModal={() => setShowSyncModal(true)}
+        onOpenShutdownModal={() => setShowShutdownModal(true)}
       />
+
+      {syncNotification && (
+        <SyncNotificationBanner
+          type={syncNotification.type}
+          message={syncNotification.message}
+          onClose={() => setSyncNotification(null)}
+        />
+      )}
 
       <main className="main-content">
         {activeTab === 'register' && (
@@ -359,6 +518,7 @@ export default function App() {
                 onAddPreset={handleAddPreset}
                 onUpdatePreset={handleUpdatePreset}
                 onDeletePreset={handleDeletePreset}
+                onReorderPresets={handleReorderPresets}
                 keypadAmount={keypadAmount}
                 onClearKeypadAmount={() => setKeypadAmount('')}
               />
@@ -388,6 +548,7 @@ export default function App() {
             onAddPreset={handleAddPreset}
             onUpdatePreset={handleUpdatePreset}
             onDeletePreset={handleDeletePreset}
+            onReorderPresets={handleReorderPresets}
           />
         )}
 
@@ -430,6 +591,24 @@ export default function App() {
           storeConfig={storeConfig}
           onClose={() => setCurrentReceiptData(null)}
           onNewSale={() => setCurrentReceiptData(null)}
+        />
+      )}
+
+      {/* Pending Offline Sales Sync Modal */}
+      {showSyncModal && pendingSyncCount > 0 && (
+        <PendingSyncModal
+          pendingCount={pendingSyncCount}
+          isLoading={isSyncingQueue}
+          onSync={handleSyncQueueNow}
+          onSnooze={handleSnoozeSync}
+        />
+      )}
+
+      {/* End-of-Shift Shutdown Modal */}
+      {showShutdownModal && (
+        <ShutdownModal
+          pendingCount={pendingSyncCount}
+          onClose={() => setShowShutdownModal(false)}
         />
       )}
     </div>

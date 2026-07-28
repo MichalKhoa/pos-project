@@ -101,5 +101,6 @@ export const DEFAULT_STORE_CONFIG = {
   defaultVat: 21,
   receiptFooter: 'Děkujeme za váš nákup! www.himmelhome.cz',
   currencySymbol: 'Kč',
+  printerPaperWidth: '80', // '58' or '80' mm thermal receipt printer
   eetEnabled: true // EET Ready mode indicator
 };

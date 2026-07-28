@@ -72,11 +72,15 @@ export default function SalesHistoryView({
 
   // Apply search query filter over period filtered sales
   const searchFilteredSales = periodFilteredSales.filter(sale => {
+    if (!sale) return false;
     const term = searchTerm.toLowerCase();
+    const rNum = (sale.receiptNumber || sale.receipt_number || '').toString().toLowerCase();
+    const pMethod = (sale.paymentMethod || sale.payment_method || '').toLowerCase();
+    const itemsList = Array.isArray(sale.items) ? sale.items : [];
     return (
-      sale.receiptNumber.toString().includes(term) ||
-      sale.paymentMethod.toLowerCase().includes(term) ||
-      sale.items.some(i => i.name.toLowerCase().includes(term))
+      rNum.includes(term) ||
+      pMethod.includes(term) ||
+      itemsList.some(i => (i.name || '').toLowerCase().includes(term))
     );
   });
 
@@ -508,17 +512,25 @@ export default function SalesHistoryView({
               />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600' }}>
               <span>Na stránku:</span>
               <select
                 value={pageSize}
                 onChange={e => setPageSize(parseInt(e.target.value, 10))}
-                style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: '#fff', padding: '0.3rem 0.5rem' }}
+                style={{
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--text-primary)',
+                  fontWeight: '700',
+                  padding: '0.35rem 0.6rem',
+                  cursor: 'pointer'
+                }}
               >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
+                <option value={10} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>10 účtenek</option>
+                <option value={25} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>25 účtenek</option>
+                <option value={50} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>50 účtenek</option>
+                <option value={100} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>100 účtenek</option>
               </select>
             </div>
           </div>

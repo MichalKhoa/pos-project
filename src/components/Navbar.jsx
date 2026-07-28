@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Store, Tag, Lock, Unlock } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Store, Tag, Lock, Unlock, AlertTriangle, Power } from 'lucide-react';
 
 export default function Navbar({
   activeTab,
   setActiveTab,
   storeConfig,
   isAdminMode,
-  onToggleAdminMode
+  onToggleAdminMode,
+  pendingCount = 0,
+  onOpenSyncModal,
+  onOpenShutdownModal
 }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -62,6 +65,17 @@ export default function Navbar({
       </nav>
 
       <div className="nav-meta">
+        {pendingCount > 0 && (
+          <button
+            className="status-badge badge-pending-sync pulse-badge"
+            onClick={onOpenSyncModal}
+            title="Klikněte pro odeslání neodeslaných účtenek na EET"
+          >
+            <AlertTriangle size={14} />
+            <span>{pendingCount} Neodesláno</span>
+          </button>
+        )}
+
         <button
           className="status-badge"
           style={{
@@ -84,6 +98,15 @@ export default function Navbar({
           <span>EET 2.0 Ready</span>
         </div>
 
+        <button
+          className="status-badge btn-shutdown-badge"
+          onClick={onOpenShutdownModal}
+          title="Ukončit směnu a vypnout pokladní systém"
+        >
+          <Power size={14} />
+          <span>Vypnout Pokladnu</span>
+        </button>
+
         <div className="time-display">
           <Clock size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: '-2px' }} />
           {currentTime.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -92,3 +115,5 @@ export default function Navbar({
     </header>
   );
 }
+
+

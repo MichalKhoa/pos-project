@@ -316,7 +316,7 @@ export default function PresetsCatalogView({
 
             <form onSubmit={handleSubmitForm} className="modal-body">
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
                   Název položky
                 </label>
                 <input
@@ -330,7 +330,8 @@ export default function PresetsCatalogView({
                     background: 'var(--bg-input)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-md)',
-                    color: '#ffffff'
+                    color: 'var(--text-primary)',
+                    fontWeight: '600'
                   }}
                   required
                 />
@@ -360,7 +361,7 @@ export default function PresetsCatalogView({
               {!formData.isOpenPrice ? (
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
                       Pevná cena v Kč s DPH
                     </label>
                     <input
@@ -375,15 +376,16 @@ export default function PresetsCatalogView({
                         background: 'var(--bg-input)',
                         border: '1px solid var(--border-color)',
                         borderRadius: 'var(--radius-md)',
-                        color: '#ffffff',
+                        color: 'var(--text-primary)',
+                        fontWeight: '700',
                         fontFamily: 'var(--font-mono)'
                       }}
                       required={!formData.isOpenPrice}
                     />
                   </div>
 
-                  <div style={{ width: '130px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                  <div style={{ width: '140px' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
                       Sazba DPH
                     </label>
                     <select
@@ -395,18 +397,19 @@ export default function PresetsCatalogView({
                         background: 'var(--bg-input)',
                         border: '1px solid var(--border-color)',
                         borderRadius: 'var(--radius-md)',
-                        color: '#ffffff'
+                        color: 'var(--text-primary)',
+                        fontWeight: '600'
                       }}
                     >
-                      <option value={21}>21% (Základní)</option>
-                      <option value={12}>12% (Snížená)</option>
-                      <option value={0}>0% (Osvobozeno)</option>
+                      <option value={21} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>21% (Základní)</option>
+                      <option value={12} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>12% (Snížená)</option>
+                      <option value={0} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>0% (Osvobozeno)</option>
                     </select>
                   </div>
                 </div>
               ) : (
                 <div style={{ width: '100%' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
                     Sazba DPH pro volnou cenu
                   </label>
                   <select
@@ -418,24 +421,25 @@ export default function PresetsCatalogView({
                       background: 'var(--bg-input)',
                       border: '1px solid var(--border-color)',
                       borderRadius: 'var(--radius-md)',
-                      color: '#ffffff'
+                      color: 'var(--text-primary)',
+                      fontWeight: '600'
                     }}
                   >
-                    <option value={21}>21% (Základní)</option>
-                    <option value={12}>12% (Snížená)</option>
-                    <option value={0}>0% (Osvobozeno)</option>
+                    <option value={21} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>21% (Základní)</option>
+                    <option value={12} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>12% (Snížená)</option>
+                    <option value={0} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>0% (Osvobozeno)</option>
                   </select>
                 </div>
               )}
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600' }}>
                     Kategorie
                   </label>
                   <button
                     type="button"
-                    style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.75rem', fontWeight: '600' }}
+                    style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: '700' }}
                     onClick={() => setActiveModal('category')}
                   >
                     + Nová kategorie
@@ -450,17 +454,18 @@ export default function PresetsCatalogView({
                     background: 'var(--bg-input)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-md)',
-                    color: '#ffffff'
+                    color: 'var(--text-primary)',
+                    fontWeight: '600'
                   }}
                 >
                   {categories.filter(c => c.id !== 'all').map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>{c.name}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
                   Barva tlačítka
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -531,7 +536,7 @@ export default function PresetsCatalogView({
 
             <form onSubmit={handleCreateCategory} className="modal-body">
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
                   Název kategorie
                 </label>
                 <input
@@ -545,7 +550,8 @@ export default function PresetsCatalogView({
                     background: 'var(--bg-input)',
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-md)',
-                    color: '#ffffff'
+                    color: 'var(--text-primary)',
+                    fontWeight: '600'
                   }}
                   autoFocus
                   required
