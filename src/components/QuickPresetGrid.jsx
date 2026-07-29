@@ -33,7 +33,6 @@ export default function QuickPresetGrid({
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | 'category' | null
   const [editingPreset, setEditingPreset] = useState(null);
-  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Open Price Prompt Modal State
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
@@ -153,20 +152,6 @@ export default function QuickPresetGrid({
 
     if (onReorderPresets) {
       onReorderPresets(newFullPresets);
-    }
-  };
-
-  const handleCreateCategory = (e) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    const newId = onAddCategory(newCategoryName);
-    if (newId) {
-      setActiveCategory(newId);
-      setFormData(prev => ({ ...prev, category: newId }));
-    }
-    setNewCategoryName('');
-    if (activeModal === 'category') {
-      setActiveModal(null);
     }
   };
 

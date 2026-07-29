@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Printer, CheckCircle, RotateCcw, QrCode, Smartphone, Check } from 'lucide-react';
+import { Printer, CheckCircle, RotateCcw } from 'lucide-react';
 import { printReceiptBackend } from '../api/posApi';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
 export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale }) {
-  const [showQrModal, setShowQrModal] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
   if (!saleData) return null;

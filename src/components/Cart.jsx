@@ -7,9 +7,7 @@ export default function Cart({
   onRemoveItem,
   onClearCart,
   onOpenPayment,
-  onUpdateItemDiscount,
   cartDiscountPercent = 0,
-  onSetCartDiscountPercent,
   onOpenCustomDiscount
 }) {
   // Calculate item effective gross totals after item-level discounts

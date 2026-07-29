@@ -40,14 +40,10 @@ class CzechEETService:
         receipt_number = sale_data.get("receiptNumber") or sale_data.get("receipt_number") or f"{current_year}-000001"
         total_amount = float(sale_data.get("totalAmount") or sale_data.get("total_amount") or 0.0)
 
-        # Format ISO timestamp in UTC
-        ts_raw = sale_data.get("timestamp")
-        if isinstance(ts_raw, datetime):
-            dat_trzby = ts_raw.strftime("%Y-%m-%dT%H:%M:%SZ")
-        elif isinstance(ts_raw, str) and ts_raw:
-            dat_trzby = ts_raw.replace("+00:00", "Z")
-        else:
-            dat_trzby = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Format ISO timestamp safely using Czech / UTC timezone helper
+        from services.security_utils import parse_iso_timestamp
+        ts_dt = parse_iso_timestamp(sale_data.get("timestamp"))
+        dat_trzby = ts_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # 1. Cryptographic PKP & BKP Calculation
         crypto_mgr = self.get_crypto_manager(cert_path, cert_password)

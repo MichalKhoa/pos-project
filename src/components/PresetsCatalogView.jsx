@@ -30,20 +30,6 @@ export default function PresetsCatalogView({
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | 'category' | null
   const [editingPreset, setEditingPreset] = useState(null);
 
-  const handleCreateCategory = (e) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    const newId = onAddCategory(newCategoryName);
-    if (newId) {
-      setActiveCategory(newId);
-      setFormData(prev => ({ ...prev, category: newId }));
-    }
-    setNewCategoryName('');
-    if (activeModal === 'category') {
-      setActiveModal(null);
-    }
-  };
-
   const [formData, setFormData] = useState({
     name: '',
     price: '',

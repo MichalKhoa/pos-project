@@ -28,7 +28,7 @@ def get_eet_status(db: Session = Depends(get_db)):
         db.refresh(config)
 
     cert_path = config.eet_cert_path or ""
-    cert_pwd = config.eet_cert_password or ""
+    cert_pwd = config.get_decrypted_cert_password() if config else ""
 
     crypto_mgr = eet_service.get_crypto_manager(cert_path, cert_pwd)
     cert_info = crypto_mgr.get_certificate_info()
@@ -61,7 +61,7 @@ def verify_eet_connection(db: Session = Depends(get_db)):
         "id_provozovny": config.id_provozovny if config else "11",
         "id_pokl": config.id_pokl if config else "1",
         "eet_cert_path": config.eet_cert_path if config else "",
-        "eet_cert_password": config.eet_cert_password if config else "",
+        "eet_cert_password": config.get_decrypted_cert_password() if config else "",
         "eet_environment": config.eet_environment if config else "playground"
     }
 
@@ -77,12 +77,14 @@ def upload_eet_certificate(
     db: Session = Depends(get_db)
 ):
     """Uploads a PKCS#12 (.p12) merchant certificate and updates store config."""
-    if not file.filename.endswith((".p12", ".pfx")):
+    safe_filename = os.path.basename(file.filename or "")
+    if not safe_filename or not safe_filename.lower().endswith((".p12", ".pfx")):
         raise HTTPException(status_code=400, detail="Soubor musí mít příponu .p12 nebo .pfx")
 
-    save_path = os.path.join(CERTS_DIR, file.filename)
+    save_path = os.path.join(CERTS_DIR, safe_filename)
     with open(save_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+
 
     # Test certificate parsing
     crypto_mgr = eet_service.get_crypto_manager(save_path, password)
@@ -102,7 +104,7 @@ def upload_eet_certificate(
         db.add(config)
 
     config.eet_cert_path = save_path
-    config.eet_cert_password = password
+    config.set_encrypted_cert_password(password)
     config.eet_environment = environment
     db.commit()
     db.refresh(config)
@@ -129,7 +131,7 @@ def process_offline_queue(db: Session = Depends(get_db)):
         "id_provozovny": config.id_provozovny if config else "11",
         "id_pokl": config.id_pokl if config else "1",
         "eet_cert_path": config.eet_cert_path if config else "",
-        "eet_cert_password": config.eet_cert_password if config else "",
+        "eet_cert_password": config.get_decrypted_cert_password() if config else "",
         "eet_environment": config.eet_environment if config else "playground"
     }
 
@@ -144,11 +146,15 @@ def process_offline_queue(db: Session = Depends(get_db)):
             "timestamp": sale.timestamp.isoformat()
         }
         res = eet_service.sign_and_submit_sale(sale_data, store_dict)
-        sale.fik_code = res.get("pok") or res.get("fik") or f"{uuid.uuid4()}-ff"
-        sale.eet_status = "EVD_OK"
-        sale.is_sent_to_eet = True
-        processed_count += 1
-        synced_ids.append(sale.id)
+        if res.get("eet_status") == "EVD_OK" or res.get("is_sent_to_eet"):
+            sale.fik_code = res.get("pok") or res.get("fik")
+            sale.eet_status = "EVD_OK"
+            sale.is_sent_to_eet = True
+            processed_count += 1
+            synced_ids.append(sale.id)
+        else:
+            logger.warning(f"Resend sale #{sale.receipt_number} remaining offline: {res.get('error')}")
+
 
     db.commit()
 

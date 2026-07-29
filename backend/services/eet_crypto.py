@@ -64,7 +64,8 @@ class EETCryptoManager:
         Builds the standardized EET v4.1 canonical seed string:
         {eic_popl}|{id_jednotky}|{id_pokl}|{porad_cis}|{dat_trzby}|{celk_trzba}
         """
-        formatted_amount = f"{celk_trzba:.2f}"
+        from services.security_utils import round_currency
+        formatted_amount = f"{round_currency(celk_trzba):.2f}"
         return f"{eic_popl}|{id_jednotky}|{id_pokl}|{porad_cis}|{dat_trzby}|{formatted_amount}"
 
     def compute_pkp_and_bkp(

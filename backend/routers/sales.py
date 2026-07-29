@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
@@ -9,6 +9,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/api/v1/sales", tags=["Sales Ledger"])
 eet_service = CzechEETService()
+
 
 
 class SaleItemSchema(BaseModel):
@@ -69,24 +70,26 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         "id_provozovny": config.id_provozovny if config else "11",
         "id_pokl": config.id_pokl if config else "1",
         "eet_cert_path": config.eet_cert_path if config else "",
-        "eet_cert_password": config.eet_cert_password if config else "",
+        "eet_cert_password": config.get_decrypted_cert_password() if config else "",
         "eet_environment": config.eet_environment if config else "playground"
     }
 
     # Run EET Fiscal Signing
     eet_res = eet_service.sign_and_submit_sale(sale.model_dump(), store_dict)
 
+    from services.security_utils import parse_iso_timestamp, round_currency
+
     # Save to SQLite DB
     db_sale = SaleModel(
         id=sale.id,
         receipt_number=sale.receiptNumber,
-        timestamp=datetime.fromisoformat(sale.timestamp.replace("Z", "")) if sale.timestamp else datetime.utcnow(),
-        total_amount=sale.totalAmount,
+        timestamp=parse_iso_timestamp(sale.timestamp),
+        total_amount=round_currency(sale.totalAmount),
         cart_discount_percent=sale.cartDiscountPercent,
         payment_method=sale.paymentMethod,
         split_details=sale.splitDetails,
-        tendered_amount=sale.tenderedAmount,
-        change_due=sale.changeDue,
+        tendered_amount=round_currency(sale.tenderedAmount),
+        change_due=round_currency(sale.changeDue),
         tax_summary=sale.taxSummary,
         fik_code=eet_res.get("fik"),
         bkp_code=eet_res.get("bkp"),
@@ -100,7 +103,7 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         original_receipt_number=sale.originalReceiptNumber,
         refund_reason=sale.refundReason,
         refund_status=sale.refundStatus or "NONE",
-        refunded_amount=sale.refundedAmount or 0.0
+        refunded_amount=round_currency(sale.refundedAmount or 0.0)
     )
 
     db.add(db_sale)
@@ -111,7 +114,7 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
             sale_id=sale.id,
             item_id=item.id,
             name=item.name,
-            price=item.price,
+            price=round_currency(item.price),
             quantity=item.quantity,
             vat=item.vat,
             discount_percent=item.discount_percent
@@ -146,8 +149,22 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
 
 
 @router.delete("/{sale_id}")
-def delete_sale(sale_id: str, db: Session = Depends(get_db)):
-    """Delete a test sale transaction (Admin Mode)."""
+def delete_sale(sale_id: str, request: Request, db: Session = Depends(get_db)):
+    """Delete a test sale transaction (Admin Mode - Protected)."""
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost", "testclient"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Transaction deletion is restricted to localhost admin session."
+        )
+
+    admin_header = request.headers.get("X-Admin-Override", "")
+    if admin_header.lower() != "true":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Vyžadováno potvrzení administrátorského oprávnění (X-Admin-Override header)."
+        )
+
     sale = db.query(SaleModel).filter(SaleModel.id == sale_id).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
@@ -155,3 +172,4 @@ def delete_sale(sale_id: str, db: Session = Depends(get_db)):
     db.delete(sale)
     db.commit()
     return {"status": "DELETED", "sale_id": sale_id}
+

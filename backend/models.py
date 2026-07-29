@@ -76,6 +76,17 @@ class StoreConfigModel(Base):
     id_provozovny = Column(String, default="11")
     id_pokl = Column(String, default="1")
 
+    def get_decrypted_cert_password(self) -> str:
+        """Returns decrypted EET certificate password."""
+        from services.security_utils import decrypt_secret
+        return decrypt_secret(self.eet_cert_password or "")
+
+    def set_encrypted_cert_password(self, password: str):
+        """Encrypts and stores EET certificate password."""
+        from services.security_utils import encrypt_secret
+        self.eet_cert_password = encrypt_secret(password)
+
+
 
 class CategoryModel(Base):
     """DB Model for Product Categories."""

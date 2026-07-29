@@ -228,7 +228,7 @@ export default function App() {
   }, []);
 
   // Check pending offline receipts from backend EET status
-  const checkPendingOfflineSales = useCallback(async (forceOpen = false) => {
+  const checkPendingOfflineSales = useCallback(async () => {
     try {
       const eetStatus = await fetchEetStatus();
       if (eetStatus && typeof eetStatus.pending_offline_sales === 'number') {

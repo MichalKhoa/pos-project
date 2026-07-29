@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Store, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon, Activity } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
 export default function Navbar({
@@ -44,7 +44,7 @@ export default function Navbar({
         } else {
           setIsOnline(false);
         }
-      } catch (e) {
+      } catch {
         setIsOnline(false);
       }
     };

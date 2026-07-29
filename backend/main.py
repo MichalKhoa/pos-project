@@ -1,5 +1,6 @@
+import os
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import sales, printer, display, payments, eet, catalog
@@ -17,14 +18,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for React frontend (Vite http://localhost:5173)
+# Enable CORS for React frontend (Vite http://localhost:5173 & http://127.0.0.1:5173)
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+if not allowed_origins:
+    allowed_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Include API Routers
 app.include_router(sales.router)
@@ -46,18 +53,67 @@ def root():
 
 
 @app.post("/api/v1/system/shutdown")
-def shutdown_system():
+def shutdown_system(request: Request):
     """Safely stop backend service & terminal windows on cashier request."""
+    # Security check: Enforce loopback caller restriction
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost", "testclient"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Shutdown endpoint is restricted to localhost callers."
+        )
+
     import os, subprocess, threading
     logger.info("Shutdown requested by cashier via POS interface.")
 
+    # Process completion check: Flush pending offline EET sales if present
+    try:
+        from database import SessionLocal
+        from models import SaleModel, StoreConfigModel
+        from services.eet_service import CzechEETService
+
+        db = SessionLocal()
+        pending_sales = db.query(SaleModel).filter(
+            (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
+        ).all()
+
+        if pending_sales:
+            logger.info(f"Shutdown: Flushing {len(pending_sales)} pending offline EET sales...")
+            config = db.query(StoreConfigModel).first()
+            store_dict = {
+                "eic_popl": config.dic if config else "CZ00000019",
+                "dic": config.dic if config else "CZ00000019",
+                "id_jednotky": config.id_provozovny if config else "11",
+                "id_provozovny": config.id_provozovny if config else "11",
+                "id_pokl": config.id_pokl if config else "1",
+                "eet_cert_path": config.eet_cert_path if config else "",
+                "eet_cert_password": config.get_decrypted_cert_password() if config else "",
+                "eet_environment": config.eet_environment if config else "playground"
+            }
+            eet_svc = CzechEETService()
+            for sale in pending_sales:
+                sale_data = {
+                    "receiptNumber": sale.receipt_number,
+                    "totalAmount": sale.total_amount,
+                    "taxSummary": sale.tax_summary or {},
+                    "timestamp": sale.timestamp.isoformat()
+                }
+                res = eet_svc.sign_and_submit_sale(sale_data, store_dict)
+                if res.get("eet_status") == "EVD_OK":
+                    sale.fik_code = res.get("fik")
+                    sale.eet_status = "EVD_OK"
+                    sale.is_sent_to_eet = True
+            db.commit()
+        db.close()
+    except Exception as e:
+        logger.warning(f"Error processing pending sales during shutdown: {e}")
+
     def terminate():
         try:
-            # Taskkill background launcher terminal windows and process trees
+            # Target POS launcher terminal windows and app instances (avoiding indiscriminate process kills)
             subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Web*"', shell=True, capture_output=True)
             subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Launcher*"', shell=True, capture_output=True)
             subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Kiosk Launcher*"', shell=True, capture_output=True)
-            subprocess.run('taskkill /F /IM node.exe', shell=True, capture_output=True)
             subprocess.run('taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq http://localhost:5173*"', shell=True, capture_output=True)
             subprocess.run('taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq Himmel POS App*"', shell=True, capture_output=True)
             subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*"', shell=True, capture_output=True)
@@ -66,13 +122,18 @@ def shutdown_system():
         finally:
             os._exit(0)
 
-    timer = threading.Timer(0.3, terminate)
+    timer = threading.Timer(0.5, terminate)
     timer.start()
     return {"status": "SUCCESS", "message": "Pokladní systém byl úspěšně ukončen."}
 
 
 
 
+
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host=host, port=port, reload=True)
+

@@ -65,22 +65,23 @@ class EETSoapClient:
         hlavicka_attr_str = " ".join([f'{k}="{v}"' for k, v in sorted(hlavicka_attrs.items())])
 
         # Sort and format Data attributes according to EET v4.1 schema
+        from services.security_utils import round_currency
         data_attrs = {
             "eic_popl": eic_popl,
             "id_jednotky": str(id_jednotky),
             "id_pokl": str(id_pokl),
             "porad_cis": str(porad_cis),
             "dat_trzby": dat_trzby,
-            "celk_trzba": f"{celk_trzba:.2f}"
+            "celk_trzba": f"{round_currency(celk_trzba):.2f}"
         }
         if eic_poverujiciho:
             data_attrs["eic_poverujiciho"] = eic_poverujiciho
         if povereni_vice_popl is not None:
             data_attrs["povereni_vice_popl"] = "true" if povereni_vice_popl else "false"
         if urceno_cerp_zuct is not None:
-            data_attrs["urceno_cerp_zuct"] = f"{urceno_cerp_zuct:.2f}"
+            data_attrs["urceno_cerp_zuct"] = f"{round_currency(urceno_cerp_zuct):.2f}"
         if cerp_zuct is not None:
-            data_attrs["cerp_zuct"] = f"{cerp_zuct:.2f}"
+            data_attrs["cerp_zuct"] = f"{round_currency(cerp_zuct):.2f}"
 
         data_attr_str = " ".join([f'{k}="{v}"' for k, v in sorted(data_attrs.items())])
 

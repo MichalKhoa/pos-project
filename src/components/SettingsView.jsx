@@ -11,8 +11,6 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  Server,
-  Key,
   Send,
   Calendar,
   FileCheck,
@@ -139,7 +137,7 @@ export default function SettingsView({
 
         alert('✅ Záloha byla úspěšně načtena! Obnovuji rozhraní...');
         window.location.reload();
-      } catch (err) {
+      } catch {
         alert('❌ Nepodařilo se načíst záložní soubor. Zkontrolujte, zda jde o platný JSON záložní soubor.');
       }
     };
@@ -188,7 +186,6 @@ export default function SettingsView({
     const testWindow = window.open('', '_blank', 'width=400,height=600');
     if (!testWindow) return;
 
-    const charCount = is58 ? 32 : 48;
     const printWidth = is58 ? '48mm' : '72mm';
     const rulerNumbers = is58 ? '12345678901234567890123456789032' : '123456789012345678901234567890123456789012345678';
     const borderLine = is58 ? 'L' + '-'.repeat(30) + 'R' : 'L' + '-'.repeat(46) + 'R';
