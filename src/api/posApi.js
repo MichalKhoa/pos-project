@@ -139,6 +139,16 @@ export function normalizeSale(sale) {
     pkp_code: sale.pkp_code || sale.pkpCode || sale.pkp || null,
     eet_status: sale.eet_status || sale.eetStatus || 'EVD_OK',
     eetStatus: sale.eetStatus || sale.eet_status || 'EVD_OK',
+    isRefund: sale.isRefund !== undefined ? sale.isRefund : (sale.is_refund !== undefined ? sale.is_refund : false),
+    is_refund: sale.is_refund !== undefined ? sale.is_refund : (sale.isRefund !== undefined ? sale.isRefund : false),
+    originalReceiptNumber: sale.originalReceiptNumber || sale.original_receipt_number || null,
+    original_receipt_number: sale.original_receipt_number || sale.originalReceiptNumber || null,
+    refundReason: sale.refundReason || sale.refund_reason || null,
+    refund_reason: sale.refund_reason || sale.refundReason || null,
+    refundStatus: sale.refundStatus || sale.refund_status || 'NONE',
+    refund_status: sale.refund_status || sale.refundStatus || 'NONE',
+    refundedAmount: sale.refundedAmount !== undefined ? sale.refundedAmount : (sale.refunded_amount !== undefined ? sale.refunded_amount : 0),
+    refunded_amount: sale.refunded_amount !== undefined ? sale.refunded_amount : (sale.refundedAmount !== undefined ? sale.refundedAmount : 0),
     items: Array.isArray(sale.items) ? sale.items.map(item => ({
       ...item,
       id: item.id || item.item_id,
@@ -149,6 +159,24 @@ export function normalizeSale(sale) {
       discountPercent: item.discountPercent !== undefined ? item.discountPercent : (item.discount_percent !== undefined ? item.discount_percent : 0)
     })) : []
   };
+}
+
+/**
+ * Update refund status & refunded amount in backend SQLite DB
+ */
+export async function updateSaleRefundStatusBackend(saleId, refundStatus, refundedAmount) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/sales/${saleId}/refund-status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refund_status: refundStatus, refunded_amount: refundedAmount })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to update refund status in backend:', err);
+    return null;
+  }
 }
 
 /**
@@ -199,6 +227,120 @@ export async function printReceiptBackend(saleData, storeConfig) {
     return await res.json();
   } catch (err) {
     console.warn('Physical hardware printer unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch product categories from backend database
+ */
+export async function fetchCategoriesBackend() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/categories`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend categories unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Save/update a category in backend database
+ */
+export async function saveCategoryBackend(category) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(category)
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to save category to backend:', err);
+    return null;
+  }
+}
+
+/**
+ * Delete a category in backend database
+ */
+export async function deleteCategoryBackend(catId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/categories/${catId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to delete category in backend:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch presets from backend database
+ */
+export async function fetchPresetsBackend() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/presets`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend presets unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Save/update a preset in backend database
+ */
+export async function savePresetBackend(preset) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/presets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(preset)
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to save preset to backend:', err);
+    return null;
+  }
+}
+
+/**
+ * Bulk reorder presets in backend database
+ */
+export async function reorderPresetsBackend(presets) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/presets/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ presets })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to reorder presets in backend:', err);
+    return null;
+  }
+}
+
+/**
+ * Delete a preset in backend database
+ */
+export async function deletePresetBackend(presetId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/presets/${presetId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to delete preset in backend:', err);
     return null;
   }
 }

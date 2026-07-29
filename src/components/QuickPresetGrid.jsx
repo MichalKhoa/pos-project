@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator, GripVertical, MoveLeft, MoveRight } from 'lucide-react';
+import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
+import CategoryManagerModal from './CategoryManagerModal';
 
 const COLOR_OPTIONS = [
   '#3b82f6', // Blue
@@ -17,6 +18,7 @@ export default function QuickPresetGrid({
   presets,
   categories = DEFAULT_CATEGORIES,
   onAddCategory,
+  onEditCategory,
   onDeleteCategory,
   onAddToCart,
   onAddPreset,
@@ -27,6 +29,7 @@ export default function QuickPresetGrid({
   onClearKeypadAmount
 }) {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | 'category' | null
   const [editingPreset, setEditingPreset] = useState(null);
@@ -45,9 +48,13 @@ export default function QuickPresetGrid({
     color: '#3b82f6'
   });
 
-  const filteredPresets = activeCategory === 'all'
-    ? presets
-    : presets.filter(p => p.category === activeCategory);
+  const filteredPresets = presets.filter(p => {
+    const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+    const matchesSearch = !searchTerm.trim() ||
+      (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.price && p.price.toString().includes(searchTerm));
+    return matchesCategory && matchesSearch;
+  });
 
   // Drag and Drop state
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -287,20 +294,44 @@ export default function QuickPresetGrid({
           </span>
         </div>
 
-        <button
-          className={`nav-tab ${isEditMode ? 'active' : ''}`}
-          style={{
-            padding: '0.35rem 0.75rem',
-            fontSize: '0.8rem',
-            background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
-            color: isEditMode ? '#000000' : 'var(--text-secondary)',
-            fontWeight: '700'
-          }}
-          onClick={() => setIsEditMode(!isEditMode)}
-        >
-          {isEditMode ? <Check size={14} /> : <Settings2 size={14} />}
-          <span>{isEditMode ? 'Hotovo' : 'Upravit tlačítka'}</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* Quick Product Search Bar */}
+          <div className="keypad-input-container" style={{ width: '180px', padding: '0.2rem 0.5rem', height: '32px' }}>
+            <Search size={14} style={{ color: 'var(--text-muted)', marginRight: '4px' }} />
+            <input
+              type="text"
+              className="keypad-label-input"
+              placeholder="Hledat položku..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <button
+            className={`nav-tab ${isEditMode ? 'active' : ''}`}
+            style={{
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.8rem',
+              background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
+              color: isEditMode ? '#000000' : 'var(--text-secondary)',
+              fontWeight: '700'
+            }}
+            onClick={() => setIsEditMode(!isEditMode)}
+          >
+            {isEditMode ? <Check size={14} /> : <Settings2 size={14} />}
+            <span>{isEditMode ? 'Hotovo' : 'Upravit tlačítka'}</span>
+          </button>
+        </div>
       </div>
 
       <div className="category-bar">
@@ -318,9 +349,10 @@ export default function QuickPresetGrid({
           className="category-chip"
           style={{ borderStyle: 'dashed', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
           onClick={() => setActiveModal('category')}
+          title="Přidat, upravit nebo smazat kategorie"
         >
-          <Plus size={14} />
-          <span>Nová kategorie</span>
+          <Settings2 size={14} />
+          <span>Spravovat kategorie</span>
         </button>
       </div>
 
@@ -796,61 +828,16 @@ export default function QuickPresetGrid({
         </div>
       )}
 
-      {/* New Category Modal */}
+      {/* Category Manager Modal */}
       {activeModal === 'category' && (
-        <div className="modal-overlay" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-            <div className="modal-header">
-              <div className="modal-title">
-                <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-                <span>Nová Kategorie Položek</span>
-              </div>
-              <button className="close-modal-btn" onClick={() => setActiveModal(null)}>✕</button>
-            </div>
-
-            <form onSubmit={handleCreateCategory} className="modal-body">
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                  Název kategorie
-                </label>
-                <input
-                  type="text"
-                  placeholder="např. Pekařství, Elektronika, Zahrada"
-                  value={newCategoryName}
-                  onChange={e => setNewCategoryName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#ffffff'
-                  }}
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button
-                  type="button"
-                  className="nav-tab"
-                  onClick={() => setActiveModal(null)}
-                >
-                  Zrušit
-                </button>
-                <button
-                  type="submit"
-                  className="pay-btn pay-btn-card"
-                  style={{ height: '44px', padding: '0 1.25rem' }}
-                >
-                  <Check size={18} />
-                  <span>Vytvořit kategorii</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CategoryManagerModal
+          categories={categories}
+          onAddCategory={onAddCategory}
+          onEditCategory={onEditCategory}
+          onDeleteCategory={onDeleteCategory}
+          onClose={() => setActiveModal(null)}
+          onSelectCategory={(id) => setActiveCategory(id)}
+        />
       )}
     </div>
   );

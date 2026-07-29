@@ -1,5 +1,5 @@
 # ==========================================
-# Dependencies & Package Managers
+# Dependencies
 # ==========================================
 node_modules/
 backend/venv/
@@ -7,106 +7,63 @@ backend/.venv/
 venv/
 .venv/
 env/
-ENV/
-develop-eggs/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
 # ==========================================
-# Build & Distribution Artifacts
+# Build & Output Directories
 # ==========================================
 dist/
 dist-electron/
 build/
-out/
 .vite/
 
 # ==========================================
-# Python Bytecode & Caches
+# Internal Tooling, VCS & Assistant Caches
+# ==========================================
+.git/
+.antigravity/
+.gemini/
+.serena/cache/
+.serena/project.local.yml
+
+# ==========================================
+# Python & Tool Caches
 # ==========================================
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .oxlint_cache/
 
 # ==========================================
-# Database & Local Runtime Data
+# Database & Binary Storage
 # ==========================================
 *.db
-*.db-journal
-*.db-shm
-*.db-wal
 *.sqlite
 *.sqlite3
 backend/pos_store.db
 
 # ==========================================
-# Certificates, Keys & Secrets
+# Certificates & Sensitive Credentials
 # ==========================================
 backend/certs/*.p12
 backend/certs/*.pfx
 backend/certs/*.pem
-backend/certs/*.crt
 backend/certs/*.key
-!backend/certs/.gitkeep
 *.p12
 *.pfx
 *.pem
 *.key
-.env
-.env.local
-.env.*.local
+.env*
 
 # ==========================================
-# Logs
+# Logs & Large Lockfiles
 # ==========================================
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+package-lock.json
 
 # ==========================================
-# Tooling & Assistant Caches / Overrides
-# ==========================================
-.serena/cache/
-.serena/project.local.yml
-.antigravity/
-.gemini/
-
-# ==========================================
-# IDEs & Text Editors
+# IDEs & Editor Data
 # ==========================================
 .idea/
 .vscode/
-*.swp
-*.swo
-*~
-*.sublime-project
-*.sublime-workspace
-
-# ==========================================
-# OS Generated Files
-# ==========================================
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db

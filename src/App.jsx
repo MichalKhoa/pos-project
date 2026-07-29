@@ -11,19 +11,26 @@ import SettingsView from './components/SettingsView';
 import PendingSyncModal from './components/PendingSyncModal';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
 import ShutdownModal from './components/ShutdownModal';
+import RefundModal from './components/RefundModal';
+import CalendarModal from './components/CalendarModal';
+import DiscountModal from './components/DiscountModal';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
-import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale } from './api/posApi';
+import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend } from './api/posApi';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('register');
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [showShutdownModal, setShowShutdownModal] = useState(false);
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [discountModalSelectedItem, setDiscountModalSelectedItem] = useState(null);
+  const [historyDateFilter, setHistoryDateFilter] = useState(null);
   const [isSyncingQueue, setIsSyncingQueue] = useState(false);
   const [snoozedUntil, setSnoozedUntil] = useState(0);
   const [syncNotification, setSyncNotification] = useState(null);
 
-  // LocalStorage state initialization with safe fallbacks
+  // State — start from localStorage fallback, backend load will overwrite on mount
   const [categories, setCategories] = useState(() => {
     try {
       const saved = localStorage.getItem('himmel_pos_categories');
@@ -38,7 +45,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('himmel_pos_presets');
       const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) ? parsed : DEFAULT_PRESETS;
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRESETS;
     } catch {
       return DEFAULT_PRESETS;
     }
@@ -91,6 +98,7 @@ export default function App() {
   const [cartDiscountPercent, setCartDiscountPercent] = useState(0);
   const [paymentModalMethod, setPaymentModalMethod] = useState(null); // 'cash' | 'card' | 'split' | null
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
+  const [refundTargetSale, setRefundTargetSale] = useState(null);
 
   // Admin Mode & Test Sales Management
   const handleToggleAdminMode = () => {
@@ -109,7 +117,90 @@ export default function App() {
     }
   };
 
-  // Sync to LocalStorage
+  // Refund / Storno processing handler
+  const handleProcessRefund = ({ originalSale, returnedItems, totalRefundAmount, refundTaxSummary, refundReason, paymentMethod, isFullRefund }) => {
+    const currentYear = new Date().getFullYear().toString();
+    const yearPrefix = `${currentYear}-`;
+    let maxSeq = 0;
+    for (const s of salesHistory) {
+      const rNum = s.receiptNumber || '';
+      const cleanNum = rNum.replace('STORNO-', '');
+      if (cleanNum.startsWith(yearPrefix)) {
+        const num = parseInt(cleanNum.slice(yearPrefix.length), 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      }
+    }
+    const nextStornoNum = `STORNO-${currentYear}-${(maxSeq + 1).toString().padStart(6, '0')}`;
+
+    const formattedTaxSummary = Object.entries(refundTaxSummary).reduce((acc, [rate, values]) => {
+      acc[rate] = {
+        rate: parseInt(rate, 10),
+        gross: -values.gross,
+        net: -values.net,
+        tax: -values.tax
+      };
+      return acc;
+    }, {});
+
+    const stornoSale = normalizeSale({
+      id: `sale-storno-${Date.now()}`,
+      receiptNumber: nextStornoNum,
+      timestamp: new Date().toISOString(),
+      items: returnedItems.map(item => ({
+        id: item.id || `item-${Date.now()}`,
+        name: `STORNO: ${item.name}`,
+        price: parseFloat(item.price),
+        quantity: -item.quantityToReturn,
+        vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
+        discount_percent: item.discountPercent || 0
+      })),
+      totalAmount: -totalRefundAmount,
+      cartDiscountPercent: originalSale.cartDiscountPercent || 0,
+      paymentMethod,
+      tenderedAmount: paymentMethod === 'cash' ? -totalRefundAmount : 0,
+      changeDue: 0,
+      taxSummary: formattedTaxSummary,
+      isRefund: true,
+      originalReceiptNumber: originalSale.receiptNumber,
+      refundReason
+    });
+
+    const newRefundStatus = isFullRefund ? 'FULL' : 'PARTIAL';
+    const updatedRefundedAmount = (originalSale.refundedAmount || 0) + totalRefundAmount;
+
+    const updatedOriginalSale = normalizeSale({
+      ...originalSale,
+      refundStatus: newRefundStatus,
+      refund_status: newRefundStatus,
+      refundedAmount: updatedRefundedAmount,
+      refunded_amount: updatedRefundedAmount
+    });
+
+    // Send storno transaction to backend
+    createSaleBackend(stornoSale).then(backendRes => {
+      if (backendRes && backendRes.status === 'SUCCESS') {
+        const enrichedStorno = normalizeSale({
+          ...stornoSale,
+          fik: backendRes.fik,
+          pok: backendRes.fik,
+          bkp: backendRes.bkp,
+          pkp: backendRes.pkp,
+          eet_status: backendRes.eet_status || 'EVD_OK'
+        });
+        setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? enrichedStorno : s));
+        setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? enrichedStorno : prev);
+      }
+    });
+
+    // Send refund status update for original sale to backend
+    updateSaleRefundStatusBackend(originalSale.id, newRefundStatus, updatedRefundedAmount);
+
+    setSalesHistory(prev => [stornoSale, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
+    setRefundTargetSale(null);
+    setCurrentReceiptData(stornoSale);
+  };
+
+  // Sync to LocalStorage (offline fallback)
   useEffect(() => {
     localStorage.setItem('himmel_pos_categories', JSON.stringify(categories));
   }, [categories]);
@@ -125,6 +216,16 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('himmel_pos_sales', JSON.stringify(salesHistory));
   }, [salesHistory]);
+
+  // Load categories & presets from backend on mount (overrides localStorage)
+  useEffect(() => {
+    fetchCategoriesBackend().then(data => {
+      if (Array.isArray(data) && data.length > 0) setCategories(data);
+    });
+    fetchPresetsBackend().then(data => {
+      if (Array.isArray(data) && data.length > 0) setPresets(data);
+    });
+  }, []);
 
   // Check pending offline receipts from backend EET status
   const checkPendingOfflineSales = useCallback(async (forceOpen = false) => {
@@ -271,7 +372,7 @@ export default function App() {
             id: `custom-${Date.now()}`,
             name: 'Volný prodej',
             price: parseFloat(keypadAmount),
-            vat: storeConfig?.defaultVat || 21,
+            vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
             isCustom: true
           });
           setKeypadAmount('');
@@ -290,15 +391,36 @@ export default function App() {
     if (!name.trim()) return;
     const newCat = {
       id: `cat-${Date.now()}`,
-      name: name.trim()
+      name: name.trim(),
+      position: categories.length
     };
     setCategories(prev => [...prev, newCat]);
+    saveCategoryBackend(newCat);
     return newCat.id;
+  };
+
+  const handleEditCategory = (catId, newName) => {
+    if (!newName.trim() || catId === 'all') return;
+    setCategories(prev => prev.map(c => {
+      if (c.id !== catId) return c;
+      const updated = { ...c, name: newName.trim() };
+      saveCategoryBackend(updated);
+      return updated;
+    }));
   };
 
   const handleDeleteCategory = (catId) => {
     if (catId === 'all') return;
     setCategories(prev => prev.filter(c => c.id !== catId));
+    deleteCategoryBackend(catId);
+    // Reassign items from deleted category so no presets are orphaned
+    const fallbackCategory = categories.find(c => c.id !== 'all' && c.id !== catId)?.id || 'living';
+    setPresets(prev => prev.map(p => {
+      if (p.category !== catId) return p;
+      const updated = { ...p, category: fallbackCategory };
+      savePresetBackend(updated);
+      return updated;
+    }));
   };
 
   // Cart operations
@@ -339,6 +461,40 @@ export default function App() {
     setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, discountPercent } : item));
   };
 
+  const handleOpenCustomDiscountModal = (item = null) => {
+    setDiscountModalSelectedItem(item);
+    setIsDiscountModalOpen(true);
+  };
+
+  const handleApplyCustomDiscount = ({ type, value, scope, itemId }) => {
+    if (scope === 'item' && itemId) {
+      setCartItems(prev => prev.map(item => {
+        if (item.id !== itemId) return item;
+        if (type === 'percent') {
+          return { ...item, discountPercent: Math.min(100, value) };
+        } else {
+          const itemGross = item.price * item.quantity;
+          const pct = itemGross > 0 ? (value / itemGross) * 100 : 0;
+          return { ...item, discountPercent: Math.min(100, Math.round(pct * 10) / 10) };
+        }
+      }));
+    } else {
+      // Scope === 'cart'
+      if (type === 'percent') {
+        setCartDiscountPercent(Math.min(100, value));
+      } else {
+        const rawSubtotal = cartItems.reduce((sum, item) => {
+          const disc = item.discountPercent || 0;
+          const effectivePrice = item.price * (1 - disc / 100);
+          return sum + (effectivePrice * item.quantity);
+        }, 0);
+
+        const pct = rawSubtotal > 0 ? (value / rawSubtotal) * 100 : 0;
+        setCartDiscountPercent(Math.min(100, Math.round(pct * 10) / 10));
+      }
+    }
+  };
+
   const handleRemoveItem = (itemId) => {
     setCartItems(prev => prev.filter(item => item.id !== itemId));
   };
@@ -350,19 +506,24 @@ export default function App() {
 
   // Preset operations
   const handleAddPreset = (newPreset) => {
-    setPresets(prev => [newPreset, ...prev]);
+    const withPosition = { ...newPreset, position: 0 };
+    setPresets(prev => [withPosition, ...prev]);
+    savePresetBackend(withPosition);
   };
 
   const handleUpdatePreset = (updatedPreset) => {
     setPresets(prev => prev.map(p => p.id === updatedPreset.id ? updatedPreset : p));
+    savePresetBackend(updatedPreset);
   };
 
   const handleDeletePreset = (presetId) => {
     setPresets(prev => prev.filter(p => p.id !== presetId));
+    deletePresetBackend(presetId);
   };
 
   const handleReorderPresets = (reorderedPresets) => {
     setPresets(reorderedPresets);
+    reorderPresetsBackend(reorderedPresets);
   };
 
   // Checkout flow
@@ -486,6 +647,7 @@ export default function App() {
         pendingCount={pendingSyncCount}
         onOpenSyncModal={() => setShowSyncModal(true)}
         onOpenShutdownModal={() => setShowShutdownModal(true)}
+        onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
       />
 
       {syncNotification && (
@@ -504,7 +666,7 @@ export default function App() {
                 onAddToCart={handleAddToCart}
                 amountStr={keypadAmount}
                 setAmountStr={setKeypadAmount}
-                defaultVat={storeConfig?.defaultVat || 21}
+                defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
               />
             </div>
 
@@ -513,6 +675,7 @@ export default function App() {
                 presets={presets}
                 categories={categories}
                 onAddCategory={handleAddCategory}
+                onEditCategory={handleEditCategory}
                 onDeleteCategory={handleDeleteCategory}
                 onAddToCart={handleAddToCart}
                 onAddPreset={handleAddPreset}
@@ -534,6 +697,7 @@ export default function App() {
                 onUpdateItemDiscount={handleUpdateItemDiscount}
                 cartDiscountPercent={cartDiscountPercent}
                 onSetCartDiscountPercent={setCartDiscountPercent}
+                onOpenCustomDiscount={handleOpenCustomDiscountModal}
               />
             </div>
           </div>
@@ -544,6 +708,7 @@ export default function App() {
             presets={presets}
             categories={categories}
             onAddCategory={handleAddCategory}
+            onEditCategory={handleEditCategory}
             onDeleteCategory={handleDeleteCategory}
             onAddPreset={handleAddPreset}
             onUpdatePreset={handleUpdatePreset}
@@ -560,6 +725,8 @@ export default function App() {
             onToggleAdminMode={handleToggleAdminMode}
             onDeleteSale={handleDeleteSale}
             onClearAllTestSales={handleClearAllTestSales}
+            onInitiateRefund={setRefundTargetSale}
+            initialDateFilter={historyDateFilter}
           />
         )}
 
@@ -574,13 +741,50 @@ export default function App() {
         )}
       </main>
 
+      {/* Custom Discount Modal */}
+      <DiscountModal
+        isOpen={isDiscountModalOpen}
+        onClose={() => setIsDiscountModalOpen(false)}
+        totalAmount={cartItems.reduce((sum, item) => {
+          const disc = item.discountPercent || 0;
+          return sum + (item.price * (1 - disc / 100) * item.quantity);
+        }, 0)}
+        cartItems={cartItems}
+        selectedItem={discountModalSelectedItem}
+        onApplyDiscount={handleApplyCustomDiscount}
+      />
+
       {/* Payment Modal */}
       {paymentModalMethod && (
         <PaymentModal
           method={paymentModalMethod}
-          totalAmount={cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
+          totalAmount={cartItems.reduce((sum, item) => {
+            const disc = item.discountPercent || 0;
+            return sum + (item.price * (1 - disc / 100) * item.quantity);
+          }, 0) * (1 - cartDiscountPercent / 100)}
           onClose={() => setPaymentModalMethod(null)}
           onCompleteSale={handleCompleteSale}
+        />
+      )}
+
+      {/* Refund / Storno Modal */}
+      {refundTargetSale && (
+        <RefundModal
+          sale={refundTargetSale}
+          onClose={() => setRefundTargetSale(null)}
+          onConfirmRefund={handleProcessRefund}
+        />
+      )}
+
+      {/* Calendar & Shift Overview Modal */}
+      {isCalendarModalOpen && (
+        <CalendarModal
+          salesHistory={salesHistory}
+          onClose={() => setIsCalendarModalOpen(false)}
+          onNavigateToHistory={(dateStr) => {
+            setHistoryDateFilter(dateStr);
+            setActiveTab('history');
+          }}
         />
       )}
 

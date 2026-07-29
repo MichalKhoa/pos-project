@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Check, Calculator } from 'lucide-react';
+import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Check, Calculator, Settings2 } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
+import CategoryManagerModal from './CategoryManagerModal';
 
 const COLOR_OPTIONS = [
   '#3b82f6', // Blue
@@ -17,6 +18,7 @@ export default function PresetsCatalogView({
   presets,
   categories = DEFAULT_CATEGORIES,
   onAddCategory,
+  onEditCategory,
   onDeleteCategory,
   onAddPreset,
   onUpdatePreset,
@@ -27,7 +29,6 @@ export default function PresetsCatalogView({
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | 'category' | null
   const [editingPreset, setEditingPreset] = useState(null);
-  const [newCategoryName, setNewCategoryName] = useState('');
 
   const handleCreateCategory = (e) => {
     e.preventDefault();
@@ -201,9 +202,10 @@ export default function PresetsCatalogView({
             className="category-chip"
             style={{ borderStyle: 'dashed', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             onClick={() => setActiveModal('category')}
+            title="Přidat, upravit nebo smazat kategorie"
           >
-            <Plus size={14} />
-            <span>Nová kategorie</span>
+            <Settings2 size={14} />
+            <span>Spravovat kategorie</span>
           </button>
         </div>
       </div>
@@ -522,62 +524,16 @@ export default function PresetsCatalogView({
         </div>
       )}
 
-      {/* New Category Modal */}
+      {/* Category Manager Modal */}
       {activeModal === 'category' && (
-        <div className="modal-overlay" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-            <div className="modal-header">
-              <div className="modal-title">
-                <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-                <span>Nová Kategorie Položek</span>
-              </div>
-              <button className="close-modal-btn" onClick={() => setActiveModal(null)}>✕</button>
-            </div>
-
-            <form onSubmit={handleCreateCategory} className="modal-body">
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                  Název kategorie
-                </label>
-                <input
-                  type="text"
-                  placeholder="např. Pekařství, Elektronika, Zahrada"
-                  value={newCategoryName}
-                  onChange={e => setNewCategoryName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '600'
-                  }}
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button
-                  type="button"
-                  className="nav-tab"
-                  onClick={() => setActiveModal(null)}
-                >
-                  Zrušit
-                </button>
-                <button
-                  type="submit"
-                  className="pay-btn pay-btn-card"
-                  style={{ height: '44px', padding: '0 1.25rem' }}
-                >
-                  <Check size={18} />
-                  <span>Vytvořit kategorii</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CategoryManagerModal
+          categories={categories}
+          onAddCategory={onAddCategory}
+          onEditCategory={onEditCategory}
+          onDeleteCategory={onDeleteCategory}
+          onClose={() => setActiveModal(null)}
+          onSelectCategory={(id) => setActiveCategory(id)}
+        />
       )}
     </div>
   );

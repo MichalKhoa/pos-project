@@ -26,6 +26,11 @@ class SaleModel(Base):
     id_provozovny = Column(String, default="11")
     id_pokl = Column(String, default="1")
     is_sent_to_eet = Column(Boolean, default=True)
+    is_refund = Column(Boolean, default=False)
+    original_receipt_number = Column(String, nullable=True)
+    refund_reason = Column(String, nullable=True)
+    refund_status = Column(String, default="NONE")    # 'NONE', 'PARTIAL', 'FULL'
+    refunded_amount = Column(Float, default=0.0)
 
     items = relationship("SaleItemModel", back_populates="sale", cascade="all, delete-orphan")
 
@@ -70,4 +75,27 @@ class StoreConfigModel(Base):
     eet_mode = Column(Integer, default=0) # 0 = standard online, 1 = simplified offline
     id_provozovny = Column(String, default="11")
     id_pokl = Column(String, default="1")
+
+
+class CategoryModel(Base):
+    """DB Model for Product Categories."""
+    __tablename__ = "categories"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    position = Column(Integer, default=0)
+
+
+class PresetModel(Base):
+    """DB Model for Quick Item Presets."""
+    __tablename__ = "presets"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    price = Column(Float, nullable=False, default=0.0)
+    category = Column(String, nullable=False, default="custom")
+    vat = Column(Integer, default=21)
+    color = Column(String, nullable=True)
+    is_open_price = Column(Boolean, default=False)
+    position = Column(Integer, default=0)
 

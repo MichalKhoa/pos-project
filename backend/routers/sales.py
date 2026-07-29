@@ -32,6 +32,16 @@ class CreateSaleSchema(BaseModel):
     changeDue: float = 0.0
     taxSummary: dict
     items: List[SaleItemSchema]
+    isRefund: Optional[bool] = False
+    originalReceiptNumber: Optional[str] = None
+    refundReason: Optional[str] = None
+    refundStatus: Optional[str] = "NONE"
+    refundedAmount: Optional[float] = 0.0
+
+
+class UpdateRefundStatusSchema(BaseModel):
+    refund_status: str
+    refunded_amount: float
 
 
 @router.get("/")
@@ -85,7 +95,12 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         eic_popl=store_dict["dic"],
         id_provozovny=store_dict["id_provozovny"],
         id_pokl=store_dict["id_pokl"],
-        is_sent_to_eet=eet_res.get("is_sent_to_eet", True)
+        is_sent_to_eet=eet_res.get("is_sent_to_eet", True),
+        is_refund=sale.isRefund,
+        original_receipt_number=sale.originalReceiptNumber,
+        refund_reason=sale.refundReason,
+        refund_status=sale.refundStatus or "NONE",
+        refunded_amount=sale.refundedAmount or 0.0
     )
 
     db.add(db_sale)
@@ -115,6 +130,19 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         "pkp": db_sale.pkp_code,
         "eet_status": db_sale.eet_status
     }
+
+
+@router.put("/{sale_id}/refund-status")
+def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: Session = Depends(get_db)):
+    """Update refund status and refunded amount of an existing sale."""
+    sale = db.query(SaleModel).filter(SaleModel.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    
+    sale.refund_status = data.refund_status
+    sale.refunded_amount = data.refunded_amount
+    db.commit()
+    return {"status": "UPDATED", "sale_id": sale_id}
 
 
 @router.delete("/{sale_id}")

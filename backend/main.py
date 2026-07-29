@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import sales, printer, display, payments, eet
+from routers import sales, printer, display, payments, eet, catalog
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +28,7 @@ app.add_middleware(
 
 # Include API Routers
 app.include_router(sales.router)
+app.include_router(catalog.router)
 app.include_router(eet.router)
 app.include_router(printer.router)
 app.include_router(display.router)

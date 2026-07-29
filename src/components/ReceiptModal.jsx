@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, CheckCircle, RotateCcw, QrCode, Smartphone, Check } from 'lucide-react';
 import { printReceiptBackend } from '../api/posApi';
+import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
 export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale }) {
   const [showQrModal, setShowQrModal] = useState(false);
@@ -72,6 +73,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         </head>
         <body>
           <div class="receipt-box">
+            <img src="${himmelLogo}" style="width: 32px; height: 32px; display: block; margin: 0 auto 4px auto;" />
             <div class="center bold" style="font-size: 13px;">${storeConfig.storeName}</div>
             <div class="center">${storeConfig.street}</div>
             <div class="center">${storeConfig.city}</div>
@@ -153,10 +155,10 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
   return (
     <div className="modal-overlay">
       <div className="modal-card" style={{ maxWidth: is58mm ? '360px' : '440px' }}>
-        <div className="modal-header">
+        <div className="modal-header" style={{ background: (saleData.isRefund || saleData.is_refund) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'var(--bg-input)' }}>
           <div className="modal-title">
-            <CheckCircle size={20} style={{ color: 'var(--accent-emerald)' }} />
-            <span>Prodej Dokončen</span>
+            <CheckCircle size={20} style={{ color: (saleData.isRefund || saleData.is_refund) ? '#fff' : 'var(--accent-emerald)' }} />
+            <span>{(saleData.isRefund || saleData.is_refund) ? 'STORNO DOKLAD / DOBROPIS' : 'Prodej Dokončen'}</span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
@@ -182,10 +184,20 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               <div>{storeConfig.street}</div>
               <div>{storeConfig.city}</div>
               <div style={{ marginTop: '4px' }}>IČO: {storeConfig.ico} | DIČ: {storeConfig.dic}</div>
-              <div style={{ marginTop: '6px', fontSize: '0.75rem', fontWeight: '700' }}>
-                ÚČTENKA č. {saleData.receiptNumber}
+              <div style={{ marginTop: '6px', fontSize: '0.75rem', fontWeight: '800', color: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : 'inherit' }}>
+                {(saleData.isRefund || saleData.is_refund) ? `STORNO DOKLAD č. ${saleData.receiptNumber}` : `ÚČTENKA č. ${saleData.receiptNumber}`}
               </div>
-              <div style={{ fontSize: '0.7rem' }}>
+              {(saleData.isRefund || saleData.is_refund) && (saleData.originalReceiptNumber || saleData.original_receipt_number) && (
+                <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#dc2626', marginTop: '2px' }}>
+                  Původní doklad č.: #{saleData.originalReceiptNumber || saleData.original_receipt_number}
+                </div>
+              )}
+              {(saleData.isRefund || saleData.is_refund) && (saleData.refundReason || saleData.refund_reason) && (
+                <div style={{ fontSize: '0.65rem', color: '#555', fontStyle: 'italic', marginTop: '2px' }}>
+                  Důvod: {saleData.refundReason || saleData.refund_reason}
+                </div>
+              )}
+              <div style={{ fontSize: '0.7rem', marginTop: '2px' }}>
                 {new Date(saleData.timestamp).toLocaleString('cs-CZ')}
               </div>
             </div>
@@ -216,8 +228,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               </tbody>
             </table>
 
-            <div className="receipt-total-row">
-              <span>CELKEM</span>
+            <div className="receipt-total-row" style={{ color: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : 'inherit' }}>
+              <span>CELKEM K {(saleData.isRefund || saleData.is_refund) ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
               <span>{saleData.totalAmount.toFixed(0)} Kč</span>
             </div>
 

@@ -296,7 +296,7 @@ export default function SettingsView({
                 type="text"
                 value={config.storeName}
                 onChange={e => setConfig({ ...config, storeName: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
+                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                 required
               />
             </div>
@@ -308,7 +308,7 @@ export default function SettingsView({
                   type="text"
                   value={config.street}
                   onChange={e => setConfig({ ...config, street: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
                 />
               </div>
@@ -319,7 +319,7 @@ export default function SettingsView({
                   type="text"
                   value={config.city}
                   onChange={e => setConfig({ ...config, city: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
                 />
               </div>
@@ -332,7 +332,7 @@ export default function SettingsView({
                   type="text"
                   value={config.ico}
                   onChange={e => setConfig({ ...config, ico: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
                 />
               </div>
@@ -343,7 +343,7 @@ export default function SettingsView({
                   type="text"
                   value={config.dic}
                   onChange={e => setConfig({ ...config, dic: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
                 />
               </div>
@@ -359,7 +359,7 @@ export default function SettingsView({
                   type="text"
                   value={config.id_provozovny || '11'}
                   onChange={e => setConfig({ ...config, id_provozovny: e.target.value })}
-                  style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '0.9rem', fontWeight: '700' }}
+                  style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
                   required
                 />
               </div>
@@ -372,7 +372,7 @@ export default function SettingsView({
                   type="text"
                   value={config.id_pokl || '1'}
                   onChange={e => setConfig({ ...config, id_pokl: e.target.value })}
-                  style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: '#fff', fontSize: '0.9rem', fontWeight: '700' }}
+                  style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
                   required
                 />
               </div>

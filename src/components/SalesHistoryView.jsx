@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, DollarSign, Banknote, CreditCard, Receipt, Eye, Lock, Unlock, Trash2, ShieldAlert, Calendar, BarChart3, PieChart, TrendingUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from 'lucide-react';
+import { Search, DollarSign, Banknote, CreditCard, Receipt, Eye, Lock, Unlock, Trash2, ShieldAlert, Calendar, BarChart3, PieChart, TrendingUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, RotateCcw } from 'lucide-react';
 import ReceiptModal from './ReceiptModal';
 
 const CZECH_MONTHS = [
@@ -13,7 +13,9 @@ export default function SalesHistoryView({
   isAdminMode,
   onToggleAdminMode,
   onDeleteSale,
-  onClearAllTestSales
+  onClearAllTestSales,
+  onInitiateRefund,
+  initialDateFilter = null
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSale, setSelectedSale] = useState(null);
@@ -41,11 +43,21 @@ export default function SalesHistoryView({
 
   const [fromDate, setFromDate] = useState(firstOfMonthStr);
   const [toDate, setToDate] = useState(todayStr);
+  const [docTypeFilter, setDocTypeFilter] = useState('all'); // 'all' | 'sales' | 'refunds'
+
+  // Apply initial date filter if passed (e.g. from CalendarModal)
+  useEffect(() => {
+    if (initialDateFilter) {
+      setPeriodFilter('custom');
+      setFromDate(initialDateFilter);
+      setToDate(initialDateFilter);
+    }
+  }, [initialDateFilter]);
 
   // Reset pagination when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, periodFilter, selectedYear, selectedMonth, fromDate, toDate, pageSize]);
+  }, [searchTerm, periodFilter, selectedYear, selectedMonth, fromDate, toDate, pageSize, docTypeFilter]);
 
   // Filter sales by selected time period, year, and month
   const periodFilteredSales = salesHistory.filter(sale => {
@@ -70,16 +82,23 @@ export default function SalesHistoryView({
     return true; // 'all'
   });
 
-  // Apply search query filter over period filtered sales
+  // Apply document type filter (sales vs stornos) and search query
   const searchFilteredSales = periodFilteredSales.filter(sale => {
     if (!sale) return false;
+    if (docTypeFilter === 'sales' && (sale.isRefund || sale.is_refund)) return false;
+    if (docTypeFilter === 'refunds' && !(sale.isRefund || sale.is_refund)) return false;
+
     const term = searchTerm.toLowerCase();
     const rNum = (sale.receiptNumber || sale.receipt_number || '').toString().toLowerCase();
+    const origNum = (sale.originalReceiptNumber || sale.original_receipt_number || '').toString().toLowerCase();
     const pMethod = (sale.paymentMethod || sale.payment_method || '').toLowerCase();
+    const reason = (sale.refundReason || sale.refund_reason || '').toLowerCase();
     const itemsList = Array.isArray(sale.items) ? sale.items : [];
     return (
       rNum.includes(term) ||
+      origNum.includes(term) ||
       pMethod.includes(term) ||
+      reason.includes(term) ||
       itemsList.some(i => (i.name || '').toLowerCase().includes(term))
     );
   });
@@ -501,12 +520,37 @@ export default function SalesHistoryView({
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div className="keypad-input-container" style={{ width: '280px' }}>
+            {/* Filter by document type: All vs Sales vs Refunds */}
+            <div style={{ display: 'flex', gap: '0.3rem', background: 'var(--bg-input)', padding: '0.2rem', borderRadius: 'var(--radius-md)' }}>
+              <button
+                className={`nav-tab ${docTypeFilter === 'all' ? 'active' : ''}`}
+                style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}
+                onClick={() => setDocTypeFilter('all')}
+              >
+                Vše
+              </button>
+              <button
+                className={`nav-tab ${docTypeFilter === 'sales' ? 'active' : ''}`}
+                style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}
+                onClick={() => setDocTypeFilter('sales')}
+              >
+                Pouze Běžné Prodeje
+              </button>
+              <button
+                className={`nav-tab ${docTypeFilter === 'refunds' ? 'active' : ''}`}
+                style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
+                onClick={() => setDocTypeFilter('refunds')}
+              >
+                Pouze Storno / Vratky
+              </button>
+            </div>
+
+            <div className="keypad-input-container" style={{ width: '260px' }}>
               <Search size={16} style={{ color: 'var(--text-muted)', marginRight: '8px' }} />
               <input
                 type="text"
                 className="keypad-label-input"
-                placeholder="Hledat č. účtenky / položku..."
+                placeholder="Hledat č. účtenky / položku / důvod..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
@@ -546,65 +590,124 @@ export default function SalesHistoryView({
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Číslo účtenky</th>
-                    <th>Datum & Čas</th>
+                    <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Číslo účtenky</th>
+                    <th style={{ width: '140px', whiteSpace: 'nowrap' }}>Datum & Čas</th>
                     <th>Položky</th>
-                    <th>Způsob úhrady</th>
-                    <th>Částka celkem</th>
-                    <th style={{ textAlign: 'right' }}>Akce</th>
+                    <th style={{ width: '160px' }}>Stav & Úhrada</th>
+                    <th style={{ width: '120px', textAlign: 'right', whiteSpace: 'nowrap' }}>Částka celkem</th>
+                    <th style={{ width: '220px', textAlign: 'right' }}>Akce</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedSales.map((sale) => (
-                    <tr key={sale.id}>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700' }}>
-                        #{sale.receiptNumber}
-                      </td>
-                      <td>
-                        <span style={{ fontSize: '0.85rem' }}>
-                          {new Date(sale.timestamp).toLocaleString('cs-CZ')}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          {sale.items.map(i => `${i.name} (${i.quantity}x)`).join(', ')}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="status-badge" style={{
-                          background: sale.paymentMethod === 'cash' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                          color: sale.paymentMethod === 'cash' ? 'var(--accent-emerald)' : 'var(--accent-blue)',
-                          borderColor: sale.paymentMethod === 'cash' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)'
-                        }}>
-                          {sale.paymentMethod === 'cash' ? 'Hotovost' : sale.paymentMethod === 'card' ? 'Karta' : 'QR'}
-                        </span>
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', color: 'var(--accent-emerald)' }}>
-                        {sale.totalAmount.toFixed(0)} Kč
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button
-                          className="nav-tab"
-                          style={{ padding: '0.35rem 0.75rem', display: 'inline-flex', marginRight: isAdminMode ? '0.5rem' : '0' }}
-                          onClick={() => setSelectedSale(sale)}
-                        >
-                          <Eye size={14} />
-                          <span>Detail / Tisk</span>
-                        </button>
+                  {paginatedSales.map((sale) => {
+                    const isRefund = sale.isRefund || sale.is_refund;
+                    const isFullyRefunded = sale.refundStatus === 'FULL' || sale.refund_status === 'FULL';
+                    const isPartiallyRefunded = sale.refundStatus === 'PARTIAL' || sale.refund_status === 'PARTIAL';
 
-                        {isAdminMode && (
-                          <button
-                            className="delete-item-btn"
-                            onClick={() => onDeleteSale(sale.id)}
-                            title="Smazat testovací prodej"
-                            style={{ padding: '0.35rem 0.5rem' }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                    return (
+                      <tr key={sale.id} style={{ background: isRefund ? 'rgba(239, 68, 68, 0.04)' : 'transparent' }}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                          <div>#{sale.receiptNumber}</div>
+                          {isRefund && sale.originalReceiptNumber && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                              K účtence: #{sale.originalReceiptNumber}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '0.85rem' }}>
+                            {new Date(sale.timestamp).toLocaleString('cs-CZ')}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ fontSize: '0.85rem', color: isRefund ? '#ef4444' : 'var(--text-secondary)' }}>
+                            {sale.items.map(i => `${i.name} (${i.quantity}x)`).join(', ')}
+                          </span>
+                          {isRefund && sale.refundReason && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '2px' }}>
+                              Důvod: {sale.refundReason}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {isRefund ? (
+                              <span className="status-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+                                STORNO DOKLAD
+                              </span>
+                            ) : isFullyRefunded ? (
+                              <span className="status-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+                                VRÁCENO KOMPLETNĚ
+                              </span>
+                            ) : isPartiallyRefunded ? (
+                              <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
+                                ČÁSTEČNĚ VRÁCENO (-{(sale.refundedAmount || 0).toFixed(0)} Kč)
+                              </span>
+                            ) : null}
+
+                            <span className="status-badge" style={{
+                              background: sale.paymentMethod === 'cash' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                              color: sale.paymentMethod === 'cash' ? 'var(--accent-emerald)' : 'var(--accent-blue)',
+                              borderColor: sale.paymentMethod === 'cash' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)'
+                            }}>
+                              {sale.paymentMethod === 'cash' ? 'Hotovost' : sale.paymentMethod === 'card' ? 'Karta' : 'QR'}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', textAlign: 'right', color: isRefund ? '#ef4444' : 'var(--accent-emerald)', whiteSpace: 'nowrap' }}>
+                          {sale.totalAmount.toFixed(0)} Kč
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                            {!isRefund && !isFullyRefunded && onInitiateRefund && (
+                              <button
+                                className="nav-tab"
+                                style={{
+                                  padding: '0.35rem 0.65rem',
+                                  fontSize: '0.8rem',
+                                  background: 'rgba(239, 68, 68, 0.1)',
+                                  color: '#ef4444',
+                                  borderColor: 'rgba(239, 68, 68, 0.3)',
+                                  whiteSpace: 'nowrap',
+                                  fontWeight: '700'
+                                }}
+                                onClick={() => onInitiateRefund(sale)}
+                                title="Vystavit vratku / storno účtenky"
+                              >
+                                <RotateCcw size={14} />
+                                <span>Storno / Vratka</span>
+                              </button>
+                            )}
+
+                            <button
+                              className="nav-tab"
+                              style={{
+                                padding: '0.35rem 0.65rem',
+                                fontSize: '0.8rem',
+                                whiteSpace: 'nowrap',
+                                fontWeight: '700'
+                              }}
+                              onClick={() => setSelectedSale(sale)}
+                            >
+                              <Eye size={14} />
+                              <span>Detail / Tisk</span>
+                            </button>
+
+                            {isAdminMode && (
+                              <button
+                                className="delete-item-btn"
+                                onClick={() => onDeleteSale(sale.id)}
+                                title="Smazat testovací prodej"
+                                style={{ padding: '0.35rem 0.5rem', whiteSpace: 'nowrap' }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

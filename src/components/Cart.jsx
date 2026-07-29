@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Tag, Split } from 'lucide-react';
+import React from 'react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split } from 'lucide-react';
 
 export default function Cart({
   cartItems,
@@ -9,11 +9,9 @@ export default function Cart({
   onOpenPayment,
   onUpdateItemDiscount,
   cartDiscountPercent = 0,
-  onSetCartDiscountPercent
+  onSetCartDiscountPercent,
+  onOpenCustomDiscount
 }) {
-  const [activeDiscountItem, setActiveDiscountItem] = useState(null);
-  const [showCartDiscountBar, setShowCartDiscountBar] = useState(false);
-
   // Calculate item effective gross totals after item-level discounts
   const rawSubtotal = cartItems.reduce((sum, item) => {
     const disc = item.discountPercent || 0;
@@ -54,68 +52,58 @@ export default function Cart({
   const sortedRates = Object.values(taxSummary).sort((a, b) => b.rate - a.rate);
   const totalNet = sortedRates.reduce((sum, t) => sum + t.net, 0);
   const totalTax = sortedRates.reduce((sum, t) => sum + t.tax, 0);
+  const totalItemCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Cart Header */}
       <div className="cart-header">
-        <div className="cart-title">
-          <ShoppingCart size={20} style={{ color: 'var(--accent-blue)' }} />
-          <span>Účtenka / Košík</span>
+        <div className="cart-title" style={{ flexShrink: 1, minWidth: 0 }}>
+          <ShoppingCart size={18} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
+          <span>Košík</span>
           {cartItems.length > 0 && (
-            <span className="qty-value" style={{ background: 'var(--accent-blue)', color: '#fff', borderRadius: '999px', fontSize: '0.75rem', padding: '2px 8px' }}>
-              {cartItems.reduce((sum, i) => sum + i.quantity, 0)}
+            <span className="cart-badge-count">
+              {totalItemCount}
             </span>
           )}
         </div>
 
         {cartItems.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0 }}>
+            {/* Open Custom Discount Modal for Cart */}
             <button
+              type="button"
               className="clear-cart-btn"
-              style={{ background: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.15)' : 'rgba(0,0,0,0.05)', color: cartDiscountPercent > 0 ? 'var(--accent-blue)' : 'var(--text-secondary)' }}
-              onClick={() => setShowCartDiscountBar(!showCartDiscountBar)}
+              style={{
+                background: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
+                color: cartDiscountPercent > 0 ? 'var(--accent-blue)' : 'var(--text-secondary)',
+                borderColor: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.3)' : 'var(--border-color)',
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.8rem',
+                fontWeight: '800'
+              }}
+              onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
               title="Sleva na celý košík"
             >
-              <Percent size={14} />
-              <span>Sleva {cartDiscountPercent > 0 ? `${cartDiscountPercent}%` : ''}</span>
+              <Percent size={13} />
+              <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : 'Sleva'}</span>
             </button>
 
-            <button className="clear-cart-btn" onClick={onClearCart}>
-              <Trash2 size={14} />
+            <button
+              type="button"
+              className="clear-cart-btn"
+              style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
+              onClick={onClearCart}
+              title="Vysypat celý košík"
+            >
+              <Trash2 size={13} />
               <span>Vysypat</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Cart Discount Selector Drawer */}
-      {showCartDiscountBar && cartItems.length > 0 && (
-        <div style={{
-          background: 'var(--bg-input)',
-          borderBottom: '1px solid var(--border-color)',
-          padding: '0.6rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          flexWrap: 'wrap'
-        }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>Sleva košíku:</span>
-          {[0, 5, 10, 15, 20, 50].map(pct => (
-            <button
-              key={pct}
-              className={`vat-btn ${cartDiscountPercent === pct ? 'active' : ''}`}
-              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
-              onClick={() => {
-                onSetCartDiscountPercent(pct);
-                setShowCartDiscountBar(false);
-              }}
-            >
-              {pct === 0 ? 'Bez slevy' : `-${pct}%`}
-            </button>
-          ))}
-        </div>
-      )}
-
+      {/* Cart Items List */}
       <div className="cart-items-container">
         {cartItems.length === 0 ? (
           <div className="empty-cart">
@@ -131,104 +119,83 @@ export default function Cart({
             const itemDisc = item.discountPercent || 0;
             const effectiveUnitPrice = item.price * (1 - itemDisc / 100);
             const lineTotal = effectiveUnitPrice * item.quantity;
-            const isDiscountOpen = activeDiscountItem === item.id;
 
             return (
-              <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div className="cart-item">
-                  <div className="cart-item-info">
-                    <div className="cart-item-name" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span>{item.name}</span>
-                      {itemDisc > 0 && (
-                        <span className="status-badge" style={{ padding: '1px 6px', fontSize: '0.7rem', background: 'rgba(225, 29, 72, 0.12)', color: 'var(--accent-rose)', borderColor: 'rgba(225, 29, 72, 0.3)' }}>
-                          -{itemDisc}%
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="cart-item-meta">
-                      {itemDisc > 0 ? (
-                        <>
-                          <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', marginRight: '4px' }}>
-                            {parseFloat(item.price).toFixed(2)} Kč
-                          </span>
-                          <span style={{ color: 'var(--accent-rose)', fontWeight: '700' }}>
-                            {effectiveUnitPrice.toFixed(2)} Kč
-                          </span>
-                        </>
-                      ) : (
-                        <span>{parseFloat(item.price).toFixed(2)} Kč</span>
-                      )}
-                      <span> × {item.quantity} (DPH {itemVat}%)</span>
-                    </div>
+              <div key={`${item.id}-${index}`} className="cart-item-card">
+                {/* Row 1 Top: Item Name & Action Buttons (%, Qty Stepper, Delete) */}
+                <div className="cart-item-row-top">
+                  <div className="cart-item-name-group">
+                    <span className="cart-item-name-text">{item.name}</span>
+                    {itemDisc > 0 && (
+                      <span className="cart-item-disc-tag">-{itemDisc}%</span>
+                    )}
                   </div>
 
-                  <div className="cart-item-right">
+                  <div className="cart-item-controls-group">
+                    {/* Open Custom Discount Modal directly for Item */}
                     <button
-                      className="qty-btn"
-                      style={{ background: itemDisc > 0 ? 'rgba(225, 29, 72, 0.15)' : 'var(--bg-card)', color: itemDisc > 0 ? 'var(--accent-rose)' : 'var(--text-secondary)' }}
-                      onClick={() => setActiveDiscountItem(isDiscountOpen ? null : item.id)}
-                      title="Sleva na položku"
+                      type="button"
+                      className={`cart-disc-btn ${itemDisc > 0 ? 'active' : ''}`}
+                      onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(item)}
+                      title="Sleva na položku (% / Kč)"
                     >
                       <Percent size={12} />
                     </button>
 
-                    <div className="qty-controls">
-                      <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>
-                        <Minus size={12} />
+                    <div className="cart-stepper-box">
+                      <button type="button" className="cart-stepper-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>
+                        <Minus size={10} />
                       </button>
-                      <span className="qty-value">{item.quantity}</span>
-                      <button className="qty-btn" onClick={() => onUpdateQty(item.id, item.quantity + 1)}>
-                        <Plus size={12} />
+                      <span className="cart-stepper-num">{item.quantity}</span>
+                      <button type="button" className="cart-stepper-btn" onClick={() => onUpdateQty(item.id, item.quantity + 1)}>
+                        <Plus size={10} />
                       </button>
                     </div>
 
-                    <div className="cart-item-price">
-                      {lineTotal.toFixed(2)} Kč
-                    </div>
-
-                    <button className="delete-item-btn" onClick={() => onRemoveItem(item.id)}>
-                      <Trash2 size={16} />
+                    <button type="button" className="cart-del-btn" onClick={() => onRemoveItem(item.id)} title="Smazat položku">
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
 
-                {/* Item-level discount selector drawer */}
-                {isDiscountOpen && (
-                  <div style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '0.4rem 0.6rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.3rem',
-                    marginLeft: '0.5rem'
-                  }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700' }}>Sleva položky:</span>
-                    {[0, 5, 10, 15, 20, 50].map(pct => (
-                      <button
-                        key={pct}
-                        className={`vat-btn ${itemDisc === pct ? 'active' : ''}`}
-                        style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }}
-                        onClick={() => {
-                          onUpdateItemDiscount(item.id, pct);
-                          setActiveDiscountItem(null);
-                        }}
-                      >
-                        {pct === 0 ? '0%' : `-${pct}%`}
-                      </button>
-                    ))}
+                {/* Row 2 Bottom: Unit Price breakdown (Left) & Line Total Price (Right) */}
+                <div className="cart-item-row-bottom">
+                  <div className="cart-item-unit-details">
+                    {itemDisc > 0 ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <s style={{ opacity: 0.5, fontSize: '0.72rem' }}>
+                          {parseFloat(item.price).toFixed(2)} Kč
+                        </s>
+                        <span style={{ color: 'var(--accent-rose)', fontWeight: '800' }}>
+                          {effectiveUnitPrice.toFixed(2)} Kč
+                        </span>
+                      </span>
+                    ) : (
+                      <span>{parseFloat(item.price).toFixed(2)} Kč</span>
+                    )}
+                    <span style={{ opacity: 0.6 }}> × {item.quantity} (DPH {itemVat}%)</span>
                   </div>
-                )}
+
+                  <div className="cart-item-line-total-price">
+                    {lineTotal.toFixed(2)} Kč
+                  </div>
+                </div>
               </div>
             );
           })
         )}
       </div>
 
+      {/* Cart Footer & Checkout Action Buttons */}
       <div className="cart-footer">
         <div className="summary-rows">
+          <div className="summary-row">
+            <span>Celkový počet položek:</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--text-primary)' }}>
+              {totalItemCount} ks
+            </span>
+          </div>
+
           {cartDiscountPercent > 0 && (
             <div className="summary-row" style={{ color: 'var(--accent-rose)', fontWeight: '700' }}>
               <span>Sleva na košík ({cartDiscountPercent}%):</span>
@@ -254,6 +221,7 @@ export default function Cart({
 
         <div className="payment-actions-grid">
           <button
+            type="button"
             className="pay-btn pay-btn-cash"
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('cash')}
@@ -263,6 +231,7 @@ export default function Cart({
           </button>
 
           <button
+            type="button"
             className="pay-btn pay-btn-card"
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('card')}
@@ -275,16 +244,18 @@ export default function Cart({
         {/* Split Payment Button */}
         {cartItems.length > 0 && (
           <button
+            type="button"
             className="nav-tab"
             style={{
               width: '100%',
-              justify: 'center',
-              padding: '0.5rem',
+              justifyContent: 'center',
+              padding: '0.6rem',
               fontSize: '0.85rem',
               background: 'rgba(124, 58, 237, 0.1)',
               color: 'var(--accent-purple)',
               border: '1px solid rgba(124, 58, 237, 0.3)',
-              fontWeight: '700'
+              fontWeight: '700',
+              cursor: 'pointer'
             }}
             onClick={() => onOpenPayment('split')}
           >
