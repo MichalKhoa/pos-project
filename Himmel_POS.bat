@@ -8,7 +8,13 @@ echo ========================================================
 echo Starting Hardware Backend...
 start "Himmel POS Backend" /min cmd /c "cd /d %~dp0backend && python main.py"
 
-:: 2. Launch Vite Web App Server silently in background
+:: 2. Launch Litestream Real-time Replication (if installed)
+if exist "%~dp0backend\litestream.exe" (
+    echo Starting Litestream Cloud Replication...
+    start "Himmel POS Litestream" /min cmd /c "cd /d %~dp0backend && litestream.exe replicate -config litestream.yml"
+)
+
+:: 3. Launch Vite Web App Server silently in background
 echo Starting Cashier Web Server...
 start "Himmel POS Web" /min cmd /c "cd /d %~dp0 && npm run dev"
 

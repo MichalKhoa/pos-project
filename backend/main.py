@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import sales, printer, display, payments, eet, catalog
+from routers import sales, printer, display, payments, eet, catalog, updater
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +40,7 @@ app.include_router(eet.router)
 app.include_router(printer.router)
 app.include_router(display.router)
 app.include_router(payments.router)
+app.include_router(updater.router)
 
 
 @app.get("/")

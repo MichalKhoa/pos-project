@@ -21,7 +21,9 @@ import {
   fetchEetStatus,
   verifyEetConnection,
   uploadEetCert,
-  processEetQueue
+  processEetQueue,
+  fetchUpdateStatus,
+  applySystemUpdate
 } from '../api/posApi';
 
 export default function SettingsView({
@@ -44,6 +46,13 @@ export default function SettingsView({
   const [backendLoading, setBackendLoading] = useState(true);
   const [eetStatusData, setEetStatusData] = useState(null);
 
+  // System Update State
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateData, setUpdateData] = useState(null);
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateResult, setUpdateResult] = useState(null);
+
   // Upload Form State
   const [selectedFile, setSelectedFile] = useState(null);
   const [certPassword, setCertPassword] = useState('');
@@ -57,6 +66,28 @@ export default function SettingsView({
   // Queue Processing State
   const [queueLoading, setQueueLoading] = useState(false);
   const [queueResult, setQueueResult] = useState(null);
+
+  // Check update status
+  const handleCheckUpdate = async () => {
+    setUpdateLoading(true);
+    const res = await fetchUpdateStatus();
+    if (res) {
+      setUpdateData(res);
+    }
+    setUpdateLoading(false);
+  };
+
+  const handleTriggerApplyUpdate = async () => {
+    setApplyLoading(true);
+    const res = await applySystemUpdate();
+    if (res) {
+      setUpdateResult(res);
+    } else {
+      setUpdateResult({ status: 'ERROR', message: 'Nepodařilo se navázat spojení s aktualizační službou.' });
+    }
+    setApplyLoading(false);
+    setShowUpdateModal(false);
+  };
 
   // Load backend status on mount
   const loadBackendInfo = async () => {
@@ -617,6 +648,61 @@ export default function SettingsView({
             </div>
           </div>
 
+          {/* System Updates Management */}
+          <div className="table-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <RefreshCw size={18} style={{ color: 'var(--accent-blue)' }} />
+              <span>Systémové Aktualizace (Vzdálený Git Update)</span>
+            </h3>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+              <div>
+                <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                  Aktuální verze: {updateData?.current_version?.hash ? `Commit #${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  {updateData?.is_update_available ? (
+                    <span style={{ color: 'var(--accent-amber)', fontWeight: 'bold' }}>
+                      ⚡ Dostupná nová verze ({updateData.behind_commits_count} nová změna/změny)
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--accent-emerald)' }}>
+                      ✓ Váš pokladní systém je plně aktuální
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className="nav-tab"
+                  disabled={updateLoading}
+                  onClick={handleCheckUpdate}
+                  style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
+                >
+                  <RefreshCw size={14} className={updateLoading ? 'spin' : ''} />
+                  <span>{updateLoading ? 'Zjišťování...' : 'Zkontrolovat'}</span>
+                </button>
+
+                {updateData?.is_update_available && (
+                  <button
+                    className="pay-btn pay-btn-card"
+                    onClick={() => setShowUpdateModal(true)}
+                    style={{ height: '38px', padding: '0 0.85rem', fontSize: '0.8rem' }}
+                  >
+                    <span>Aktualizovat systém</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {updateResult && (
+              <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: 'var(--radius-md)', background: updateResult.status === 'UPDATE_INITIATED' ? 'rgba(5, 150, 105, 0.12)' : 'rgba(225, 29, 72, 0.12)', border: `1px solid ${updateResult.status === 'UPDATE_INITIATED' ? 'rgba(5, 150, 105, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`, fontSize: '0.8rem' }}>
+                {updateResult.message}
+              </div>
+            )}
+          </div>
+
           {/* Backup Management */}
           <div className="table-card" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem' }}>Záloha a Správa Dat</h3>
@@ -645,6 +731,56 @@ export default function SettingsView({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal for System Update */}
+      {showUpdateModal && (
+        <div className="modal-overlay" onClick={() => setShowUpdateModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <div className="modal-title">
+                <RefreshCw size={20} style={{ color: 'var(--accent-blue)' }} />
+                <span>Potvrzení aktualizace pokladny</span>
+              </div>
+              <button className="close-modal-btn" onClick={() => setShowUpdateModal(false)}>✕</button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '1.25rem' }}>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                Opravdu chcete spustit aktualizaci pokladního systému?
+              </p>
+
+              {updateData?.latest_version && (
+                <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--accent-emerald)', marginBottom: '4px' }}>
+                    Nová verze #{updateData.latest_version.hash}
+                  </div>
+                  <div style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                    "{updateData.latest_version.message}"
+                  </div>
+                </div>
+              )}
+
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                Aplikace na malou chvíli ukončí pokladní rozhraní, stáhne nové soubory z Git repozitáře a automaticky se znovu spustí.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', padding: '1rem', borderTop: '1px solid var(--border-color)', justifyContent: 'flex-end' }}>
+              <button className="nav-tab" onClick={() => setShowUpdateModal(false)}>
+                Zrušit
+              </button>
+              <button
+                className="pay-btn pay-btn-card"
+                disabled={applyLoading}
+                onClick={handleTriggerApplyUpdate}
+                style={{ height: '42px', padding: '0 1.25rem' }}
+              >
+                <span>{applyLoading ? 'Spouštění...' : 'Stáhnout a instalovat'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

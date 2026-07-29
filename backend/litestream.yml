@@ -1,0 +1,37 @@
+# =========================================================
+# Litestream Configuration for Cloudflare R2 & SQLite
+# Himmel POS Real-Time Cloud Replication
+# =========================================================
+
+# Global Litestream Log Level (info, debug, warn, error)
+logging:
+  level: info
+
+# Databases to replicate
+dbs:
+  - path: ./pos_store.db
+    
+    # Real-time replica destinations
+    replicas:
+      - type: s3
+        # Cloudflare R2 S3-Compatible Storage Endpoint
+        # Replace <ACCOUNT_ID> with your Cloudflare Account ID (found on Cloudflare Dashboard URL or R2 overview page)
+        endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+        
+        # Cloudflare R2 Bucket Name
+        bucket: himmel-pos-backups
+        
+        # Directory path inside your R2 bucket for this POS register
+        path: store_01/pos_store.db
+
+        # Cloudflare R2 API Credentials (R2 Access Key & Secret Key)
+        # You can set these keys directly here, or set environment variables:
+        #   LITESTREAM_ACCESS_KEY_ID / AWS_ACCESS_KEY_ID
+        #   LITESTREAM_SECRET_ACCESS_KEY / AWS_SECRET_ACCESS_KEY
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
+
+        # Replication Intervals & Retention Policy
+        sync-interval: 1s          # Continuous real-time streaming delay
+        snapshot-interval: 24h     # Full database snapshot every 24 hours
+        retention: 72h             # Keep 3 days of point-in-time point recovery history

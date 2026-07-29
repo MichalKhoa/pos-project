@@ -344,3 +344,33 @@ export async function deletePresetBackend(presetId) {
     return null;
   }
 }
+
+/**
+ * Fetch Git system update status from backend
+ */
+export async function fetchUpdateStatus() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/update/status`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend update status unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Trigger remote system update & restart from backend
+ */
+export async function applySystemUpdate() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/update/apply`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('System update application failed:', err);
+    return null;
+  }
+}
