@@ -1,0 +1,28 @@
+# Security, PIN Authentication & Recovery Architecture
+
+Security practices, authentication workflows, cryptographic hashing, and PIN recovery mechanisms in Himmel POS.
+
+## 🔑 Cashier PIN Authentication & Hashing
+- **Server-Side Hashing:** Cashier PINs are stored as SHA-256 hex digests in the SQLite database (`store_config.cashier_pin`).
+- **Endpoint:** `POST /api/v1/config/verify-pin` compares SHA-256 hashes server-side.
+- **Privacy:** `GET /api/v1/config` never returns `cashierPin` in payload—only a `hasPin` boolean.
+- **Auto-Migration:** Plaintext PINs in legacy databases are automatically hashed on first successful verification.
+- **Offline Fallback:** If Python backend is unreachable, frontend falls back to localStorage PIN comparison.
+
+## 🛑 Lock Screen & Input Isolation
+- `LockScreenModal.jsx` handles PIN input.
+- Uses capture phase listener (`window.addEventListener('keydown', handleKeyDown, true)`) and `e.stopImmediatePropagation()` to isolate physical keyboard events.
+- Prevents PIN digits from leaking into underlying register inputs (`ManualKeypad.jsx`, `App.jsx`).
+
+## 🔑 PIN Recovery Mechanisms (PUK & Local Script)
+1. **Master Recovery Code (PUK):**
+   - In-app unlock on lock screen via `POST /api/v1/config/verify-puk`.
+   - Format: `HIMMEL-<ICO>-MASTER` or universal fallback `HIMMEL-RECOVERY-99`.
+   - Resets stored PIN to default `1234` and unlocks the screen.
+2. **Local Terminal Script:**
+   - `Himmel_POS_Reset_PIN.bat` directly executes an SQLite update in `pos_store.db` to set PIN hash to `1234`.
+
+## 🚀 Execution & Launcher Scripts
+- **Production Silent Mode (`Himmel_POS.bat`):** Runs FastAPI backend, Litestream, and Vite in background with no terminal windows; opens Edge POS app.
+- **Debug Mode (`Himmel_POS_Debug.bat`):** Launches dedicated terminal windows for backend, frontend, and litestream with Edge DevTools auto-opened.
+- **Windows Service (`WINDOWS_SERVICE_SETUP.md`):** Complete guide for setting up FastAPI backend via NSSM as a native Windows service starting at boot.
