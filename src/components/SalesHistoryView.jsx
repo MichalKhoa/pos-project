@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, DollarSign, Banknote, CreditCard, Receipt, Eye, Lock, Unlock, Trash2, ShieldAlert, Calendar, BarChart3, PieChart, TrendingUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, RotateCcw } from 'lucide-react';
 import ReceiptModal from './ReceiptModal';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const CZECH_MONTHS = [
   'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
@@ -17,6 +18,7 @@ export default function SalesHistoryView({
   onInitiateRefund,
   initialDateFilter = null
 }) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSale, setSelectedSale] = useState(null);
   const [periodFilter, setPeriodFilter] = useState('month'); // 'today' | 'month' | 'year' | 'all' | 'custom'
@@ -176,7 +178,7 @@ export default function SalesHistoryView({
       <div className="section-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div className="section-title" style={{ fontSize: '1.4rem' }}>
           <TrendingUp size={26} style={{ color: 'var(--accent-emerald)' }} />
-          <span>Statistiky Prodejů & Z-Zpráva</span>
+          <span>{t('history.stats_title')}</span>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -185,10 +187,10 @@ export default function SalesHistoryView({
               className="clear-cart-btn"
               style={{ padding: '0.4rem 0.85rem' }}
               onClick={onClearAllTestSales}
-              title="Smazat všechny testovací prodeje"
+              title={t('history.delete_test_sales')}
             >
               <Trash2 size={16} />
-              <span>Smazat Všechny Testovací Prodeje</span>
+              <span>{t('history.delete_test_sales')}</span>
             </button>
           )}
 
@@ -205,7 +207,7 @@ export default function SalesHistoryView({
             onClick={onToggleAdminMode}
           >
             {isAdminMode ? <Unlock size={16} /> : <Lock size={16} />}
-            <span>{isAdminMode ? 'Admin Režim: AKTIVNÍ' : 'Aktivovat Admin Režim'}</span>
+            <span>{isAdminMode ? t('history.admin_active') : t('history.admin_activate')}</span>
           </button>
         </div>
       </div>
@@ -224,7 +226,7 @@ export default function SalesHistoryView({
         }}>
           <ShieldAlert size={18} />
           <span>
-            <strong>Režim Správce (Admin) je aktivní:</strong> Můžete mazat testovací prodeje, které nemají vstupovat do účetnictví. Mazáním se okamžitě přepočítá denní tržba.
+            {t('history.admin_banner')}
           </span>
         </div>
       )}
@@ -234,13 +236,13 @@ export default function SalesHistoryView({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Calendar size={20} style={{ color: 'var(--accent-blue)' }} />
-            <span style={{ fontWeight: '800', fontSize: '1rem' }}>Vyberte Časové Období:</span>
+            <span style={{ fontWeight: '800', fontSize: '1rem' }}>{t('history.select_period')}</span>
           </div>
 
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Year Selector Dropdown */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Rok:</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{t('history.year_label')}:</span>
               <select
                 value={selectedYear}
                 onChange={e => {
@@ -282,7 +284,7 @@ export default function SalesHistoryView({
               style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
               onClick={() => setPeriodFilter('today')}
             >
-              Dnes
+              {t('history.today')}
             </button>
 
             <button
@@ -290,7 +292,7 @@ export default function SalesHistoryView({
               style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
               onClick={() => setPeriodFilter('month')}
             >
-              Vybraný Měsíc
+              {t('history.month')}
             </button>
 
             <button
@@ -298,7 +300,7 @@ export default function SalesHistoryView({
               style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
               onClick={() => setPeriodFilter('year')}
             >
-              Celý Rok {selectedYear}
+              {t('history.year')} {selectedYear}
             </button>
 
             <button
@@ -306,7 +308,7 @@ export default function SalesHistoryView({
               style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
               onClick={() => setPeriodFilter('all')}
             >
-              Všechna Data
+              {t('history.all_period')}
             </button>
 
             <button
@@ -315,7 +317,7 @@ export default function SalesHistoryView({
               onClick={() => setPeriodFilter('custom')}
             >
               <Filter size={14} />
-              <span>Vlastní Období</span>
+              <span>{t('history.custom_date')}</span>
             </button>
           </div>
         </div>
@@ -396,7 +398,7 @@ export default function SalesHistoryView({
             <DollarSign size={24} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Tržba ({getPeriodLabel()})</span>
+            <span className="metric-label">{t('history.revenue')} ({getPeriodLabel()})</span>
             <span className="metric-value">{totalRevenue.toFixed(0)} Kč</span>
           </div>
         </div>
@@ -406,7 +408,7 @@ export default function SalesHistoryView({
             <Banknote size={24} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Hotovost ({transactionCount > 0 ? ((cashRevenue / totalRevenue) * 100 || 0).toFixed(0) : 0}%)</span>
+            <span className="metric-label">{t('history.cash_revenue')} ({transactionCount > 0 ? ((cashRevenue / totalRevenue) * 100 || 0).toFixed(0) : 0}%)</span>
             <span className="metric-value">{cashRevenue.toFixed(0)} Kč</span>
           </div>
         </div>
@@ -416,7 +418,7 @@ export default function SalesHistoryView({
             <CreditCard size={24} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Karta / QR ({transactionCount > 0 ? ((cardRevenue / totalRevenue) * 100 || 0).toFixed(0) : 0}%)</span>
+            <span className="metric-label">{t('history.card_revenue')} / QR ({transactionCount > 0 ? ((cardRevenue / totalRevenue) * 100 || 0).toFixed(0) : 0}%)</span>
             <span className="metric-value">{cardRevenue.toFixed(0)} Kč</span>
           </div>
         </div>
@@ -426,8 +428,8 @@ export default function SalesHistoryView({
             <Receipt size={24} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Počet Účtenek (Průměr)</span>
-            <span className="metric-value">{transactionCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>({avgOrderValue.toFixed(0)} Kč/nákup)</span></span>
+            <span className="metric-label">{t('history.txn_count')}</span>
+            <span className="metric-value">{transactionCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>({avgOrderValue.toFixed(0)} Kč)</span></span>
           </div>
         </div>
       </div>
@@ -438,16 +440,16 @@ export default function SalesHistoryView({
         <div className="table-card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BarChart3 size={18} style={{ color: 'var(--accent-blue)' }} />
-            <span>Rozpis DPH ({getPeriodLabel()})</span>
+            <span>VAT Breakdown ({getPeriodLabel()})</span>
           </h3>
 
           <table className="data-table">
             <thead>
               <tr>
-                <th>Sazba DPH</th>
-                <th>Základ (Netto)</th>
-                <th>Daň (DPH)</th>
-                <th>Brutto (Celkem)</th>
+                <th>VAT %</th>
+                <th>Netto</th>
+                <th>VAT Amount</th>
+                <th>Brutto</th>
               </tr>
             </thead>
             <tbody>
@@ -456,7 +458,7 @@ export default function SalesHistoryView({
                   <td style={{ fontWeight: '700' }}>{t.rate}%</td>
                   <td style={{ fontFamily: 'var(--font-mono)' }}>{t.net.toFixed(2)} Kč</td>
                   <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', fontWeight: '700' }}>
-                    {t.rate === 0 ? 'Osvobozeno' : `${t.tax.toFixed(2)} Kč`}
+                    {t.tax.toFixed(2)} Kč
                   </td>
                   <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', color: 'var(--accent-emerald)' }}>
                     {t.gross.toFixed(2)} Kč
@@ -464,7 +466,7 @@ export default function SalesHistoryView({
                 </tr>
               ))}
               <tr style={{ borderTop: '2px solid var(--border-color)', fontWeight: '800' }}>
-                <td>CELKEM</td>
+                <td>TOTAL</td>
                 <td style={{ fontFamily: 'var(--font-mono)' }}>{totalNetto.toFixed(2)} Kč</td>
                 <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)' }}>{totalVat.toFixed(2)} Kč</td>
                 <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)' }}>{totalRevenue.toFixed(2)} Kč</td>
@@ -477,19 +479,19 @@ export default function SalesHistoryView({
         <div className="table-card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <PieChart size={18} style={{ color: 'var(--accent-purple)' }} />
-            <span>Tržby podle Kategorií Produktů</span>
+            <span>{t('history.category_sales')}</span>
           </h3>
 
           {sortedCategories.length === 0 ? (
-            <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>Žádné položky v tomto období.</div>
+            <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>No items in selected period.</div>
           ) : (
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Kategorie</th>
-                  <th>Prodáno ks</th>
-                  <th>Tržba (Kč)</th>
-                  <th>Podíl</th>
+                  <th>{t('presets.col_category')}</th>
+                  <th>{t('history.items_sold')}</th>
+                  <th>{t('history.revenue')} (Kč)</th>
+                  <th>{t('history.share')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -527,21 +529,21 @@ export default function SalesHistoryView({
                 style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}
                 onClick={() => setDocTypeFilter('all')}
               >
-                Vše
+                {t('history.all_docs')}
               </button>
               <button
                 className={`nav-tab ${docTypeFilter === 'sales' ? 'active' : ''}`}
                 style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}
                 onClick={() => setDocTypeFilter('sales')}
               >
-                Pouze Běžné Prodeje
+                {t('history.sales_only')}
               </button>
               <button
                 className={`nav-tab ${docTypeFilter === 'refunds' ? 'active' : ''}`}
                 style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
                 onClick={() => setDocTypeFilter('refunds')}
               >
-                Pouze Storno / Vratky
+                {t('history.refunds_only')}
               </button>
             </div>
 
@@ -550,14 +552,14 @@ export default function SalesHistoryView({
               <input
                 type="text"
                 className="keypad-label-input"
-                placeholder="Hledat č. účtenky / položku / důvod..."
+                placeholder={t('history.search_placeholder')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600' }}>
-              <span>Na stránku:</span>
+              <span>{t('history.per_page')}:</span>
               <select
                 value={pageSize}
                 onChange={e => setPageSize(parseInt(e.target.value, 10))}
@@ -590,12 +592,12 @@ export default function SalesHistoryView({
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Číslo účtenky</th>
-                    <th style={{ width: '140px', whiteSpace: 'nowrap' }}>Datum & Čas</th>
+                    <th style={{ width: '150px', whiteSpace: 'nowrap' }}>{t('history.col_receipt')}</th>
+                    <th style={{ width: '140px', whiteSpace: 'nowrap' }}>{t('history.col_date')}</th>
                     <th>Položky</th>
-                    <th style={{ width: '160px' }}>Stav & Úhrada</th>
-                    <th style={{ width: '120px', textAlign: 'right', whiteSpace: 'nowrap' }}>Částka celkem</th>
-                    <th style={{ width: '220px', textAlign: 'right' }}>Akce</th>
+                    <th style={{ width: '160px' }}>{t('history.col_method')}</th>
+                    <th style={{ width: '120px', textAlign: 'right', whiteSpace: 'nowrap' }}>{t('history.col_total')}</th>
+                    <th style={{ width: '220px', textAlign: 'right' }}>{t('history.col_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>

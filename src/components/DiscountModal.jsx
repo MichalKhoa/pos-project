@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Percent, Banknote, CheckCircle2, RotateCcw, Delete, Tag } from 'lucide-react';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const PCT_PRESETS = [5, 10, 15, 20, 25, 30, 50, 75];
 const AMT_PRESETS = [20, 50, 100, 200, 500, 1000];
@@ -8,10 +9,11 @@ export default function DiscountModal({
   isOpen,
   onClose,
   totalAmount,
-  selectedItem = null, // null for cart-level discount, or item object for item discount
-  onApplyDiscount // ({ type: 'percent'|'amount', value: number, scope: 'cart'|'item', itemId?: string }) => void
+  selectedItem = null,
+  onApplyDiscount
 }) {
-  const [discountType, setDiscountType] = useState('percent'); // 'percent' | 'amount'
+  const { t } = useTranslation();
+  const [discountType, setDiscountType] = useState('percent');
   const [valStr, setValStr] = useState('0');
   const [targetScope, setTargetScope] = useState(selectedItem ? 'item' : 'cart');
 
@@ -24,12 +26,10 @@ export default function DiscountModal({
 
   const numVal = parseFloat(valStr.replace(',', '.')) || 0;
 
-  // Calculate base reference amount depending on scope
   const referenceAmount = targetScope === 'item' && selectedItem
     ? (selectedItem.price * selectedItem.quantity)
     : totalAmount;
 
-  // Calculate savings
   let savingsAmount = 0;
   if (discountType === 'percent') {
     savingsAmount = referenceAmount * (Math.min(100, numVal) / 100);
@@ -84,13 +84,12 @@ export default function DiscountModal({
         <div className="modal-header">
           <div className="modal-title">
             <Percent size={22} style={{ color: 'var(--accent-purple)' }} />
-            <span>Vlastní Sleva</span>
+            <span>{t('discount.title')}</span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ gap: '0.9rem' }}>
-          {/* Target Scope Switcher (Cart vs Item) */}
           {selectedItem && (
             <div style={{ display: 'flex', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.3rem', borderRadius: 'var(--radius-md)' }}>
               <button
@@ -100,7 +99,7 @@ export default function DiscountModal({
                 onClick={() => setTargetScope('item')}
               >
                 <Tag size={15} />
-                <span>Položka: {selectedItem.name}</span>
+                <span>{t('discount.for_item')}: {selectedItem.name}</span>
               </button>
 
               <button
@@ -110,12 +109,11 @@ export default function DiscountModal({
                 onClick={() => setTargetScope('cart')}
               >
                 <Percent size={15} />
-                <span>Celý košík ({totalAmount.toFixed(0)} Kč)</span>
+                <span>{t('discount.for_cart')} ({totalAmount.toFixed(0)} Kč)</span>
               </button>
             </div>
           )}
 
-          {/* Discount Type Switcher (% vs Kč) */}
           <div style={{ display: 'flex', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.3rem', borderRadius: 'var(--radius-md)' }}>
             <button
               type="button"
@@ -124,7 +122,7 @@ export default function DiscountModal({
               onClick={() => { setDiscountType('percent'); setValStr('0'); }}
             >
               <Percent size={16} />
-              <span>Procentuální sleva (%)</span>
+              <span>{t('discount.percent_type')}</span>
             </button>
 
             <button
@@ -134,11 +132,10 @@ export default function DiscountModal({
               onClick={() => { setDiscountType('amount'); setValStr('0'); }}
             >
               <Banknote size={16} />
-              <span>Částková sleva (Kč)</span>
+              <span>{t('discount.amount_type')}</span>
             </button>
           </div>
 
-          {/* Large Discount Value Display & Real-time Savings Calculation */}
           <div style={{
             background: 'var(--bg-input)',
             border: '1.5px solid var(--border-color)',
@@ -150,7 +147,7 @@ export default function DiscountModal({
             gap: '0.3rem'
           }}>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              {discountType === 'percent' ? 'Zadaná Procentuální Sleva' : 'Zadaná Částka Slevy'}
+              {discountType === 'percent' ? t('discount.entered_percent') : t('discount.entered_amount')}
             </div>
             <div style={{
               fontFamily: 'var(--font-mono)',
@@ -161,7 +158,6 @@ export default function DiscountModal({
               {valStr} {discountType === 'percent' ? '%' : 'Kč'}
             </div>
 
-            {/* Savings readout */}
             <div style={{
               display: 'flex',
               justify: 'space-around',
@@ -172,15 +168,14 @@ export default function DiscountModal({
               fontSize: '0.88rem'
             }}>
               <span style={{ color: 'var(--accent-rose)', fontWeight: '800' }}>
-                Ušetříte: -{savingsAmount.toFixed(2)} Kč
+                {t('discount.savings')}: -{savingsAmount.toFixed(2)} Kč
               </span>
               <span style={{ color: 'var(--accent-emerald)', fontWeight: '800' }}>
-                Nová cena: {finalAmount.toFixed(2)} Kč
+                {t('discount.new_price')}: {finalAmount.toFixed(2)} Kč
               </span>
             </div>
           </div>
 
-          {/* Quick Preset Buttons */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
             {discountType === 'percent' ? (
               PCT_PRESETS.map(pct => (
@@ -213,11 +208,10 @@ export default function DiscountModal({
               style={{ color: 'var(--accent-rose)', padding: '0.55rem 0.4rem', fontWeight: '800' }}
               onClick={() => setValStr('0')}
             >
-              <RotateCcw size={14} /> Vynulovat
+              <RotateCcw size={14} /> {t('payment.reset')}
             </button>
           </div>
 
-          {/* On-Screen Touch Numpad Grid */}
           <div className="cash-numpad-container">
             <div className="cash-numpad-grid">
               {['7', '8', '9'].map(n => (
@@ -242,7 +236,6 @@ export default function DiscountModal({
             </div>
           </div>
 
-          {/* Apply Action Button */}
           <button
             type="button"
             className="pay-btn pay-btn-cash"
@@ -250,7 +243,7 @@ export default function DiscountModal({
             onClick={handleApply}
           >
             <CheckCircle2 size={22} />
-            <span>Aplikovat slevu (Ušetříte {savingsAmount.toFixed(0)} Kč)</span>
+            <span>{t('discount.apply_discount')} (-{savingsAmount.toFixed(0)} Kč)</span>
           </button>
         </div>
       </div>

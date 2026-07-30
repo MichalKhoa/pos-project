@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon, Globe } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function Navbar({
   activeTab,
@@ -11,8 +12,10 @@ export default function Navbar({
   pendingCount = 0,
   onOpenSyncModal,
   onOpenShutdownModal,
-  onOpenCalendarModal
+  onOpenCalendarModal,
+  onLockApp
 }) {
+  const { t, language, setLanguage, languages } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('pos_theme') || 'light';
@@ -71,7 +74,7 @@ export default function Navbar({
           onClick={() => setActiveTab('register')}
         >
           <ShoppingBag size={18} />
-          <span>Pokladna</span>
+          <span>{t('nav.register')}</span>
         </button>
 
         <button
@@ -79,7 +82,7 @@ export default function Navbar({
           onClick={() => setActiveTab('presets')}
         >
           <Tag size={18} />
-          <span>Katalog položek</span>
+          <span>{t('nav.presets')}</span>
         </button>
 
         <button
@@ -87,7 +90,7 @@ export default function Navbar({
           onClick={() => setActiveTab('history')}
         >
           <History size={18} />
-          <span>Historie prodejů</span>
+          <span>{t('nav.history')}</span>
         </button>
 
         <button
@@ -95,11 +98,34 @@ export default function Navbar({
           onClick={() => setActiveTab('settings')}
         >
           <Settings size={18} />
-          <span>Nastavení</span>
+          <span>{t('nav.settings')}</span>
         </button>
       </nav>
 
       <div className="nav-meta">
+        {/* Language Switcher Dropdown */}
+        <div className="status-badge" style={{ padding: '0.4rem 0.6rem', background: 'var(--bg-main)' }}>
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+            style={{
+              background: 'transparent',
+              color: 'var(--text-primary)',
+              border: 'none',
+              fontSize: '0.8rem',
+              fontWeight: '800',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+          >
+            {languages.map(l => (
+              <option key={l.code} value={l.code} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                {l.flag} {l.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Combined EET 2.0 & Online Latency Status Pill */}
         <div
           className="status-badge"
@@ -109,7 +135,7 @@ export default function Navbar({
           <span className={isOnline ? 'status-dot' : 'status-dot-offline'} style={{ background: isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}></span>
           <ShieldCheck size={14} style={{ color: isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
           <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>
-            EET 2.0 • {isOnline ? `${latency !== null ? latency : 12}ms` : 'Offline'}
+            EET 2.0 • {isOnline ? `${latency !== null ? latency : 12}ms` : t('nav.offline')}
           </span>
         </div>
 
@@ -131,7 +157,7 @@ export default function Navbar({
             title="Klikněte pro odeslání neodeslaných účtenek na EET"
           >
             <AlertTriangle size={14} />
-            <span>{pendingCount} Neodesláno</span>
+            <span>{pendingCount} {t('nav.not_sent')}</span>
           </button>
         )}
 
@@ -148,7 +174,18 @@ export default function Navbar({
           title={isAdminMode ? 'Režim správce je AKTIVNÍ' : 'Klikněte pro aktivaci Admin režimu'}
         >
           {isAdminMode ? <Unlock size={14} /> : <Lock size={14} />}
-          <span>{isAdminMode ? 'Admin' : 'Správce'}</span>
+          <span>{isAdminMode ? t('nav.admin_active') : t('nav.admin')}</span>
+        </button>
+
+        {/* Streamlined Quick Lock Icon Button */}
+        <button
+          type="button"
+          className="status-badge"
+          style={{ cursor: 'pointer', padding: '0.4rem 0.6rem', background: 'var(--bg-main)' }}
+          onClick={onLockApp}
+          title="Zamknout pokladnu (Quick Lock)"
+        >
+          <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
         </button>
 
         <button
@@ -158,7 +195,7 @@ export default function Navbar({
           style={{ cursor: 'pointer' }}
         >
           <Power size={14} />
-          <span>Vypnout</span>
+          <span>{t('nav.shutdown')}</span>
         </button>
 
         <button

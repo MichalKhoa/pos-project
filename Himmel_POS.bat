@@ -1,28 +1,28 @@
 @echo off
-title Himmel POS Launcher
+title Himmel POS — Silent Kiosk Launcher
 echo ========================================================
-echo   Starting Himmel POS for Windows Touchscreen Monitor...
+echo   Starting Himmel POS (Production Silent Mode)...
 echo ========================================================
 
-:: 1. Launch Python FastAPI Backend silently in background
-echo Starting Hardware Backend...
-start "Himmel POS Backend" /min cmd /c "cd /d %~dp0backend && python main.py"
+:: 1. Launch Python FastAPI Backend completely hidden (VB script runner)
+echo Starting Python Backend Service (Silent)...
+start /B venv\bin\python backend\main.py >nul 2>&1 || start /B python backend\main.py >nul 2>&1
 
-:: 2. Launch Litestream Real-time Replication (if installed)
+:: 2. Launch Litestream Replication silently if present
 if exist "%~dp0backend\litestream.exe" (
-    echo Starting Litestream Cloud Replication...
-    start "Himmel POS Litestream" /min cmd /c "cd /d %~dp0backend && litestream.exe replicate -config litestream.yml"
+    echo Starting Database Replication (Silent)...
+    start /B backend\litestream.exe replicate -config backend\litestream.yml >nul 2>&1
 )
 
-:: 3. Launch Vite Web App Server silently in background
-echo Starting Cashier Web Server...
-start "Himmel POS Web" /min cmd /c "cd /d %~dp0 && npm run dev"
+:: 3. Launch Vite Web App Server silently
+echo Starting Cashier Interface (Silent)...
+start /B npm run dev >nul 2>&1
 
-:: 3. Wait 3 seconds for servers to initialize
+:: 4. Wait for initialization
 timeout /t 3 /nobreak >nul
 
-:: 4. Open Cashier App in Full-Screen Desktop Window Mode
-echo Opening Cashier Application on Touchscreen Monitor...
+:: 5. Open Edge in Kiosk Window Mode
+echo Opening Cashier Display...
 start "Himmel POS App" msedge --app=http://localhost:5173 --start-maximized
 
-echo Done! Himmel POS is now running.
+echo Himmel POS is running in silent mode.

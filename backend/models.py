@@ -76,6 +76,19 @@ class StoreConfigModel(Base):
     id_provozovny = Column(String, default="11")
     id_pokl = Column(String, default="1")
 
+    # CSOB Payment Terminal Ingenico Move 3500 Configuration
+    csob_terminal_enabled = Column(Boolean, default=False)
+    csob_terminal_ip = Column(String, default="")
+    csob_terminal_port = Column(Integer, default=8888)
+    csob_terminal_id = Column(String, default="")
+
+    # Cashier Lock & Security Configuration
+    cashier_pin = Column(String, default="1234")
+    auto_lock_minutes = Column(Integer, default=15)
+
+    # Hardware Direct Silent Printing vs Browser Debug Preview
+    direct_hardware_print = Column(Boolean, default=True)
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

@@ -1,6 +1,95 @@
+import os
+import glob
+import subprocess
 import logging
 
 logger = logging.getLogger("pos-escpos")
+
+
+def detect_connected_printers():
+    """
+    Scans host system for connected thermal printer hardware devices:
+    - USB Direct Nodes (/dev/usb/lp*, /dev/usblp*)
+    - Serial/TTY Nodes (/dev/ttyUSB*, /dev/ttyACM*)
+    - CUPS System Printers
+    - Network / Browser Print
+    """
+    devices = []
+
+    # 1. Check USB Thermal Printer character devices (/dev/usb/lp0, lp1, etc.)
+    usb_paths = sorted(glob.glob("/dev/usb/lp*") + glob.glob("/dev/usblp*"))
+    for idx, path in enumerate(usb_paths):
+        devices.append({
+            "id": path,
+            "name": f"USB Tiskárna účtenek ({path})",
+            "interface": "USB",
+            "address": path,
+            "status": "CONNECTED",
+            "is_default": idx == 0
+        })
+
+    # 2. Check Serial/TTY POS Printer ports (/dev/ttyUSB*, /dev/ttyACM*)
+    tty_paths = sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/ttyACM*"))
+    for path in tty_paths:
+        devices.append({
+            "id": path,
+            "name": f"Sériová TTY Tiskárna ({path})",
+            "interface": "SERIAL",
+            "address": path,
+            "status": "CONNECTED",
+            "is_default": False
+        })
+
+    # 3. Check CUPS System Printers via lpstat if available
+    try:
+        res = subprocess.run(["lpstat", "-p"], capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            for line in res.stdout.splitlines():
+                if "printer" in line:
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        pname = parts[1]
+                        devices.append({
+                            "id": f"cups-{pname}",
+                            "name": f"Systémová tiskárna CUPS ({pname})",
+                            "interface": "CUPS",
+                            "address": pname,
+                            "status": "CONNECTED",
+                            "is_default": False
+                        })
+    except Exception:
+        pass
+
+    # 4. Fallback Default USB device if no physical hardware detected
+    if not devices:
+        devices.append({
+            "id": "/dev/usb/lp0",
+            "name": "USB Tiskárna účtenek (/dev/usb/lp0)",
+            "interface": "USB",
+            "address": "/dev/usb/lp0",
+            "status": "DEFAULT",
+            "is_default": True
+        })
+
+    # 5. Network Printer & Web Browser Print Option
+    devices.append({
+        "id": "network-custom",
+        "name": "Síťová tiskárna (Ethernet / Wi-Fi IP)",
+        "interface": "NETWORK",
+        "address": "192.168.1.100",
+        "status": "CUSTOM",
+        "is_default": False
+    })
+    devices.append({
+        "id": "browser-print",
+        "name": "Webový systémový tisk (Pop-up window)",
+        "interface": "BROWSER",
+        "address": "window.print()",
+        "status": "VIRTUAL",
+        "is_default": False
+    })
+
+    return devices
 
 
 class ESCPOSPrinterService:
@@ -18,13 +107,14 @@ class ESCPOSPrinterService:
         Prints a formatted 58mm or 80mm thermal receipt using python-escpos.
         If physical printer is not connected, logs receipt output cleanly to console.
         """
-        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80")))
-        is_58mm = paper_width in ["58", "48"]
-        line_width = 32 if is_58mm else 48
-        name_width = 14 if is_58mm else 24
-        print_mm = "48mm (58mm rola)" if is_58mm else "72mm (80mm rola)"
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_a4 = paper_width == "A4"
+        is_58mm = not is_a4 and paper_width in ["58", "48"]
+        line_width = 80 if is_a4 else (32 if is_58mm else 48)
+        name_width = 40 if is_a4 else (14 if is_58mm else 24)
+        print_mm = "Formát A4 (Faktura / Daňový Doklad)" if is_a4 else ("48mm (58mm rola)" if is_58mm else "72mm (80mm rola)")
 
-        logger.info(f"Printing {print_mm} thermal receipt #{sale_data.get('receiptNumber')} via {self.interface_type}")
+        logger.info(f"Printing {print_mm} receipt #{sale_data.get('receiptNumber')} via {self.interface_type}")
 
         try:
             separator = "=" * line_width

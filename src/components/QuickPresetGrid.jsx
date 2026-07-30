@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const COLOR_OPTIONS = [
   '#3b82f6', // Blue
@@ -28,6 +29,7 @@ export default function QuickPresetGrid({
   keypadAmount = '',
   onClearKeypadAmount
 }) {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -273,9 +275,9 @@ export default function QuickPresetGrid({
       <div className="section-header">
         <div className="section-title">
           <Layers size={18} style={{ color: 'var(--accent-blue)' }} />
-          <span>Rychlá Volba Položek</span>
+          <span>{t('presets.title')}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-            ({filteredPresets.length} položek)
+            ({filteredPresets.length})
           </span>
         </div>
 
@@ -286,7 +288,7 @@ export default function QuickPresetGrid({
             <input
               type="text"
               className="keypad-label-input"
-              placeholder="Hledat položku..."
+              placeholder={t('presets.search')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}
@@ -314,7 +316,7 @@ export default function QuickPresetGrid({
             onClick={() => setIsEditMode(!isEditMode)}
           >
             {isEditMode ? <Check size={14} /> : <Settings2 size={14} />}
-            <span>{isEditMode ? 'Hotovo' : 'Upravit tlačítka'}</span>
+            <span>{isEditMode ? 'OK' : t('presets.edit')}</span>
           </button>
         </div>
       </div>
@@ -326,7 +328,7 @@ export default function QuickPresetGrid({
             className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
             onClick={() => setActiveCategory(cat.id)}
           >
-            {cat.name}
+            {cat.id === 'all' ? t('presets.all') : cat.name}
           </button>
         ))}
 
@@ -334,10 +336,10 @@ export default function QuickPresetGrid({
           className="category-chip"
           style={{ borderStyle: 'dashed', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
           onClick={() => setActiveModal('category')}
-          title="Přidat, upravit nebo smazat kategorie"
+          title={t('presets.manage_categories')}
         >
           <Settings2 size={14} />
-          <span>Spravovat kategorie</span>
+          <span>{t('presets.add_category')}</span>
         </button>
       </div>
 
@@ -354,7 +356,7 @@ export default function QuickPresetGrid({
           gap: '0.5rem'
         }}>
           <Edit3 size={14} />
-          <span>Režim úprav: Přetáhněte tlačítko (Drag & Drop) nebo použijte šipky pro změnu pozice. Kliknutím upravíte cenu a název.</span>
+          <span>Edit mode: Drag & drop to reorder. Click item to edit price & name.</span>
         </div>
       )}
 
@@ -466,7 +468,7 @@ export default function QuickPresetGrid({
 
         <button className="preset-card preset-add-card" onClick={handleOpenAddModal}>
           <Plus size={24} />
-          <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Přidat tlačítko</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>{t('presets.add_preset')}</span>
         </button>
       </div>
 
@@ -477,14 +479,14 @@ export default function QuickPresetGrid({
             <div className="modal-header">
               <div className="modal-title">
                 <Calculator size={20} style={{ color: 'var(--accent-amber)' }} />
-                <span>Zadejte cenu: {openPriceTarget.name}</span>
+                <span>{openPriceTarget.name}</span>
               </div>
               <button className="close-modal-btn" onClick={() => setOpenPriceTarget(null)}>✕</button>
             </div>
 
             <form onSubmit={handleConfirmOpenPrice} className="modal-body">
               <div className="tender-display" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
-                <span className="tender-label">Částka v Kč s DPH ({openPriceTarget.vat}% DPH)</span>
+                <span className="tender-label">{t('presets.price')} ({openPriceTarget.vat}% VAT)</span>
                 <div style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: '2.2rem',
@@ -504,7 +506,7 @@ export default function QuickPresetGrid({
                       const parts = prev.split('.');
                       if (parts[1] && parts[1].length >= 2) return prev;
                     }
-                    return prev.length < 8 ? prev + num : prev;
+                    return prev.length < 10 ? prev + num : prev;
                   })}>{num}</button>
                 ))}
                 <button
@@ -522,7 +524,7 @@ export default function QuickPresetGrid({
                       const parts = prev.split('.');
                       if (parts[1] && parts[1].length >= 2) return prev;
                     }
-                    return prev.length < 8 ? prev + num : prev;
+                    return prev.length < 10 ? prev + num : prev;
                   })}>{num}</button>
                 ))}
                 <button
@@ -540,7 +542,7 @@ export default function QuickPresetGrid({
                       const parts = prev.split('.');
                       if (parts[1] && parts[1].length >= 2) return prev;
                     }
-                    return prev.length < 8 ? prev + num : prev;
+                    return prev.length < 10 ? prev + num : prev;
                   })}>{num}</button>
                 ))}
                 <button
@@ -560,7 +562,7 @@ export default function QuickPresetGrid({
                     const parts = prev.split('.');
                     if (parts[1] && parts[1].length >= 2) return prev;
                   }
-                  return prev.length < 8 ? prev + '0' : prev;
+                  return prev.length < 10 ? prev + '0' : prev;
                 })}>0</button>
 
                 <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2' }} onClick={() => setEnteredOpenPrice(prev => {
@@ -568,7 +570,7 @@ export default function QuickPresetGrid({
                     const parts = prev.split('.');
                     if (parts[1] && parts[1].length >= 2) return prev;
                   }
-                  return prev.length < 8 ? prev + '00' : prev;
+                  return prev.length < 10 ? prev + '00' : prev;
                 })}>00</button>
               </div>
 
@@ -579,7 +581,7 @@ export default function QuickPresetGrid({
                   style={{ flex: 1, justifyContent: 'center', height: '48px' }}
                   onClick={() => setOpenPriceTarget(null)}
                 >
-                  Zrušit
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -588,7 +590,7 @@ export default function QuickPresetGrid({
                   disabled={!enteredOpenPrice || parseFloat(enteredOpenPrice) <= 0}
                 >
                   <Check size={18} />
-                  <span>Vložit do košíku</span>
+                  <span>{t('keypad.add_to_cart')}</span>
                 </button>
               </div>
             </form>
@@ -603,7 +605,7 @@ export default function QuickPresetGrid({
             <div className="modal-header">
               <div className="modal-title">
                 <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-                <span>{activeModal === 'add' ? 'Nové Rychlé Tlačítko' : `Upravit: ${editingPreset?.name}`}</span>
+                <span>{activeModal === 'add' ? t('presets.add_preset_title') : t('presets.edit_preset_title')}</span>
               </div>
               <button className="close-modal-btn" onClick={() => setActiveModal(null)}>✕</button>
             </div>
@@ -611,11 +613,11 @@ export default function QuickPresetGrid({
             <form onSubmit={handleSubmitForm} className="modal-body">
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                  Název položky
+                  {t('presets.preset_name')}
                 </label>
                 <input
                   type="text"
-                  placeholder="např. Keramická váza nebo Volné zboží"
+                  placeholder="..."
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
                   style={{
@@ -647,7 +649,7 @@ export default function QuickPresetGrid({
                   style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-amber)' }}
                 />
                 <label htmlFor="isOpenPrice" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                  Otevřená cena (Zadat částku až při prodeji na pokladně)
+                  {t('presets.open_price_label')}
                 </label>
               </div>
 
@@ -655,7 +657,7 @@ export default function QuickPresetGrid({
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                      Pevná cena v Kč s DPH
+                      {t('presets.price')}
                     </label>
                     <input
                       type="number"
@@ -678,7 +680,7 @@ export default function QuickPresetGrid({
 
                   <div style={{ width: '130px' }}>
                     <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                      Sazba DPH
+                      {t('presets.vat_rate')}
                     </label>
                     <select
                       value={formData.vat}
@@ -692,9 +694,9 @@ export default function QuickPresetGrid({
                         color: '#ffffff'
                       }}
                     >
-                      <option value={21}>21% (Základní)</option>
-                      <option value={12}>12% (Snížená)</option>
-                      <option value={0}>0% (Osvobozeno)</option>
+                      <option value={21}>21%</option>
+                      <option value={12}>12%</option>
+                      <option value={0}>0%</option>
                     </select>
                   </div>
                 </div>
@@ -703,7 +705,7 @@ export default function QuickPresetGrid({
               {formData.isOpenPrice && (
                 <div style={{ width: '100%' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                    Sazba DPH pro volnou cenu
+                    {t('presets.vat_rate')}
                   </label>
                   <select
                     value={formData.vat}
@@ -717,9 +719,9 @@ export default function QuickPresetGrid({
                       color: '#ffffff'
                     }}
                   >
-                    <option value={21}>21% (Základní)</option>
-                    <option value={12}>12% (Snížená)</option>
-                    <option value={0}>0% (Osvobozeno)</option>
+                    <option value={21}>21%</option>
+                    <option value={12}>12%</option>
+                    <option value={0}>0%</option>
                   </select>
                 </div>
               )}
@@ -727,14 +729,14 @@ export default function QuickPresetGrid({
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Kategorie
+                    {t('presets.col_category')}
                   </label>
                   <button
                     type="button"
                     style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.75rem', fontWeight: '600' }}
                     onClick={() => setActiveModal('category')}
                   >
-                    + Nová kategorie
+                    + {t('presets.add_category')}
                   </button>
                 </div>
                 <select
@@ -757,7 +759,7 @@ export default function QuickPresetGrid({
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                  Barva tlačítka
+                  {t('presets.color_label')}
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {COLOR_OPTIONS.map(c => (
@@ -786,7 +788,7 @@ export default function QuickPresetGrid({
                     onClick={() => handleDelete(editingPreset.id)}
                   >
                     <Trash2 size={16} />
-                    <span>Smazat</span>
+                    <span>{t('presets.delete')}</span>
                   </button>
                 ) : <div />}
 
@@ -796,7 +798,7 @@ export default function QuickPresetGrid({
                     className="nav-tab"
                     onClick={() => setActiveModal(null)}
                   >
-                    Zrušit
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -804,7 +806,7 @@ export default function QuickPresetGrid({
                     style={{ height: '44px', padding: '0 1.25rem' }}
                   >
                     <Check size={18} />
-                    <span>{activeModal === 'add' ? 'Přidat' : 'Uložit Změny'}</span>
+                    <span>{activeModal === 'add' ? t('presets.add_category_btn') : t('common.save')}</span>
                   </button>
                 </div>
               </div>

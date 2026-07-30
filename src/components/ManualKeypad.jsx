@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, Delete, PlusCircle, Sparkles } from 'lucide-react';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -7,6 +8,7 @@ export default function ManualKeypad({
   setAmountStr,
   defaultVat = 21
 }) {
+  const { t } = useTranslation();
   const [label, setLabel] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => defaultVat !== undefined ? parseInt(defaultVat, 10) : 21);
   const [activeKey, setActiveKey] = useState(null);
@@ -51,7 +53,7 @@ export default function ManualKeypad({
       if (parts[1] && parts[1].length >= 2) return;
     }
 
-    if (amountStr.length >= 8) return;
+    if (amountStr.length >= 10) return;
 
     setAmountStr(prev => prev + val);
   };
@@ -112,7 +114,7 @@ export default function ManualKeypad({
       <div className="section-header" style={{ marginBottom: '0.2rem' }}>
         <div className="section-title">
           <Calculator size={20} style={{ color: 'var(--accent-emerald)' }} />
-          <span style={{ fontSize: '1.05rem', fontWeight: '800' }}>Ruční Zadání Částky</span>
+          <span style={{ fontSize: '1.05rem', fontWeight: '800' }}>{t('keypad.manual_title')}</span>
         </div>
       </div>
 
@@ -121,7 +123,7 @@ export default function ManualKeypad({
         <input
           type="text"
           className="keypad-label-input"
-          placeholder="Název / popis položky (volitelné)..."
+          placeholder={t('keypad.item_placeholder')}
           value={label}
           onChange={e => setLabel(e.target.value)}
           style={{ fontSize: '1.05rem', padding: '0.4rem 0' }}
@@ -143,11 +145,11 @@ export default function ManualKeypad({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
           <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Částka k úhradě
+            {t('keypad.amount_label')}
           </span>
           {hasValidAmount && (
             <span style={{ fontSize: '0.78rem', color: 'var(--accent-emerald)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <Sparkles size={13} /> Připraveno
+              <Sparkles size={13} /> {t('keypad.ready')}
             </span>
           )}
         </div>
@@ -197,7 +199,7 @@ export default function ManualKeypad({
           type="button"
           className={`key-btn key-action ${activeKey === 'BACK' ? 'active-press' : ''}`}
           onClick={() => handleKeyPress('BACK')}
-          title="Smazat znak (Backspace)"
+          title="Backspace"
         >
           <Delete size={24} />
         </button>
@@ -217,7 +219,7 @@ export default function ManualKeypad({
           type="button"
           className={`key-btn key-action ${activeKey === 'CLEAR' ? 'active-press' : ''}`}
           onClick={() => handleKeyPress('CLEAR')}
-          title="Vynulovat (Clear)"
+          title="Clear"
         >
           C
         </button>
@@ -237,7 +239,7 @@ export default function ManualKeypad({
           type="button"
           className={`key-btn ${activeKey === '.' ? 'active-press' : ''}`}
           onClick={() => handleKeyPress('.')}
-          title="Desetinná čárka (,)"
+          title=","
         >
           ,
         </button>
@@ -268,7 +270,7 @@ export default function ManualKeypad({
           type="button"
           className={`key-btn ${activeKey === '.00' ? 'active-press' : ''}`}
           onClick={() => handleKeyPress('.00')}
-          title="Přidat .00"
+          title=".00"
         >
           .00
         </button>
@@ -282,7 +284,7 @@ export default function ManualKeypad({
           disabled={!hasValidAmount}
         >
           <PlusCircle size={24} />
-          <span>{hasValidAmount ? 'Přidat do Košíku' : 'Zadejte Částku'}</span>
+          <span>{hasValidAmount ? t('keypad.add_to_cart') : t('keypad.enter_amount')}</span>
         </button>
       </div>
     </div>

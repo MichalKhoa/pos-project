@@ -232,6 +232,21 @@ export async function printReceiptBackend(saleData, storeConfig) {
 }
 
 /**
+ * Scan and fetch list of connected hardware printer devices from backend
+ */
+export async function fetchPrinterDevices() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/devices`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data?.devices || [];
+  } catch (err) {
+    console.warn('Failed to scan printer devices:', err);
+    return [];
+  }
+}
+
+/**
  * Fetch product categories from backend database
  */
 export async function fetchCategoriesBackend() {
@@ -374,3 +389,156 @@ export async function applySystemUpdate() {
     return null;
   }
 }
+
+/**
+ * Fetch ČSOB Ingenico Move 3500 terminal configuration from backend
+ */
+export async function fetchTerminalConfig() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/terminal/config`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Terminal config unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Save ČSOB terminal settings to backend SQLite database
+ */
+export async function saveTerminalConfig(terminalConfig) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/terminal/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(terminalConfig)
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to save terminal config:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Test TCP connection (ping) to ČSOB terminal IP & Port
+ */
+export async function pingTerminal(ip = null, port = null) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/terminal/ping`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip, port })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    return { success: false, status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Send payment transaction to ČSOB payment terminal
+ */
+export async function payWithTerminal(amount, variableSymbol = '') {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/terminal/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, variableSymbol })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    return { success: false, status: 'CONNECTION_ERROR', message: err.message };
+  }
+}
+
+/**
+ * Send end-of-day reconciliation command (uzávěrka) to ČSOB terminal
+ */
+export async function reconcileTerminal() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/payments/terminal/reconcile`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    return { success: false, status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Fetch store configuration settings from SQLite database backend
+ */
+export async function fetchStoreConfigBackend() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend store config unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Save store configuration settings to SQLite database backend
+ */
+export async function saveStoreConfigBackend(storeConfig) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(storeConfig)
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to save store config to backend DB:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Verify cashier PIN against hashed value in backend database
+ * @returns {Promise<{valid: boolean}>} - valid=true on success, throws on failure
+ */
+export async function verifyPinBackend(pin) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config/verify-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    if (res.status === 401) return { valid: false };
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('PIN verification failed (backend offline, falling back):', err);
+    return { valid: null, error: err.message };
+  }
+}
+
+/**
+ * Verify Master Recovery Code (PUK) to reset PIN to 1234
+ */
+export async function verifyPukBackend(puk) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config/verify-puk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ puk })
+    });
+    if (res.status === 401) return { valid: false };
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    return { valid: false, error: err.message };
+  }
+}
+
+

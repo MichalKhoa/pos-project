@@ -2723,14 +2723,27 @@ label {
   .printable-receipt.paper-58mm {
     width: 48mm !important;
     max-width: 48mm !important;
-    padding: 1mm 2mm !important;
-    font-size: 0.68rem !important;
+    padding: 0 1mm !important;
+    font-size: 0.65rem !important;
+    line-height: 1.25 !important;
+    box-sizing: border-box !important;
   }
 
   .printable-receipt.paper-80mm {
     width: 72mm !important;
     max-width: 72mm !important;
-    padding: 2mm 4mm !important;
-    font-size: 0.82rem !important;
+    padding: 2mm 3mm !important;
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+    box-sizing: border-box !important;
+  }
+
+  .printable-receipt table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .printable-receipt td, .printable-receipt th {
+    word-break: break-word !important;
   }
 }

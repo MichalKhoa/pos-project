@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Tag, Plus, Edit3, Trash2, Check, X, Layers } from 'lucide-react';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function CategoryManagerModal({
   categories,
@@ -9,6 +10,7 @@ export default function CategoryManagerModal({
   onClose,
   onSelectCategory
 }) {
+  const { t } = useTranslation();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCatId, setEditingCatId] = useState(null);
   const [editingName, setEditingName] = useState('');
@@ -58,7 +60,7 @@ export default function CategoryManagerModal({
         <div className="modal-header">
           <div className="modal-title">
             <Layers size={20} style={{ color: 'var(--accent-blue)' }} />
-            <span>Správa Kategorií Produktů</span>
+            <span>{t('presets.manage_categories')}</span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
@@ -68,7 +70,7 @@ export default function CategoryManagerModal({
           <form onSubmit={handleCreate} style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               type="text"
-              placeholder="Název nové kategorie (např. Pečivo, Nápoje)..."
+              placeholder={t('presets.new_category_placeholder')}
               value={newCategoryName}
               onChange={e => setNewCategoryName(e.target.value)}
               style={{
@@ -88,14 +90,14 @@ export default function CategoryManagerModal({
               style={{ height: '42px', padding: '0 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
             >
               <Plus size={16} />
-              <span>Přidat</span>
+              <span>{t('presets.add_category_btn')}</span>
             </button>
           </form>
 
           {/* List of Existing Categories */}
           <div>
             <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              Existující kategorie ({editableCategories.length}):
+              {t('presets.existing_categories')} ({editableCategories.length}):
             </div>
 
             <div style={{
@@ -107,7 +109,7 @@ export default function CategoryManagerModal({
             }}>
               {editableCategories.length === 0 ? (
                 <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Žádné vlastné kategorie nepředdefinované.
+                  No categories defined.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -149,7 +151,7 @@ export default function CategoryManagerModal({
                               className="nav-tab"
                               style={{ padding: '0.35rem 0.6rem', background: 'var(--accent-emerald)', color: '#fff', borderColor: 'var(--accent-emerald)' }}
                               onClick={() => handleSaveEdit(cat.id)}
-                              title="Uložit název"
+                              title={t('common.save')}
                             >
                               <Check size={16} />
                             </button>
@@ -158,7 +160,7 @@ export default function CategoryManagerModal({
                               className="nav-tab"
                               style={{ padding: '0.35rem 0.6rem' }}
                               onClick={handleCancelEdit}
-                              title="Zrušit"
+                              title={t('common.cancel')}
                             >
                               <X size={16} />
                             </button>
@@ -176,10 +178,10 @@ export default function CategoryManagerModal({
                                 className="nav-tab"
                                 style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
                                 onClick={() => handleStartEdit(cat)}
-                                title="Upravit název kategorie"
+                                title={t('presets.edit')}
                               >
                                 <Edit3 size={14} />
-                                <span>Upravit</span>
+                                <span>{t('presets.edit')}</span>
                               </button>
 
                               <button
@@ -187,7 +189,7 @@ export default function CategoryManagerModal({
                                 className="delete-item-btn"
                                 style={{ padding: '0.35rem 0.5rem' }}
                                 onClick={() => handleDelete(cat.id, cat.name)}
-                                title="Smazat kategorii"
+                                title={t('presets.delete')}
                               >
                                 <Trash2 size={14} />
                               </button>
@@ -204,7 +206,7 @@ export default function CategoryManagerModal({
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button type="button" className="btn btn-outline" onClick={onClose} style={{ height: '42px', padding: '0 1.25rem' }}>
-              Zavřít
+              {t('common.close')}
             </button>
           </div>
         </div>

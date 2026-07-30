@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split } from 'lucide-react';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function Cart({
   cartItems,
@@ -10,6 +11,7 @@ export default function Cart({
   cartDiscountPercent = 0,
   onOpenCustomDiscount
 }) {
+  const { t } = useTranslation();
   // Calculate item effective gross totals after item-level discounts
   const rawSubtotal = cartItems.reduce((sum, item) => {
     const disc = item.discountPercent || 0;
@@ -58,7 +60,7 @@ export default function Cart({
       <div className="cart-header">
         <div className="cart-title" style={{ flexShrink: 1, minWidth: 0 }}>
           <ShoppingCart size={18} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-          <span>Košík</span>
+          <span>{t('cart.title')}</span>
           {cartItems.length > 0 && (
             <span className="cart-badge-count">
               {totalItemCount}
@@ -81,10 +83,10 @@ export default function Cart({
                 fontWeight: '800'
               }}
               onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
-              title="Sleva na celý košík"
+              title={t('cart.discount')}
             >
               <Percent size={13} />
-              <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : 'Sleva'}</span>
+              <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount')}</span>
             </button>
 
             <button
@@ -92,10 +94,10 @@ export default function Cart({
               className="clear-cart-btn"
               style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
               onClick={onClearCart}
-              title="Vysypat celý košík"
+              title={t('cart.clear')}
             >
               <Trash2 size={13} />
-              <span>Vysypat</span>
+              <span>{t('cart.clear')}</span>
             </button>
           </div>
         )}
@@ -108,8 +110,8 @@ export default function Cart({
             <div className="empty-cart-icon">
               <ShoppingCart size={28} />
             </div>
-            <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Košík je prázdný</div>
-            <div style={{ fontSize: '0.8rem' }}>Klikněte na rychlé tlačítko nebo zadejte částku na klávesnici</div>
+            <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{t('cart.empty')}</div>
+            <div style={{ fontSize: '0.8rem' }}>{t('cart.empty_sub')}</div>
           </div>
         ) : (
           cartItems.map((item, index) => {
@@ -171,7 +173,7 @@ export default function Cart({
                     ) : (
                       <span>{parseFloat(item.price).toFixed(2)} Kč</span>
                     )}
-                    <span style={{ opacity: 0.6 }}> × {item.quantity} (DPH {itemVat}%)</span>
+                    <span style={{ opacity: 0.6 }}> × {item.quantity} ({t('cart.vat')} {itemVat}%)</span>
                   </div>
 
                   <div className="cart-item-line-total-price">
@@ -188,15 +190,15 @@ export default function Cart({
       <div className="cart-footer">
         <div className="summary-rows">
           <div className="summary-row">
-            <span>Celkový počet položek:</span>
+            <span>Položky celkem:</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--text-primary)' }}>
-              {totalItemCount} ks
+              {totalItemCount}
             </span>
           </div>
 
           {cartDiscountPercent > 0 && (
             <div className="summary-row" style={{ color: 'var(--accent-rose)', fontWeight: '700' }}>
-              <span>Sleva na košík ({cartDiscountPercent}%):</span>
+              <span>{t('cart.discount')} ({cartDiscountPercent}%):</span>
               <span style={{ fontFamily: 'var(--font-mono)' }}>-{cartDiscountAmount.toFixed(2)} Kč</span>
             </div>
           )}
@@ -212,7 +214,7 @@ export default function Cart({
           </div>
 
           <div className="summary-row total-row">
-            <span>CELKEM K ÚHRADĚ:</span>
+            <span>{t('cart.total')}:</span>
             <span className="total-amount">{finalGrandTotal.toFixed(2)} Kč</span>
           </div>
         </div>
@@ -225,7 +227,7 @@ export default function Cart({
             onClick={() => onOpenPayment('cash')}
           >
             <Banknote size={18} />
-            <span>Hotově</span>
+            <span>{t('payment.cash')}</span>
           </button>
 
           <button
@@ -235,7 +237,7 @@ export default function Cart({
             onClick={() => onOpenPayment('card')}
           >
             <CreditCard size={18} />
-            <span>Karta / QR</span>
+            <span>{t('payment.card')} / QR</span>
           </button>
         </div>
 
@@ -258,7 +260,7 @@ export default function Cart({
             onClick={() => onOpenPayment('split')}
           >
             <Split size={16} />
-            <span>Kombinovaná platba (Hotovost + Karta)</span>
+            <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
           </button>
         )}
       </div>

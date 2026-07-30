@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Check, Calculator, Settings2 } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const COLOR_OPTIONS = [
   '#3b82f6', // Blue
@@ -24,6 +25,7 @@ export default function PresetsCatalogView({
   onUpdatePreset,
   onDeletePreset
 }) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
@@ -123,9 +125,9 @@ export default function PresetsCatalogView({
       <div className="section-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div className="section-title" style={{ fontSize: '1.4rem' }}>
           <Tag size={24} style={{ color: 'var(--accent-blue)' }} />
-          <span>Katalog Rychlých Tlačítek & Položek</span>
+          <span>{t('presets.title')}</span>
           <span style={{ fontSize: '0.9rem', color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '999px', fontWeight: '700' }}>
-            {presets.length} položek celkem
+            {presets.length}
           </span>
         </div>
 
@@ -135,7 +137,7 @@ export default function PresetsCatalogView({
           onClick={handleOpenAddModal}
         >
           <Plus size={18} />
-          <span>Přidat Novou Položku</span>
+          <span>{t('presets.add_preset')}</span>
         </button>
       </div>
 
@@ -147,7 +149,7 @@ export default function PresetsCatalogView({
             <input
               type="text"
               className="keypad-label-input"
-              placeholder="Vyhledat podle názvu nebo ceny..."
+              placeholder={t('presets.search')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
@@ -160,7 +162,7 @@ export default function PresetsCatalogView({
               onClick={() => setViewMode('table')}
             >
               <List size={16} />
-              <span>Tabulka</span>
+              <span>Table</span>
             </button>
             <button
               className={`nav-tab ${viewMode === 'grid' ? 'active' : ''}`}
@@ -168,7 +170,7 @@ export default function PresetsCatalogView({
               onClick={() => setViewMode('grid')}
             >
               <Grid size={16} />
-              <span>Mřížka</span>
+              <span>Grid</span>
             </button>
           </div>
         </div>
@@ -180,18 +182,17 @@ export default function PresetsCatalogView({
               className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
               onClick={() => setActiveCategory(cat.id)}
             >
-              {cat.name}
+              {cat.id === 'all' ? t('presets.all') : cat.name}
             </button>
           ))}
 
           <button
             className="category-chip"
-            style={{ borderStyle: 'dashed', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            style={{ borderStyle: 'dashed', background: 'transparent' }}
             onClick={() => setActiveModal('category')}
-            title="Přidat, upravit nebo smazat kategorie"
           >
             <Settings2 size={14} />
-            <span>Spravovat kategorie</span>
+            <span>{t('presets.add_category')}</span>
           </button>
         </div>
       </div>
@@ -207,13 +208,13 @@ export default function PresetsCatalogView({
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Barva</th>
-                  <th>Název položky</th>
-                  <th>Cena (s DPH)</th>
-                  <th>Typ ceny</th>
-                  <th>DPH</th>
-                  <th>Kategorie</th>
-                  <th style={{ textAlign: 'right' }}>Akce</th>
+                  <th>Color</th>
+                  <th>{t('presets.col_name')}</th>
+                  <th>{t('presets.col_price')}</th>
+                  <th>{t('presets.col_type')}</th>
+                  <th>{t('presets.col_vat')}</th>
+                  <th>{t('presets.col_category')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('presets.col_actions')}</th>
                 </tr>
               </thead>
               <tbody>

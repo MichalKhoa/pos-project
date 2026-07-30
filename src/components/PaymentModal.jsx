@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles } from 'lucide-react';
+import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles, RefreshCw, AlertCircle, Wifi } from 'lucide-react';
+import { fetchTerminalConfig, payWithTerminal } from '../api/posApi';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const COINS = [1, 2, 5, 10, 20, 50];
 const BANKNOTES = [100, 200, 500, 1000, 2000, 5000];
@@ -10,8 +12,20 @@ export default function PaymentModal({
   onClose,
   onCompleteSale
 }) {
+  const { t } = useTranslation();
   const [tenderedStr, setTenderedStr] = useState('0');
   const [activeMethod, setActiveMethod] = useState(method || 'cash');
+
+  // Terminal state
+  const [termConfig, setTermConfig] = useState(null);
+  const [termLoading, setTermLoading] = useState(false);
+  const [termResult, setTermResult] = useState(null);
+
+  useEffect(() => {
+    fetchTerminalConfig().then(cfg => {
+      if (cfg) setTermConfig(cfg);
+    });
+  }, []);
 
   // Split payment state
   const [splitCashStr, setSplitCashStr] = useState('0');
@@ -130,6 +144,17 @@ export default function PaymentModal({
     });
   };
 
+  const handleTerminalPay = async () => {
+    setTermLoading(true);
+    setTermResult(null);
+    const res = await payWithTerminal(totalAmount);
+    setTermResult(res);
+    setTermLoading(false);
+    if (res?.success) {
+      handleComplete();
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
@@ -144,7 +169,7 @@ export default function PaymentModal({
         <div className="modal-header" style={{ padding: '1rem 1.25rem' }}>
           <div className="modal-title">
             {activeMethod === 'cash' ? <Banknote size={22} style={{ color: 'var(--accent-emerald)' }} /> : activeMethod === 'split' ? <Split size={22} style={{ color: 'var(--accent-purple)' }} /> : <CreditCard size={22} style={{ color: 'var(--accent-blue)' }} />}
-            <span>Platba Prodeje</span>
+            <span>{t('payment.title')}</span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
@@ -161,8 +186,8 @@ export default function PaymentModal({
               >
                 <div className="vtab-icon"><Banknote size={20} /></div>
                 <div className="vtab-text">
-                  <span className="vtab-title">Hotovost</span>
-                  <span className="vtab-sub">Mince & Bankovky</span>
+                  <span className="vtab-title">{t('payment.cash')}</span>
+                  <span className="vtab-sub">{t('payment.coins')} & {t('payment.banknotes')}</span>
                 </div>
               </button>
 
@@ -173,8 +198,8 @@ export default function PaymentModal({
               >
                 <div className="vtab-icon"><CreditCard size={20} /></div>
                 <div className="vtab-text">
-                  <span className="vtab-title">Karta</span>
-                  <span className="vtab-sub">Terminál / Bezkontaktně</span>
+                  <span className="vtab-title">{t('payment.card')}</span>
+                  <span className="vtab-sub">Terminál / Contactless</span>
                 </div>
               </button>
 
@@ -185,8 +210,8 @@ export default function PaymentModal({
               >
                 <div className="vtab-icon"><QrCode size={20} /></div>
                 <div className="vtab-text">
-                  <span className="vtab-title">QR Platba</span>
-                  <span className="vtab-sub">Okamžitý převod</span>
+                  <span className="vtab-title">{t('payment.qr')}</span>
+                  <span className="vtab-sub">SPD Bank Transfer</span>
                 </div>
               </button>
 
@@ -197,8 +222,8 @@ export default function PaymentModal({
               >
                 <div className="vtab-icon"><Split size={20} /></div>
                 <div className="vtab-text">
-                  <span className="vtab-title">Kombinovaná</span>
-                  <span className="vtab-sub">Hotovost + Karta</span>
+                  <span className="vtab-title">{t('payment.split')}</span>
+                  <span className="vtab-sub">{t('payment.cash')} + {t('payment.card')}</span>
                 </div>
               </button>
             </div>
@@ -264,7 +289,7 @@ export default function PaymentModal({
                       onClick={() => handleCashAdd('exact')}
                     >
                       <Sparkles size={15} />
-                      <span>Přesně ({totalAmount.toFixed(0)} Kč)</span>
+                      <span>{t('payment.exact')} ({totalAmount.toFixed(0)} Kč)</span>
                     </button>
                     <button
                       type="button"
@@ -273,7 +298,7 @@ export default function PaymentModal({
                       onClick={() => handleCashAdd('clear')}
                     >
                       <RotateCcw size={14} />
-                      <span>Vynulovat</span>
+                      <span>{t('payment.reset')}</span>
                     </button>
                   </div>
 
@@ -281,7 +306,7 @@ export default function PaymentModal({
                   <div className="cash-category-box">
                     <div className="cash-category-title">
                       <Coins size={15} style={{ color: 'var(--accent-amber)' }} />
-                      <span>Mince (Kč):</span>
+                      <span>{t('payment.coins')}</span>
                     </div>
                     <div className="coins-grid-lg">
                       {COINS.map(coin => (
@@ -301,7 +326,7 @@ export default function PaymentModal({
                   <div className="cash-category-box">
                     <div className="cash-category-title">
                       <Banknote size={15} style={{ color: 'var(--accent-emerald)' }} />
-                      <span>Bankovky (Kč):</span>
+                      <span>{t('payment.banknotes')}</span>
                     </div>
                     <div className="banknotes-grid-lg">
                       {BANKNOTES.map(note => (
@@ -325,7 +350,7 @@ export default function PaymentModal({
                     marginTop: 'auto'
                   }}>
                     <span className="change-label" style={{ color: changeDue < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '0.95rem' }}>
-                      {changeDue < 0 ? 'Chybí doplatit:' : 'Vrátit zákazníkovi:'}
+                      {changeDue < 0 ? `${t('payment.missing')}:` : `${t('payment.change_due')}:`}
                     </span>
                     <span className="change-amount" style={{ color: changeDue < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '1.75rem' }}>
                       {Math.abs(changeDue).toFixed(0)} Kč
@@ -336,7 +361,7 @@ export default function PaymentModal({
                 {/* COLUMN 2: Touch Numpad & Big Completion Button */}
                 <div className="cash-col-right">
                   <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Klávesnice pro zadání částky:
+                    {t('payment.numpad_title')}:
                   </div>
 
                   {/* 4-Column Touch Numpad Grid */}
@@ -351,7 +376,7 @@ export default function PaymentModal({
                     {['4', '5', '6'].map(n => (
                       <button key={n} type="button" className="side-num-btn" onClick={() => handleNumpadKey(n)}>{n}</button>
                     ))}
-                    <button type="button" className="side-num-btn key-action" onClick={() => handleNumpadKey('CLEAR')} title="Vynulovat">
+                    <button type="button" className="side-num-btn key-action" onClick={() => handleNumpadKey('CLEAR')} title={t('payment.reset')}>
                       C
                     </button>
 
@@ -372,7 +397,7 @@ export default function PaymentModal({
                     onClick={handleComplete}
                   >
                     <CheckCircle2 size={24} />
-                    <span>Dokončit prodej ({totalAmount.toFixed(0)} Kč)</span>
+                    <span>{t('payment.complete_sale')} ({totalAmount.toFixed(0)} Kč)</span>
                   </button>
                 </div>
               </div>
@@ -471,22 +496,90 @@ export default function PaymentModal({
               </div>
             )}
 
-            {/* Card Payment Layout */}
+            {/* Card Payment Layout with CSOB Terminal Preparation Status */}
             {activeMethod === 'card' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ textAlign: 'center', padding: '3rem 2rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                  <CreditCard size={72} style={{ color: 'var(--accent-blue)', marginBottom: '1rem' }} />
+                <div style={{ textAlign: 'center', padding: '2.5rem 2rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <CreditCard size={64} style={{ color: 'var(--accent-blue)', marginBottom: '0.8rem' }} />
                   <div style={{ fontWeight: '800', fontSize: '1.4rem', marginBottom: '0.4rem' }}>Přiložte nebo vložte kartu</div>
-                  <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Terminál je připraven k transakci {totalAmount} Kč</div>
+                  <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Částka k úhradě: <strong>{totalAmount.toFixed(0)} Kč</strong></div>
+
+                  {/* ČSOB Terminal Status Banner */}
+                  <div style={{
+                    marginTop: '1.25rem',
+                    padding: '0.85rem',
+                    borderRadius: 'var(--radius-md)',
+                    background: (termConfig?.enabled && termConfig?.ip) ? 'rgba(5, 150, 105, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+                    border: `1px solid ${(termConfig?.enabled && termConfig?.ip) ? 'rgba(5, 150, 105, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                    textAlign: 'left',
+                    fontSize: '0.85rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
+                      <Wifi size={16} />
+                      <span>
+                        {(termConfig?.enabled && termConfig?.ip)
+                          ? `ČSOB IP Terminál (${termConfig.ip}:${termConfig.port})`
+                          : 'Ruční Režim Terminálu (Samostatný terminál)'
+                        }
+                      </span>
+                    </div>
+                    <div style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      {(termConfig?.enabled && termConfig?.ip)
+                        ? `Připraven k automatickému TCP spojení. Stiskněte tlačítko pro odeslání ${totalAmount.toFixed(0)} Kč na displej terminálu.`
+                        : `Zadejte částku ${totalAmount.toFixed(0)} Kč ručně na displeji vášho klávesnicového terminálu a po schválení stiskněte potvrdit.`
+                      }
+                    </div>
+                  </div>
                 </div>
-                <button
-                  className="pay-btn pay-btn-card"
-                  style={{ width: '100%', height: '62px', fontSize: '1.15rem', fontWeight: '800' }}
-                  onClick={handleComplete}
-                >
-                  <CheckCircle2 size={24} />
-                  <span>Potvrdit Platbu Kartou ({totalAmount.toFixed(0)} Kč)</span>
-                </button>
+
+                {termResult && (
+                  <div style={{
+                    padding: '0.85rem',
+                    borderRadius: 'var(--radius-md)',
+                    background: termResult.success ? 'rgba(5, 150, 105, 0.15)' : 'rgba(225, 29, 72, 0.15)',
+                    border: `1px solid ${termResult.success ? 'rgba(5, 150, 105, 0.4)' : 'rgba(225, 29, 72, 0.4)'}`,
+                    fontSize: '0.85rem'
+                  }}>
+                    <div style={{ fontWeight: '800', color: termResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
+                      {termResult.success ? '✓ Transakce na terminálu schválena!' : `✕ ${termResult.message}`}
+                    </div>
+                    {termResult.auth_code && (
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+                        Autorizační kód: {termResult.auth_code} | Karta: {termResult.card_mask}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  {termConfig?.enabled && termConfig?.ip && (
+                    <button
+                      className="pay-btn pay-btn-card"
+                      disabled={termLoading}
+                      style={{ flex: 1, height: '62px', fontSize: '1.05rem', fontWeight: '800' }}
+                      onClick={handleTerminalPay}
+                    >
+                      <RefreshCw size={20} className={termLoading ? 'spin' : ''} />
+                      <span>{termLoading ? 'Odesílám na ČSOB terminál...' : 'Odeslat na Terminál ČSOB'}</span>
+                    </button>
+                  )}
+
+                  <button
+                    className="pay-btn pay-btn-card"
+                    style={{
+                      flex: 1,
+                      height: '62px',
+                      fontSize: '1.05rem',
+                      fontWeight: '800',
+                      background: (termConfig?.enabled && termConfig?.ip) ? 'var(--bg-card)' : 'var(--accent-blue)',
+                      border: (termConfig?.enabled && termConfig?.ip) ? '1px solid var(--border-color)' : 'none'
+                    }}
+                    onClick={handleComplete}
+                  >
+                    <CheckCircle2 size={22} />
+                    <span>{(termConfig?.enabled && termConfig?.ip) ? 'Ruční Schválení Karty' : `Potvrdit Přijatou Platbu Kartou (${totalAmount.toFixed(0)} Kč)`}</span>
+                  </button>
+                </div>
               </div>
             )}
 

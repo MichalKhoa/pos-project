@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Receipt, Banknote, CreditCard, RotateCcw, FileText, ArrowRight, Check, AlertOctagon, Info } from 'lucide-react';
-
-const WEEKDAYS = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-const MONTH_NAMES = [
-  'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
-  'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
-];
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 /**
  * Calculates Easter Sunday for a given year (Meeus/Jones/Butcher algorithm)
@@ -74,6 +69,7 @@ export default function CalendarModal({
   onClose,
   onNavigateToHistory
 }) {
+  const { t, language } = useTranslation();
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date()); // Controls displayed month/year
   const [selectedDate, setSelectedDate] = useState(new Date()); // Selected day cell
@@ -90,6 +86,10 @@ export default function CalendarModal({
 
   const selectedDateKey = selectedDate.toISOString().slice(0, 10);
   const selectedDateHoliday = useMemo(() => getCzechHoliday(selectedDate), [selectedDate]);
+
+  // Dynamic Month & Weekday arrays according to active language
+  const weekdaysList = t('calendar.weekdays');
+  const monthNamesList = t('calendar.months');
 
   // Sync note text when selected date changes
   useEffect(() => {
@@ -221,7 +221,7 @@ export default function CalendarModal({
         <div className="modal-header">
           <div className="modal-title">
             <CalendarIcon size={22} style={{ color: 'var(--accent-blue)' }} />
-            <span>Kalendář Směny & Státní Svátky ČR</span>
+            <span>{t('calendar.title')}</span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
@@ -246,13 +246,13 @@ export default function CalendarModal({
                   className="nav-tab"
                   style={{ padding: '0.4rem 0.6rem' }}
                   onClick={handlePrevMonth}
-                  title="Předchozí měsíc"
+                  title={t('calendar.prev_month')}
                 >
                   <ChevronLeft size={18} />
                 </button>
 
                 <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                  {MONTH_NAMES[month]} {year}
+                  {monthNamesList[month]} {year}
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.35rem' }}>
@@ -262,14 +262,14 @@ export default function CalendarModal({
                     style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', fontWeight: '700' }}
                     onClick={handleGoToToday}
                   >
-                    Dnes
+                    {t('calendar.today')}
                   </button>
                   <button
                     type="button"
                     className="nav-tab"
                     style={{ padding: '0.4rem 0.6rem' }}
                     onClick={handleNextMonth}
-                    title="Následující měsíc"
+                    title={t('calendar.next_month')}
                   >
                     <ChevronRight size={18} />
                   </button>
@@ -278,7 +278,7 @@ export default function CalendarModal({
 
               {/* Weekday Headers */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
-                {WEEKDAYS.map((wd, i) => (
+                {weekdaysList.map((wd, i) => (
                   <div
                     key={wd}
                     style={{

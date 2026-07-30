@@ -2,8 +2,9 @@ import os
 import logging
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from database import engine, Base
-from routers import sales, printer, display, payments, eet, catalog, updater
+from routers import sales, printer, display, payments, eet, catalog, updater, config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -11,6 +12,49 @@ logger = logging.getLogger("pos-backend")
 
 # Create database tables automatically
 Base.metadata.create_all(bind=engine)
+
+# Comprehensive Auto-migrations for existing/old SQLite database files
+MIGRATIONS = [
+    # Table: store_config
+    ("store_config", "csob_terminal_enabled", "BOOLEAN DEFAULT 0"),
+    ("store_config", "csob_terminal_ip", "VARCHAR DEFAULT ''"),
+    ("store_config", "csob_terminal_port", "INTEGER DEFAULT 8888"),
+    ("store_config", "csob_terminal_id", "VARCHAR DEFAULT ''"),
+    ("store_config", "cashier_pin", "VARCHAR DEFAULT '1234'"),
+    ("store_config", "auto_lock_minutes", "INTEGER DEFAULT 15"),
+    ("store_config", "direct_hardware_print", "BOOLEAN DEFAULT 1"),
+    ("store_config", "id_provozovny", "VARCHAR DEFAULT '11'"),
+    ("store_config", "id_pokl", "VARCHAR DEFAULT '1'"),
+    ("store_config", "eet_cert_path", "VARCHAR DEFAULT ''"),
+    ("store_config", "eet_cert_password", "VARCHAR DEFAULT ''"),
+    ("store_config", "eet_environment", "VARCHAR DEFAULT 'playground'"),
+    ("store_config", "eet_mode", "INTEGER DEFAULT 0"),
+    ("store_config", "printer_interface", "VARCHAR DEFAULT 'USB'"),
+    ("store_config", "printer_address", "VARCHAR DEFAULT '/dev/usb/lp0'"),
+    ("store_config", "printer_paper_width", "VARCHAR DEFAULT '80'"),
+    # Table: sales
+    ("sales", "cart_discount_percent", "FLOAT DEFAULT 0"),
+    ("sales", "split_details", "VARCHAR DEFAULT ''"),
+    ("sales", "is_refund", "BOOLEAN DEFAULT 0"),
+    ("sales", "original_receipt_number", "VARCHAR DEFAULT ''"),
+    ("sales", "refund_reason", "VARCHAR DEFAULT ''"),
+    ("sales", "refund_status", "VARCHAR DEFAULT 'NONE'"),
+    ("sales", "refunded_amount", "FLOAT DEFAULT 0"),
+    # Table: sale_items
+    ("sale_items", "discount_percent", "FLOAT DEFAULT 0"),
+    # Table: catalog_presets
+    ("catalog_presets", "is_open_price", "BOOLEAN DEFAULT 0"),
+    ("catalog_presets", "color", "VARCHAR DEFAULT '#3b82f6'"),
+    ("catalog_presets", "sort_order", "INTEGER DEFAULT 0"),
+]
+
+with engine.connect() as conn:
+    for table, col, col_type in MIGRATIONS:
+        try:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
+            conn.commit()
+        except Exception:
+            pass
 
 app = FastAPI(
     title="Himmel POS Backend API",
@@ -36,6 +80,7 @@ app.add_middleware(
 # Include API Routers
 app.include_router(sales.router)
 app.include_router(catalog.router)
+app.include_router(config.router)
 app.include_router(eet.router)
 app.include_router(printer.router)
 app.include_router(display.router)

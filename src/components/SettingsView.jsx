@@ -14,7 +14,10 @@ import {
   Send,
   Calendar,
   FileCheck,
-  Printer
+  Printer,
+  CreditCard,
+  Wifi,
+  Globe
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -23,8 +26,14 @@ import {
   uploadEetCert,
   processEetQueue,
   fetchUpdateStatus,
-  applySystemUpdate
+  applySystemUpdate,
+  fetchTerminalConfig,
+  saveTerminalConfig,
+  pingTerminal,
+  reconcileTerminal,
+  fetchPrinterDevices
 } from '../api/posApi';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function SettingsView({
   storeConfig,
@@ -33,13 +42,31 @@ export default function SettingsView({
   onResetData,
   onNavigateToPresets
 }) {
+  const { t, language, setLanguage, languages } = useTranslation();
   const [config, setConfig] = useState({
     id_provozovny: '11',
     id_pokl: '1',
     eet_environment: 'playground',
+    printerInterface: 'USB',
+    printerAddress: '/dev/usb/lp0',
     ...storeConfig
   });
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Printer Hardware Scan State
+  const [printerDevices, setPrinterDevices] = useState([]);
+  const [scanningPrinters, setScanningPrinters] = useState(false);
+
+  useEffect(() => {
+    handleScanPrinters();
+  }, []);
+
+  const handleScanPrinters = async () => {
+    setScanningPrinters(true);
+    const devs = await fetchPrinterDevices();
+    setPrinterDevices(devs);
+    setScanningPrinters(false);
+  };
 
   // Backend Connection & EET State
   const [backendConnected, setBackendConnected] = useState(false);
@@ -66,6 +93,17 @@ export default function SettingsView({
   // Queue Processing State
   const [queueLoading, setQueueLoading] = useState(false);
   const [queueResult, setQueueResult] = useState(null);
+
+  // ČSOB Terminal Ingenico Move 3500 State
+  const [termEnabled, setTermEnabled] = useState(false);
+  const [termIp, setTermIp] = useState('');
+  const [termPort, setTermPort] = useState('8888');
+  const [termId, setTermId] = useState('');
+  const [termSaveSuccess, setTermSaveSuccess] = useState(false);
+  const [pingLoading, setPingLoading] = useState(false);
+  const [pingResult, setPingResult] = useState(null);
+  const [reconcileLoading, setReconcileLoading] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState(null);
 
   // Check update status
   const handleCheckUpdate = async () => {
@@ -107,8 +145,46 @@ export default function SettingsView({
           eet_environment: eetStatus.environment || prev.eet_environment || 'playground'
         }));
       }
+
+      const termConfig = await fetchTerminalConfig();
+      if (termConfig) {
+        setTermEnabled(termConfig.enabled || false);
+        setTermIp(termConfig.ip || '');
+        setTermPort(termConfig.port ? termConfig.port.toString() : '8888');
+        setTermId(termConfig.terminalId || '');
+      }
     }
     setBackendLoading(false);
+  };
+
+  const handleSaveTerminal = async (e) => {
+    e.preventDefault();
+    const res = await saveTerminalConfig({
+      enabled: termEnabled,
+      ip: termIp,
+      port: parseInt(termPort, 10) || 8888,
+      terminalId: termId
+    });
+    if (res?.status === 'SUCCESS') {
+      setTermSaveSuccess(true);
+      setTimeout(() => setTermSaveSuccess(false), 3000);
+    }
+  };
+
+  const handlePingTerminal = async () => {
+    setPingLoading(true);
+    setPingResult(null);
+    const res = await pingTerminal(termIp, parseInt(termPort, 10) || 8888);
+    setPingResult(res);
+    setPingLoading(false);
+  };
+
+  const handleReconcileTerminal = async () => {
+    setReconcileLoading(true);
+    setReconcileResult(null);
+    const res = await reconcileTerminal();
+    setReconcileResult(res);
+    setReconcileLoading(false);
   };
 
   useEffect(() => {
@@ -259,7 +335,7 @@ export default function SettingsView({
       <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="section-title" style={{ fontSize: '1.4rem' }}>
           <Store size={24} style={{ color: 'var(--accent-purple)' }} />
-          <span>Nastavení Pokladny & EET 2.0 Backend</span>
+          <span>{t('settings.title')}</span>
         </div>
 
         {/* Live Backend Connection Indicator */}
@@ -271,13 +347,13 @@ export default function SettingsView({
             padding: '0.4rem 0.85rem'
           }}>
             <span className="status-dot" style={{ background: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}></span>
-            <span>{backendLoading ? 'Ověřování serveru...' : backendConnected ? 'Python Backend ONLINE (http://localhost:8000)' : 'Backend OFFLINE (Režim Simulace)'}</span>
+            <span>{backendLoading ? t('settings.backend_verifying') : backendConnected ? t('settings.backend_online') : t('settings.backend_offline')}</span>
           </div>
 
           <button
             className="nav-tab"
             onClick={loadBackendInfo}
-            title="Obnovit stav připojení"
+            title={t('settings.ping_test')}
             style={{ padding: '0.4rem 0.6rem' }}
           >
             <RefreshCw size={16} className={backendLoading ? 'spin-icon' : ''} />
@@ -290,10 +366,10 @@ export default function SettingsView({
         <div>
           <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
             <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-            <span>Katalog Rychlých Tlačítek & Ceník</span>
+            <span>{t('presets.title')}</span>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Spravujte všech {presets.length} položek v celoobrazovkovém katalogu.
+            {t('settings.catalog_desc', { count: presets.length })}
           </div>
         </div>
 
@@ -302,197 +378,494 @@ export default function SettingsView({
           style={{ height: '42px', padding: '0 1.25rem', fontSize: '0.85rem' }}
           onClick={onNavigateToPresets}
         >
-          <span>Otevřít Katalog Položek</span>
+          <span>{t('settings.open_catalog')}</span>
           <ArrowRight size={16} />
         </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
-        {/* Store Config Form */}
-        <div className="table-card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Store size={18} style={{ color: 'var(--accent-blue)' }} />
-            <span>Údaje o Prodejně & Registraci</span>
-          </h3>
+        {/* Left Column Stack: Store Config + CSOB Terminal Config */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Store Config Form */}
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Store size={18} style={{ color: 'var(--accent-blue)' }} />
+              <span>{t('settings.store_info')}</span>
+            </h3>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                Název firmy / provozovny
-              </label>
-              <input
-                type="text"
-                value={config.storeName}
-                onChange={e => setConfig({ ...config, storeName: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
-                required
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Ulice a č.p.</label>
-                <input
-                  type="text"
-                  value={config.street}
-                  onChange={e => setConfig({ ...config, street: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
-                  required
-                />
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Město a PSČ</label>
-                <input
-                  type="text"
-                  value={config.city}
-                  onChange={e => setConfig({ ...config, city: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
-                  required
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>IČO</label>
-                <input
-                  type="text"
-                  value={config.ico}
-                  onChange={e => setConfig({ ...config, ico: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
-                  required
-                />
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>DIČ / EIČ (EET ID)</label>
-                <input
-                  type="text"
-                  value={config.dic}
-                  onChange={e => setConfig({ ...config, dic: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* EET Register Parameters */}
-            <div style={{ display: 'flex', gap: '0.75rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                  Číslo Evidenční Jednotky (id_jednotky)
-                </label>
-                <input
-                  type="text"
-                  value={config.id_provozovny || '11'}
-                  onChange={e => setConfig({ ...config, id_provozovny: e.target.value })}
-                  style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
-                  required
-                />
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                  Označení Pokladny (id_pokl)
-                </label>
-                <input
-                  type="text"
-                  value={config.id_pokl || '1'}
-                  onChange={e => setConfig({ ...config, id_pokl: e.target.value })}
-                  style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
-                  required
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <div style={{ flex: 1 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                  Výchozí sazba DPH
+                  {t('settings.store_name')}
                 </label>
-                <select
-                  value={config.defaultVat !== undefined ? config.defaultVat : 21}
-                  onChange={e => setConfig({ ...config, defaultVat: parseInt(e.target.value, 10) })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
-                >
-                  <option value={21}>21% (Základní sazba)</option>
-                  <option value={12}>12% (Snížená sazba)</option>
-                  <option value={0}>0% (Osvobozeno)</option>
-                </select>
+                <input
+                  type="text"
+                  value={config.storeName}
+                  onChange={e => setConfig({ ...config, storeName: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
+                  required
+                />
               </div>
 
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                  Cílové EET Prostředí
-                </label>
-                <select
-                  value={config.eet_environment || 'playground'}
-                  onChange={e => setConfig({ ...config, eet_environment: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--accent-purple)', fontWeight: '800' }}
-                >
-                  <option value="playground">Neprodukční (Playground)</option>
-                  <option value="production">Produkční (Tržby EET)</option>
-                </select>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t('settings.street')}</label>
+                  <input
+                    type="text"
+                    value={config.street}
+                    onChange={e => setConfig({ ...config, street: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t('settings.city')}</label>
+                  <input
+                    type="text"
+                    value={config.city}
+                    onChange={e => setConfig({ ...config, city: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
+                    required
+                  />
+                </div>
               </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t('settings.ico')}</label>
+                  <input
+                    type="text"
+                    value={config.ico}
+                    onChange={e => setConfig({ ...config, ico: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t('settings.dic')}</label>
+                  <input
+                    type="text"
+                    value={config.dic}
+                    onChange={e => setConfig({ ...config, dic: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* EET Register Parameters */}
+              <div style={{ display: 'flex', gap: '0.75rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                    {t('settings.unit_no')}
+                  </label>
+                  <input
+                    type="text"
+                    value={config.id_provozovny || '11'}
+                    onChange={e => setConfig({ ...config, id_provozovny: e.target.value })}
+                    style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                    {t('settings.register_no')}
+                  </label>
+                  <input
+                    type="text"
+                    value={config.id_pokl || '1'}
+                    onChange={e => setConfig({ ...config, id_pokl: e.target.value })}
+                    style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    {t('settings.default_vat')}
+                  </label>
+                  <select
+                    value={config.defaultVat !== undefined ? config.defaultVat : 21}
+                    onChange={e => setConfig({ ...config, defaultVat: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
+                  >
+                    <option value={21}>21%</option>
+                    <option value={12}>12%</option>
+                    <option value={0}>0%</option>
+                  </select>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    {t('settings.environment')}
+                  </label>
+                  <select
+                    value={config.eet_environment || 'playground'}
+                    onChange={e => setConfig({ ...config, eet_environment: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--accent-purple)', fontWeight: '800' }}
+                  >
+                    <option value="playground">Playground</option>
+                    <option value="production">Production</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Cashier Lock & Security Settings */}
+              <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Shield size={16} style={{ color: 'var(--accent-amber)' }} />
+                  <span>Zabezpečení a Uzamčení Pokladny</span>
+                </label>
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                      PIN kód pokladny (4 číslice)
+                    </label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      value={config.cashierPin || '1234'}
+                      onChange={e => setConfig({ ...config, cashierPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '0.2em' }}
+                    />
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                      Automatické zamknutí
+                    </label>
+                    <select
+                      value={config.autoLockMinutes !== undefined ? config.autoLockMinutes : 15}
+                      onChange={e => setConfig({ ...config, autoLockMinutes: parseInt(e.target.value, 10) })}
+                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '700' }}
+                    >
+                      <option value={15}>Po 15 minutách neaktivity (Doporučeno)</option>
+                      <option value={5}>Po 5 minutách neaktivity</option>
+                      <option value={30}>Po 30 minutách neaktivity</option>
+                      <option value={0}>Vypnuto (Pouze ruční zamknutí)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Thermal Receipt Printer Device Selector & Width Calibration */}
+              <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Printer size={16} style={{ color: 'var(--accent-blue)' }} />
+                    <span>Výběr Připojené Tiskárny Účtenek</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="key-btn"
+                    onClick={handleScanPrinters}
+                    disabled={scanningPrinters}
+                    style={{ height: '30px', padding: '0 0.6rem', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    title="Obnovit seznam připojených tiskáren"
+                  >
+                    <RefreshCw size={12} className={scanningPrinters ? 'spin-icon' : ''} />
+                    <span>{scanningPrinters ? 'Hledám...' : 'Obnovit'}</span>
+                  </button>
+                </div>
+
+                {/* Device Selector Dropdown */}
+                <div style={{ marginBottom: '0.65rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                    Detekované Tiskové Zařízení
+                  </label>
+                  <select
+                    value={config.printerAddress || '/dev/usb/lp0'}
+                    onChange={e => {
+                      const selectedAddr = e.target.value;
+                      const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
+                      const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
+                      setConfig({
+                        ...config,
+                        printerAddress: selectedAddr,
+                        printerInterface: interfaceType
+                      });
+                    }}
+                    style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.85rem' }}
+                  >
+                    {printerDevices.map(dev => (
+                      <option key={dev.id} value={dev.address} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                        {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}{dev.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Network IP or Custom Address Input (if Custom/Network selected) */}
+                {config.printerInterface === 'NETWORK' && (
+                  <div style={{ marginBottom: '0.65rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                      IP Adresa Síťové Tiskárny (Port 9100)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="192.168.1.100"
+                      value={config.printerAddress}
+                      onChange={e => setConfig({ ...config, printerAddress: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
+                    />
+                  </div>
+                )}
+
+                {/* Paper Roll Width Selection */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                    Šířka Papírové Role (Termotisk)
+                  </label>
+                  <select
+                    value={config.printerPaperWidth || '80'}
+                    onChange={e => setConfig({ ...config, printerPaperWidth: e.target.value })}
+                    style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '800', fontSize: '0.85rem' }}
+                  >
+                    <option value="80" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                      80 mm (72 mm tisknutelná šířka • 48 znaků)
+                    </option>
+                    <option value="58" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                      58 mm (48 mm tisknutelná šířka • 32 znaků)
+                    </option>
+                    <option value="A4" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                      Formát A4 (Faktura / Daňový doklad • 210 x 297 mm)
+                    </option>
+                  </select>
+                </div>
+
+                {/* Direct Silent Hardware Print vs Debug Preview Modal */}
+                <div style={{ marginTop: '0.65rem', padding: '0.65rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                      ⚡ Přímý HW Tisk (Bez popup okna)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={config.directHardwarePrint !== false}
+                      onChange={e => setConfig({ ...config, directHardwarePrint: e.target.checked })}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                  </label>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                    {config.directHardwarePrint !== false
+                      ? 'Odesílá účtenku rovnou na fyzickou tiskárnu. Pop-up okno se nezobrazuje.'
+                      : '🐞 Režim Náhledu / Vývoje (Debug): Zobrazí náhledové okno s možností ručního tisku.'}
+                  </div>
+                </div>
+
+                {/* Printer Width Calibration Test Button */}
+                <div style={{ marginTop: '0.6rem', padding: '0.65rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '800', marginBottom: '0.3rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Printer size={14} style={{ color: 'var(--accent-blue)' }} />
+                    <span>{t('settings.printer_calibration')}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="nav-tab"
+                    onClick={handlePrintWidthRulerTest}
+                    style={{ width: '100%', padding: '0.45rem', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '700' }}
+                  >
+                    <Printer size={14} />
+                    <span>{t('settings.print_test_ruler')} ({config.printerPaperWidth === '58' ? '48 mm' : '72 mm'})</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  {t('settings.receipt_footer')}
+                </label>
+                <input
+                  type="text"
+                  value={config.receiptFooter}
+                  onChange={e => setConfig({ ...config, receiptFooter: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              <button type="submit" className="pay-btn pay-btn-card" style={{ height: '46px', marginTop: '0.5rem' }}>
+                <Save size={18} />
+                <span>{saveSuccess ? t('common.saved') : t('settings.save_store')}</span>
+              </button>
+            </form>
+          </div>
+
+          {/* ČSOB Payment Terminal Ingenico Move 3500 Preparation Card */}
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CreditCard size={18} style={{ color: 'var(--accent-blue)' }} />
+                <span>{t('settings.csob_title')}</span>
+              </h3>
+              <span className="status-badge" style={{
+                background: termIp ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                color: termIp ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+                borderColor: termIp ? 'rgba(5, 150, 105, 0.3)' : 'rgba(245, 158, 11, 0.3)',
+                padding: '0.3rem 0.65rem',
+                fontSize: '0.75rem'
+              }}>
+                {termIp ? `IP: ${termIp}:${termPort}` : (language === 'vi' ? 'Chờ IP' : language === 'en' ? 'Awaiting IP' : 'Příprava (Čekání na IP)')}
+              </span>
             </div>
 
-            {/* Thermal Receipt Printer Selection (58mm vs 80mm) */}
-            <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.4rem' }}>
-                Typ & Šířka Papíru Pokladní Tiskárny (ESC/POS)
-              </label>
-              <select
-                value={config.printerPaperWidth || '80'}
-                onChange={e => setConfig({ ...config, printerPaperWidth: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '800' }}
-              >
-                <option value="80" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                  🖨️ 80 mm rola (72 mm tisková oblast - max 48 znaků/řádek)
-                </option>
-                <option value="58" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                  🧾 58 mm rola (48 mm tisková oblast - max 32 znaků/řádek)
-                </option>
-              </select>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                Nastavení automaticky přizpůsobí rozvržení účtenky na 48 mm / 72 mm pro 100% čitelné okraje.
+            <form onSubmit={handleSaveTerminal} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                  {t('settings.csob_mode')}
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="vat-btn"
+                    style={{
+                      padding: '0.75rem',
+                      textAlign: 'left',
+                      background: !termEnabled ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-input)',
+                      borderColor: !termEnabled ? 'var(--accent-blue)' : 'var(--border-color)',
+                      color: 'var(--text-primary)',
+                      borderRadius: 'var(--radius-md)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.2rem'
+                    }}
+                    onClick={() => setTermEnabled(false)}
+                  >
+                    <span style={{ fontWeight: '800', fontSize: '0.85rem', color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
+                      {t('settings.csob_manual_mode')}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      {t('settings.csob_manual_desc')}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="vat-btn"
+                    style={{
+                      padding: '0.75rem',
+                      textAlign: 'left',
+                      background: termEnabled ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
+                      borderColor: termEnabled ? 'var(--accent-emerald)' : 'var(--border-color)',
+                      color: 'var(--text-primary)',
+                      borderRadius: 'var(--radius-md)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.2rem'
+                    }}
+                    onClick={() => setTermEnabled(true)}
+                  >
+                    <span style={{ fontWeight: '800', fontSize: '0.85rem', color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
+                      {t('settings.csob_auto_mode')}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      {t('settings.csob_auto_desc')}
+                    </span>
+                  </button>
+                </div>
               </div>
 
-              {/* Printer Width Calibration Test Button */}
-              <div style={{ marginTop: '0.6rem', padding: '0.65rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: '800', marginBottom: '0.3rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Printer size={14} style={{ color: 'var(--accent-blue)' }} />
-                  <span>Kalibrace & Test Ořezu Šířky</span>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 2 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    {t('settings.csob_ip')}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="192.168.1.150"
+                    value={termIp}
+                    onChange={e => setTermIp(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600', fontFamily: 'var(--font-mono)' }}
+                  />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    {t('settings.csob_port')}
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="8888"
+                    value={termPort}
+                    onChange={e => setTermPort(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600', fontFamily: 'var(--font-mono)' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  {t('settings.csob_tid')}
+                </label>
+                <input
+                  type="text"
+                  placeholder="12345678"
+                  value={termId}
+                  onChange={e => setTermId(e.target.value)}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                <button type="submit" className="pay-btn pay-btn-card" style={{ flex: 1, height: '42px', fontSize: '0.85rem' }}>
+                  <Save size={16} />
+                  <span>{termSaveSuccess ? t('common.saved') : t('settings.save_terminal')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="nav-tab"
+                  disabled={pingLoading || !backendConnected}
+                  onClick={handlePingTerminal}
+                  style={{ padding: '0 1rem', fontSize: '0.8rem', fontWeight: '700' }}
+                >
+                  <Wifi size={14} className={pingLoading ? 'spin' : ''} />
+                  <span>{pingLoading ? '...' : t('settings.ping_test')}</span>
+                </button>
+              </div>
+
+              {pingResult && (
+                <div style={{
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: pingResult.success ? 'rgba(5, 150, 105, 0.12)' : 'rgba(225, 29, 72, 0.12)',
+                  border: `1px solid ${pingResult.success ? 'rgba(5, 150, 105, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`,
+                  fontSize: '0.8rem',
+                  color: pingResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)'
+                }}>
+                  <div style={{ fontWeight: '800' }}>{pingResult.success ? '✓ OK' : '✕ Error'}</div>
+                  <div>{pingResult.message}</div>
+                </div>
+              )}
+
+              {/* End of day reconciliation button */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.85rem', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>{t('settings.reconcile')}</div>
                 </div>
                 <button
                   type="button"
                   className="nav-tab"
-                  onClick={handlePrintWidthRulerTest}
-                  style={{ width: '100%', padding: '0.45rem', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '700' }}
+                  disabled={reconcileLoading || !backendConnected || !termIp}
+                  onClick={handleReconcileTerminal}
+                  style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
                 >
-                  <Printer size={14} />
-                  <span>Vytisknout Testovací Pravítko Šířky ({config.printerPaperWidth === '58' ? '48 mm' : '72 mm'})</span>
+                  <span>{reconcileLoading ? '...' : t('settings.reconcile')}</span>
                 </button>
               </div>
-            </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                Text v zápatí účtenky
-              </label>
-              <input
-                type="text"
-                value={config.receiptFooter}
-                onChange={e => setConfig({ ...config, receiptFooter: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-              />
-            </div>
-
-            <button type="submit" className="pay-btn pay-btn-card" style={{ height: '46px', marginTop: '0.5rem' }}>
-              <Save size={18} />
-              <span>{saveSuccess ? 'Uloženo!' : 'Uložit Nastavení Prodejny'}</span>
-            </button>
-          </form>
+              {reconcileResult && (
+                <div style={{ fontSize: '0.8rem', color: reconcileResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginTop: '0.2rem' }}>
+                  {reconcileResult.message}
+                </div>
+              )}
+            </form>
+          </div>
         </div>
 
         {/* EET 2.0 Certificate Management & Live Testing */}
@@ -501,38 +874,35 @@ export default function SettingsView({
           <div className="table-card" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Shield size={18} style={{ color: certInfo?.loaded ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
-              <span>Certifikát Pokladny EET 2.0</span>
+              <span>{t('settings.cert_title')}</span>
             </h3>
 
             {certInfo?.loaded ? (
               <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.3)', padding: '1rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', lineHeight: '1.6' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-emerald)', fontWeight: '800', marginBottom: '0.5rem' }}>
                   <CheckCircle size={18} />
-                  <span>Certifikát je Aktivní a Načten</span>
+                  <span>{t('settings.cert_active')}</span>
                 </div>
-                <div><strong>Subjekt:</strong> {certInfo.subject}</div>
-                <div><strong>Vydavatel:</strong> {certInfo.issuer}</div>
-                <div><strong>Sériové číslo:</strong> <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{certInfo.serial_number}</span></div>
+                <div><strong>Subject:</strong> {certInfo.subject}</div>
+                <div><strong>Issuer:</strong> {certInfo.issuer}</div>
+                <div><strong>S/N:</strong> <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{certInfo.serial_number}</span></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.4rem', color: 'var(--text-secondary)' }}>
                   <Calendar size={14} />
-                  <span>Platnost do: <strong>{new Date(certInfo.not_valid_after).toLocaleDateString('cs-CZ')}</strong></span>
+                  <span>Valid to: <strong>{new Date(certInfo.not_valid_after).toLocaleDateString()}</strong></span>
                 </div>
               </div>
             ) : (
               <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-amber)', fontWeight: '700', marginBottom: '0.3rem' }}>
                   <AlertCircle size={18} />
-                  <span>Certifikát není nahrán nebo chybí heslo</span>
-                </div>
-                <div style={{ color: 'var(--text-secondary)' }}>
-                  Nahrajte soubor merchant certifikátu ve formátu `.p12` nebo `.pfx` pro spuštění fiskalizace na portálu Finanční správy ČR.
+                  <span>{t('settings.cert_missing')}</span>
                 </div>
               </div>
             )}
 
             {/* Certificate Upload Form */}
             <form onSubmit={handleCertUpload} style={{ marginTop: '1.25rem', borderTop: '1px border var(--border-color)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>Nahrát nový certifikát (.p12 / .pfx)</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>{t('settings.cert_upload_label')}</div>
 
               <input
                 type="file"
@@ -544,7 +914,7 @@ export default function SettingsView({
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <input
                   type="password"
-                  placeholder="Heslo k certifikátu .p12"
+                  placeholder={t('settings.cert_password')}
                   value={certPassword}
                   onChange={e => setCertPassword(e.target.value)}
                   style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}
@@ -557,7 +927,7 @@ export default function SettingsView({
                   style={{ height: '40px', padding: '0 1rem', fontSize: '0.8rem' }}
                 >
                   <Upload size={14} />
-                  <span>{uploadLoading ? 'Nahrávání...' : 'Nahrát'}</span>
+                  <span>{uploadLoading ? '...' : t('settings.upload_btn')}</span>
                 </button>
               </div>
 
@@ -580,7 +950,7 @@ export default function SettingsView({
           <div className="table-card" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Send size={18} style={{ color: 'var(--accent-purple)' }} />
-              <span>Ověření Spojení a Fronta EET</span>
+              <span>{t('settings.eet_queue_title')}</span>
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -591,7 +961,7 @@ export default function SettingsView({
                 style={{ height: '44px', fontSize: '0.85rem' }}
               >
                 <FileCheck size={16} />
-                <span>{verifyLoading ? 'Odesílání ověřovací zprávy...' : 'Test Spojení s EET (Ověření overeni=true)'}</span>
+                <span>{verifyLoading ? '...' : t('settings.test_eet_btn')}</span>
               </button>
 
               {verifyResult && (
@@ -604,28 +974,18 @@ export default function SettingsView({
                   lineHeight: '1.5'
                 }}>
                   <div style={{ fontWeight: '800', color: verifyResult.status === 'SUCCESS' ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
-                    {verifyResult.status === 'SUCCESS' ? '✓ Ověřovací zpráva byla úspěšně přijata EET serverem!' : '✕ Chyba při ověřování EET'}
+                    {verifyResult.status === 'SUCCESS' ? '✓ OK' : '✕ Error'}
                   </div>
                   <div>{verifyResult.detail}</div>
-                  {verifyResult.pok && (
-                    <div style={{ marginTop: '0.3rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#fff' }}>
-                      <strong>Navrácený POK:</strong> {verifyResult.pok}
-                    </div>
-                  )}
-                  {verifyResult.bkp && (
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      <strong>Kód BKP:</strong> {verifyResult.bkp}
-                    </div>
-                  )}
                 </div>
               )}
 
               {/* Offline Queue Section */}
               <div style={{ marginTop: '0.75rem', borderTop: '1px border var(--border-color)', paddingTop: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>Offline Fronta Tržeb</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>Offline Queue</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Čeká na odeslání: <strong>{eetStatusData?.pending_offline_sales || 0}</strong> prodejů
+                    Pending: <strong>{eetStatusData?.pending_offline_sales || 0}</strong>
                   </div>
                 </div>
 
@@ -636,15 +996,9 @@ export default function SettingsView({
                   style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
                 >
                   <Send size={14} />
-                  <span>{queueLoading ? 'Odesílání...' : 'Odeslat Frontu'}</span>
+                  <span>{queueLoading ? '...' : t('settings.process_queue_btn')}</span>
                 </button>
               </div>
-
-              {queueResult && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', marginTop: '0.2rem' }}>
-                  Odesláno {queueResult.processed_count || 0} neodoslaných tržeb na EET server.
-                </div>
-              )}
             </div>
           </div>
 
@@ -652,24 +1006,13 @@ export default function SettingsView({
           <div className="table-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <RefreshCw size={18} style={{ color: 'var(--accent-blue)' }} />
-              <span>Systémové Aktualizace (Vzdálený Git Update)</span>
+              <span>{t('settings.updates_title')}</span>
             </h3>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
               <div>
                 <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                  Aktuální verze: {updateData?.current_version?.hash ? `Commit #${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  {updateData?.is_update_available ? (
-                    <span style={{ color: 'var(--accent-amber)', fontWeight: 'bold' }}>
-                      ⚡ Dostupná nová verze ({updateData.behind_commits_count} nová změna/změny)
-                    </span>
-                  ) : (
-                    <span style={{ color: 'var(--accent-emerald)' }}>
-                      ✓ Váš pokladní systém je plně aktuální
-                    </span>
-                  )}
+                  Version: {updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}
                 </div>
               </div>
 
@@ -681,40 +1024,24 @@ export default function SettingsView({
                   style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
                 >
                   <RefreshCw size={14} className={updateLoading ? 'spin' : ''} />
-                  <span>{updateLoading ? 'Zjišťování...' : 'Zkontrolovat'}</span>
+                  <span>Check</span>
                 </button>
-
-                {updateData?.is_update_available && (
-                  <button
-                    className="pay-btn pay-btn-card"
-                    onClick={() => setShowUpdateModal(true)}
-                    style={{ height: '38px', padding: '0 0.85rem', fontSize: '0.8rem' }}
-                  >
-                    <span>Aktualizovat systém</span>
-                  </button>
-                )}
               </div>
             </div>
-
-            {updateResult && (
-              <div style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: 'var(--radius-md)', background: updateResult.status === 'UPDATE_INITIATED' ? 'rgba(5, 150, 105, 0.12)' : 'rgba(225, 29, 72, 0.12)', border: `1px solid ${updateResult.status === 'UPDATE_INITIATED' ? 'rgba(5, 150, 105, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`, fontSize: '0.8rem' }}>
-                {updateResult.message}
-              </div>
-            )}
           </div>
 
           {/* Backup Management */}
           <div className="table-card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem' }}>Záloha a Správa Dat</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem' }}>{t('settings.backup_title')}</h3>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.6rem' }} onClick={handleExportJSON}>
                 <Download size={16} />
-                <span>Stáhnout Zálohu (JSON)</span>
+                <span>{t('settings.export_backup')}</span>
               </button>
 
               <label className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.6rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                 <Upload size={16} />
-                <span>Obnovit ze Zálohy (JSON)</span>
+                <span>{t('settings.import_backup')}</span>
                 <input
                   type="file"
                   accept=".json"

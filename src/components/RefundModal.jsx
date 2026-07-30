@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { RotateCcw, Banknote, CreditCard, Minus, Plus } from 'lucide-react';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const REASON_PRESETS = [
   'Vada / poškození zboží',
@@ -10,6 +11,7 @@ const REASON_PRESETS = [
 ];
 
 export default function RefundModal({ sale, onClose, onConfirmRefund }) {
+  const { t } = useTranslation();
   const originalItems = sale?.items || [];
 
   // Track return quantity per item id or index
@@ -22,14 +24,13 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
     return initial;
   });
 
-  const [refundMode, setRefundMode] = useState('full'); // 'full' | 'partial'
+  const [refundMode, setRefundMode] = useState('full');
   const [selectedReasonPreset, setSelectedReasonPreset] = useState(REASON_PRESETS[0]);
   const [customReasonText, setCustomReasonText] = useState('');
   const [refundPaymentMethod, setRefundPaymentMethod] = useState(sale?.paymentMethod || 'cash');
 
   if (!sale) return null;
 
-  // Handle Full vs Partial mode toggle
   const handleModeChange = (mode) => {
     setRefundMode(mode);
     if (mode === 'full') {
@@ -51,7 +52,6 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
     setRefundMode('partial');
   };
 
-  // Calculate return total amount & returned items
   const returnedItems = originalItems.map((item, idx) => {
     const key = item.id || `idx-${idx}`;
     const qtyToReturn = returnQuantities[key] || 0;
@@ -70,7 +70,6 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
   const cartDiscountAmount = rawRefundSubtotal * (cartDiscountPercent / 100);
   const totalRefundAmount = Math.max(0, rawRefundSubtotal - cartDiscountAmount);
 
-  // Calculate refund tax breakdown
   const cartDiscountFactor = rawRefundSubtotal > 0 ? totalRefundAmount / rawRefundSubtotal : 1;
   const refundTaxSummary = returnedItems.reduce((acc, item) => {
     const rate = item.vat !== undefined ? parseInt(item.vat, 10) : 21;
@@ -114,13 +113,12 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
         <div className="modal-header header-warning" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
           <div className="modal-header-title">
             <RotateCcw size={22} />
-            <span>Vratka / Storno Účtenky</span>
+            <span>{t('refund.title')}</span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ gap: '1.2rem' }}>
-          {/* Sale Summary Banner */}
           <div style={{
             display: 'flex',
             justify: 'space-between',
@@ -131,26 +129,22 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             borderLeft: '4px solid #ef4444'
           }}>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Původní doklad:</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t('refund.orig_doc')}:</div>
               <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                Účtenka č. {sale.receiptNumber}
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                {new Date(sale.timestamp).toLocaleString('cs-CZ')} • Úhrada: {sale.paymentMethod === 'cash' ? 'Hotovost' : sale.paymentMethod === 'card' ? 'Karta' : 'Kombinovaná'}
+                {t('refund.orig_receipt')} #{sale.receiptNumber}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Původní suma:</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t('refund.orig_total')}:</div>
               <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
                 {(sale.totalAmount || 0).toFixed(0)} Kč
               </div>
             </div>
           </div>
 
-          {/* Refund Type Selector */}
           <div>
             <label className="form-label" style={{ fontWeight: '700', marginBottom: '0.4rem', display: 'block' }}>
-              Typ stornování:
+              {t('refund.refund_type')}:
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
               <button
@@ -164,7 +158,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 }}
                 onClick={() => handleModeChange('full')}
               >
-                Kompletní storno (Všechny položky)
+                {t('refund.full_refund')}
               </button>
               <button
                 type="button"
@@ -177,15 +171,14 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 }}
                 onClick={() => handleModeChange('partial')}
               >
-                Částečná vratka (Vybrané kusy)
+                {t('refund.partial_refund')}
               </button>
             </div>
           </div>
 
-          {/* Itemized Table for selection */}
           <div>
             <label className="form-label" style={{ fontWeight: '700', marginBottom: '0.4rem', display: 'block' }}>
-              Položky k vrácení:
+              {t('refund.items_to_return')}:
             </label>
             <div style={{
               maxHeight: '220px',
@@ -197,10 +190,10 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
-                    <th style={{ padding: '0.6rem 0.8rem' }}>Položka</th>
-                    <th style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>Zakoupeno</th>
-                    <th style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>K vrácení</th>
-                    <th style={{ padding: '0.6rem 0.8rem', textAlign: 'right' }}>Vratka celkem</th>
+                    <th style={{ padding: '0.6rem 0.8rem' }}>{t('presets.col_name')}</th>
+                    <th style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>Purchased</th>
+                    <th style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>Return Qty</th>
+                    <th style={{ padding: '0.6rem 0.8rem', textAlign: 'right' }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,11 +254,10 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             </div>
           </div>
 
-          {/* Refund Reason & Method */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
               <label className="form-label" style={{ fontWeight: '700', marginBottom: '0.4rem', display: 'block' }}>
-                Důvod vratky:
+                {t('refund.reason')}:
               </label>
               <select
                 className="form-input"
@@ -281,7 +273,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Uveďte konkrétní důvod..."
+                  placeholder="Specific reason..."
                   value={customReasonText}
                   onChange={e => setCustomReasonText(e.target.value)}
                   style={{ width: '100%' }}
@@ -291,7 +283,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
 
             <div>
               <label className="form-label" style={{ fontWeight: '700', marginBottom: '0.4rem', display: 'block' }}>
-                Forma vrácení peněz:
+                {t('refund.return_method')}:
               </label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
@@ -301,7 +293,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                   onClick={() => setRefundPaymentMethod('cash')}
                 >
                   <Banknote size={16} />
-                  <span>Hotovost</span>
+                  <span>{t('payment.cash')}</span>
                 </button>
                 <button
                   type="button"
@@ -310,13 +302,12 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                   onClick={() => setRefundPaymentMethod('card')}
                 >
                   <CreditCard size={16} />
-                  <span>Karta</span>
+                  <span>{t('payment.card')}</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Return Total Calculation Summary Box */}
           <div style={{
             background: 'rgba(239, 68, 68, 0.08)',
             border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -328,10 +319,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
           }}>
             <div>
               <div style={{ fontSize: '0.85rem', color: '#dc2626', fontWeight: '700' }}>
-                Celková částka k vrácení zákazníkovi:
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                Bude vystavena stornovací účtenka s zápornou sumou
+                {t('refund.total_refund')}:
               </div>
             </div>
             <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#dc2626' }}>
@@ -339,10 +327,9 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button type="button" className="btn btn-outline" onClick={onClose} style={{ height: '46px', padding: '0 1.25rem' }}>
-              Zrušit
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -358,7 +345,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
               onClick={handleConfirm}
             >
               <RotateCcw size={18} />
-              <span>Potvrdit vratku a vystavit storno doklad</span>
+              <span>{t('refund.confirm_btn')}</span>
             </button>
           </div>
         </div>

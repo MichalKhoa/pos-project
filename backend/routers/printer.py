@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models import StoreConfigModel
-from services.escpos_service import ESCPOSPrinterService
+from services.escpos_service import ESCPOSPrinterService, detect_connected_printers
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/printer", tags=["Hardware Printer"])
@@ -13,9 +13,16 @@ class PrintReceiptRequest(BaseModel):
     storeConfig: dict
 
 
+@router.get("/devices")
+def get_printer_devices():
+    """Scan and list connected hardware printer devices."""
+    devices = detect_connected_printers()
+    return {"devices": devices}
+
+
 @router.post("/print")
 def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
-    """Trigger physical ESC/POS 80mm thermal print job."""
+    """Trigger physical ESC/POS thermal print job."""
     config = db.query(StoreConfigModel).first()
     interface = config.printer_interface if config else "USB"
     address = config.printer_address if config else "/dev/usb/lp0"

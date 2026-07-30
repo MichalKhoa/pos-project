@@ -14,8 +14,9 @@ import ShutdownModal from './components/ShutdownModal';
 import RefundModal from './components/RefundModal';
 import CalendarModal from './components/CalendarModal';
 import DiscountModal from './components/DiscountModal';
+import LockScreenModal from './components/LockScreenModal';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
-import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend } from './api/posApi';
+import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend } from './api/posApi';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('register');
@@ -29,6 +30,8 @@ export default function App() {
   const [isSyncingQueue, setIsSyncingQueue] = useState(false);
   const [snoozedUntil, setSnoozedUntil] = useState(0);
   const [syncNotification, setSyncNotification] = useState(null);
+  const [isAppLocked, setIsAppLocked] = useState(false);
+  const lastActivityRef = React.useRef(Date.now());
 
   // State — start from localStorage fallback, backend load will overwrite on mount
   const [categories, setCategories] = useState(() => {
@@ -217,7 +220,7 @@ export default function App() {
     localStorage.setItem('himmel_pos_sales', JSON.stringify(salesHistory));
   }, [salesHistory]);
 
-  // Load categories & presets from backend on mount (overrides localStorage)
+  // Load categories, presets & store config from SQLite backend on mount (overrides localStorage)
   useEffect(() => {
     fetchCategoriesBackend().then(data => {
       if (Array.isArray(data) && data.length > 0) setCategories(data);
@@ -225,7 +228,17 @@ export default function App() {
     fetchPresetsBackend().then(data => {
       if (Array.isArray(data) && data.length > 0) setPresets(data);
     });
+    fetchStoreConfigBackend().then(data => {
+      if (data && typeof data === 'object') {
+        setStoreConfig(prev => ({ ...prev, ...data }));
+      }
+    });
   }, []);
+
+  const handleSaveStoreConfig = (newConfig) => {
+    setStoreConfig(newConfig);
+    saveStoreConfigBackend(newConfig);
+  };
 
   // Check pending offline receipts from backend EET status
   const checkPendingOfflineSales = useCallback(async () => {
@@ -268,6 +281,31 @@ export default function App() {
       clearInterval(interval);
     };
   }, [checkPendingOfflineSales]);
+
+  // Auto-lock cashier app on 15 minutes of inactivity
+  useEffect(() => {
+    const handleUserActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    events.forEach(evt => window.addEventListener(evt, handleUserActivity));
+
+    const checkInterval = setInterval(() => {
+      const minutesLimit = storeConfig?.autoLockMinutes !== undefined ? storeConfig.autoLockMinutes : 15;
+      if (minutesLimit > 0 && !isAppLocked) {
+        const elapsedMs = Date.now() - lastActivityRef.current;
+        if (elapsedMs >= minutesLimit * 60 * 1000) {
+          setIsAppLocked(true);
+        }
+      }
+    }, 10000);
+
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, handleUserActivity));
+      clearInterval(checkInterval);
+    };
+  }, [storeConfig?.autoLockMinutes, isAppLocked]);
 
   const handleSnoozeSync = () => {
     // Snooze modal for 5 minutes
@@ -324,6 +362,8 @@ export default function App() {
   // Global Numpad & Physical Keyboard Listener for POS Register
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't process keypad input while lock screen is active
+      if (isAppLocked) return;
       // Only process when in POS register tab and no payment modal is open
       if (activeTab !== 'register') return;
 
@@ -384,7 +424,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig]);
+  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig, isAppLocked]);
 
   // Category handlers
   const handleAddCategory = (name) => {
@@ -648,6 +688,7 @@ export default function App() {
         onOpenSyncModal={() => setShowSyncModal(true)}
         onOpenShutdownModal={() => setShowShutdownModal(true)}
         onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
+        onLockApp={() => setIsAppLocked(true)}
       />
 
       {syncNotification && (
@@ -733,7 +774,7 @@ export default function App() {
         {activeTab === 'settings' && (
           <SettingsView
             storeConfig={storeConfig}
-            onSaveStoreConfig={setStoreConfig}
+            onSaveStoreConfig={handleSaveStoreConfig}
             presets={presets}
             onResetData={handleResetData}
             onNavigateToPresets={() => setActiveTab('presets')}
@@ -813,6 +854,17 @@ export default function App() {
         <ShutdownModal
           pendingCount={pendingSyncCount}
           onClose={() => setShowShutdownModal(false)}
+        />
+      )}
+
+      {/* Cashier Lock Screen Modal Overlay */}
+      {isAppLocked && (
+        <LockScreenModal
+          storeConfig={storeConfig}
+          onUnlock={() => {
+            setIsAppLocked(false);
+            lastActivityRef.current = Date.now();
+          }}
         />
       )}
     </div>
