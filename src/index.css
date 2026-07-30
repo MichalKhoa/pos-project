@@ -127,6 +127,13 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button, .preset-card, .category-chip, .nav-tab, .cart-item-row {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 button {
@@ -135,7 +142,6 @@ button {
   border: none;
   outline: none;
   transition: all 0.15s ease-in-out;
-  touch-action: manipulation;
 }
 
 button:active {

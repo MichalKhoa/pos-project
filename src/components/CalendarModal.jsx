@@ -411,19 +411,19 @@ export default function CalendarModal({
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-rose)' }} />
-                  <span style={{ fontWeight: '700', color: 'var(--accent-rose)' }}>Zákaz prodeje (Zákon 223/2016 Sb.)</span>
+                  <span style={{ fontWeight: '700', color: 'var(--accent-rose)' }}>{t('calendar.legend_closed')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-blue)' }} />
-                  <span>Svátek (Otevřeno)</span>
+                  <span>{t('calendar.legend_open')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)' }} />
-                  <span>Tržba doložena</span>
+                  <span>{t('calendar.legend_sales')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-amber)' }} />
-                  <span>Poznámka</span>
+                  <span>{t('calendar.legend_note')}</span>
                 </div>
               </div>
             </div>
@@ -464,19 +464,19 @@ export default function CalendarModal({
                   <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)', marginLeft: '1.75rem' }}>
                     {selectedDateHoliday.isClosed ? (
                       selectedDateHoliday.isHalfDay ? (
-                        '🛑 ZÁKAZ PRODEJE OD 12:00 (Zákon č. 223/2016 Sb.)'
+                        t('calendar.half_day_closed')
                       ) : (
-                        '🛑 ZÁKAZ PRODEJE MALOOBCHODU (Zákon č. 223/2016 Sb.)'
+                        t('calendar.full_day_closed')
                       )
                     ) : (
-                      '🟢 BEZ OMEZENÍ PRODEJNÍ DOBY (Prodejny mohou mít otevřeno)'
+                      t('calendar.no_restriction')
                     )}
                   </div>
 
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.75rem' }}>
                     {selectedDateHoliday.isClosed
-                      ? 'Dle zákona č. 223/2016 Sb. musí mít prodejny nad 200 m² v tento svátek zavřeno.'
-                      : 'Na tento státní svátek se zákonné omezení prodejní doby maloobchodu nevztahuje.'}
+                      ? t('calendar.closed_desc')
+                      : t('calendar.open_desc')}
                   </div>
                 </div>
               )}
@@ -489,23 +489,23 @@ export default function CalendarModal({
                 border: '1px solid var(--border-color)'
               }}>
                 <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700' }}>
-                  Přehled prodeje pro vybraný den
+                  {t('calendar.day_summary_title')}
                 </div>
                 <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
-                  {selectedDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  {selectedDate.toLocaleDateString(language === 'cs' ? 'cs-CZ' : language === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </div>
 
                 {/* Day Summary Stats Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginTop: '1rem' }}>
                   <div style={{ background: 'var(--bg-card)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>Tržba Celkem</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>{t('calendar.total_revenue')}</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-emerald)', marginTop: '2px' }}>
-                      {selectedDayStats.totalRevenue.toLocaleString('cs-CZ')} Kč
+                      {selectedDayStats.totalRevenue.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč
                     </div>
                   </div>
 
                   <div style={{ background: 'var(--bg-card)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>Počet Účtenek</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>{t('calendar.receipt_count')}</div>
                     <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-blue)', marginTop: '2px' }}>
                       {selectedDayStats.count} ks
                     </div>
@@ -514,9 +514,9 @@ export default function CalendarModal({
                   <div style={{ background: 'var(--bg-card)', padding: '0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Banknote size={16} style={{ color: 'var(--accent-emerald)' }} />
                     <div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Hotovost</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('calendar.cash_total')}</div>
                       <div style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                        {selectedDayStats.cashTotal.toLocaleString('cs-CZ')} Kč
+                        {selectedDayStats.cashTotal.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč
                       </div>
                     </div>
                   </div>
@@ -524,9 +524,9 @@ export default function CalendarModal({
                   <div style={{ background: 'var(--bg-card)', padding: '0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CreditCard size={16} style={{ color: 'var(--accent-blue)' }} />
                     <div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Platby Kartou</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('calendar.card_total')}</div>
                       <div style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                        {selectedDayStats.cardTotal.toLocaleString('cs-CZ')} Kč
+                        {selectedDayStats.cardTotal.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč
                       </div>
                     </div>
                   </div>
@@ -547,7 +547,7 @@ export default function CalendarModal({
                     gap: '0.5rem'
                   }}>
                     <RotateCcw size={15} />
-                    <span>Registrované vratky / storna: {selectedDayStats.refundCount} ks ({selectedDayStats.refundTotal.toLocaleString('cs-CZ')} Kč)</span>
+                    <span>{t('calendar.refunds_registered')}: {selectedDayStats.refundCount} ks ({selectedDayStats.refundTotal.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč)</span>
                   </div>
                 )}
 
@@ -568,7 +568,7 @@ export default function CalendarModal({
                   onClick={handleOpenReceiptsForDay}
                 >
                   <Receipt size={16} />
-                  <span>Zobrazit Účtenky Dne ({selectedDate.toLocaleDateString('cs-CZ')})</span>
+                  <span>{t('calendar.view_day_receipts')} ({selectedDate.toLocaleDateString(language === 'cs' ? 'cs-CZ' : language === 'vi' ? 'vi-VN' : 'en-US')})</span>
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -586,7 +586,7 @@ export default function CalendarModal({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <FileText size={15} style={{ color: 'var(--accent-amber)' }} />
-                    <span>Poznámka ke Směně / Dni</span>
+                    <span>{t('calendar.shift_note_title')}</span>
                   </div>
                   {!isEditingNote && notes[selectedDateKey] && (
                     <button
@@ -595,7 +595,7 @@ export default function CalendarModal({
                       style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
                       onClick={() => setIsEditingNote(true)}
                     >
-                      Upravit
+                      {t('calendar.edit_note')}
                     </button>
                   )}
                 </div>
@@ -604,7 +604,7 @@ export default function CalendarModal({
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <input
                       type="text"
-                      placeholder="Přidat poznámku (např. Inventura, Státní svátek)..."
+                      placeholder={t('calendar.note_placeholder')}
                       value={currentNoteText}
                       onChange={e => setCurrentNoteText(e.target.value)}
                       style={{
