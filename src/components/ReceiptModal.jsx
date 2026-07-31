@@ -3,6 +3,16 @@ import { Printer, CheckCircle, RotateCcw } from 'lucide-react';
 import { printReceiptBackend } from '../api/posApi';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale }) {
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -41,17 +51,28 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     const logoSize = isA4 ? '48px' : (is58mm ? '28px' : '36px');
 
     const isRefund = saleData.isRefund || saleData.is_refund;
-    const origNumber = saleData.originalReceiptNumber || saleData.original_receipt_number;
-    const reasonText = saleData.refundReason || saleData.refund_reason;
+    const origNumber = escapeHtml(saleData.originalReceiptNumber || saleData.original_receipt_number);
+    const reasonText = escapeHtml(saleData.refundReason || saleData.refund_reason);
+    const receiptNum = escapeHtml(saleData.receiptNumber);
+
+    const storeName = escapeHtml(storeConfig.storeName || '');
+    const street = escapeHtml(storeConfig.street || '');
+    const city = escapeHtml(storeConfig.city || '');
+    const ico = escapeHtml(storeConfig.ico || '');
+    const dic = escapeHtml(storeConfig.dic || '');
+    const registerNo = escapeHtml(storeConfig.registerNo || 'Pokladna #01');
+    const idProvozovny = escapeHtml(storeConfig.idProvozovny || '11');
+    const receiptFooter = escapeHtml(storeConfig.receiptFooter || 'Děkujeme za váš nákup!');
 
     const itemsHtml = (saleData.items || []).map((item, idx) => {
       const disc = item.discountPercent || 0;
       const effPrice = item.price * (1 - disc / 100);
+      const itemName = escapeHtml(item.name);
       if (isA4) {
         return `
           <tr style="border-bottom: 1px solid #e5e7eb;">
             <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
-            <td style="padding: 6px 8px; text-align: left; font-weight: 600;">${item.name}</td>
+            <td style="padding: 6px 8px; text-align: left; font-weight: 600;">${itemName}</td>
             <td style="padding: 6px 8px; text-align: center;">${item.quantity} ks</td>
             <td style="padding: 6px 8px; text-align: right;">${item.price.toFixed(2)} Kč</td>
             <td style="padding: 6px 8px; text-align: center;">${item.vat}%</td>
@@ -62,7 +83,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       return `
         <tr>
           <td style="text-align:left; padding:2px 0; word-break:break-word;">
-            <div>${item.name} ${disc > 0 ? `(-${disc}%)` : ''}</div>
+            <div>${itemName} ${disc > 0 ? `(-${disc}%)` : ''}</div>
             <div style="font-size:${is58mm ? '7.5px' : '8.5px'}; color:#555;">DPH ${item.vat}%</div>
           </td>
           <td style="text-align:center; padding:2px 0; width:15%;">${item.quantity}</td>
@@ -136,9 +157,9 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       `)
     ) : '';
 
-    const fik = saleData.fik || saleData.pok || saleData.fik_code;
-    const bkp = saleData.bkp || saleData.bkp_code;
-    const pkp = saleData.pkp;
+    const fik = escapeHtml(saleData.fik || saleData.pok || saleData.fik_code);
+    const bkp = escapeHtml(saleData.bkp || saleData.bkp_code);
+    const pkp = escapeHtml(saleData.pkp);
 
     const payLabel = saleData.paymentMethod === 'cash' ? 'HOTOVOST' : saleData.paymentMethod === 'card' ? 'KARTA' : saleData.paymentMethod === 'split' ? 'KOMBINOVANÁ' : 'QR PLATBA';
 
@@ -147,7 +168,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Faktura / Daňový Doklad č. ${saleData.receiptNumber}</title>
+            <title>Faktura / Daňový Doklad č. ${receiptNum}</title>
             <style>
               @page { size: A4 portrait; margin: 15mm; }
               body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #111827; margin: 0; padding: 0; background: #fff; }
@@ -167,16 +188,16 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                 <div style="display:flex; gap:12px; align-items:center;">
                   <img src="${himmelLogo}" style="width: 48px; height: 48px;" />
                   <div>
-                    <div style="font-size: 18px; font-weight: 800; color: #111827;">${storeConfig.storeName}</div>
-                    <div style="color:#4b5563; font-size:11px;">${storeConfig.street}, ${storeConfig.city}</div>
-                    <div style="color:#4b5563; font-size:11px;">IČO: ${storeConfig.ico} | DIČ: ${storeConfig.dic}</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #111827;">${storeName}</div>
+                    <div style="color:#4b5563; font-size:11px;">${street}, ${city}</div>
+                    <div style="color:#4b5563; font-size:11px;">IČO: ${ico} | DIČ: ${dic}</div>
                   </div>
                 </div>
                 <div style="text-align: right;">
                   <div style="font-size: 18px; font-weight: 800; color: ${isRefund ? '#dc2626' : '#1e40af'};">
                     ${isRefund ? 'STORNO DOKLAD / DOBROPIS' : 'DAŇOVÝ DOKLAD - ÚČTENKA'}
                   </div>
-                  <div style="font-size: 14px; font-weight: 700; margin-top:2px;">č. ${saleData.receiptNumber}</div>
+                  <div style="font-size: 14px; font-weight: 700; margin-top:2px;">č. ${receiptNum}</div>
                   <div style="color:#6b7280; font-size:10px; margin-top:4px;">Datum vystavení: ${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</div>
                   ${isRefund && origNumber ? `<div style="font-weight:700; color:#dc2626;">Původní doklad: #${origNumber}</div>` : ''}
                 </div>
@@ -185,17 +206,17 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               <div class="flex-between" style="margin-bottom: 20px; gap: 20px;">
                 <div style="flex:1; background:#f9fafb; padding:12px; border-radius:4px; border:1px solid #e5e7eb;">
                   <div class="section-title">Dodavatel (Prodávající)</div>
-                  <div style="font-weight:700; font-size:12px;">${storeConfig.storeName}</div>
-                  <div>${storeConfig.street}</div>
-                  <div>${storeConfig.city}</div>
-                  <div style="margin-top:4px;">IČO: <b>${storeConfig.ico}</b> | DIČ: <b>${storeConfig.dic}</b></div>
+                  <div style="font-weight:700; font-size:12px;">${storeName}</div>
+                  <div>${street}</div>
+                  <div>${city}</div>
+                  <div style="margin-top:4px;">IČO: <b>${ico}</b> | DIČ: <b>${dic}</b></div>
                 </div>
 
                 <div style="flex:1; background:#f9fafb; padding:12px; border-radius:4px; border:1px solid #e5e7eb;">
                   <div class="section-title">Platební Údaje</div>
                   <div>Způsob úhrady: <b>${payLabel}</b></div>
-                  <div>Označení pokladny: <b>${storeConfig.registerNo || 'Pokladna #01'}</b></div>
-                  <div>Provozovna ID: <b>${storeConfig.idProvozovny || '11'}</b></div>
+                  <div>Označení pokladny: <b>${registerNo}</b></div>
+                  <div>Provozovna ID: <b>${idProvozovny}</b></div>
                   ${saleData.paymentMethod === 'cash' ? `<div>Přijatá hotovost: ${saleData.tenderedAmount || 0} Kč</div>` : ''}
                 </div>
               </div>
@@ -235,7 +256,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               </div>
 
               <div style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 10px;">
-                <div>${storeConfig.receiptFooter || 'Děkujeme za váš nákup!'}</div>
+                <div>${receiptFooter}</div>
                 <div style="margin-top: 2px;">Vystaveno v pokladním systému Himmel POS</div>
               </div>
             </div>
@@ -260,13 +281,13 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       store: storeConfig.storeName,
       ico: storeConfig.ico
     });
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(receiptPayload)}`;
+    const qrImageUrl = `http://localhost:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
 
     printWin.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Účtenka č. ${saleData.receiptNumber}</title>
+          <title>Účtenka č. ${receiptNum}</title>
           <style>
             @page { margin: 0; size: auto; }
             body { font-family: monospace, monospace; font-size: ${fontSize}; line-height: 1.25; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
@@ -281,13 +302,13 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         <body>
           <div class="receipt-box">
             <img src="${himmelLogo}" style="width: ${logoSize}; height: ${logoSize}; display: block; margin: 0 auto 3px auto;" />
-            <div class="center bold" style="font-size: ${is58mm ? '11px' : '14px'};">${storeConfig.storeName}</div>
-            <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${storeConfig.street}</div>
-            <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${storeConfig.city}</div>
-            <div class="center" style="margin-top:2px; font-size: ${is58mm ? '8px' : '9.5px'};">IČO: ${storeConfig.ico} | DIČ: ${storeConfig.dic}</div>
+            <div class="center bold" style="font-size: ${is58mm ? '11px' : '14px'};">${storeName}</div>
+            <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${street}</div>
+            <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${city}</div>
+            <div class="center" style="margin-top:2px; font-size: ${is58mm ? '8px' : '9.5px'};">IČO: ${ico} | DIČ: ${dic}</div>
             <div class="dashed"></div>
             <div class="center bold" style="font-size: ${is58mm ? '10px' : '12px'};">
-              ${isRefund ? `STORNO DOKLAD č. ${saleData.receiptNumber}` : `ÚČTENKA č. ${saleData.receiptNumber}`}
+              ${isRefund ? `STORNO DOKLAD č. ${receiptNum}` : `ÚČTENKA č. ${receiptNum}`}
             </div>
             ${isRefund && origNumber ? `<div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; font-weight: bold;">Původní doklad č.: #${origNumber}</div>` : ''}
             ${isRefund && reasonText ? `<div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; font-style: italic;">Důvod: ${reasonText}</div>` : ''}
@@ -343,7 +364,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
 
             <div class="dashed"></div>
             <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; margin-top: 3px;">
-              ${storeConfig.receiptFooter || ''}
+              ${receiptFooter}
             </div>
           </div>
           <script>
@@ -368,7 +389,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     ico: storeConfig.ico
   });
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(receiptPayload)}`;
+  const qrImageUrl = `http://localhost:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
 
   return (
     <div className="modal-overlay">

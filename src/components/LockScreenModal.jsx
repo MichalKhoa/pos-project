@@ -12,54 +12,100 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
   const [isShaking, setIsShaking] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showPukInput, setShowPukInput] = useState(false);
-  const [pukValue, setPukValue] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
 
-  const handleNumClick = (num) => {
-    if (enteredPin.length >= 4 || isVerifying || showPukInput) return;
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setErrorMsg('');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
+  const handleNumClick = async (num) => {
+    if (enteredPin.length >= 8 || isVerifying || showPukInput || lockoutSeconds > 0) return;
     const newPin = enteredPin + num;
     setEnteredPin(newPin);
     setErrorMsg('');
 
-    if (newPin.length === 4) {
-      verifyPin(newPin);
+    if (newPin.length >= 4) {
+      const unlocked = await verifyPin(newPin, true);
+      if (!unlocked && newPin.length === 8) {
+        setIsShaking(true);
+        setTimeout(() => {
+          setIsShaking(false);
+          setEnteredPin('');
+        }, 500);
+      }
     }
   };
 
+  const handleUnlockSubmit = () => {
+    if (enteredPin.length < 4 || isVerifying || showPukInput || lockoutSeconds > 0) return;
+    verifyPin(enteredPin, false);
+  };
+
   const handleBackspace = () => {
-    if (isVerifying || showPukInput) return;
+    if (isVerifying || showPukInput || lockoutSeconds > 0) return;
     setEnteredPin(prev => prev.slice(0, -1));
     setErrorMsg('');
   };
 
   const handleClear = () => {
-    if (isVerifying || showPukInput) return;
+    if (isVerifying || showPukInput || lockoutSeconds > 0) return;
     setEnteredPin('');
     setErrorMsg('');
   };
 
-  const verifyPin = async (pinToTest) => {
+  const verifyPin = async (pinToTest, isQuiet = false) => {
+    if (lockoutSeconds > 0) return false;
     setIsVerifying(true);
     try {
       const res = await verifyPinBackend(pinToTest);
       if (res.valid === true) {
         setErrorMsg('');
+        setFailedAttempts(0);
+        setLockoutSeconds(0);
         onUnlock();
-        return;
+        return true;
       }
       if (res.valid === null) {
         const localPin = storeConfig?.cashierPin || '1234';
         if (pinToTest === localPin) {
           setErrorMsg('');
+          setFailedAttempts(0);
+          setLockoutSeconds(0);
           onUnlock();
-          return;
+          return true;
         }
       }
+
+      const newFailed = failedAttempts + 1;
+      setFailedAttempts(newFailed);
+      let penalty = 0;
+      if (newFailed >= 8) penalty = 60;
+      else if (newFailed >= 5) penalty = 30;
+
+      if (penalty > 0) {
+        setLockoutSeconds(penalty);
+      } else if (!isQuiet) {
+        setErrorMsg(`Nesprávný PIN kód! (${newFailed}/5 pokusů)`);
+      }
+
       setIsShaking(true);
-      setErrorMsg('Nesprávný PIN kód!');
       setTimeout(() => {
         setIsShaking(false);
         setEnteredPin('');
       }, 500);
+      return false;
     } finally {
       setIsVerifying(false);
     }
@@ -101,6 +147,11 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
         handleBackspace();
       } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
         handleClear();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (enteredPin.length >= 4 && !isVerifying) {
+          verifyPin(enteredPin);
+        }
       }
     };
 
@@ -137,9 +188,29 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
 
         {!showPukInput ? (
           <>
+            {lockoutSeconds > 0 && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                margin: '0.75rem 0',
+                color: '#ef4444',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}>
+                <Lock size={16} />
+                <span>Přístup pozastaven na {lockoutSeconds} s z důvodu opakovaných pokusů</span>
+              </div>
+            )}
+
             {/* PIN Indicator Dots */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', margin: '1.25rem 0' }}>
-              {[0, 1, 2, 3].map(idx => {
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', margin: '1.25rem 0' }}>
+              {Array.from({ length: Math.max(4, Math.min(8, enteredPin.length)) }).map((_, idx) => {
                 const isFilled = enteredPin.length > idx;
                 return (
                   <div
@@ -165,7 +236,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
             )}
 
             {/* Touch Keypad */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem', margin: '0.5rem 0 1rem 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem', margin: '0.5rem 0 0.75rem 0' }}>
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
                 <button
                   key={num}
@@ -203,9 +274,30 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
               </button>
             </div>
 
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={enteredPin.length < 4 || isVerifying}
+              onClick={handleUnlockSubmit}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                fontWeight: '800',
+                marginBottom: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justify: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <Lock size={16} />
+              <span>Odemknout ↵</span>
+            </button>
+
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
               <KeyRound size={13} />
-              <span>Zadejte 4-místný PIN kód pro odemčení</span>
+              <span>Zadejte PIN kód (4–8 číslic) pro odemčení</span>
             </div>
 
             {/* PUK Recovery Option Toggle */}

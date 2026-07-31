@@ -1,10 +1,24 @@
 import os
 import logging
+
+# Load environment variables from .env if present
+def _load_env_file():
+    for path in [os.path.join(os.path.dirname(__file__), ".env"), os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")]:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+_load_env_file()
+
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from database import engine, Base
-from routers import sales, printer, display, payments, eet, catalog, updater, config
+from routers import sales, printer, display, payments, eet, catalog, updater, config, qr
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +49,10 @@ MIGRATIONS = [
     # Table: sales
     ("sales", "cart_discount_percent", "FLOAT DEFAULT 0"),
     ("sales", "split_details", "VARCHAR DEFAULT ''"),
+    ("sales", "eic_popl", "VARCHAR DEFAULT ''"),
+    ("sales", "id_provozovny", "VARCHAR DEFAULT '11'"),
+    ("sales", "id_pokl", "VARCHAR DEFAULT '1'"),
+    ("sales", "is_sent_to_eet", "BOOLEAN DEFAULT 1"),
     ("sales", "is_refund", "BOOLEAN DEFAULT 0"),
     ("sales", "original_receipt_number", "VARCHAR DEFAULT ''"),
     ("sales", "refund_reason", "VARCHAR DEFAULT ''"),
@@ -46,8 +64,12 @@ MIGRATIONS = [
     ("catalog_presets", "is_open_price", "BOOLEAN DEFAULT 0"),
     ("catalog_presets", "color", "VARCHAR DEFAULT '#3b82f6'"),
     ("catalog_presets", "sort_order", "INTEGER DEFAULT 0"),
+    # Table: store_config
+    ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
+    ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),
 ]
 
+# SAFETY: table/col/col_type are hardcoded tuple constants, never user input.
 with engine.connect() as conn:
     for table, col, col_type in MIGRATIONS:
         try:
@@ -72,8 +94,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key", "X-Admin-Override"],
 )
 
 
@@ -86,6 +108,7 @@ app.include_router(printer.router)
 app.include_router(display.router)
 app.include_router(payments.router)
 app.include_router(updater.router)
+app.include_router(qr.router)
 
 
 @app.get("/")
@@ -96,6 +119,43 @@ def root():
         "docs_url": "/docs",
         "version": "1.0.0"
     }
+
+
+@app.get("/api/v1/system/litestream-status")
+def get_litestream_status():
+    """Returns Litestream database replication status and SQLite WAL metrics."""
+    import sys, subprocess, os
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(backend_dir, "litestream.yml")
+    config_exists = os.path.exists(config_path)
+
+    is_running = False
+    try:
+        if sys.platform == "win32":
+            res = subprocess.run(["tasklist", "/FI", "IMAGENAME eq litestream.exe"], capture_output=True, text=True, timeout=3)
+            is_running = "litestream.exe" in res.stdout
+        else:
+            res = subprocess.run(["pgrep", "-f", "litestream"], capture_output=True, text=True, timeout=3)
+            is_running = res.returncode == 0
+    except Exception:
+        is_running = False
+
+    db_path = os.path.join(backend_dir, "pos_store.db")
+    wal_path = os.path.join(backend_dir, "pos_store.db-wal")
+
+    db_size = os.path.getsize(db_path) if os.path.exists(db_path) else 0
+    wal_size = os.path.getsize(wal_path) if os.path.exists(wal_path) else 0
+
+    return {
+        "status": "SUCCESS",
+        "litestream_configured": config_exists,
+        "is_running": is_running,
+        "wal_active": os.path.exists(wal_path),
+        "db_size_bytes": db_size,
+        "wal_size_bytes": wal_size,
+        "message": "Litestream replikace je aktivní" if is_running else ("Konfigurace přítomna" if config_exists else "Litestream nenakonfigurován")
+    }
+
 
 
 @app.post("/api/v1/system/shutdown")
@@ -157,12 +217,12 @@ def shutdown_system(request: Request):
     def terminate():
         try:
             # Target POS launcher terminal windows and app instances (avoiding indiscriminate process kills)
-            subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Web*"', shell=True, capture_output=True)
-            subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Launcher*"', shell=True, capture_output=True)
-            subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Kiosk Launcher*"', shell=True, capture_output=True)
-            subprocess.run('taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq http://localhost:5173*"', shell=True, capture_output=True)
-            subprocess.run('taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq Himmel POS App*"', shell=True, capture_output=True)
-            subprocess.run('taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*"', shell=True, capture_output=True)
+            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Web*"], shell=False, capture_output=True)
+            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Launcher*"], shell=False, capture_output=True)
+            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Kiosk Launcher*"], shell=False, capture_output=True)
+            subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq http://localhost:5173*"], shell=False, capture_output=True)
+            subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq Himmel POS App*"], shell=False, capture_output=True)
+            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Backend*"], shell=False, capture_output=True)
         except Exception as e:
             logger.warning(f"Error during terminal cleanup: {e}")
         finally:

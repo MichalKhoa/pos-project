@@ -64,6 +64,7 @@ class StoreConfigModel(Base):
     register_no = Column(String, default="Pokladna #01")
     default_vat = Column(Integer, default=21)
     receipt_footer = Column(String, default="Děkujeme za váš nákup!")
+    bank_account_iban = Column(String, default="CZ6508000000001234567890")
     printer_interface = Column(String, default="USB") # 'USB', 'NETWORK', 'SERIAL'
     printer_address = Column(String, default="/dev/usb/lp0")
     printer_paper_width = Column(String, default="80") # '58' or '80' mm
@@ -88,6 +89,9 @@ class StoreConfigModel(Base):
 
     # Hardware Direct Silent Printing vs Browser Debug Preview
     direct_hardware_print = Column(Boolean, default=True)
+
+    # Default POS Language Configuration ('cs', 'vi', 'en')
+    default_language = Column(String, default="cs")
 
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
@@ -122,4 +126,12 @@ class PresetModel(Base):
     color = Column(String, nullable=True)
     is_open_price = Column(Boolean, default=False)
     position = Column(Integer, default=0)
+
+
+class ReceiptSequenceModel(Base):
+    """DB Model for Atomic Receipt Sequence Counters per Year."""
+    __tablename__ = "receipt_sequences"
+
+    year = Column(Integer, primary_key=True)
+    last_seq = Column(Integer, default=0, nullable=False)
 

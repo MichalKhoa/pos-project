@@ -8,7 +8,7 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/api/v1/update", tags=["System Updater"])
 logger = logging.getLogger("pos-updater")
 
-REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def run_git_command(args, cwd=REPO_DIR):

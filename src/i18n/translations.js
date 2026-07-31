@@ -29,7 +29,8 @@ export const translations = {
       amount_label: "Částka k úhradě",
       ready: "Připraveno",
       add_to_cart: "Přidat do Košíku",
-      enter_amount: "Zadejte Částku"
+      enter_amount: "Zadejte Částku",
+      cancel_multiplier: "Zrušit"
     },
     calendar: {
       title: "Kalendář Směny & Státní Svátky ČR",
@@ -99,7 +100,7 @@ export const translations = {
       search: "Hledat položku nebo název...",
       all: "Všechny položky",
       add_preset: "Přidat novou položku",
-      add_category: "Nová kategorie",
+      add_category: "Správa kategorií",
       manage_categories: "Správa Kategorií Produktů",
       new_category_placeholder: "Název nové kategorie...",
       add_category_btn: "Přidat",
@@ -203,6 +204,7 @@ export const translations = {
       unit_no: "Číslo Evidenční Jednotky (id_jednotky)",
       register_no: "Označení Pokladny (id_pokl)",
       default_vat: "Výchozí sazba DPH",
+      bank_account_iban: "Bankovní účet / IBAN (pro QR platby)",
       environment: "Cílové EET Prostředí",
       printer_settings: "Typ & Šířka Papíru Pokladní Tiskárny (ESC/POS)",
       printer_80mm: "🖨️ 80 mm rola (72 mm tisková oblast - max 48 znaků/řádek)",
@@ -237,7 +239,8 @@ export const translations = {
       export_backup: "Exportovat Kompletní Zálohu Dat (JSON)",
       import_backup: "Importovat & Obnovit Databázi",
       factory_reset: "Tovární Reset Všech Dat",
-      language: "Jazyk aplikací"
+      language: "Jazyk aplikací",
+      default_language: "Výchozí Jazyk Pokladny (DB)"
     },
     discount: {
       title: "Vlastní Sleva",
@@ -290,7 +293,8 @@ export const translations = {
       amount_label: "Số tiền cần thanh toán",
       ready: "Sẵn sàng",
       add_to_cart: "Thêm Vào Giỏ Hàng",
-      enter_amount: "Nhập Số Tiền"
+      enter_amount: "Nhập Số Tiền",
+      cancel_multiplier: "Hủy"
     },
     calendar: {
       title: "Lịch Ca Làm Việc & Ngày Lễ Séc",
@@ -464,6 +468,7 @@ export const translations = {
       unit_no: "Mã đơn vị (id_jednotky)",
       register_no: "Số máy thu ngân (id_pokl)",
       default_vat: "Mức VAT mặc định",
+      bank_account_iban: "Tài khoản ngân hàng / IBAN (cho thanh toán QR)",
       environment: "Môi trường EET",
       printer_settings: "Loại & Khổ Giấy Máy In Hóa Đơn (ESC/POS)",
       printer_80mm: "🖨️ Cuộn 80 mm (vùng in 72 mm - tối đa 48 ký tự/dòng)",
@@ -498,7 +503,8 @@ export const translations = {
       export_backup: "Xuất Bản Sao Lưu Dữ Liệu (JSON)",
       import_backup: "Nhập & Khôi Phục Dữ Liệu",
       factory_reset: "Khôi Phục Cài Đặt Gốc",
-      language: "Ngôn ngữ giao diện"
+      language: "Ngôn ngữ giao diện",
+      default_language: "Ngôn Ngữ Mặc Định (DB)"
     },
     discount: {
       title: "Giảm Giá Tùy Chỉnh",
@@ -551,7 +557,8 @@ export const translations = {
       amount_label: "Amount Due",
       ready: "Ready",
       add_to_cart: "Add to Cart",
-      enter_amount: "Enter Amount"
+      enter_amount: "Enter Amount",
+      cancel_multiplier: "Cancel"
     },
     calendar: {
       title: "Shift Calendar & Czech National Holidays",
@@ -725,6 +732,7 @@ export const translations = {
       unit_no: "Unit Number (id_jednotky)",
       register_no: "Register No. (id_pokl)",
       default_vat: "Default VAT Rate",
+      bank_account_iban: "Bank Account / IBAN (for QR payments)",
       environment: "EET Target Environment",
       printer_settings: "POS Receipt Printer Type & Paper Width (ESC/POS)",
       printer_80mm: "🖨️ 80 mm roll (72 mm print area - max 48 chars/line)",
@@ -759,7 +767,8 @@ export const translations = {
       export_backup: "Export Full Data Backup (JSON)",
       import_backup: "Import & Restore Database",
       factory_reset: "Factory Reset All Data",
-      language: "Interface Language"
+      language: "Interface Language",
+      default_language: "Default POS Language (DB)"
     },
     discount: {
       title: "Custom Discount",

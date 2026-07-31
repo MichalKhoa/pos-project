@@ -13,6 +13,7 @@ Python FastAPI backend structure located in `/backend`.
 - `printer.py`: Hardware device discovery (`/api/v1/printer/devices`) and ESC/POS thermal print triggers.
 - `eet.py`: Certificate validation, status check, manual payload test, PKCS#12 upload.
 - `payments.py`: Czech Short Payment Descriptor (SPD) QR code generation, verification, and ČSOB payment terminal integration.
+- `qr.py`: Offline PNG QR image generator (`GET /api/v1/qr/generate` and `GET /api/v1/qr/spd`) using Python `qrcode` + `Pillow` libraries.
 - `display.py`: WebSocket connection manager for customer display.
 - `catalog.py`: Preset categories and product catalog management.
 

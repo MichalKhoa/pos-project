@@ -1,19 +1,8 @@
 import React, { useState } from 'react';
 import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Check, Calculator, Settings2 } from 'lucide-react';
-import { DEFAULT_CATEGORIES } from '../data/initialData';
+import { DEFAULT_CATEGORIES, COLOR_OPTIONS } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
-
-const COLOR_OPTIONS = [
-  '#3b82f6', // Blue
-  '#10b981', // Emerald
-  '#f59e0b', // Amber
-  '#8b5cf6', // Purple
-  '#ec4899', // Pink
-  '#06b6d4', // Cyan
-  '#ef4444', // Red
-  '#64748b'  // Slate
-];
 
 export default function PresetsCatalogView({
   presets,
@@ -29,7 +18,8 @@ export default function PresetsCatalogView({
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
-  const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | 'category' | null
+  const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -189,7 +179,7 @@ export default function PresetsCatalogView({
           <button
             className="category-chip"
             style={{ borderStyle: 'dashed', background: 'transparent' }}
-            onClick={() => setActiveModal('category')}
+            onClick={() => setIsCategoryModalOpen(true)}
           >
             <Settings2 size={14} />
             <span>{t('presets.add_category')}</span>
@@ -292,7 +282,7 @@ export default function PresetsCatalogView({
       )}
 
       {/* Add / Edit Modal */}
-      {activeModal && (
+      {(activeModal === 'add' || activeModal === 'edit') && (
         <div className="modal-overlay" onClick={() => setActiveModal(null)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
@@ -429,9 +419,9 @@ export default function PresetsCatalogView({
                   <button
                     type="button"
                     style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: '700' }}
-                    onClick={() => setActiveModal('category')}
+                    onClick={() => setIsCategoryModalOpen(true)}
                   >
-                    + Nová kategorie
+                    + {t('presets.add_category')}
                   </button>
                 </div>
                 <select
@@ -454,25 +444,36 @@ export default function PresetsCatalogView({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.4rem' }}>
                   Barva tlačítka
                 </label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {COLOR_OPTIONS.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: c })}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: c,
-                        border: formData.color === c ? '3px solid #ffffff' : 'none',
-                        boxShadow: formData.color === c ? '0 0 8px ' + c : 'none'
-                      }}
-                    />
-                  ))}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '0.65rem', maxHeight: '180px', overflowY: 'auto', padding: '4px 2px' }}>
+                  {COLOR_OPTIONS.map(c => {
+                    const isSelected = formData.color === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, color: c })}
+                        style={{
+                          height: '48px',
+                          borderRadius: '12px',
+                          background: c,
+                          border: isSelected ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.15)',
+                          boxShadow: isSelected ? `0 0 14px ${c}, 0 4px 10px rgba(0,0,0,0.5)` : '0 2px 5px rgba(0,0,0,0.2)',
+                          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          touchAction: 'manipulation',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {isSelected && <Check size={22} style={{ color: '#ffffff', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -512,13 +513,17 @@ export default function PresetsCatalogView({
       )}
 
       {/* Category Manager Modal */}
-      {activeModal === 'category' && (
+      {isCategoryModalOpen && (
         <CategoryManagerModal
           categories={categories}
-          onAddCategory={onAddCategory}
+          onAddCategory={(name) => {
+            const createdId = onAddCategory(name);
+            if (createdId) setFormData(prev => ({ ...prev, category: createdId }));
+            return createdId;
+          }}
           onEditCategory={onEditCategory}
           onDeleteCategory={onDeleteCategory}
-          onClose={() => setActiveModal(null)}
+          onClose={() => setIsCategoryModalOpen(false)}
           onSelectCategory={(id) => setActiveCategory(id)}
         />
       )}

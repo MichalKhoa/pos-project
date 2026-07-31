@@ -5,7 +5,7 @@ React 19 single-page register application located in `/src`.
 ## Structure
 - [main.jsx](file:///home/misko/Documents/pos-eet-himmel/src/main.jsx): React root renderer.
 - [App.jsx](file:///home/misko/Documents/pos-eet-himmel/src/App.jsx): Main state router, active tab switcher (`register`, `catalog`, `sales`, `settings`), cart state manager, global modal controllers.
-- [index.css](file:///home/misko/Documents/pos-eet-himmel/src/index.css): Comprehensive CSS design tokens (colors, typography, grid, buttons, animations).
+- [index.css](file:///home/misko/Documents/pos-eet-himmel/src/index.css): Comprehensive CSS design tokens (colors, typography, grid, buttons, animations) + touch UI rules (`user-select: none`, `-webkit-touch-callout: none`, `touch-action: manipulation`).
 - [App.css](file:///home/misko/Documents/pos-eet-himmel/src/App.css): Layout grid and view-specific structural styles.
 
 ## API Client Layer (`/src/api/posApi.js`)

@@ -3,16 +3,24 @@
 Security practices, authentication workflows, cryptographic hashing, and PIN recovery mechanisms in Himmel POS.
 
 ## 🔑 Cashier PIN Authentication & Hashing
+- **PIN Length:** Supports variable length PINs from 4 to 8 digits.
 - **Server-Side Hashing:** Cashier PINs are stored as SHA-256 hex digests in the SQLite database (`store_config.cashier_pin`).
 - **Endpoint:** `POST /api/v1/config/verify-pin` compares SHA-256 hashes server-side.
-- **Privacy:** `GET /api/v1/config` never returns `cashierPin` in payload—only a `hasPin` boolean.
+- **Privacy:** `GET /api/v1/config` never returns `cashierPin` in payload—only a `hasPin` boolean. `cashierPin` is excluded from localStorage serialization.
+- **Rate Limiting:** Lockout penalty starts after 5 failed attempts (30s penalty, 60s for 8+ attempts) with live visual countdown banner on lock screen.
 - **Auto-Migration:** Plaintext PINs in legacy databases are automatically hashed on first successful verification.
-- **Offline Fallback:** If Python backend is unreachable, frontend falls back to localStorage PIN comparison.
+- **Offline Fallback:** If Python backend is unreachable, lock screen falls back to localStorage PIN comparison.
 
 ## 🛑 Lock Screen & Input Isolation
 - `LockScreenModal.jsx` handles PIN input.
 - Uses capture phase listener (`window.addEventListener('keydown', handleKeyDown, true)`) and `e.stopImmediatePropagation()` to isolate physical keyboard events.
 - Prevents PIN digits from leaking into underlying register inputs (`ManualKeypad.jsx`, `App.jsx`).
+
+## 🛡️ Encryption, XSS & Transport Safety
+- **Secret Key Handling:** Fernet encryption derives key from `APP_SECRET_KEY` env var or auto-generates persistent 32-byte secret key in `.secret_key`.
+- **XSS Prevention:** `escapeHtml()` helper sanitizes all user-controlled catalog/store/receipt fields before rendering debug HTML print preview windows.
+- **Upload Hardening:** Certificate uploads (`.p12`/`.pfx`) restricted to max 2 MB.
+- **CORS Hardening:** Restricted to explicit HTTP methods and allowed headers.
 
 ## 🔑 PIN Recovery Mechanisms (PUK & Local Script)
 1. **Master Recovery Code (PUK):**

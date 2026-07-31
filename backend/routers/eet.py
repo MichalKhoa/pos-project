@@ -81,9 +81,14 @@ def upload_eet_certificate(
     if not safe_filename or not safe_filename.lower().endswith((".p12", ".pfx")):
         raise HTTPException(status_code=400, detail="Soubor musí mít příponu .p12 nebo .pfx")
 
+    MAX_CERT_SIZE = 2 * 1024 * 1024  # 2 MB max size limit
+    contents = file.file.read(MAX_CERT_SIZE + 1)
+    if len(contents) > MAX_CERT_SIZE:
+        raise HTTPException(status_code=413, detail="Soubor certifikátu je příliš velký (max 2 MB).")
+
     save_path = os.path.join(CERTS_DIR, safe_filename)
     with open(save_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(contents)
 
 
     # Test certificate parsing

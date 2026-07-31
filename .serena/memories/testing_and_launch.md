@@ -25,5 +25,11 @@ Operational execution scripts and environment setup.
 - Node.js & npm for React frontend.
 - PKCS#12 certificates placed in `backend/certs/`.
 
+## Automated Unit Tests
+- Backend core business logic edge cases:
+  ```bash
+  python backend/tests/test_business_logic.py
+  ```
+
 ## Related Memories
 - Core overview: `mem:core`

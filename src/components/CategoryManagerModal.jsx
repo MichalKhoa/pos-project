@@ -55,7 +55,7 @@ export default function CategoryManagerModal({
   const editableCategories = categories.filter(c => c.id !== 'all');
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
       <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
         <div className="modal-header">
           <div className="modal-title">

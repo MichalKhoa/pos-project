@@ -1,23 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
-import { DEFAULT_CATEGORIES } from '../data/initialData';
+import { DEFAULT_CATEGORIES, COLOR_OPTIONS } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
-
-const COLOR_OPTIONS = [
-  '#3b82f6', // Blue
-  '#10b981', // Emerald
-  '#f59e0b', // Amber
-  '#8b5cf6', // Purple
-  '#ec4899', // Pink
-  '#06b6d4', // Cyan
-  '#ef4444', // Red
-  '#64748b'  // Slate
-];
 
 export default function QuickPresetGrid({
   presets,
   categories = DEFAULT_CATEGORIES,
+  itemMultiplier = 1,
+  setItemMultiplier,
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
@@ -33,7 +24,8 @@ export default function QuickPresetGrid({
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | 'category' | null
+  const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
   // Open Price Prompt Modal State
@@ -195,7 +187,7 @@ export default function QuickPresetGrid({
           onAddToCart({
             ...preset,
             price: numericKeypad
-          });
+          }, itemMultiplier);
           if (onClearKeypadAmount) onClearKeypadAmount();
         } else {
           // Trigger Open Price prompt modal
@@ -203,7 +195,7 @@ export default function QuickPresetGrid({
           setEnteredOpenPrice('');
         }
       } else {
-        onAddToCart(preset);
+        onAddToCart(preset, itemMultiplier);
       }
     }
   };
@@ -216,7 +208,7 @@ export default function QuickPresetGrid({
     onAddToCart({
       ...openPriceTarget,
       price: priceVal
-    });
+    }, itemMultiplier);
 
     setOpenPriceTarget(null);
     setEnteredOpenPrice('');
@@ -304,6 +296,33 @@ export default function QuickPresetGrid({
             )}
           </div>
 
+          {itemMultiplier > 1 && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: '#ffffff',
+                padding: '0.35rem 0.65rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8rem',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.35)'
+              }}
+              title="Aktivní násobič množství"
+            >
+              <span>⚡ {itemMultiplier}×</span>
+              <button
+                type="button"
+                onClick={() => setItemMultiplier && setItemMultiplier(1)}
+                style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '1px' }}
+              >
+                <X size={13} />
+              </button>
+            </div>
+          )}
+
           <button
             className={`nav-tab ${isEditMode ? 'active' : ''}`}
             style={{
@@ -335,7 +354,7 @@ export default function QuickPresetGrid({
         <button
           className="category-chip"
           style={{ borderStyle: 'dashed', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          onClick={() => setActiveModal('category')}
+          onClick={() => setIsCategoryModalOpen(true)}
           title={t('presets.manage_categories')}
         >
           <Settings2 size={14} />
@@ -377,14 +396,38 @@ export default function QuickPresetGrid({
               className={`preset-card ${isEditMode ? 'edit-mode' : ''} ${isDraggingThis ? 'dragging' : ''} ${isDragOverThis ? 'drag-over' : ''}`}
               style={{
                 '--card-accent': preset.color || '#3b82f6',
+                position: 'relative',
                 outline: isEditMode
                   ? (isDragOverThis ? '2px solid var(--accent-blue)' : '2px dashed var(--accent-amber)')
-                  : 'none',
+                  : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : 'none'),
+                boxShadow: itemMultiplier > 1 && !isEditMode ? '0 0 12px rgba(245, 158, 11, 0.3)' : undefined,
                 opacity: isDraggingThis ? 0.4 : 1,
                 cursor: isEditMode ? 'grab' : 'pointer'
               }}
               onClick={() => handleCardClick(preset)}
             >
+              {itemMultiplier > 1 && !isEditMode && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: '900',
+                    padding: '2px 7px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                    pointerEvents: 'none',
+                    letterSpacing: '0.02em',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    zIndex: 2
+                  }}
+                >
+                  ×{itemMultiplier}
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flex: 1, width: '100%' }}>
                 {isEditMode && (
                   <div
@@ -472,33 +515,29 @@ export default function QuickPresetGrid({
         </button>
       </div>
 
-      {/* Open Price Prompt Modal with Touch Keypad */}
+      {/* Preset Open Price Prompt Modal */}
       {openPriceTarget && (
         <div className="modal-overlay" onClick={() => setOpenPriceTarget(null)}>
           <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
             <div className="modal-header">
               <div className="modal-title">
-                <Calculator size={20} style={{ color: 'var(--accent-amber)' }} />
+                <Tag size={20} style={{ color: 'var(--accent-amber)' }} />
                 <span>{openPriceTarget.name}</span>
               </div>
               <button className="close-modal-btn" onClick={() => setOpenPriceTarget(null)}>✕</button>
             </div>
 
-            <form onSubmit={handleConfirmOpenPrice} className="modal-body">
-              <div className="tender-display" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
-                <span className="tender-label">{t('presets.price')} ({openPriceTarget.vat}% VAT)</span>
-                <div style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '2.2rem',
-                  fontWeight: '800',
-                  color: 'var(--accent-emerald)',
-                  marginTop: '4px'
-                }}>
+            <form onSubmit={handleOpenPriceSubmit} className="modal-body">
+              <div className="keypad-input-container">
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                  {t('presets.open_price_label')}
+                </div>
+                <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
                   {enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč'}
                 </div>
               </div>
 
-              {/* Touch Keypad with Decimal Point */}
+              {/* Touch Numpad */}
               <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                 {['7', '8', '9'].map(num => (
                   <button key={num} type="button" className="key-btn" style={{ height: '52px' }} onClick={() => setEnteredOpenPrice(prev => {
@@ -599,7 +638,7 @@ export default function QuickPresetGrid({
       )}
 
       {/* Add / Edit Modal */}
-      {activeModal && (
+      {(activeModal === 'add' || activeModal === 'edit') && (
         <div className="modal-overlay" onClick={() => setActiveModal(null)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
@@ -734,7 +773,7 @@ export default function QuickPresetGrid({
                   <button
                     type="button"
                     style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.75rem', fontWeight: '600' }}
-                    onClick={() => setActiveModal('category')}
+                    onClick={() => setIsCategoryModalOpen(true)}
                   >
                     + {t('presets.add_category')}
                   </button>
@@ -758,25 +797,36 @@ export default function QuickPresetGrid({
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: '700' }}>
                   {t('presets.color_label')}
                 </label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {COLOR_OPTIONS.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: c })}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: c,
-                        border: formData.color === c ? '3px solid #ffffff' : 'none',
-                        boxShadow: formData.color === c ? '0 0 8px ' + c : 'none'
-                      }}
-                    />
-                  ))}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '0.65rem', maxHeight: '180px', overflowY: 'auto', padding: '4px 2px' }}>
+                  {COLOR_OPTIONS.map(c => {
+                    const isSelected = formData.color === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, color: c })}
+                        style={{
+                          height: '48px',
+                          borderRadius: '12px',
+                          background: c,
+                          border: isSelected ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.15)',
+                          boxShadow: isSelected ? `0 0 14px ${c}, 0 4px 10px rgba(0,0,0,0.5)` : '0 2px 5px rgba(0,0,0,0.2)',
+                          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          touchAction: 'manipulation',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {isSelected && <Check size={22} style={{ color: '#ffffff', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -816,13 +866,17 @@ export default function QuickPresetGrid({
       )}
 
       {/* Category Manager Modal */}
-      {activeModal === 'category' && (
+      {isCategoryModalOpen && (
         <CategoryManagerModal
           categories={categories}
-          onAddCategory={onAddCategory}
+          onAddCategory={(name) => {
+            const createdId = onAddCategory(name);
+            if (createdId) setFormData(prev => ({ ...prev, category: createdId }));
+            return createdId;
+          }}
           onEditCategory={onEditCategory}
           onDeleteCategory={onDeleteCategory}
-          onClose={() => setActiveModal(null)}
+          onClose={() => setIsCategoryModalOpen(false)}
           onSelectCategory={(id) => setActiveCategory(id)}
         />
       )}

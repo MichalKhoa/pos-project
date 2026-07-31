@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
-from models import SaleModel, SaleItemModel, StoreConfigModel
+from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel
 from services.eet_service import CzechEETService
 from pydantic import BaseModel
 from datetime import datetime
@@ -10,6 +10,36 @@ from datetime import datetime
 router = APIRouter(prefix="/api/v1/sales", tags=["Sales Ledger"])
 eet_service = CzechEETService()
 
+
+def generate_next_receipt_number(db: Session, year: Optional[int] = None) -> str:
+    """
+    Atomically increments and retrieves the next receipt sequence number for the specified year.
+    Returns format: YYYY-XXXXXX (e.g. 2026-000042)
+    """
+    if not year:
+        year = datetime.now().year
+
+    seq_obj = db.query(ReceiptSequenceModel).filter(ReceiptSequenceModel.year == year).first()
+    if not seq_obj:
+        year_prefix = f"{year}-"
+        max_num = 0
+        existing_sales = db.query(SaleModel.receipt_number).filter(SaleModel.receipt_number.like(f"{year_prefix}%")).all()
+        for (rn,) in existing_sales:
+            try:
+                num = int(rn.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except Exception:
+                pass
+        seq_obj = ReceiptSequenceModel(year=year, last_seq=max_num)
+        db.add(seq_obj)
+        db.flush()
+
+    seq_obj.last_seq += 1
+    next_num = seq_obj.last_seq
+    db.commit()
+
+    return f"{year}-{next_num:06d}"
 
 
 class SaleItemSchema(BaseModel):
@@ -23,7 +53,7 @@ class SaleItemSchema(BaseModel):
 
 class CreateSaleSchema(BaseModel):
     id: str
-    receiptNumber: str
+    receiptNumber: Optional[str] = ""
     timestamp: Optional[str] = None
     totalAmount: float
     cartDiscountPercent: float = 0.0
@@ -52,13 +82,41 @@ def get_sales_history(db: Session = Depends(get_db)):
     return sales
 
 
+@router.get("/next-receipt-number")
+def get_next_receipt_number_preview(db: Session = Depends(get_db)):
+    """Preview the next available receipt number sequence."""
+    year = datetime.now().year
+    seq_obj = db.query(ReceiptSequenceModel).filter(ReceiptSequenceModel.year == year).first()
+    if seq_obj:
+        next_num = seq_obj.last_seq + 1
+    else:
+        year_prefix = f"{year}-"
+        max_num = 0
+        existing_sales = db.query(SaleModel.receipt_number).filter(SaleModel.receipt_number.like(f"{year_prefix}%")).all()
+        for (rn,) in existing_sales:
+            try:
+                num = int(rn.split("-")[1])
+                if num > max_num:
+                    max_num = num
+            except Exception:
+                pass
+        next_num = max_num + 1
+
+    return {"next_receipt_number": f"{year}-{next_num:06d}"}
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
     """Save a completed sale, run EET fiscal signing, and persist line items."""
     # Check if sale ID already exists
     existing = db.query(SaleModel).filter(SaleModel.id == sale.id).first()
     if existing:
-        return {"status": "ALREADY_EXISTS", "sale_id": existing.id}
+        return {"status": "ALREADY_EXISTS", "sale_id": existing.id, "receipt_number": existing.receipt_number}
+
+    # Ensure atomic receipt number assignment
+    assigned_receipt_number = sale.receiptNumber
+    if not assigned_receipt_number or db.query(SaleModel).filter(SaleModel.receipt_number == assigned_receipt_number).first():
+        assigned_receipt_number = generate_next_receipt_number(db)
 
     # Retrieve store config
     config = db.query(StoreConfigModel).first()
@@ -75,14 +133,16 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
     }
 
     # Run EET Fiscal Signing
-    eet_res = eet_service.sign_and_submit_sale(sale.model_dump(), store_dict)
+    sale_payload = sale.model_dump()
+    sale_payload["receiptNumber"] = assigned_receipt_number
+    eet_res = eet_service.sign_and_submit_sale(sale_payload, store_dict)
 
     from services.security_utils import parse_iso_timestamp, round_currency
 
     # Save to SQLite DB
     db_sale = SaleModel(
         id=sale.id,
-        receipt_number=sale.receiptNumber,
+        receipt_number=assigned_receipt_number,
         timestamp=parse_iso_timestamp(sale.timestamp),
         total_amount=round_currency(sale.totalAmount),
         cart_discount_percent=sale.cartDiscountPercent,

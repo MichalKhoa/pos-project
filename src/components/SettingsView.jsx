@@ -31,9 +31,16 @@ import {
   saveTerminalConfig,
   pingTerminal,
   reconcileTerminal,
-  fetchPrinterDevices
+  fetchPrinterDevices,
+  fetchLitestreamStatus
 } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+
+function formatIban(val) {
+  if (!val) return '';
+  const clean = val.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  return clean.match(/.{1,4}/g)?.join(' ') || clean;
+}
 
 export default function SettingsView({
   storeConfig,
@@ -72,6 +79,7 @@ export default function SettingsView({
   const [backendConnected, setBackendConnected] = useState(false);
   const [backendLoading, setBackendLoading] = useState(true);
   const [eetStatusData, setEetStatusData] = useState(null);
+  const [litestreamData, setLitestreamData] = useState(null);
 
   // System Update State
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -153,6 +161,11 @@ export default function SettingsView({
         setTermPort(termConfig.port ? termConfig.port.toString() : '8888');
         setTermId(termConfig.terminalId || '');
       }
+
+      const liteStatus = await fetchLitestreamStatus();
+      if (liteStatus) {
+        setLitestreamData(liteStatus);
+      }
     }
     setBackendLoading(false);
   };
@@ -193,7 +206,14 @@ export default function SettingsView({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (config.cashierPin && (config.cashierPin.length < 4 || config.cashierPin.length > 8)) {
+      alert('PIN kód musí mít 4 až 8 číslic.');
+      return;
+    }
     onSaveStoreConfig(config);
+    if (config.defaultLanguage) {
+      setLanguage(config.defaultLanguage);
+    }
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
@@ -455,6 +475,20 @@ export default function SettingsView({
                 </div>
               </div>
 
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  {t('settings.bank_account_iban')}
+                </label>
+                <input
+                  type="text"
+                  placeholder="CZ65 0800 0000 0012 3456 7890"
+                  value={formatIban(config.bankAccountIban || '')}
+                  onChange={e => setConfig({ ...config, bankAccountIban: formatIban(e.target.value) })}
+                  maxLength={32}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}
+                />
+              </div>
+
               {/* EET Register Parameters */}
               <div style={{ display: 'flex', gap: '0.75rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <div style={{ flex: 1 }}>
@@ -502,6 +536,23 @@ export default function SettingsView({
 
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    {t('settings.default_language')}
+                  </label>
+                  <select
+                    value={config.defaultLanguage || 'cs'}
+                    onChange={e => setConfig({ ...config, defaultLanguage: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
+                  >
+                    {languages.map(l => (
+                      <option key={l.code} value={l.code}>
+                        {l.flag} {l.name} ({l.label})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
                     {t('settings.environment')}
                   </label>
                   <select
@@ -525,13 +576,13 @@ export default function SettingsView({
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                      PIN kód pokladny (4 číslice)
+                      PIN kód pokladny (4–8 číslic)
                     </label>
                     <input
                       type="password"
-                      maxLength={4}
+                      maxLength={8}
                       value={config.cashierPin || '1234'}
-                      onChange={e => setConfig({ ...config, cashierPin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      onChange={e => setConfig({ ...config, cashierPin: e.target.value.replace(/\D/g, '').slice(0, 8) })}
                       style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '0.2em' }}
                     />
                   </div>
@@ -1054,6 +1105,27 @@ export default function SettingsView({
                 <Trash2 size={16} />
                 <span>Resetovat Data</span>
               </button>
+            </div>
+
+            {/* Litestream Cloud Replication Status Panel */}
+            <div style={{ marginTop: '1rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Shield size={14} style={{ color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
+                  <span>Litestream Cloud Replikace (WAL)</span>
+                </span>
+                <span className="status-badge" style={{
+                  padding: '0.2rem 0.5rem',
+                  fontSize: '0.7rem',
+                  background: litestreamData?.is_running ? 'rgba(5, 150, 105, 0.15)' : litestreamData?.litestream_configured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(100, 116, 139, 0.15)',
+                  color: litestreamData?.is_running ? 'var(--accent-emerald)' : litestreamData?.litestream_configured ? 'var(--accent-amber)' : 'var(--text-muted)'
+                }}>
+                  {litestreamData?.is_running ? '🟢 Aktivní replikace' : litestreamData?.litestream_configured ? '🟡 Konfigurace OK' : '⚪ Neaktivní'}
+                </span>
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                {litestreamData?.message || 'Kontrola stavu replikace SQLite databáze...'}
+              </div>
             </div>
           </div>
         </div>

@@ -12,16 +12,18 @@ export default function Cart({
   onOpenCustomDiscount
 }) {
   const { t } = useTranslation();
+  const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
+
   // Calculate item effective gross totals after item-level discounts
-  const rawSubtotal = cartItems.reduce((sum, item) => {
+  const rawSubtotal = roundCZK(cartItems.reduce((sum, item) => {
     const disc = item.discountPercent || 0;
     const effectivePrice = item.price * (1 - disc / 100);
     return sum + (effectivePrice * item.quantity);
-  }, 0);
+  }, 0));
 
   // Apply Cart-Level Discount
-  const cartDiscountAmount = rawSubtotal * (cartDiscountPercent / 100);
-  const finalGrandTotal = Math.max(0, rawSubtotal - cartDiscountAmount);
+  const cartDiscountAmount = roundCZK(rawSubtotal * (cartDiscountPercent / 100));
+  const finalGrandTotal = Math.max(0, roundCZK(rawSubtotal - cartDiscountAmount));
   const cartDiscountFactor = rawSubtotal > 0 ? finalGrandTotal / rawSubtotal : 1;
 
   // Group tax totals accurately per VAT rate (21%, 12%, 0%) after all discounts
@@ -30,28 +32,28 @@ export default function Cart({
     const itemDisc = item.discountPercent || 0;
     const itemEffectivePrice = item.price * (1 - itemDisc / 100);
     const itemGrossBeforeCartDisc = itemEffectivePrice * item.quantity;
-    const itemFinalGross = itemGrossBeforeCartDisc * cartDiscountFactor;
+    const itemFinalGross = roundCZK(itemGrossBeforeCartDisc * cartDiscountFactor);
 
     let netPrice = itemFinalGross;
     let taxAmount = 0;
 
     if (rate > 0) {
-      netPrice = itemFinalGross / (1 + rate / 100);
-      taxAmount = itemFinalGross - netPrice;
+      netPrice = roundCZK(itemFinalGross / (1 + rate / 100));
+      taxAmount = roundCZK(itemFinalGross - netPrice);
     }
 
     if (!acc[rate]) {
       acc[rate] = { rate, gross: 0, net: 0, tax: 0 };
     }
-    acc[rate].gross += itemFinalGross;
-    acc[rate].net += netPrice;
-    acc[rate].tax += taxAmount;
+    acc[rate].gross = roundCZK(acc[rate].gross + itemFinalGross);
+    acc[rate].net = roundCZK(acc[rate].net + netPrice);
+    acc[rate].tax = roundCZK(acc[rate].tax + taxAmount);
     return acc;
   }, {});
 
   const sortedRates = Object.values(taxSummary).sort((a, b) => b.rate - a.rate);
-  const totalNet = sortedRates.reduce((sum, t) => sum + t.net, 0);
-  const totalTax = sortedRates.reduce((sum, t) => sum + t.tax, 0);
+  const totalNet = roundCZK(sortedRates.reduce((sum, t) => sum + t.net, 0));
+  const totalTax = roundCZK(sortedRates.reduce((sum, t) => sum + t.tax, 0));
   const totalItemCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
   return (

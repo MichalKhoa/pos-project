@@ -97,6 +97,7 @@ export default function App() {
 
   const [cartItems, setCartItems] = useState([]);
   const [keypadAmount, setKeypadAmount] = useState('');
+  const [itemMultiplier, setItemMultiplier] = useState(1);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [cartDiscountPercent, setCartDiscountPercent] = useState(0);
   const [paymentModalMethod, setPaymentModalMethod] = useState(null); // 'cash' | 'card' | 'split' | null
@@ -213,7 +214,8 @@ export default function App() {
   }, [presets]);
 
   useEffect(() => {
-    localStorage.setItem('himmel_pos_config', JSON.stringify(storeConfig));
+    const { cashierPin, ...safeConfig } = storeConfig || {};
+    localStorage.setItem('himmel_pos_config', JSON.stringify(safeConfig));
   }, [storeConfig]);
 
   useEffect(() => {
@@ -222,17 +224,53 @@ export default function App() {
 
   // Load categories, presets & store config from SQLite backend on mount (overrides localStorage)
   useEffect(() => {
-    fetchCategoriesBackend().then(data => {
-      if (Array.isArray(data) && data.length > 0) setCategories(data);
-    });
-    fetchPresetsBackend().then(data => {
-      if (Array.isArray(data) && data.length > 0) setPresets(data);
-    });
-    fetchStoreConfigBackend().then(data => {
-      if (data && typeof data === 'object') {
-        setStoreConfig(prev => ({ ...prev, ...data }));
+    const reloadBackendData = () => {
+      fetchCategoriesBackend().then(data => {
+        if (Array.isArray(data) && data.length > 0) setCategories(data);
+      });
+      fetchPresetsBackend().then(data => {
+        if (Array.isArray(data) && data.length > 0) setPresets(data);
+      });
+      fetchStoreConfigBackend().then(data => {
+        if (data && typeof data === 'object') {
+          setStoreConfig(prev => ({ ...prev, ...data }));
+        }
+      });
+    };
+
+    reloadBackendData();
+
+    // Multi-tab storage sync: listen to changes originating from other browser tabs
+    const handleStorageChange = (e) => {
+      if (!e.key || !e.newValue) return;
+      try {
+        const data = JSON.parse(e.newValue);
+        if (e.key === 'himmel_pos_categories' && Array.isArray(data)) {
+          setCategories(data);
+        } else if (e.key === 'himmel_pos_presets' && Array.isArray(data)) {
+          setPresets(data);
+        } else if (e.key === 'himmel_pos_config' && typeof data === 'object') {
+          setStoreConfig(prev => ({ ...prev, ...data }));
+        } else if (e.key === 'himmel_pos_sales' && Array.isArray(data)) {
+          setSalesHistory(data);
+        }
+      } catch (err) {
+        console.warn("Multi-tab storage sync error:", err);
       }
-    });
+    };
+
+    // Re-fetch backend DB state when window receives focus
+    const handleFocus = () => {
+      reloadBackendData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const handleSaveStoreConfig = (newConfig) => {
@@ -399,10 +437,28 @@ export default function App() {
         e.preventDefault();
         setKeypadAmount(prev => prev.slice(0, -1));
       }
-      // Escape or Delete -> Clear keypad amount
+      // Escape or Delete -> Clear keypad amount & reset multiplier
       else if (key === 'Escape' || key === 'Delete') {
         e.preventDefault();
         setKeypadAmount('');
+        setItemMultiplier(1);
+      }
+      // Multiplicator key (*, x, X)
+      else if (key === '*' || key.toLowerCase() === 'x') {
+        e.preventDefault();
+        setKeypadAmount(prev => {
+          if (prev && !prev.includes('.')) {
+            const parsedQty = parseInt(prev, 10);
+            if (!isNaN(parsedQty) && parsedQty >= 1 && parsedQty <= 99) {
+              setItemMultiplier(parsedQty);
+              return '';
+            }
+          }
+          if (itemMultiplier > 1) {
+            setItemMultiplier(1);
+          }
+          return prev;
+        });
       }
       // Enter or Numpad Enter -> Add typed amount or open cash payment
       else if (key === 'Enter') {
@@ -464,9 +520,10 @@ export default function App() {
   };
 
   // Cart operations
-  const handleAddToCart = (item) => {
+  const handleAddToCart = (item, customQty = null) => {
     const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
     const itemPrice = parseFloat(item.price);
+    const qtyToAdd = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
 
     setCartItems(prevItems => {
       const existingIdx = prevItems.findIndex(i =>
@@ -480,21 +537,28 @@ export default function App() {
         const updated = [...prevItems];
         updated[existingIdx] = {
           ...updated[existingIdx],
-          quantity: updated[existingIdx].quantity + 1
+          quantity: updated[existingIdx].quantity + qtyToAdd
         };
         return updated;
       } else {
-        return [...prevItems, { ...item, price: itemPrice, vat: itemVat, quantity: 1, discountPercent: item.discountPercent || 0 }];
+        return [...prevItems, { ...item, price: itemPrice, vat: itemVat, quantity: qtyToAdd, discountPercent: item.discountPercent || 0 }];
       }
     });
+
+    if (itemMultiplier !== 1) {
+      setItemMultiplier(1);
+    }
   };
+
+  const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
 
   const handleUpdateQty = (itemId, newQty) => {
     if (newQty <= 0) {
       handleRemoveItem(itemId);
       return;
     }
-    setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, quantity: newQty } : item));
+    const clampedQty = Math.min(9999, newQty);
+    setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, quantity: clampedQty } : item));
   };
 
   const handleUpdateItemDiscount = (itemId, discountPercent) => {
@@ -573,14 +637,14 @@ export default function App() {
   };
 
   const handleCompleteSale = ({ paymentMethod, splitDetails, tenderedAmount, changeDue }) => {
-    const rawSubtotal = cartItems.reduce((sum, item) => {
+    const rawSubtotal = roundCZK(cartItems.reduce((sum, item) => {
       const disc = item.discountPercent || 0;
       const effectivePrice = item.price * (1 - disc / 100);
       return sum + (effectivePrice * item.quantity);
-    }, 0);
+    }, 0));
 
-    const cartDiscountAmount = rawSubtotal * (cartDiscountPercent / 100);
-    const finalGrandTotal = Math.max(0, rawSubtotal - cartDiscountAmount);
+    const cartDiscountAmount = roundCZK(rawSubtotal * (cartDiscountPercent / 100));
+    const finalGrandTotal = Math.max(0, roundCZK(rawSubtotal - cartDiscountAmount));
     const cartDiscountFactor = rawSubtotal > 0 ? finalGrandTotal / rawSubtotal : 1;
 
     // Calculate tax summary
@@ -589,22 +653,22 @@ export default function App() {
       const itemDisc = item.discountPercent || 0;
       const itemEffectivePrice = item.price * (1 - itemDisc / 100);
       const itemGrossBeforeCartDisc = itemEffectivePrice * item.quantity;
-      const itemFinalGross = itemGrossBeforeCartDisc * cartDiscountFactor;
+      const itemFinalGross = roundCZK(itemGrossBeforeCartDisc * cartDiscountFactor);
 
       let netPrice = itemFinalGross;
       let taxAmount = 0;
 
       if (rate > 0) {
-        netPrice = itemFinalGross / (1 + rate / 100);
-        taxAmount = itemFinalGross - netPrice;
+        netPrice = roundCZK(itemFinalGross / (1 + rate / 100));
+        taxAmount = roundCZK(itemFinalGross - netPrice);
       }
 
       if (!acc[rate]) {
         acc[rate] = { rate, gross: 0, net: 0, tax: 0 };
       }
-      acc[rate].gross += itemFinalGross;
-      acc[rate].net += netPrice;
-      acc[rate].tax += taxAmount;
+      acc[rate].gross = roundCZK(acc[rate].gross + itemFinalGross);
+      acc[rate].net = roundCZK(acc[rate].net + netPrice);
+      acc[rate].tax = roundCZK(acc[rate].tax + taxAmount);
       return acc;
     }, {});
 
@@ -641,11 +705,12 @@ export default function App() {
       taxSummary
     });
 
-    // Asynchronously send to Python FastAPI backend for EET fiscalization
+    // Asynchronously send to Python FastAPI backend for EET fiscalization and atomic receipt numbering
     createSaleBackend(newSale).then(backendRes => {
-      if (backendRes && backendRes.status === 'SUCCESS') {
+      if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
         const enrichedSale = normalizeSale({
           ...newSale,
+          receiptNumber: backendRes.receipt_number || newSale.receiptNumber,
           fik: backendRes.fik,
           pok: backendRes.fik,
           bkp: backendRes.bkp,
@@ -707,6 +772,8 @@ export default function App() {
                 onAddToCart={handleAddToCart}
                 amountStr={keypadAmount}
                 setAmountStr={setKeypadAmount}
+                itemMultiplier={itemMultiplier}
+                setItemMultiplier={setItemMultiplier}
                 defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
               />
             </div>
@@ -715,6 +782,8 @@ export default function App() {
               <QuickPresetGrid
                 presets={presets}
                 categories={categories}
+                itemMultiplier={itemMultiplier}
+                setItemMultiplier={setItemMultiplier}
                 onAddCategory={handleAddCategory}
                 onEditCategory={handleEditCategory}
                 onDeleteCategory={handleDeleteCategory}
@@ -799,6 +868,7 @@ export default function App() {
       {paymentModalMethod && (
         <PaymentModal
           method={paymentModalMethod}
+          storeConfig={storeConfig}
           totalAmount={cartItems.reduce((sum, item) => {
             const disc = item.discountPercent || 0;
             return sum + (item.price * (1 - disc / 100) * item.quantity);

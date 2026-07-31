@@ -541,4 +541,19 @@ export async function verifyPukBackend(puk) {
   }
 }
 
+/**
+ * Fetch Litestream replication status and SQLite WAL metrics
+ */
+export async function fetchLitestreamStatus() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/system/litestream-status`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Litestream status check failed:', err);
+    return null;
+  }
+}
+
+
 

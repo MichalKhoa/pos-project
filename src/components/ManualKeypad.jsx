@@ -6,6 +6,8 @@ export default function ManualKeypad({
   onAddToCart,
   amountStr = '',
   setAmountStr,
+  itemMultiplier = 1,
+  setItemMultiplier,
   defaultVat = 21
 }) {
   const { t } = useTranslation();
@@ -30,6 +32,7 @@ export default function ManualKeypad({
 
     if (val === 'CLEAR') {
       setAmountStr('');
+      if (setItemMultiplier) setItemMultiplier(1);
       return;
     }
     if (val === 'BACK') {
@@ -67,12 +70,14 @@ export default function ManualKeypad({
       name: label.trim() || 'Volný prodej',
       price: numericAmount,
       vat: selectedVat,
+      quantity: itemMultiplier || 1,
       isCustom: true
     });
 
     // Reset keypad
     if (setAmountStr) setAmountStr('');
     setLabel('');
+    if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
     triggerKeyAnimation('ENTER');
   };
 
@@ -130,7 +135,7 @@ export default function ManualKeypad({
         />
       </div>
 
-      {/* Row 2: Amount Display Line */}
+      {/* Row 2: Amount & Live Formula Display Line */}
       <div
         className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
         style={{
@@ -140,31 +145,73 @@ export default function ManualKeypad({
           flexDirection: 'column',
           alignItems: 'flex-start',
           justifyContent: 'center',
-          padding: '0.65rem 1rem'
+          padding: '0.65rem 1rem',
+          border: itemMultiplier > 1 ? '2px solid var(--accent-amber)' : undefined,
+          boxShadow: itemMultiplier > 1 ? '0 0 18px rgba(245, 158, 11, 0.3)' : undefined,
+          transition: 'all 0.25s ease'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <span style={{ fontSize: '0.78rem', color: itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             {t('keypad.amount_label')}
+            {itemMultiplier > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (setItemMultiplier) setItemMultiplier(1);
+                  if (setAmountStr) setAmountStr('');
+                }}
+                style={{
+                  background: 'var(--accent-amber)',
+                  border: 'none',
+                  color: '#000',
+                  borderRadius: '10px',
+                  padding: '2px 8px',
+                  fontSize: '0.7rem',
+                  fontWeight: '800',
+                  cursor: 'pointer'
+                }}
+              >
+                {t('keypad.cancel_multiplier')}
+              </button>
+            )}
           </span>
-          {hasValidAmount && (
-            <span style={{ fontSize: '0.78rem', color: 'var(--accent-emerald)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <Sparkles size={13} /> {t('keypad.ready')}
-            </span>
-          )}
         </div>
+
+        {/* Giant Live Equation or Single Price */}
         <div style={{
-          fontSize: '2.2rem',
-          fontWeight: '800',
+          fontSize: itemMultiplier > 1 ? '2.1rem' : '2.2rem',
+          fontWeight: '900',
           fontFamily: 'var(--font-mono)',
-          color: hasValidAmount ? 'var(--accent-emerald)' : 'var(--text-muted)',
+          color: itemMultiplier > 1 ? 'var(--accent-amber)' : (hasValidAmount ? 'var(--accent-emerald)' : 'var(--text-muted)'),
           width: '100%',
           textAlign: 'right',
           marginTop: '-2px',
-          transition: 'color 0.2s ease, transform 0.15s ease'
+          transition: 'all 0.2s ease'
         }}>
-          {amountStr ? `${amountStr} Kč` : '0 Kč'}
+          {itemMultiplier > 1
+            ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'}`
+            : (amountStr ? `${amountStr} Kč` : '0 Kč')
+          }
         </div>
+
+        {/* Subtotal Calculation Callout Line */}
+        {itemMultiplier > 1 && hasValidAmount && (
+          <div style={{
+            fontSize: '0.95rem',
+            fontWeight: '800',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--accent-emerald)',
+            width: '100%',
+            textAlign: 'right',
+            marginTop: '2px',
+            borderTop: '1px dashed rgba(245, 158, 11, 0.3)',
+            paddingTop: '3px'
+          }}>
+            = Celkem {(itemMultiplier * parseFloat(amountStr)).toLocaleString('cs-CZ')} Kč
+          </div>
+        )}
       </div>
 
       {/* Row 3: Prechosen Vibrant VAT Selector */}
@@ -261,10 +308,33 @@ export default function ManualKeypad({
         </button>
         <button
           type="button"
-          className={`key-btn ${activeKey === '000' ? 'active-press' : ''}`}
-          onClick={() => handleKeyPress('000')}
+          className={`key-btn key-action ${itemMultiplier > 1 ? 'active-multiplier' : ''} ${activeKey === 'MULTIPLY' ? 'active-press' : ''}`}
+          onClick={() => {
+            triggerKeyAnimation('MULTIPLY');
+            // If multiplier is already active (> 1), clicking x again cancels multiplier
+            if (itemMultiplier > 1) {
+              if (setItemMultiplier) setItemMultiplier(1);
+              if (setAmountStr) setAmountStr('');
+              return;
+            }
+
+            if (amountStr && !amountStr.includes('.')) {
+              const q = parseInt(amountStr, 10);
+              if (!isNaN(q) && q >= 1 && q <= 99) {
+                if (setItemMultiplier) setItemMultiplier(q);
+                if (setAmountStr) setAmountStr('');
+              }
+            }
+          }}
+          title="Multiplikátor množství (např. 5 × 120 Kč)"
+          style={{
+            background: itemMultiplier > 1 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : undefined,
+            color: itemMultiplier > 1 ? '#ffffff' : 'var(--accent-amber)',
+            fontWeight: '800',
+            fontSize: '1.35rem'
+          }}
         >
-          000
+          ×
         </button>
         <button
           type="button"

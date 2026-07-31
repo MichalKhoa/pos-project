@@ -11,5 +11,6 @@ Top-level entry point for `pos-eet-himmel` project structure and system capabili
 - React 19 Vite single-page application structure and state router: `mem:frontend/core`
 - UI views, modals, cart management, and layout components: `mem:frontend/components`
 - SQLite database models and persistence: `mem:database`
+- Litestream SQLite cloud replication and WAL backup: `mem:backend/litestream`
 - Security, PIN authentication, hashing, and recovery architecture: `mem:security_and_auth`
 - Windows launchers, runtime environment, and operational execution: `mem:testing_and_launch`
