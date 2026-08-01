@@ -527,7 +527,7 @@ export default function QuickPresetGrid({
               <button className="close-modal-btn" onClick={() => setOpenPriceTarget(null)}>✕</button>
             </div>
 
-            <form onSubmit={handleOpenPriceSubmit} className="modal-body">
+            <form onSubmit={handleConfirmOpenPrice} className="modal-body">
               <div className="keypad-input-container">
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   {t('presets.open_price_label')}

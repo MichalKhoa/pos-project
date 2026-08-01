@@ -31,6 +31,15 @@ export default function App() {
   const [snoozedUntil, setSnoozedUntil] = useState(0);
   const [syncNotification, setSyncNotification] = useState(null);
   const [isAppLocked, setIsAppLocked] = useState(false);
+  const [mobilePosTab, setMobilePosTab] = useState('keypad');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
   const lastActivityRef = React.useRef(Date.now());
 
   // State — start from localStorage fallback, backend load will overwrite on mount
@@ -766,51 +775,82 @@ export default function App() {
 
       <main className="main-content">
         {activeTab === 'register' && (
-          <div className="pos-layout">
-            <div className="pos-col-left">
-              <ManualKeypad
-                onAddToCart={handleAddToCart}
-                amountStr={keypadAmount}
-                setAmountStr={setKeypadAmount}
-                itemMultiplier={itemMultiplier}
-                setItemMultiplier={setItemMultiplier}
-                defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
-              />
+          <>
+            <div className="pos-layout">
+              <div className={`pos-col-left${isMobile && mobilePosTab !== 'keypad' ? ' mobile-hidden' : ''}`}>
+                <ManualKeypad
+                  onAddToCart={handleAddToCart}
+                  amountStr={keypadAmount}
+                  setAmountStr={setKeypadAmount}
+                  itemMultiplier={itemMultiplier}
+                  setItemMultiplier={setItemMultiplier}
+                  defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
+                />
+              </div>
+
+              <div className={`pos-col-center${isMobile && mobilePosTab !== 'products' ? ' mobile-hidden' : ''}`}>
+                <QuickPresetGrid
+                  presets={presets}
+                  categories={categories}
+                  itemMultiplier={itemMultiplier}
+                  setItemMultiplier={setItemMultiplier}
+                  onAddCategory={handleAddCategory}
+                  onEditCategory={handleEditCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                  onAddToCart={handleAddToCart}
+                  onAddPreset={handleAddPreset}
+                  onUpdatePreset={handleUpdatePreset}
+                  onDeletePreset={handleDeletePreset}
+                  onReorderPresets={handleReorderPresets}
+                  keypadAmount={keypadAmount}
+                  onClearKeypadAmount={() => setKeypadAmount('')}
+                />
+              </div>
+
+              <div className={`pos-col-right${isMobile && mobilePosTab !== 'cart' ? ' mobile-hidden' : ''}`}>
+                <Cart
+                  cartItems={cartItems}
+                  onUpdateQty={handleUpdateQty}
+                  onRemoveItem={handleRemoveItem}
+                  onClearCart={handleClearCart}
+                  onOpenPayment={handleOpenPayment}
+                  onUpdateItemDiscount={handleUpdateItemDiscount}
+                  cartDiscountPercent={cartDiscountPercent}
+                  onSetCartDiscountPercent={setCartDiscountPercent}
+                  onOpenCustomDiscount={handleOpenCustomDiscountModal}
+                />
+              </div>
             </div>
 
-            <div className="pos-col-center">
-              <QuickPresetGrid
-                presets={presets}
-                categories={categories}
-                itemMultiplier={itemMultiplier}
-                setItemMultiplier={setItemMultiplier}
-                onAddCategory={handleAddCategory}
-                onEditCategory={handleEditCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onAddToCart={handleAddToCart}
-                onAddPreset={handleAddPreset}
-                onUpdatePreset={handleUpdatePreset}
-                onDeletePreset={handleDeletePreset}
-                onReorderPresets={handleReorderPresets}
-                keypadAmount={keypadAmount}
-                onClearKeypadAmount={() => setKeypadAmount('')}
-              />
-            </div>
-
-            <div className="pos-col-right">
-              <Cart
-                cartItems={cartItems}
-                onUpdateQty={handleUpdateQty}
-                onRemoveItem={handleRemoveItem}
-                onClearCart={handleClearCart}
-                onOpenPayment={handleOpenPayment}
-                onUpdateItemDiscount={handleUpdateItemDiscount}
-                cartDiscountPercent={cartDiscountPercent}
-                onSetCartDiscountPercent={setCartDiscountPercent}
-                onOpenCustomDiscount={handleOpenCustomDiscountModal}
-              />
-            </div>
-          </div>
+            {isMobile && (
+              <div className="mobile-pos-tabs">
+                <button
+                  className={`mobile-pos-tab ${mobilePosTab === 'keypad' ? 'active' : ''}`}
+                  onClick={() => setMobilePosTab('keypad')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                  Klávesy
+                </button>
+                <button
+                  className={`mobile-pos-tab ${mobilePosTab === 'products' ? 'active' : ''}`}
+                  onClick={() => setMobilePosTab('products')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 8h20"/><path d="M9 3v5"/></svg>
+                  Produkty
+                </button>
+                <button
+                  className={`mobile-pos-tab ${mobilePosTab === 'cart' ? 'active' : ''}`}
+                  onClick={() => setMobilePosTab('cart')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  Košík
+                  {cartItems.length > 0 && (
+                    <span className="mobile-cart-badge">{cartItems.length}</span>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === 'presets' && (
