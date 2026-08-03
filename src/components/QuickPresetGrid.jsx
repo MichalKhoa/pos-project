@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, Calculator, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
+import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
 import { DEFAULT_CATEGORIES, COLOR_OPTIONS } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';

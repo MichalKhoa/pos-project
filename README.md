@@ -64,8 +64,9 @@ pos-project-himmel/
 │   ├── requirements.txt      # Python dependencies
 │   ├── routers/              # API endpoints (sales, printer, eet, payments, display)
 │   └── services/             # Core business logic (eet_crypto, eet_soap, escpos_service)
-├── docs/                     # Specifications, EET guides, PDF-to-Markdown tools
-│   ├── convert_pdf_to_md.py  # Utility to convert official EET PDFs to Markdown
+├── docs/                     # Documentation, guides, and implementation plans
+│   ├── plans/                # Implementation specifications (Inventory, EET, DB Safety)
+│   ├── guides/               # Setup and security manuals (Cashier, CSOB, Scaling)
 │   └── eet_docs/             # Stored EET spec documents
 ├── src/                      # React 19 Frontend Web Application
 │   ├── api/                  # API client layer (posApi.js)

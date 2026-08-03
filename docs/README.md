@@ -4,16 +4,26 @@ Tato složka slouží pro ukládání a správu oficiálních specifikací, cert
 
 ---
 
-## 📂 Struktura Složek
+## 📂 Dokumentační Struktura
 
 ```
 docs/
-├── convert_pdf_to_md.py    # Python skript pro konverzi PDF specifikací na Markdown
-├── README.md               # Návod k použití a specifikace
-└── eet_docs/               # Ukládání PDF specifikací a vygenerovaných Markdown dokumentů
-    ├── markdown/           # Vygenerované .md soubory přístupné pro AI asistenta
-    ├── eet_specifikace.pdf # Vložte sem oficiální EET PDF dokumenty
-    └── metodika_eet.pdf
+├── plans/                          # Specifikace a Plány Implementace
+│   ├── INVENTORY_IMPLEMENTATION_PLAN.md
+│   ├── EET_HARDENING_PLAN.md
+│   ├── DATABASE_SAFETY_PLAN.md
+│   ├── PROMPTING_GUIDE.md
+│   ├── PROMPT_QUESTIONNAIRE.md
+│   └── security_and_stability_roadmap.md
+├── guides/                         # Příručky pro Nastavení a Správu
+│   ├── CASHIER_SETUP_GUIDE.md
+│   ├── CSOB_TERMINAL_GUIDE.md
+│   ├── LITESTREAM_R2_SETUP.md
+│   ├── SCALING_AND_NETWORK_SECURITY.md
+│   └── WINDOWS_SERVICE_SETUP.md
+├── eet_docs/                       # Oficiální EET PDF & konvertovaný Markdown
+├── csob_docs/                      # CSOB terminál dokumentace
+└── convert_pdf_to_md.py            # Python skript pro konverzi PDF na Markdown
 ```
 
 ---

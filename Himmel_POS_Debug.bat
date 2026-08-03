@@ -7,7 +7,7 @@ echo.
 
 :: 1. Launch Python FastAPI Backend in visible terminal window
 echo [1/3] Launching Python FastAPI Backend terminal...
-start "Himmel POS Backend (Debug)" cmd /k "cd /d %~dp0backend && python main.py"
+start "Himmel POS Backend (Debug)" cmd /k "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && python main.py"
 
 :: 2. Launch Litestream Replication in visible terminal window (if present)
 if exist "%~dp0backend\litestream.exe" (

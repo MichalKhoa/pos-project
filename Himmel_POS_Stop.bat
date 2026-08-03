@@ -11,9 +11,13 @@ taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" 2>nul
 echo Closing Web Server Terminal Window...
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Web*" 2>nul
 
+echo Closing Litestream Terminal Window...
+taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Litestream*" 2>nul
+
 echo Closing Launcher Windows...
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Launcher*" 2>nul
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Kiosk Launcher*" 2>nul
+taskkill /T /F /FI "WINDOWTITLE eq Himmel POS — Enable Mobile*" 2>nul
 
 :: 2. Terminate any remaining Node.js or Python processes
 taskkill /F /IM node.exe 2>nul

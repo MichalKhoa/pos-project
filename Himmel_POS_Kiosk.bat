@@ -4,8 +4,8 @@ echo ========================================================
 echo   Starting Himmel POS in Dedicated Touch Kiosk Mode...
 echo ========================================================
 
-:: 1. Launch Python FastAPI Backend silently in background
-start "Himmel POS Backend" /min cmd /c "cd /d %~dp0backend && python main.py"
+:: 1. Launch Python FastAPI Backend silently in background (with venv)
+start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && python main.py"
 
 :: 2. Launch Vite Web App Server silently in background
 start "Himmel POS Web" /min cmd /c "cd /d %~dp0 && npm run dev"

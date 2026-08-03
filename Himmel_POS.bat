@@ -11,19 +11,19 @@ if exist "%~dp0backend\.env" (
     for /f "usebackq tokens=1,* delims==" %%a in ("%~dp0.env") do set "%%a=%%b"
 )
 
-:: 1. Launch Python FastAPI Backend completely hidden (VB script runner)
+:: 1. Launch Python FastAPI Backend silently in virtualenv
 echo Starting Python Backend Service (Silent)...
-start /B venv\bin\python backend\main.py >nul 2>&1 || start /B python backend\main.py >nul 2>&1
+start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && python main.py"
 
 :: 2. Launch Litestream Replication silently if present
 if exist "%~dp0backend\litestream.exe" (
     echo Starting Database Replication (Silent)...
-    start /B backend\litestream.exe replicate -config backend\litestream.yml >nul 2>&1
+    start "Himmel POS Litestream" /min cmd /c "cd /d "%~dp0backend" && litestream.exe replicate -config litestream.yml"
 )
 
 :: 3. Launch Vite Web App Server silently
 echo Starting Cashier Interface (Silent)...
-start /B npm run dev >nul 2>&1
+start "Himmel POS Web" /min cmd /c "cd /d "%~dp0" && npm run dev"
 
 :: 4. Wait for initialization
 timeout /t 3 /nobreak >nul
