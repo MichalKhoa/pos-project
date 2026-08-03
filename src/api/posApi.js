@@ -1,11 +1,12 @@
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_HOST = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
 
 /**
  * Fetch backend root status
  */
 export async function fetchBackendRoot() {
   try {
-    const res = await fetch('http://localhost:8000/');
+    const res = await fetch(`http://${API_HOST}:8000/`);
     if (!res.ok) return { online: false };
     const data = await res.json();
     return { online: true, ...data };

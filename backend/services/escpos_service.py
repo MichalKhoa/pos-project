@@ -134,6 +134,9 @@ class ESCPOSPrinterService:
                 printer = None
 
             if printer:
+                # Top padding margin (prevents top edge clipping on receipt header)
+                printer.text("\n\n\n\n")
+
                 # Header
                 printer.set(align='center', font='a', width=2, height=2)
                 printer.text(f"{store_config.get('storeName', 'Himmel POS')}\n")
@@ -159,10 +162,17 @@ class ESCPOSPrinterService:
                 # Footer & EET Signatures
                 printer.text(f"Zpusob uchrady: {sale_data.get('paymentMethod').upper()}\n")
                 printer.text(dash_line + "\n")
-                printer.text(f"FIK: {sale_data.get('fik_code', 'N/A')}\n")
-                printer.text(f"BKP: {sale_data.get('bkp_code', 'N/A')}\n")
+                if sale_data.get('fik_code'):
+                    printer.text(f"FIK: {sale_data.get('fik_code')}\n")
+                if sale_data.get('bkp_code'):
+                    printer.text(f"BKP: {sale_data.get('bkp_code')}\n")
+                if not sale_data.get('fik_code') and not sale_data.get('bkp_code'):
+                    printer.text("Rezim bez EET\n")
                 printer.set(align='center')
-                printer.text(f"\n{store_config.get('receiptFooter')}\n\n")
+                printer.text(f"\n{store_config.get('receiptFooter')}\n")
+
+                # Bottom padding margin before physical paper cut (prevents cutter blade from clipping footer)
+                printer.text("\n\n\n\n\n\n\n")
 
                 # Cut paper & open cash drawer
                 printer.cashdraw(2)

@@ -282,9 +282,10 @@ export default function App() {
     };
   }, []);
 
-  const handleSaveStoreConfig = (newConfig) => {
+  const handleSaveStoreConfig = async (newConfig) => {
     setStoreConfig(newConfig);
-    saveStoreConfigBackend(newConfig);
+    await saveStoreConfigBackend(newConfig);
+    await checkPendingOfflineSales();
   };
 
   // Check pending offline receipts from backend EET status
@@ -380,12 +381,27 @@ export default function App() {
         }
       }
 
-      setSyncNotification({
-        type: 'success',
-        message: processed > 0
-          ? `✅ Úspěšně odesláno ${processed} neodeslaných účtenek na EET (Finanční správa ČR).`
-          : 'Všechny tržby jsou již řádně evidovány na EET.'
-      });
+      if (res?.status === 'EET_DISABLED') {
+        setSyncNotification({
+          type: 'info',
+          message: 'EET evidování je v nastavení vypnuto.'
+        });
+      } else if (processed > 0) {
+        setSyncNotification({
+          type: 'success',
+          message: `✅ Úspěšně odesláno ${processed} neodeslaných účtenek na EET (Finanční správa ČR).`
+        });
+      } else if (offlineLocalSales.length > 0 || (res?.processed_count === 0 && res?.status === 'SUCCESS')) {
+        setSyncNotification({
+          type: 'error',
+          message: '⚠️ Nepodařilo se odeslat neodeslané účtenky na EET (server je nedostupný nebo vypršel časový limit).'
+        });
+      } else {
+        setSyncNotification({
+          type: 'success',
+          message: 'Všechny tržby jsou již řádně evidovány na EET.'
+        });
+      }
 
       // 3. Refresh sales history from backend
       const updatedHistory = await fetchSalesHistoryBackend();

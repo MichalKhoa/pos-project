@@ -493,7 +493,7 @@ export default function QuickPresetGrid({
                 )}
               </div>
 
-              <div className="preset-footer" style={{ marginTop: 'auto', paddingTop: '0.4rem' }}>
+              <div className="preset-footer" style={{ marginTop: '0.2rem' }}>
                 {!preset.isOpenPrice ? (
                   <>
                     <div className="preset-price">{preset.price} Kč</div>

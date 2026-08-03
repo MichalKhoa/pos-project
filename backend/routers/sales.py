@@ -132,10 +132,19 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         "eet_environment": config.eet_environment if config else "playground"
     }
 
-    # Run EET Fiscal Signing
+    # Run EET Fiscal Signing (if EET is enabled in store config)
     sale_payload = sale.model_dump()
     sale_payload["receiptNumber"] = assigned_receipt_number
-    eet_res = eet_service.sign_and_submit_sale(sale_payload, store_dict)
+    if config and config.eet_enabled:
+        eet_res = eet_service.sign_and_submit_sale(sale_payload, store_dict)
+    else:
+        eet_res = {
+            "fik": None,
+            "bkp": None,
+            "pkp": None,
+            "eet_status": "DISABLED",
+            "is_sent_to_eet": True
+        }
 
     from services.security_utils import parse_iso_timestamp, round_currency
 

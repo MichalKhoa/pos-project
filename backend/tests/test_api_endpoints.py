@@ -203,6 +203,43 @@ class TestAPIEndpoints(unittest.TestCase):
         res_rec = self.client.post("/api/v1/payments/terminal/reconcile")
         self.assertEqual(res_rec.status_code, 200)
 
+    def test_eet_disabled_mode(self):
+        # 1. Check default eetEnabled in config (should be False)
+        res_cfg = self.client.get("/api/v1/config")
+        self.assertEqual(res_cfg.status_code, 200)
+        self.assertFalse(res_cfg.json().get("eetEnabled"))
+
+        # 2. Disable EET explicitly
+        res_save = self.client.post("/api/v1/config", json={"eetEnabled": False})
+        self.assertEqual(res_save.status_code, 200)
+
+        # 3. Create sale with EET disabled
+        sale_payload = {
+            "id": "sale-no-eet-1",
+            "receiptNumber": "2026-000099",
+            "timestamp": "2026-08-01T23:40:00Z",
+            "totalAmount": 100.0,
+            "paymentMethod": "cash",
+            "taxSummary": {},
+            "items": [{"name": "Položka 1", "price": 100.0, "quantity": 1, "vat": 21}]
+        }
+        res_sale = self.client.post("/api/v1/sales/", json=sale_payload)
+        self.assertEqual(res_sale.status_code, 201)
+        data_sale = res_sale.json()
+        self.assertEqual(data_sale.get("eet_status"), "DISABLED")
+        self.assertIsNone(data_sale.get("fik"))
+
+        # 4. Check EET status endpoint reflects eet_enabled=False and pending_offline_sales=0
+        res_eet_stat = self.client.get("/api/v1/eet/status")
+        self.assertEqual(res_eet_stat.status_code, 200)
+        self.assertFalse(res_eet_stat.json().get("eet_enabled"))
+        self.assertEqual(res_eet_stat.json().get("pending_offline_sales"), 0)
+
+        # 5. Check process queue returns EET_DISABLED
+        res_proc = self.client.post("/api/v1/eet/process-queue")
+        self.assertEqual(res_proc.status_code, 200)
+        self.assertEqual(res_proc.json().get("status"), "EET_DISABLED")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -35,6 +35,7 @@ import {
   fetchLitestreamStatus
 } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import LanguageSelector from './LanguageSelector.jsx';
 
 function formatIban(val) {
   if (!val) return '';
@@ -150,7 +151,8 @@ export default function SettingsView({
           dic: eetStatus.dic || prev.dic,
           id_provozovny: eetStatus.id_provozovny || eetStatus.id_jednotky || prev.id_provozovny || '11',
           id_pokl: eetStatus.id_pokl || prev.id_pokl || '1',
-          eet_environment: eetStatus.environment || prev.eet_environment || 'playground'
+          eet_environment: eetStatus.environment || prev.eet_environment || 'playground',
+          eetEnabled: eetStatus.eet_enabled !== undefined ? eetStatus.eet_enabled : prev.eetEnabled
         }));
       }
 
@@ -538,17 +540,11 @@ export default function SettingsView({
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
                     {t('settings.default_language')}
                   </label>
-                  <select
+                  <LanguageSelector
                     value={config.defaultLanguage || 'cs'}
-                    onChange={e => setConfig({ ...config, defaultLanguage: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
-                  >
-                    {languages.map(l => (
-                      <option key={l.code} value={l.code}>
-                        {l.flag} {l.name} ({l.label})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={code => setConfig({ ...config, defaultLanguage: code })}
+                    style={{ width: '100%' }}
+                  />
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -921,6 +917,48 @@ export default function SettingsView({
 
         {/* EET 2.0 Certificate Management & Live Testing */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* EET Operation Mode Toggle Card */}
+          <div className="table-card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div>
+                <div style={{ fontWeight: '800', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
+                  <Shield size={18} style={{ color: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
+                  <span>{t('settings.eet_toggle_label')}</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.3rem', lineHeight: '1.4' }}>
+                  {t('settings.eet_toggle_desc')}
+                </div>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '28px', flexShrink: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={!!config.eetEnabled}
+                  onChange={e => {
+                    const updated = { ...config, eetEnabled: e.target.checked };
+                    setConfig(updated);
+                    onSaveStoreConfig(updated);
+                  }}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--border-color)',
+                  transition: '.3s', borderRadius: '34px'
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: '22px', width: '22px', left: config.eetEnabled ? '25px' : '3px', bottom: '3px',
+                    backgroundColor: 'white', transition: '.3s', borderRadius: '50%'
+                  }} />
+                </span>
+              </label>
+            </div>
+            {!config.eetEnabled && (
+              <div style={{ marginTop: '0.85rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', fontSize: '0.8rem', color: 'var(--accent-blue)' }}>
+                {t('settings.eet_disabled_banner')}
+              </div>
+            )}
+          </div>
+
           {/* Certificate Status Card */}
           <div className="table-card" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

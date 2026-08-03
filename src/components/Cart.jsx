@@ -59,19 +59,19 @@ export default function Cart({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Cart Header */}
-      <div className="cart-header">
-        <div className="cart-title" style={{ flexShrink: 1, minWidth: 0 }}>
+      <div className="cart-header" style={{ gap: '0.75rem' }}>
+        <div className="cart-title" style={{ flexShrink: 1, minWidth: 0, gap: '0.4rem' }}>
           <ShoppingCart size={18} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-          <span>{t('cart.title')}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('cart.title')}</span>
           {cartItems.length > 0 && (
-            <span className="cart-badge-count">
+            <span className="cart-badge-count" style={{ marginLeft: '0.2rem', flexShrink: 0 }}>
               {totalItemCount}
             </span>
           )}
         </div>
 
         {cartItems.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
             {/* Open Custom Discount Modal for Cart */}
             <button
               type="button"
@@ -82,19 +82,20 @@ export default function Cart({
                 borderColor: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.3)' : 'var(--border-color)',
                 padding: '0.35rem 0.65rem',
                 fontSize: '0.8rem',
-                fontWeight: '800'
+                fontWeight: '800',
+                whiteSpace: 'nowrap'
               }}
               onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
               title={t('cart.discount')}
             >
               <Percent size={13} />
-              <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount')}</span>
+              <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount_short')}</span>
             </button>
 
             <button
               type="button"
               className="clear-cart-btn"
-              style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
+              style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
               onClick={onClearCart}
               title={t('cart.clear')}
             >
@@ -191,13 +192,6 @@ export default function Cart({
       {/* Cart Footer & Checkout Action Buttons */}
       <div className="cart-footer">
         <div className="summary-rows">
-          <div className="summary-row">
-            <span>Položky celkem:</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--text-primary)' }}>
-              {totalItemCount}
-            </span>
-          </div>
-
           {cartDiscountPercent > 0 && (
             <div className="summary-row" style={{ color: 'var(--accent-rose)', fontWeight: '700' }}>
               <span>{t('cart.discount')} ({cartDiscountPercent}%):</span>
@@ -206,12 +200,12 @@ export default function Cart({
           )}
 
           <div className="summary-row">
-            <span>Základ daně (Netto):</span>
+            <span>{t('cart.tax_base')}</span>
             <span style={{ fontFamily: 'var(--font-mono)' }}>{totalNet.toFixed(2)} Kč</span>
           </div>
 
           <div className="summary-row">
-            <span>DPH celkem:</span>
+            <span>{t('cart.tax_total')}</span>
             <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)' }}>{totalTax.toFixed(2)} Kč</span>
           </div>
 
@@ -238,8 +232,8 @@ export default function Cart({
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('card')}
           >
-            <CreditCard size={18} />
-            <span>{t('payment.card')} / QR</span>
+            <CreditCard size={18} style={{ flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('payment.card_btn')}</span>
           </button>
         </div>
 
@@ -252,17 +246,20 @@ export default function Cart({
               width: '100%',
               justifyContent: 'center',
               padding: '0.6rem',
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               background: 'rgba(124, 58, 237, 0.1)',
               color: 'var(--accent-purple)',
               border: '1px solid rgba(124, 58, 237, 0.3)',
               fontWeight: '700',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}
             onClick={() => onOpenPayment('split')}
           >
-            <Split size={16} />
-            <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
+            <Split size={16} style={{ flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
           </button>
         )}
       </div>

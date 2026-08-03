@@ -34,6 +34,7 @@ class StoreConfigSchema(BaseModel):
     printerPaperWidth: Optional[str] = "80"
     idProvozovny: Optional[str] = "11"
     idPokl: Optional[str] = "1"
+    eetEnabled: Optional[bool] = False
     eetEnvironment: Optional[str] = "playground"
     csobTerminalEnabled: Optional[bool] = False
     csobTerminalIp: Optional[str] = ""
@@ -69,6 +70,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "printerPaperWidth": config.printer_paper_width,
         "idProvozovny": config.id_provozovny or "11",
         "idPokl": config.id_pokl or "1",
+        "eetEnabled": config.eet_enabled if config.eet_enabled is not None else False,
         "eetEnvironment": config.eet_environment or "playground",
         "csobTerminalEnabled": config.csob_terminal_enabled or False,
         "csobTerminalIp": config.csob_terminal_ip or "",
@@ -102,6 +104,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.printerPaperWidth is not None: config.printer_paper_width = data.printerPaperWidth
     if data.idProvozovny is not None: config.id_provozovny = data.idProvozovny
     if data.idPokl is not None: config.id_pokl = data.idPokl
+    if data.eetEnabled is not None: config.eet_enabled = data.eetEnabled
     if data.eetEnvironment is not None: config.eet_environment = data.eetEnvironment
     if data.csobTerminalEnabled is not None: config.csob_terminal_enabled = data.csobTerminalEnabled
     if data.csobTerminalIp is not None: config.csob_terminal_ip = data.csobTerminalIp

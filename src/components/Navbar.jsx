@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon, Globe } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import LanguageSelector from './LanguageSelector.jsx';
 
 export default function Navbar({
   activeTab,
@@ -39,7 +40,8 @@ export default function Navbar({
     const checkLatency = async () => {
       const start = performance.now();
       try {
-        const res = await fetch('http://localhost:8000/', { method: 'GET', cache: 'no-store' });
+        const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+        const res = await fetch(`http://${host}:8000/`, { method: 'GET', cache: 'no-store' });
         if (res.ok) {
           const end = performance.now();
           setLatency(Math.max(1, Math.round(end - start)));
@@ -103,39 +105,23 @@ export default function Navbar({
       </nav>
 
       <div className="nav-meta">
-        {/* Language Switcher Dropdown */}
-        <div className="status-badge" style={{ padding: '0.4rem 0.6rem', background: 'var(--bg-main)' }}>
-          <select
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            style={{
-              background: 'transparent',
-              color: 'var(--text-primary)',
-              border: 'none',
-              fontSize: '0.8rem',
-              fontWeight: '800',
-              cursor: 'pointer',
-              outline: 'none'
-            }}
-          >
-            {languages.map(l => (
-              <option key={l.code} value={l.code} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                {l.flag} {l.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Custom SVG Language Switcher Dropdown */}
+        <LanguageSelector compact />
 
         {/* Combined EET 2.0 & Online Latency Status Pill */}
         <div
           className="status-badge"
-          style={{ gap: '0.4rem' }}
-          title={isOnline ? `EET 2.0 Online • Odezva backendu: ${latency !== null ? latency : '--'} ms` : 'EET Offline'}
+          style={{ gap: '0.4rem', opacity: storeConfig?.eetEnabled === false ? 0.85 : 1 }}
+          title={
+            storeConfig?.eetEnabled === false
+              ? 'EET evidování je v nastavení vypnuto'
+              : isOnline ? `EET 2.0 Online • Odezva backendu: ${latency !== null ? latency : '--'} ms` : 'EET Offline'
+          }
         >
-          <span className={isOnline ? 'status-dot' : 'status-dot-offline'} style={{ background: isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}></span>
-          <ShieldCheck size={14} style={{ color: isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
+          <span className={storeConfig?.eetEnabled === false ? '' : isOnline ? 'status-dot' : 'status-dot-offline'} style={{ background: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)', borderRadius: '50%', width: '8px', height: '8px' }}></span>
+          <ShieldCheck size={14} style={{ color: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
           <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>
-            EET 2.0 • {isOnline ? `${latency !== null ? latency : 12}ms` : t('nav.offline')}
+            {storeConfig?.eetEnabled === false ? (t('nav.eet_off') || 'EET Vypnuto') : `EET 2.0 • ${isOnline ? `${latency !== null ? latency : 12}ms` : t('nav.offline')}`}
           </span>
         </div>
 

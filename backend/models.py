@@ -70,6 +70,7 @@ class StoreConfigModel(Base):
     printer_paper_width = Column(String, default="80") # '58' or '80' mm
 
     # EET 2.0 Configuration
+    eet_enabled = Column(Boolean, default=False)
     eet_cert_path = Column(String, default="")
     eet_cert_password = Column(String, default="")
     eet_environment = Column(String, default="playground") # 'playground', 'production'

@@ -654,6 +654,17 @@ export default function SalesHistoryView({
                             }}>
                               {sale.paymentMethod === 'cash' ? 'Hotovost' : sale.paymentMethod === 'card' ? 'Karta' : 'QR'}
                             </span>
+
+                            {sale.eet_status === 'DISABLED' && (
+                              <span className="status-badge" style={{ background: 'rgba(148, 163, 184, 0.15)', color: 'var(--text-secondary)', borderColor: 'rgba(148, 163, 184, 0.3)' }}>
+                                Bez EET
+                              </span>
+                            )}
+                            {sale.eet_status === 'OFFLINE_PENDING' && (
+                              <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+                                EET Čeká
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', textAlign: 'right', color: isRefund ? '#ef4444' : 'var(--accent-emerald)', whiteSpace: 'nowrap' }}>

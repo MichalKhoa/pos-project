@@ -33,11 +33,16 @@ def get_eet_status(db: Session = Depends(get_db)):
     crypto_mgr = eet_service.get_crypto_manager(cert_path, cert_pwd)
     cert_info = crypto_mgr.get_certificate_info()
 
-    pending_count = db.query(SaleModel).filter(
-        (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
-    ).count()
+    eet_enabled = config.eet_enabled if config and config.eet_enabled is not None else False
+
+    pending_count = 0
+    if eet_enabled:
+        pending_count = db.query(SaleModel).filter(
+            (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
+        ).count()
 
     return {
+        "eet_enabled": eet_enabled,
         "environment": config.eet_environment or "playground",
         "eic_popl": config.dic or "CZ00000019",
         "dic": config.dic or "CZ00000019",
@@ -124,6 +129,10 @@ def upload_eet_certificate(
 @router.post("/process-queue")
 def process_offline_queue(db: Session = Depends(get_db)):
     """Flushes offline transaction queue and resends pending sales to EET."""
+    config = db.query(StoreConfigModel).first()
+    if config and not config.eet_enabled:
+        return {"processed": 0, "status": "EET_DISABLED", "message": "EET evidování je v nastavení vypnuto."}
+
     pending_sales = db.query(SaleModel).filter(
         (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
     ).all()

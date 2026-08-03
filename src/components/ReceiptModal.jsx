@@ -82,12 +82,12 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       }
       return `
         <tr>
-          <td style="text-align:left; padding:2px 0; word-break:break-word;">
+          <td style="text-align:left; width:54%; padding:2px 0; word-break:break-word;">
             <div>${itemName} ${disc > 0 ? `(-${disc}%)` : ''}</div>
             <div style="font-size:${is58mm ? '7.5px' : '8.5px'}; color:#555;">DPH ${item.vat}%</div>
           </td>
-          <td style="text-align:center; padding:2px 0; width:15%;">${item.quantity}</td>
-          <td style="text-align:right; padding:2px 0; width:30%;">${(effPrice * item.quantity).toFixed(0)} Kč</td>
+          <td style="text-align:center; width:16%; padding:2px 0;">${item.quantity}</td>
+          <td style="text-align:right; width:30%; padding:2px 0;">${(effPrice * item.quantity).toFixed(0)} Kč</td>
         </tr>
       `;
     }).join('');
@@ -172,7 +172,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <style>
               @page { size: A4 portrait; margin: 15mm; }
               body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #111827; margin: 0; padding: 0; background: #fff; }
-              .a4-container { width: 100%; max-width: 190mm; margin: 0 auto; padding: 10px; box-sizing: border-box; }
+              .a4-container { width: 100%; max-width: 190mm; margin: 0 auto; padding: 15mm 10mm 25mm 10mm; box-sizing: border-box; }
               .flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
               .header-box { border-bottom: 2px solid #111827; padding-bottom: 15px; margin-bottom: 20px; }
               .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
@@ -281,7 +281,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       store: storeConfig.storeName,
       ico: storeConfig.ico
     });
-    const qrImageUrl = `http://localhost:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
+    const apiHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+    const qrImageUrl = `http://${apiHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
 
     printWin.document.write(`
       <!DOCTYPE html>
@@ -291,17 +292,17 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
           <style>
             @page { margin: 0; size: auto; }
             body { font-family: monospace, monospace; font-size: ${fontSize}; line-height: 1.25; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
-            .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${is58mm ? '0 1mm' : '2mm 3mm'}; box-sizing: border-box; text-align: left; }
+            .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${is58mm ? '18mm 2mm 28mm 2mm' : '22mm 4mm 35mm 4mm'}; box-sizing: border-box; text-align: left; }
             .center { text-align: center; }
             .bold { font-weight: bold; }
-            .dashed { border-top: 1px dashed #000; margin: 3px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 3px 0; table-layout: fixed; }
-            .total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0; font-size: ${is58mm ? '11px' : '13px'}; font-weight: bold; display: flex; justify-content: space-between; margin: 3px 0; }
+            .dashed { border-top: 1px dashed #000; margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
+            .total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: ${is58mm ? '11px' : '13px'}; font-weight: bold; display: flex; justify-content: space-between; margin: 5px 0; }
           </style>
         </head>
         <body>
           <div class="receipt-box">
-            <img src="${himmelLogo}" style="width: ${logoSize}; height: ${logoSize}; display: block; margin: 0 auto 3px auto;" />
+            <img src="${himmelLogo}" style="width: ${logoSize}; height: ${logoSize}; display: block; margin: 0 auto 4px auto;" />
             <div class="center bold" style="font-size: ${is58mm ? '11px' : '14px'};">${storeName}</div>
             <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${street}</div>
             <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${city}</div>
@@ -318,8 +319,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <table>
               <thead>
                 <tr style="border-bottom: 1px dashed #000; font-size: ${is58mm ? '8.5px' : '9.5px'};">
-                  <th style="text-align:left; width:55%;">Položka</th>
-                  <th style="text-align:center; width:15%;">Ks</th>
+                  <th style="text-align:left; width:54%;">Položka</th>
+                  <th style="text-align:center; width:16%;">Ks</th>
                   <th style="text-align:right; width:30%;">Cena</th>
                 </tr>
               </thead>
@@ -333,7 +334,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               <span>${saleData.totalAmount.toFixed(0)} Kč</span>
             </div>
 
-            <div style="font-size: ${is58mm ? '8.5px' : '9.5px'}; margin: 3px 0;">
+            <div style="font-size: ${is58mm ? '8.5px' : '9.5px'}; margin: 4px 0;">
               <div style="display:flex; justify-content:space-between;">
                 <span>Způsob úhrady:</span>
                 <span class="bold">${payLabel}</span>
@@ -355,15 +356,19 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             ${taxHtml}
 
             <div class="dashed"></div>
-            <div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; word-break: break-all;">
-              <div class="bold">EET 2.0 (${saleData.eet_status || 'EVD_OK'})</div>
-              ${fik ? `<div>POK/FIK: ${fik}</div>` : ''}
-              ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
-              ${pkp && !fik ? `<div>PKP: ${pkp.slice(0, 44)}...</div>` : ''}
+            <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; word-break: break-all;">
+              ${(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? `
+                <div class="bold">Režim provozu: Běžný prodej bez EET</div>
+              ` : `
+                <div class="bold">EET 2.0 (${saleData.eet_status || 'EVD_OK'})</div>
+                ${fik ? `<div>POK/FIK: ${fik}</div>` : ''}
+                ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
+                ${pkp && !fik ? `<div>PKP: ${pkp.slice(0, 44)}...</div>` : ''}
+              `}
             </div>
 
             <div class="dashed"></div>
-            <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; margin-top: 3px;">
+            <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; margin-top: 4px; padding-bottom: 6px;">
               ${receiptFooter}
             </div>
           </div>
@@ -389,7 +394,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     ico: storeConfig.ico
   });
 
-  const qrImageUrl = `http://localhost:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
+  const apiHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+  const qrImageUrl = `http://${apiHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
 
   return (
     <div className="modal-overlay">
@@ -414,7 +420,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             className={`receipt-paper printable-receipt ${is58mm ? 'paper-58mm' : 'paper-80mm'}`}
             style={{
               width: is58mm ? '220px' : '320px',
-              padding: is58mm ? '8px 6px' : '16px 12px',
+              padding: is58mm ? '18px 8px 26px 8px' : '26px 14px 36px 14px',
               fontSize: is58mm ? '0.7rem' : '0.8rem',
               lineHeight: is58mm ? '1.25' : '1.35'
             }}
@@ -555,24 +561,26 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               )}
             </div>
 
-            {/* Czech EET 2.0 Fiscal Block */}
+            {/* Fiscal Block */}
             <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '0.6rem' : '0.65rem' }}>
-              <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>
-                EET 2.0 Evidováno v režimu běžném ({saleData.eet_status || 'EVD_OK'})
-              </div>
-              { (saleData.fik || saleData.pok) && (
-                <div><strong>POK/FIK:</strong> {saleData.fik || saleData.pok}</div>
-              )}
-              { saleData.bkp && (
-                <div><strong>BKP:</strong> {saleData.bkp}</div>
-              )}
-              { saleData.pkp && !saleData.fik && !saleData.pok && (
-                <div style={{ marginTop: '2px' }}><strong>PKP:</strong> {saleData.pkp.slice(0, 44)}...</div>
-              )}
-              { !saleData.fik && !saleData.pok && !saleData.bkp && (
+              {(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? (
+                <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px', color: 'var(--text-secondary)' }}>
+                  Režim provozu: Běžný prodej bez EET
+                </div>
+              ) : (
                 <>
-                  <div>POK: 4f8d9b2a-1c3e-4567-89ab-0123456789ab-01</div>
-                  <div>BKP: 12345678-ABCDEF12-34567890-ABCDEF12-34567890</div>
+                  <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>
+                    EET 2.0 Evidováno v režimu běžném ({saleData.eet_status || 'EVD_OK'})
+                  </div>
+                  { (saleData.fik || saleData.pok) && (
+                    <div><strong>POK/FIK:</strong> {saleData.fik || saleData.pok}</div>
+                  )}
+                  { saleData.bkp && (
+                    <div><strong>BKP:</strong> {saleData.bkp}</div>
+                  )}
+                  { saleData.pkp && !saleData.fik && !saleData.pok && (
+                    <div style={{ marginTop: '2px' }}><strong>PKP:</strong> {saleData.pkp.slice(0, 44)}...</div>
+                  )}
                 </>
               )}
             </div>

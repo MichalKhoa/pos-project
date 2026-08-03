@@ -39,6 +39,7 @@ MIGRATIONS = [
     ("store_config", "direct_hardware_print", "BOOLEAN DEFAULT 1"),
     ("store_config", "id_provozovny", "VARCHAR DEFAULT '11'"),
     ("store_config", "id_pokl", "VARCHAR DEFAULT '1'"),
+    ("store_config", "eet_enabled", "BOOLEAN DEFAULT 0"),
     ("store_config", "eet_cert_path", "VARCHAR DEFAULT ''"),
     ("store_config", "eet_cert_password", "VARCHAR DEFAULT ''"),
     ("store_config", "eet_environment", "VARCHAR DEFAULT 'playground'"),
@@ -84,11 +85,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for React frontend (Vite http://localhost:5173 & http://127.0.0.1:5173)
+# Enable CORS for React frontend (Vite & LAN network clients)
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
 if not allowed_origins:
-    allowed_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    allowed_origins = ["*"]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -179,12 +181,16 @@ def shutdown_system(request: Request):
         from services.eet_service import CzechEETService
 
         db = SessionLocal()
-        pending_sales = db.query(SaleModel).filter(
-            (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
-        ).all()
+        config = db.query(StoreConfigModel).first()
+        if config and not config.eet_enabled:
+            logger.info("Shutdown: EET is disabled in store config, skipping offline sales flush.")
+        else:
+            pending_sales = db.query(SaleModel).filter(
+                (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
+            ).all()
 
-        if pending_sales:
-            logger.info(f"Shutdown: Flushing {len(pending_sales)} pending offline EET sales...")
+            if pending_sales:
+                logger.info(f"Shutdown: Flushing {len(pending_sales)} pending offline EET sales...")
             config = db.query(StoreConfigModel).first()
             store_dict = {
                 "eic_popl": config.dic if config else "CZ00000019",
@@ -239,7 +245,7 @@ def shutdown_system(request: Request):
 if __name__ == "__main__":
     import os
     import uvicorn
-    host = os.getenv("HOST", "127.0.0.1")
+    host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host=host, port=port, reload=True)
 
