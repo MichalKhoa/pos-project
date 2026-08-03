@@ -46,32 +46,30 @@ class CzechBankQRPaymentService:
     def check_payment_status(self, variable_symbol: str, expected_amount: float) -> Dict[str, Any]:
         """
         Checks if the bank account has received a transaction matching the variable symbol and amount.
-        Place your bank API polling or webhook lookup logic here.
+        Checks real-time payment cache populated by bank email listener or webhooks.
         """
         logger.info(f"Checking QR payment arrival for VS: {variable_symbol}, Amount: {expected_amount} CZK")
 
-        # STUB / PLACEHOLDER LOGIC:
-        # In production, call your bank REST API (e.g., Fio API: https://www.fio.cz/ib_api/rest/periods/...)
-        # or check a local Webhook payment event cache.
-        
-        # Example bank API integration:
-        """
-        url = f"https://www.fio.cz/ib_api/rest/last/{self.api_token}/transactions.json"
-        response = requests.get(url)
-        if response.status_code == 200:
-            transactions = response.json().get('accountStatement', {}).get('transactionList', {}).get('transaction', [])
-            for tx in transactions:
-                vs = tx.get('column5', {}).get('value') # Variable symbol field
-                amt = tx.get('column1', {}).get('value') # Amount field
-                if str(vs) == str(variable_symbol) and float(amt) >= expected_amount:
-                    return {"status": "PAID", "transaction_id": tx.get('column22', {}).get('value')}
-        """
+        try:
+            from services.email_payment_listener import payment_cache
+            cached = payment_cache.get_payment(variable_symbol)
+            if cached and cached.get("amount", 0) >= expected_amount:
+                logger.info(f"🎉 QR Payment Verified via Email Listener! VS: {variable_symbol}, Amount: {cached['amount']} CZK")
+                return {
+                    "status": "PAID",
+                    "variable_symbol": variable_symbol,
+                    "expected_amount": expected_amount,
+                    "received_amount": cached["amount"],
+                    "message": "Platba úspěšně ověřena a přijata!"
+                }
+        except Exception as e:
+            logger.warning(f"Error checking email payment cache: {e}")
 
-        # Return status response object
+        # Return pending status if not yet received
         return {
             "status": "PENDING", # Options: 'PENDING', 'PAID', 'EXPIRED', 'FAILED'
             "variable_symbol": variable_symbol,
             "expected_amount": expected_amount,
             "received_amount": 0.0,
-            "message": "Waiting for customer to complete instant bank transfer."
+            "message": "Čeká se na provedení okamžité platby zákazníkem..."
         }
