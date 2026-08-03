@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 
-export const FlagCZ = ({ style = {}, className = '' }) => (
+const FlagCZ = ({ style = {}, className = '' }) => (
   <svg width="20" height="14" viewBox="0 0 640 480" style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }} className={className}>
     <rect width="640" height="480" fill="#d7141a"/>
     <rect width="640" height="240" fill="#fff"/>
@@ -10,14 +10,14 @@ export const FlagCZ = ({ style = {}, className = '' }) => (
   </svg>
 );
 
-export const FlagVN = ({ style = {}, className = '' }) => (
+const FlagVN = ({ style = {}, className = '' }) => (
   <svg width="20" height="14" viewBox="0 0 640 480" style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }} className={className}>
     <rect width="640" height="480" fill="#da251d"/>
     <polygon points="320,84 357,198 477,198 380,268 417,382 320,312 223,382 260,268 163,198 283,198" fill="#ffff00"/>
   </svg>
 );
 
-export const FlagUK = ({ style = {}, className = '' }) => (
+const FlagUK = ({ style = {}, className = '' }) => (
   <svg width="20" height="14" viewBox="0 0 640 480" style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }} className={className}>
     <path fill="#012169" d="M0 0h640v480H0z"/>
     <path fill="#FFF" d="m75 0 245 180L565 0h75v50L395 240l245 190v50h-75L320 300 75 480H0v-50l245-190L0 50V0h75z"/>
@@ -27,7 +27,7 @@ export const FlagUK = ({ style = {}, className = '' }) => (
   </svg>
 );
 
-export function getFlagComponent(code) {
+function getFlagComponent(code) {
   switch (code?.toLowerCase()) {
     case 'cs':
       return <FlagCZ />;

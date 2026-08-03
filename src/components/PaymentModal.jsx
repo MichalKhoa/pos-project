@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles, RefreshCw, AlertCircle, Wifi } from 'lucide-react';
+import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles, RefreshCw, Wifi } from 'lucide-react';
 import { fetchTerminalConfig, payWithTerminal } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
@@ -38,11 +38,6 @@ export default function PaymentModal({
     setSplitCashStr('0');
     setSplitStep(1);
   }, [totalAmount]);
-
-  const handleTabChange = (newMethod) => {
-    setActiveMethod(newMethod);
-    setSplitStep(1);
-  };
 
   const tenderedVal = parseFloat(tenderedStr) || 0;
   const changeDue = tenderedVal - totalAmount;
@@ -128,6 +123,7 @@ export default function PaymentModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMethod, tenderedStr, splitCashStr, changeDue, totalAmount]);
 
   const handleComplete = () => {

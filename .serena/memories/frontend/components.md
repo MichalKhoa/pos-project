@@ -3,27 +3,28 @@
 UI components located in `/src/components`.
 
 ## Views & Layout
-- `Navbar.jsx`: Header navigation bar with backend status indicator, active tab toggles, language dropdown selector (`CS`, `VI`, `EN`), streamlined Quick Lock icon button, theme toggle, and clock.
-- `QuickPresetGrid.jsx`: Category filter buttons, "Správa kategorií" button (`isCategoryModalOpen`), internationalized search bar, edit mode toggles, active quantity multiplier badge (`⚡ 5×`), preset card badge overlays, 48px touchscreen color selector grid with checkmark indicators, and quick-select item grid for cashier register (touch keypad limit 10 chars).
-- `PresetsCatalogView.jsx`: Category and product catalog management interface with "Správa kategorií" modal trigger and 48px touchscreen color selector grid with checkmark indicators.
+- `Navbar.jsx`: Header navigation bar with tabs (`Pokladna`, `Sklad`, `Katalog`, `Historie`, `Nastavení`), backend latency/EET status indicator, language dropdown selector (`CS`, `VI`, `EN`), Quick Lock button, theme toggle, and clock.
+- `InventoryView.jsx`: Dedicated top-level `Sklad` view with EAN barcode search, low-stock filter (`Nízká zásoba`), quick stock increment (+5, +10, +50, custom set), min stock alert level, and inline EAN code editor.
+- `QuickPresetGrid.jsx`: Category filter buttons, internationalized search bar, edit mode, quantity multiplier (`⚡ 5×`), stock pills (`📦 X ks` - yellow for low stock, orange for $\le 0$), 48px touch color selector, and quick item grid.
+- `PresetsCatalogView.jsx`: Full-screen product catalog and category management.
 - `SalesHistoryView.jsx`: Sales ledger with search, date filter, status badges, receipt viewer, CSV export, and EET re-send.
-- `SettingsView.jsx`: Store configuration, hardware printer device auto-scanner, paper format selector (58mm / 80mm / A4), direct HW print toggle, cashier PIN & auto-lock timeout, EET certificate settings, CSOB terminal setup, and backup/restore.
+- `SettingsView.jsx`: Store config, printer auto-scanner, paper format selector (58mm/80mm/A4), PIN lock, EET cert, ČSOB terminal setup, backup/restore, and system update.
 
 ## Cart & Keypads
 - `Cart.jsx`: Itemized shopping cart, per-item discount trigger, quantity controls, tax breakdown, pay button.
-- `ManualKeypad.jsx`: Touchscreen numeric keypad for custom price/SKU entry with `QTY × PRICE` multiplicator key (`×` / `*` / `X`) and active multiplier badge.
+- `ManualKeypad.jsx`: Touchscreen numeric keypad with `QTY × PRICE` multiplier key (`×` / `*` / `X`) and active multiplier badge.
 
-## Modals
-- `LockScreenModal.jsx`: Touchscreen 4-digit PIN security lock overlay with physical keyboard support (`0-9`, `Backspace`, `Escape`, `C`) and shake animation on invalid PIN entry.
+## Modals & Audio
+- `LockScreenModal.jsx`: Touchscreen 4-digit PIN security lock overlay with physical keyboard support (`0-9`, `Backspace`, `Escape`, `C`), rate limiter, and shake animation.
 - `PaymentModal.jsx`: Multi-payment workflow (Cash change calculator, Card terminal, Czech SPD QR code, Split payment).
-- `ReceiptModal.jsx`: Receipt & A4 Tax Invoice preview with direct silent thermal hardware printing and optional debug preview pop-up window trigger.
-- `DiscountModal.jsx`: Custom percentage/amount discount entry.
-- `CategoryManagerModal.jsx`, `RefundModal.jsx`, `DiscountModal.jsx`, `ShutdownModal.jsx`, `PendingSyncModal.jsx`.
-- `CalendarModal.jsx`: Czech national holiday & retail closure law tracker (Zákon č. 223/2016 Sb.), shift notes, daily sales summary, receipt navigation. Fully internationalized (`CS`, `VI`, `EN`).
+- `RefundModal.jsx`: Receipt refund modal with itemized selection, partial refund, and "Poškozeno / Likvidace (Ne-naskladňovat)" checkbox.
+- `ReceiptModal.jsx`: Receipt & A4 Tax Invoice preview with direct silent thermal hardware printing.
+- `audio.js` (`src/utils/audio.js`): Zero-dependency Web Audio API sound manager (barcode scan chime, checkout success sound, error alert) with enable/disable toggle in Settings.
 
 ## Component Invariants
-- Modal components (`RefundModal.jsx`, `DiscountModal.jsx`, `LockScreenModal.jsx`, etc.): MUST define all React hooks (`useState`, `useEffect`) unconditionally at top of component before any conditional early returns (`if (!isOpen) return null;`) to satisfy React Rules of Hooks.
-- Touch UI Targets: All interactive buttons and cards MUST specify `touch-action: manipulation` and `-webkit-touch-callout: none` to eliminate 300ms tap latency and block native callout menus on touchscreens.
+- Modal components (`RefundModal.jsx`, `DiscountModal.jsx`, `LockScreenModal.jsx`, etc.): MUST define all React hooks unconditionally at top of component before any conditional early returns.
+- Touch UI Targets: Interactive buttons and cards MUST specify `touch-action: manipulation` and `-webkit-touch-callout: none`.
+- PWA Support: Service Worker `public/sw.js` and manifest `public/manifest.json` enable `CacheFirst` offline launch.
 
 ## Related Memories
 - Frontend architecture: `mem:frontend/core`

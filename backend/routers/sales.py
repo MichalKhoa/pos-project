@@ -105,13 +105,24 @@ def get_next_receipt_number_preview(db: Session = Depends(get_db)):
     return {"next_receipt_number": f"{year}-{next_num:06d}"}
 
 
+IDEMPOTENCY_CACHE = {}
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
+def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(get_db)):
     """Save a completed sale, run EET fiscal signing, and persist line items."""
+    idempotency_key = request.headers.get("X-Idempotency-Key") or request.headers.get("x-idempotency-key")
+    if idempotency_key and idempotency_key in IDEMPOTENCY_CACHE:
+        cached_res, ts = IDEMPOTENCY_CACHE[idempotency_key]
+        if datetime.now().timestamp() - ts < 300:
+            return cached_res
+
     # Check if sale ID already exists
     existing = db.query(SaleModel).filter(SaleModel.id == sale.id).first()
     if existing:
-        return {"status": "ALREADY_EXISTS", "sale_id": existing.id, "receipt_number": existing.receipt_number}
+        res = {"status": "ALREADY_EXISTS", "sale_id": existing.id, "receipt_number": existing.receipt_number}
+        if idempotency_key:
+            IDEMPOTENCY_CACHE[idempotency_key] = (res, datetime.now().timestamp())
+        return res
 
     # Ensure atomic receipt number assignment
     assigned_receipt_number = sale.receiptNumber
@@ -146,54 +157,61 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
             "is_sent_to_eet": True
         }
 
-    from services.security_utils import parse_iso_timestamp, round_currency
+    from database import get_db, atomic_transaction
 
-    # Save to SQLite DB
-    db_sale = SaleModel(
-        id=sale.id,
-        receipt_number=assigned_receipt_number,
-        timestamp=parse_iso_timestamp(sale.timestamp),
-        total_amount=round_currency(sale.totalAmount),
-        cart_discount_percent=sale.cartDiscountPercent,
-        payment_method=sale.paymentMethod,
-        split_details=sale.splitDetails,
-        tendered_amount=round_currency(sale.tenderedAmount),
-        change_due=round_currency(sale.changeDue),
-        tax_summary=sale.taxSummary,
-        fik_code=eet_res.get("fik"),
-        bkp_code=eet_res.get("bkp"),
-        pkp_code=eet_res.get("pkp"),
-        eet_status=eet_res.get("eet_status", "EVD_OK"),
-        eic_popl=store_dict["dic"],
-        id_provozovny=store_dict["id_provozovny"],
-        id_pokl=store_dict["id_pokl"],
-        is_sent_to_eet=eet_res.get("is_sent_to_eet", True),
-        is_refund=sale.isRefund,
-        original_receipt_number=sale.originalReceiptNumber,
-        refund_reason=sale.refundReason,
-        refund_status=sale.refundStatus or "NONE",
-        refunded_amount=round_currency(sale.refundedAmount or 0.0)
-    )
-
-    db.add(db_sale)
-
-    # Save itemized rows
-    for item in sale.items:
-        db_item = SaleItemModel(
-            sale_id=sale.id,
-            item_id=item.id,
-            name=item.name,
-            price=round_currency(item.price),
-            quantity=item.quantity,
-            vat=item.vat,
-            discount_percent=item.discount_percent
+    with atomic_transaction(db):
+        # Save to SQLite DB
+        db_sale = SaleModel(
+            id=sale.id,
+            receipt_number=assigned_receipt_number,
+            timestamp=parse_iso_timestamp(sale.timestamp),
+            total_amount=round_currency(sale.totalAmount),
+            cart_discount_percent=sale.cartDiscountPercent,
+            payment_method=sale.paymentMethod,
+            split_details=sale.splitDetails,
+            tendered_amount=round_currency(sale.tenderedAmount),
+            change_due=round_currency(sale.changeDue),
+            tax_summary=sale.taxSummary,
+            fik_code=eet_res.get("fik"),
+            bkp_code=eet_res.get("bkp"),
+            pkp_code=eet_res.get("pkp"),
+            eet_status=eet_res.get("eet_status", "EVD_OK"),
+            eic_popl=store_dict["dic"],
+            id_provozovny=store_dict["id_provozovny"],
+            id_pokl=store_dict["id_pokl"],
+            is_sent_to_eet=eet_res.get("is_sent_to_eet", True),
+            is_refund=sale.isRefund,
+            original_receipt_number=sale.originalReceiptNumber,
+            refund_reason=sale.refundReason,
+            refund_status=sale.refundStatus or "NONE",
+            refunded_amount=round_currency(sale.refundedAmount or 0.0)
         )
-        db.add(db_item)
 
-    db.commit()
+        db.add(db_sale)
+
+        # Save itemized rows & deduct inventory stock
+        from models import PresetModel
+        for item in sale.items:
+            db_item = SaleItemModel(
+                sale_id=sale.id,
+                item_id=item.id,
+                name=item.name,
+                price=round_currency(item.price),
+                quantity=item.quantity,
+                vat=item.vat,
+                discount_percent=item.discount_percent
+            )
+            db.add(db_item)
+
+            # Deduct stock quantity if product preset has stock tracking enabled
+            if item.id:
+                preset = db.query(PresetModel).filter(PresetModel.id == item.id).first()
+                if preset and preset.track_stock:
+                    preset.stock_quantity -= item.quantity
+
     db.refresh(db_sale)
 
-    return {
+    res = {
         "status": "SUCCESS",
         "sale_id": db_sale.id,
         "receipt_number": db_sale.receipt_number,
@@ -202,17 +220,36 @@ def create_sale(sale: CreateSaleSchema, db: Session = Depends(get_db)):
         "pkp": db_sale.pkp_code,
         "eet_status": db_sale.eet_status
     }
+    if idempotency_key:
+        IDEMPOTENCY_CACHE[idempotency_key] = (res, datetime.now().timestamp())
+    return res
+
+
+class UpdateRefundStatusSchema(BaseModel):
+    refund_status: str
+    refunded_amount: float
+    restock: Optional[bool] = True
 
 
 @router.put("/{sale_id}/refund-status")
 def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: Session = Depends(get_db)):
-    """Update refund status and refunded amount of an existing sale."""
+    """Update refund status and refunded amount of an existing sale, with optional item restocking."""
     sale = db.query(SaleModel).filter(SaleModel.id == sale_id).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
     
     sale.refund_status = data.refund_status
     sale.refunded_amount = data.refunded_amount
+
+    # Auto-restock items if restock is enabled (unless damaged/waste)
+    if data.restock:
+        from models import PresetModel
+        for item in sale.items:
+            if item.item_id:
+                preset = db.query(PresetModel).filter(PresetModel.id == item.item_id).first()
+                if preset and preset.track_stock:
+                    preset.stock_quantity += item.quantity
+
     db.commit()
     return {"status": "UPDATED", "sale_id": sale_id}
 

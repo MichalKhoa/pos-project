@@ -76,6 +76,7 @@ pos-project-himmel/
 │   ├── App.css               # Application layout styling
 │   └── index.css             # Design tokens and theme system
 ├── Himmel_POS.bat            # Windows 1-click desktop register launcher
+├── Himmel_POS_Mobile_Launcher.bat # Windows 1-click phone/LAN launcher (shows phone URLs)
 ├── Himmel_POS_Kiosk.bat      # Windows 1-click full-screen kiosk mode launcher
 ├── index.html                # Vite main HTML entry point
 ├── package.json              # Frontend npm dependencies and scripts

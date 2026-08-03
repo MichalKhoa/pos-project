@@ -177,3 +177,64 @@ def process_offline_queue(db: Session = Depends(get_db)):
         "processed_count": processed_count,
         "synced_sales": synced_ids
     }
+
+
+@router.get("/audit-logs")
+def get_eet_audit_logs(limit: int = 100, db: Session = Depends(get_db)):
+    """Fetch audit history for fiscal verification."""
+    from models import EetAuditLogModel
+    logs = db.query(EetAuditLogModel).order_by(EetAuditLogModel.id.desc()).limit(limit).all()
+    return {
+        "status": "SUCCESS",
+        "count": len(logs),
+        "logs": [
+            {
+                "id": l.id,
+                "sale_id": l.sale_id,
+                "timestamp": l.timestamp.isoformat() if l.timestamp else None,
+                "action": l.action,
+                "status": l.status,
+                "bkp": l.bkp,
+                "fik": l.fik,
+                "error_message": l.error_message
+            }
+            for l in logs
+        ]
+    }
+
+
+@router.get("/offline-queue")
+def get_offline_queue(db: Session = Depends(get_db)):
+    """List all pending offline sales requiring EET resend."""
+    pending_sales = db.query(SaleModel).filter(
+        (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
+    ).all()
+    return {
+        "status": "SUCCESS",
+        "count": len(pending_sales),
+        "sales": [
+            {
+                "id": s.id,
+                "receipt_number": s.receipt_number,
+                "timestamp": s.timestamp.isoformat() if s.timestamp else None,
+                "total_amount": s.total_amount,
+                "eet_status": s.eet_status,
+                "eet_retry_count": s.eet_retry_count or 0,
+                "bkp_code": s.bkp_code,
+                "pkp_code": s.pkp_code
+            }
+            for s in pending_sales
+        ]
+    }
+
+
+@router.post("/force-resend")
+def force_resend_offline_queue():
+    """Manual trigger to flush offline EET queue immediately."""
+    from services.eet_resend_daemon import resend_pending_offline_sales
+    processed_count = resend_pending_offline_sales()
+    return {
+        "status": "SUCCESS",
+        "message": f"Okamžité odeslání dokončeno. Zpracováno sales: {processed_count}",
+        "processed_count": processed_count
+    }

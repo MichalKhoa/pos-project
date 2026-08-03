@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -7,6 +7,7 @@ import PaymentModal from './components/PaymentModal';
 import ReceiptModal from './components/ReceiptModal';
 import SalesHistoryView from './components/SalesHistoryView';
 import PresetsCatalogView from './components/PresetsCatalogView';
+import InventoryView from './components/InventoryView';
 import SettingsView from './components/SettingsView';
 import PendingSyncModal from './components/PendingSyncModal';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
@@ -15,6 +16,7 @@ import RefundModal from './components/RefundModal';
 import CalendarModal from './components/CalendarModal';
 import DiscountModal from './components/DiscountModal';
 import LockScreenModal from './components/LockScreenModal';
+import { soundFx } from './utils/audio';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
 import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend } from './api/posApi';
 
@@ -34,13 +36,14 @@ export default function App() {
   const [mobilePosTab, setMobilePosTab] = useState('keypad');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
+  const lastActivityRef = useRef(Date.now());
+
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
     const handler = (e) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-  const lastActivityRef = React.useRef(Date.now());
 
   // State — start from localStorage fallback, backend load will overwrite on mount
   const [categories, setCategories] = useState(() => {
@@ -223,8 +226,11 @@ export default function App() {
   }, [presets]);
 
   useEffect(() => {
-    const { cashierPin, ...safeConfig } = storeConfig || {};
-    localStorage.setItem('himmel_pos_config', JSON.stringify(safeConfig));
+    if (storeConfig) {
+      const safeConfig = { ...storeConfig };
+      delete safeConfig.cashierPin;
+      localStorage.setItem('himmel_pos_config', JSON.stringify(safeConfig));
+    }
   }, [storeConfig]);
 
   useEffect(() => {
@@ -422,6 +428,38 @@ export default function App() {
     }
   };
 
+  // Cart operations
+  const handleAddToCart = useCallback((item, customQty = null) => {
+    soundFx.playScanChime();
+    const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
+    const itemPrice = parseFloat(item.price);
+    const qtyToAdd = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
+
+    setCartItems(prevItems => {
+      const existingIdx = prevItems.findIndex(i =>
+        i.id === item.id &&
+        Math.abs(parseFloat(i.price) - itemPrice) < 0.001 &&
+        parseInt(i.vat ?? 21, 10) === itemVat &&
+        (i.discountPercent || 0) === (item.discountPercent || 0)
+      );
+
+      if (existingIdx > -1) {
+        const updated = [...prevItems];
+        updated[existingIdx] = {
+          ...updated[existingIdx],
+          quantity: updated[existingIdx].quantity + qtyToAdd
+        };
+        return updated;
+      } else {
+        return [...prevItems, { ...item, price: itemPrice, vat: itemVat, quantity: qtyToAdd, discountPercent: item.discountPercent || 0 }];
+      }
+    });
+
+    if (itemMultiplier !== 1) {
+      setItemMultiplier(1);
+    }
+  }, [itemMultiplier]);
+
   // Global Numpad & Physical Keyboard Listener for POS Register
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -505,7 +543,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig, isAppLocked]);
+  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier]);
 
   // Category handlers
   const handleAddCategory = (name) => {
@@ -544,36 +582,7 @@ export default function App() {
     }));
   };
 
-  // Cart operations
-  const handleAddToCart = (item, customQty = null) => {
-    const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
-    const itemPrice = parseFloat(item.price);
-    const qtyToAdd = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
 
-    setCartItems(prevItems => {
-      const existingIdx = prevItems.findIndex(i =>
-        i.id === item.id &&
-        Math.abs(parseFloat(i.price) - itemPrice) < 0.001 &&
-        parseInt(i.vat ?? 21, 10) === itemVat &&
-        (i.discountPercent || 0) === (item.discountPercent || 0)
-      );
-
-      if (existingIdx > -1) {
-        const updated = [...prevItems];
-        updated[existingIdx] = {
-          ...updated[existingIdx],
-          quantity: updated[existingIdx].quantity + qtyToAdd
-        };
-        return updated;
-      } else {
-        return [...prevItems, { ...item, price: itemPrice, vat: itemVat, quantity: qtyToAdd, discountPercent: item.discountPercent || 0 }];
-      }
-    });
-
-    if (itemMultiplier !== 1) {
-      setItemMultiplier(1);
-    }
-  };
 
   const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
 
@@ -662,6 +671,7 @@ export default function App() {
   };
 
   const handleCompleteSale = ({ paymentMethod, splitDetails, tenderedAmount, changeDue }) => {
+    soundFx.playSuccessChime();
     const rawSubtotal = roundCZK(cartItems.reduce((sum, item) => {
       const disc = item.discountPercent || 0;
       const effectivePrice = item.price * (1 - disc / 100);
@@ -867,6 +877,14 @@ export default function App() {
               </div>
             )}
           </>
+        )}
+
+        {activeTab === 'inventory' && (
+          <InventoryView
+            presets={presets}
+            categories={categories}
+            onUpdatePresets={setPresets}
+          />
         )}
 
         {activeTab === 'presets' && (

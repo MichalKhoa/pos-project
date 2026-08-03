@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon, Globe } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon, Package } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
@@ -16,7 +16,7 @@ export default function Navbar({
   onOpenCalendarModal,
   onLockApp
 }) {
-  const { t, language, setLanguage, languages } = useTranslation();
+  const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('pos_theme') || 'light';
@@ -77,6 +77,14 @@ export default function Navbar({
         >
           <ShoppingBag size={18} />
           <span>{t('nav.register')}</span>
+        </button>
+
+        <button
+          className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''}`}
+          onClick={() => setActiveTab('inventory')}
+        >
+          <Package size={18} />
+          <span>{t('nav.inventory') || 'Sklad'}</span>
         </button>
 
         <button

@@ -105,9 +105,13 @@ class EETCryptoManager:
         dummy_sig_bytes = hashlib.sha256(seed_bytes).digest() + hashlib.sha256(seed_bytes[::-1]).digest()
         pkp_b64 = base64.b64encode(dummy_sig_bytes * 4).decode("utf-8")[:344]
         
-        sha1_digest = hashlib.sha1(seed_bytes).hexdigest().upper()
-        bkp_formatted = "-".join([sha1_digest[i:i+8] for i in range(0, 40, 8)])
+        sha1_digest = hashlib.sha1(seed_bytes).hexdigest()
+        bkp_formatted = self._format_bkp(sha1_digest)
         return pkp_b64, bkp_formatted
+
+    def _format_bkp(self, sha1_hex: str) -> str:
+        clean = sha1_hex.upper().replace("-", "")
+        return "-".join([clean[i:i+8] for i in range(0, 40, 8)])
 
     def get_certificate_info(self) -> dict:
         """Returns metadata about the loaded certificate."""

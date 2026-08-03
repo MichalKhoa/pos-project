@@ -497,10 +497,32 @@ export default function QuickPresetGrid({
                 {!preset.isOpenPrice ? (
                   <>
                     <div className="preset-price">{preset.price} Kč</div>
-                    <div className="preset-vat">DPH {preset.vat}%</div>
+                    <div className="preset-vat">
+                      {preset.trackStock && (
+                        <span
+                          style={{
+                            marginRight: '6px',
+                            fontWeight: '800',
+                            padding: '1px 5px',
+                            borderRadius: '4px',
+                            background: (preset.stockQuantity || 0) <= 0 ? 'rgba(239, 68, 68, 0.3)' : (preset.stockQuantity || 0) <= (preset.minStockAlert || 5) ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255,255,255,0.15)',
+                            color: (preset.stockQuantity || 0) <= 0 ? 'var(--accent-rose)' : (preset.stockQuantity || 0) <= (preset.minStockAlert || 5) ? 'var(--accent-amber)' : 'inherit'
+                          }}
+                          title={`Skladová zásoba: ${preset.stockQuantity || 0} ks`}
+                        >
+                          📦 {preset.stockQuantity || 0} ks
+                        </span>
+                      )}
+                      DPH {preset.vat}%
+                    </div>
                   </>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    {preset.trackStock && (
+                      <span style={{ fontSize: '0.72rem', fontWeight: '800', color: (preset.stockQuantity || 0) <= 0 ? 'var(--accent-rose)' : 'var(--text-muted)' }}>
+                        📦 {preset.stockQuantity || 0} ks
+                      </span>
+                    )}
                     <div className="preset-vat">DPH {preset.vat}%</div>
                   </div>
                 )}

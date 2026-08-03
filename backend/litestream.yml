@@ -9,7 +9,7 @@ logging:
 
 # Databases to replicate
 dbs:
-  - path: ./pos_store.db
+  - path: ./data/pos_store.db
     
     # Real-time replica destinations
     replicas:

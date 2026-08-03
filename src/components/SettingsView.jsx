@@ -16,8 +16,7 @@ import {
   FileCheck,
   Printer,
   CreditCard,
-  Wifi,
-  Globe
+  Wifi
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -50,7 +49,7 @@ export default function SettingsView({
   onResetData,
   onNavigateToPresets
 }) {
-  const { t, language, setLanguage, languages } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const [config, setConfig] = useState({
     id_provozovny: '11',
     id_pokl: '1',
@@ -87,7 +86,6 @@ export default function SettingsView({
   const [updateData, setUpdateData] = useState(null);
   const [applyLoading, setApplyLoading] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updateResult, setUpdateResult] = useState(null);
 
   // Upload Form State
   const [selectedFile, setSelectedFile] = useState(null);
@@ -101,7 +99,6 @@ export default function SettingsView({
 
   // Queue Processing State
   const [queueLoading, setQueueLoading] = useState(false);
-  const [queueResult, setQueueResult] = useState(null);
 
   // ČSOB Terminal Ingenico Move 3500 State
   const [termEnabled, setTermEnabled] = useState(false);
@@ -564,7 +561,7 @@ export default function SettingsView({
 
               {/* Cashier Lock & Security Settings */}
               <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Shield size={16} style={{ color: 'var(--accent-amber)' }} />
                   <span>Zabezpečení a Uzamčení Pokladny</span>
                 </label>

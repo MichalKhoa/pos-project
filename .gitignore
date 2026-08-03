@@ -54,6 +54,8 @@ __pycache__/
 *.sqlite
 *.sqlite3
 backend/pos_store.db
+backend/data/
+backend/backups/
 
 # ==========================================
 # Certificates, Keys & Secrets

@@ -1,11 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react/only-export-components */
+import React, { createContext, useContext, useState } from 'react';
 import { translations } from './translations';
-
-export const LANGUAGES = [
-  { code: 'cs', label: 'CZ', flag: '🇨🇿', name: 'Čeština' },
-  { code: 'vi', label: 'VI', flag: '🇻🇳', name: 'Tiếng Việt' },
-  { code: 'en', label: 'EN', flag: '🇬🇧', name: 'English' }
-];
+import { LANGUAGES } from './languages';
+export { LANGUAGES };
 
 const LanguageContext = createContext();
 

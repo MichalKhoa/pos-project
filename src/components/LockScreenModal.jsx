@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, KeyRound, HelpCircle, RefreshCw } from 'lucide-react';
-import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { verifyPinBackend, verifyPukBackend } from '../api/posApi';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
 export default function LockScreenModal({ storeConfig, onUnlock }) {
-  const { t } = useTranslation();
   const [enteredPin, setEnteredPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -129,7 +127,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
       } else {
         setErrorMsg('Neplatný záchranný klíč (PUK)!');
       }
-    } catch (err) {
+    } catch {
       setErrorMsg('Chyba při ověřování záchranného klíče.');
     } finally {
       setIsVerifying(false);
@@ -157,6 +155,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enteredPin, isVerifying, showPukInput]);
 
   return (

@@ -129,8 +129,12 @@ class PinVerifyRequest(BaseModel):
 
 
 @router.post("/verify-pin")
-def verify_pin(data: PinVerifyRequest, db: Session = Depends(get_db)):
-    """Verify cashier PIN against hashed value in database."""
+def verify_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(get_db)):
+    """Verify cashier PIN against hashed value in database with rate limiting."""
+    from services.rate_limiter import pin_rate_limiter
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    pin_rate_limiter.check_rate_limit(client_ip)
+
     config = db.query(StoreConfigModel).first()
     stored = config.cashier_pin if config else "1234"
 
@@ -148,6 +152,43 @@ def verify_pin(data: PinVerifyRequest, db: Session = Depends(get_db)):
     if _hash_pin(data.pin) == stored:
         return {"status": "SUCCESS", "valid": True}
     raise HTTPException(status_code=401, detail="Nesprávný PIN kód")
+
+
+@router.get("/system/health")
+def get_system_health():
+    """Returns detailed diagnostic health metrics of backend server and database."""
+    import os, psutil, datetime
+    from database import DB_PATH, check_db_integrity
+
+    db_ok = check_db_integrity()
+    wal_path = DB_PATH + "-wal"
+    db_size = os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0
+    wal_size = os.path.getsize(wal_path) if os.path.exists(wal_path) else 0
+
+    cpu_usage = psutil.cpu_percent(interval=None) if hasattr(psutil, "cpu_percent") else 0
+    ram = psutil.virtual_memory() if hasattr(psutil, "virtual_memory") else None
+    disk = psutil.disk_usage(os.path.dirname(DB_PATH)) if hasattr(psutil, "disk_usage") else None
+
+    return {
+        "status": "HEALTHY" if db_ok else "DEGRADED",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "cpu_percent": cpu_usage,
+        "ram": {
+            "total_mb": round(ram.total / (1024 * 1024)) if ram else 0,
+            "used_mb": round(ram.used / (1024 * 1024)) if ram else 0,
+            "percent": ram.percent if ram else 0
+        },
+        "disk": {
+            "total_gb": round(disk.total / (1024 ** 3), 1) if disk else 0,
+            "free_gb": round(disk.free / (1024 ** 3), 1) if disk else 0,
+            "percent_used": disk.percent if disk else 0
+        },
+        "database": {
+            "integrity": "ok" if db_ok else "corrupt",
+            "db_size_bytes": db_size,
+            "wal_size_bytes": wal_size
+        }
+    }
 
 
 class PukVerifyRequest(BaseModel):
@@ -172,4 +213,22 @@ def verify_puk(data: PukVerifyRequest, db: Session = Depends(get_db)):
         return {"status": "SUCCESS", "valid": True, "message": "PIN byl úspěšně vyresetován na 1234"}
 
     raise HTTPException(status_code=401, detail="Neplatný záchranný klíč (PUK)!")
+
+
+@router.get("/backup-status")
+def get_system_backup_status():
+    """Returns local database backup metrics, WAL metrics, and last backup timestamp."""
+    from services.backup_service import get_backup_status
+    return get_backup_status()
+
+
+@router.post("/trigger-backup")
+def trigger_manual_backup():
+    """Manual 1-click snapshot trigger from Settings UI."""
+    from services.backup_service import create_database_backup
+    res = create_database_backup()
+    if res.get("status") == "ERROR":
+        raise HTTPException(status_code=500, detail=res.get("message"))
+    return res
+
 

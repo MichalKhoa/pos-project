@@ -26,6 +26,7 @@ class SaleModel(Base):
     id_provozovny = Column(String, default="11")
     id_pokl = Column(String, default="1")
     is_sent_to_eet = Column(Boolean, default=True)
+    eet_retry_count = Column(Integer, default=0)
     is_refund = Column(Boolean, default=False)
     original_receipt_number = Column(String, nullable=True)
     refund_reason = Column(String, nullable=True)
@@ -127,6 +128,10 @@ class PresetModel(Base):
     color = Column(String, nullable=True)
     is_open_price = Column(Boolean, default=False)
     position = Column(Integer, default=0)
+    stock_quantity = Column(Integer, default=0, nullable=False)
+    track_stock = Column(Boolean, default=False, nullable=False)
+    min_stock_alert = Column(Integer, default=5, nullable=False)
+    barcode = Column(String, index=True, nullable=True)
 
 
 class ReceiptSequenceModel(Base):
@@ -135,4 +140,20 @@ class ReceiptSequenceModel(Base):
 
     year = Column(Integer, primary_key=True)
     last_seq = Column(Integer, default=0, nullable=False)
+
+
+class EetAuditLogModel(Base):
+    """DB Model for immutable EET 2.0 transaction audit logs."""
+    __tablename__ = "eet_audit_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sale_id = Column(String, ForeignKey("sales.id"), nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    action = Column(String, nullable=False)     # 'FIRST_SEND', 'RETRY_SEND', 'VERIFY'
+    status = Column(String, nullable=False)     # 'EVD_OK', 'OFFLINE_PENDING', 'ERROR'
+    bkp = Column(String, nullable=True)
+    fik = Column(String, nullable=True)
+    request_hash = Column(String, nullable=True)
+    error_message = Column(String, nullable=True)
+
 

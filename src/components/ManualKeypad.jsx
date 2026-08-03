@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Delete, PlusCircle, Sparkles } from 'lucide-react';
+import { Calculator, Delete, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function ManualKeypad({
@@ -110,6 +110,7 @@ export default function ManualKeypad({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountStr, label, selectedVat]);
 
   const hasValidAmount = parseFloat(amountStr) > 0;

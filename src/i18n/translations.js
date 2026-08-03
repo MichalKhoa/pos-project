@@ -2,6 +2,7 @@ export const translations = {
   cs: {
     nav: {
       register: "Pokladna",
+      inventory: "Sklad",
       presets: "Katalog položek",
       history: "Historie prodejů",
       settings: "Nastavení",

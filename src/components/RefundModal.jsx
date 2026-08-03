@@ -28,6 +28,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
   const [selectedReasonPreset, setSelectedReasonPreset] = useState(REASON_PRESETS[0]);
   const [customReasonText, setCustomReasonText] = useState('');
   const [refundPaymentMethod, setRefundPaymentMethod] = useState(sale?.paymentMethod || 'cash');
+  const [isDamagedWaste, setIsDamagedWaste] = useState(false);
 
   if (!sale) return null;
 
@@ -103,6 +104,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
       refundTaxSummary,
       refundReason: finalReason,
       paymentMethod: refundPaymentMethod,
+      restock: !isDamagedWaste,
       isFullRefund: returnedItems.length === originalItems.length && returnedItems.every((item, idx) => item.quantityToReturn === originalItems[idx].quantity)
     });
   };
@@ -306,6 +308,27 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div style={{
+            background: 'var(--bg-input)',
+            padding: '0.6rem 0.9rem',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem'
+          }}>
+            <input
+              type="checkbox"
+              id="damagedWasteCheck"
+              checked={isDamagedWaste}
+              onChange={e => setIsDamagedWaste(e.target.checked)}
+              style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: '#ef4444' }}
+            />
+            <label htmlFor="damagedWasteCheck" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
+              Poškozeno / Likvidace (Nenaskladňovat položky zpět do skladu)
+            </label>
           </div>
 
           <div style={{

@@ -25,6 +25,10 @@ def _get_fernet_key() -> bytes:
             try:
                 with open(SECRET_KEY_FILE, "w", encoding="utf-8") as f:
                     f.write(secret)
+                try:
+                    os.chmod(SECRET_KEY_FILE, 0o600)
+                except Exception:
+                    pass
                 logger.info(f"Generated new persistent secret key in {SECRET_KEY_FILE}")
             except Exception as e:
                 logger.error(f"Failed to persist secret key to {SECRET_KEY_FILE}: {e}")

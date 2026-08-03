@@ -249,10 +249,11 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               </div>
 
               <div class="eet-box">
-                <div style="font-weight:700; margin-bottom:4px;">ELEKTRONICKÁ EVIDENCE TRŽEB (EET 2.0 - Režim běžný)</div>
-                ${fik ? `<div>POK / FIK: ${fik}</div>` : ''}
+                <div style="font-weight:700; margin-bottom:4px;">ELEKTRONICKÁ EVIDENCE TRŽEB (EET 2.0 - ${fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})</div>
+                ${fik ? `<div>FIK: ${fik}</div>` : ''}
                 ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
                 ${pkp && !fik ? `<div>PKP: ${pkp}</div>` : ''}
+                ${!fik && (pkp || saleData.eet_status === 'OFFLINE_PENDING') ? `<div style="font-weight:700; margin-top:4px; color:#b45309;">Vystaveno ve zjednodušeném (neonline) režimu EET</div>` : ''}
               </div>
 
               <div style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 10px;">
@@ -274,15 +275,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       return;
     }
 
-    const receiptPayload = JSON.stringify({
-      receipt: saleData.receiptNumber,
-      date: saleData.timestamp,
-      total: saleData.totalAmount,
-      store: storeConfig.storeName,
-      ico: storeConfig.ico
-    });
-    const apiHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-    const qrImageUrl = `http://${apiHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
+
 
     printWin.document.write(`
       <!DOCTYPE html>
@@ -360,10 +353,11 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               ${(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? `
                 <div class="bold">Režim provozu: Běžný prodej bez EET</div>
               ` : `
-                <div class="bold">EET 2.0 (${saleData.eet_status || 'EVD_OK'})</div>
-                ${fik ? `<div>POK/FIK: ${fik}</div>` : ''}
+                <div class="bold">EET 2.0 (${fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})</div>
+                ${fik ? `<div>FIK: ${fik}</div>` : ''}
                 ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
-                ${pkp && !fik ? `<div>PKP: ${pkp.slice(0, 44)}...</div>` : ''}
+                ${pkp && !fik ? `<div>PKP: ${pkp.slice(0, 32)}...</div>` : ''}
+                ${!fik && (pkp || saleData.eet_status === 'OFFLINE_PENDING') ? `<div class="bold" style="margin-top:2px;">Vystaveno ve zjednodušeném (neonline) režimu EET</div>` : ''}
               `}
             </div>
 
@@ -385,17 +379,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     setTimeout(() => setIsPrinting(false), 1500);
   };
 
-  // Generate Digital Receipt URL / QR Payload
-  const receiptPayload = JSON.stringify({
-    receipt: saleData.receiptNumber,
-    date: saleData.timestamp,
-    total: saleData.totalAmount,
-    store: storeConfig.storeName,
-    ico: storeConfig.ico
-  });
 
-  const apiHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-  const qrImageUrl = `http://${apiHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(receiptPayload)}`;
+
 
   return (
     <div className="modal-overlay">
@@ -570,16 +555,21 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               ) : (
                 <>
                   <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>
-                    EET 2.0 Evidováno v režimu běžném ({saleData.eet_status || 'EVD_OK'})
+                    EET 2.0 ({(saleData.fik || saleData.pok || saleData.fik_code) ? 'Běžný online režim' : 'Zjednodušený neonline režim'})
                   </div>
-                  { (saleData.fik || saleData.pok) && (
-                    <div><strong>POK/FIK:</strong> {saleData.fik || saleData.pok}</div>
+                  { (saleData.fik || saleData.pok || saleData.fik_code) && (
+                    <div><strong>FIK:</strong> {saleData.fik || saleData.pok || saleData.fik_code}</div>
                   )}
-                  { saleData.bkp && (
-                    <div><strong>BKP:</strong> {saleData.bkp}</div>
+                  { (saleData.bkp || saleData.bkp_code) && (
+                    <div><strong>BKP:</strong> {saleData.bkp || saleData.bkp_code}</div>
                   )}
-                  { saleData.pkp && !saleData.fik && !saleData.pok && (
-                    <div style={{ marginTop: '2px' }}><strong>PKP:</strong> {saleData.pkp.slice(0, 44)}...</div>
+                  { (saleData.pkp || saleData.pkp_code) && !(saleData.fik || saleData.pok || saleData.fik_code) && (
+                    <div style={{ marginTop: '2px' }}><strong>PKP:</strong> {(saleData.pkp || saleData.pkp_code).slice(0, 32)}...</div>
+                  )}
+                  { !(saleData.fik || saleData.pok || saleData.fik_code) && ((saleData.pkp || saleData.pkp_code) || saleData.eet_status === 'OFFLINE_PENDING') && (
+                    <div style={{ fontWeight: '700', marginTop: '4px', color: '#b45309' }}>
+                      Vystaveno ve zjednodušeném (neonline) režimu EET
+                    </div>
                   )}
                 </>
               )}

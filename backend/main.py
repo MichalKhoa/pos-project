@@ -20,8 +20,17 @@ from sqlalchemy import text
 from database import engine, Base
 from routers import sales, printer, display, payments, eet, catalog, updater, config, qr
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+from logging.handlers import RotatingFileHandler
+
+# Configure rotating file logging (20MB x 30 files retention = 600MB history)
+logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+os.makedirs(logs_dir, exist_ok=True)
+log_file = os.path.join(logs_dir, "pos_backend.log")
+
+file_handler = RotatingFileHandler(log_file, maxBytes=20 * 1024 * 1024, backupCount=30, encoding="utf-8")
+file_handler.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"))
+
+logging.basicConfig(level=logging.INFO, handlers=[file_handler, logging.StreamHandler()])
 logger = logging.getLogger("pos-backend")
 
 # Create database tables automatically
@@ -54,6 +63,7 @@ MIGRATIONS = [
     ("sales", "id_provozovny", "VARCHAR DEFAULT '11'"),
     ("sales", "id_pokl", "VARCHAR DEFAULT '1'"),
     ("sales", "is_sent_to_eet", "BOOLEAN DEFAULT 1"),
+    ("sales", "eet_retry_count", "INTEGER DEFAULT 0"),
     ("sales", "is_refund", "BOOLEAN DEFAULT 0"),
     ("sales", "original_receipt_number", "VARCHAR DEFAULT ''"),
     ("sales", "refund_reason", "VARCHAR DEFAULT ''"),
@@ -65,6 +75,11 @@ MIGRATIONS = [
     ("catalog_presets", "is_open_price", "BOOLEAN DEFAULT 0"),
     ("catalog_presets", "color", "VARCHAR DEFAULT '#3b82f6'"),
     ("catalog_presets", "sort_order", "INTEGER DEFAULT 0"),
+    # Table: presets
+    ("presets", "stock_quantity", "INTEGER DEFAULT 0"),
+    ("presets", "track_stock", "BOOLEAN DEFAULT 0"),
+    ("presets", "min_stock_alert", "INTEGER DEFAULT 5"),
+    ("presets", "barcode", "VARCHAR DEFAULT ''"),
     # Table: store_config
     ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
     ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),
@@ -115,11 +130,45 @@ app.include_router(qr.router)
 
 @app.on_event("startup")
 def startup_event():
+    # 1. Startup SQLite integrity quick check
+    from database import check_db_integrity, run_wal_checkpoint
+    if check_db_integrity():
+        logger.info("SQLite database PRAGMA quick_check: OK")
+    else:
+        logger.critical("SQLite database PRAGMA quick_check FAILED!")
+
+    # 2. Periodic WAL Checkpoint daemon (every 15 minutes)
+    import threading, time
+    def _wal_checkpoint_loop():
+        while True:
+            time.sleep(900)
+            try:
+                run_wal_checkpoint()
+            except Exception as e:
+                logger.warning(f"Error in WAL checkpoint loop: {e}")
+
+    wal_thread = threading.Thread(target=_wal_checkpoint_loop, daemon=True)
+    wal_thread.start()
+
     try:
         from services.email_payment_listener import start_email_listener_from_env
         start_email_listener_from_env()
     except Exception as e:
         logger.warning(f"Failed to start bank email listener: {e}")
+
+    try:
+        from services.eet_resend_daemon import start_eet_resend_daemon
+        start_eet_resend_daemon()
+    except Exception as e:
+        logger.warning(f"Failed to start EET resend daemon: {e}")
+
+
+# Single-Process Production Serving: Mount compiled React dist/ static assets if directory exists
+from fastapi.staticfiles import StaticFiles
+dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
+if os.path.exists(dist_dir):
+    app.mount("/static_ui", StaticFiles(directory=dist_dir, html=True), name="static_ui")
+    logger.info(f"Production static UI files mounted from {dist_dir}")
 
 
 @app.get("/")
@@ -151,10 +200,10 @@ def get_litestream_status():
     except Exception:
         is_running = False
 
-    db_path = os.path.join(backend_dir, "pos_store.db")
-    wal_path = os.path.join(backend_dir, "pos_store.db-wal")
+    from database import DB_PATH
+    wal_path = DB_PATH + "-wal"
 
-    db_size = os.path.getsize(db_path) if os.path.exists(db_path) else 0
+    db_size = os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0
     wal_size = os.path.getsize(wal_path) if os.path.exists(wal_path) else 0
 
     return {
@@ -166,6 +215,24 @@ def get_litestream_status():
         "wal_size_bytes": wal_size,
         "message": "Litestream replikace je aktivní" if is_running else ("Konfigurace přítomna" if config_exists else "Litestream nenakonfigurován")
     }
+
+
+@app.get("/api/v1/system/backup-status")
+def get_system_backup_status():
+    """Returns local database backup metrics, WAL metrics, and last backup timestamp."""
+    from services.backup_service import get_backup_status
+    return get_backup_status()
+
+
+@app.post("/api/v1/system/trigger-backup")
+def trigger_manual_backup():
+    """Manual 1-click snapshot trigger from Settings UI."""
+    from services.backup_service import create_database_backup
+    res = create_database_backup()
+    if res.get("status") == "ERROR":
+        raise HTTPException(status_code=500, detail=res.get("message"))
+    return res
+
 
 
 
@@ -256,5 +323,17 @@ if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host=host, port=port, reload=True)
+    is_dev = os.getenv("ENV", "development").lower() == "development"
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    uvicorn.run(
+        "main:app",
+        host=host,
+        port=port,
+        reload=is_dev,
+        reload_dirs=[
+            os.path.join(backend_dir, "routers"),
+            os.path.join(backend_dir, "services")
+        ],
+        reload_includes=["main.py", "database.py", "models.py"]
+    )
 

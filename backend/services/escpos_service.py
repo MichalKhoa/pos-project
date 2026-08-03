@@ -3,7 +3,29 @@ import glob
 import subprocess
 import logging
 
+import time
+
 logger = logging.getLogger("pos-escpos")
+
+
+def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
+    """Decorator that automatically retries printer connection with exponential backoff on USB/Serial hardware hiccups."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            last_err = None
+            current_delay = delay_seconds
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except (PermissionError, FileNotFoundError, OSError, Exception) as e:
+                    last_err = e
+                    logger.warning(f"Printer connection attempt {attempt}/{max_retries} failed: {e}. Retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= 2.0
+            logger.error(f"Printer auto-reconnect failed after {max_retries} attempts: {last_err}")
+            raise last_err
+        return wrapper
+    return decorator
 
 
 def detect_connected_printers():
@@ -162,11 +184,15 @@ class ESCPOSPrinterService:
                 # Footer & EET Signatures
                 printer.text(f"Zpusob uchrady: {sale_data.get('paymentMethod').upper()}\n")
                 printer.text(dash_line + "\n")
-                if sale_data.get('fik_code'):
-                    printer.text(f"FIK: {sale_data.get('fik_code')}\n")
-                if sale_data.get('bkp_code'):
-                    printer.text(f"BKP: {sale_data.get('bkp_code')}\n")
-                if not sale_data.get('fik_code') and not sale_data.get('bkp_code'):
+                if sale_data.get('fik_code') or sale_data.get('fik'):
+                    printer.text(f"FIK: {sale_data.get('fik_code') or sale_data.get('fik')}\n")
+                if sale_data.get('bkp_code') or sale_data.get('bkp'):
+                    printer.text(f"BKP: {sale_data.get('bkp_code') or sale_data.get('bkp')}\n")
+                if (sale_data.get('pkp_code') or sale_data.get('pkp')) and not (sale_data.get('fik_code') or sale_data.get('fik')):
+                    pkp_str = sale_data.get('pkp_code') or sale_data.get('pkp')
+                    printer.text(f"PKP: {pkp_str[:32]}...\n")
+                    printer.text("Vystaveno ve zjednodusenem (neonline) rezimu EET\n")
+                if not sale_data.get('fik_code') and not sale_data.get('fik') and not sale_data.get('pkp_code') and not sale_data.get('pkp'):
                     printer.text("Rezim bez EET\n")
                 printer.set(align='center')
                 printer.text(f"\n{store_config.get('receiptFooter')}\n")
