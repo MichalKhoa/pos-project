@@ -113,6 +113,15 @@ app.include_router(updater.router)
 app.include_router(qr.router)
 
 
+@app.on_event("startup")
+def startup_event():
+    try:
+        from services.email_payment_listener import start_email_listener_from_env
+        start_email_listener_from_env()
+    except Exception as e:
+        logger.warning(f"Failed to start bank email listener: {e}")
+
+
 @app.get("/")
 def root():
     return {
