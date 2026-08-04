@@ -33,6 +33,157 @@ export default function QuickPresetGrid({
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
   const [enteredOpenPrice, setEnteredOpenPrice] = useState('');
 
+  const filteredPresets = presets.filter(p => {
+    const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+    const matchesSearch = !searchTerm.trim() ||
+      (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.price && p.price.toString().includes(searchTerm)) ||
+      (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
+
+  // Drag and Drop state
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const isDraggingRef = useRef(false);
+
+  const handleDragStart = (e, index) => {
+    if (!isEditMode) return;
+    isDraggingRef.current = true;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e, index) => {
+    if (!isEditMode || draggedIndex === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e, index) => {
+    if (dragOverIndex === index) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (!isEditMode || draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newFiltered = Array.from(filteredPresets);
+    const [movedItem] = newFiltered.splice(draggedIndex, 1);
+    newFiltered.splice(dropIndex, 0, movedItem);
+
+    let newFullPresets;
+    if (activeCategory === 'all') {
+      newFullPresets = newFiltered;
+    } else {
+      let subIdx = 0;
+      newFullPresets = presets.map(p => {
+        if (p.category === activeCategory) {
+          const replacement = newFiltered[subIdx];
+          subIdx++;
+          return replacement;
+        }
+        return p;
+      });
+    }
+
+    // Re-assign positions
+    const reordered = newFullPresets.map((p, idx) => ({ ...p, position: idx }));
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    if (onReorderPresets) {
+      onReorderPresets(reordered);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 50);
+  };
+
+  const handleMovePosition = (index, direction, e) => {
+    if (e) e.stopPropagation();
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= filteredPresets.length) return;
+
+    const newFiltered = Array.from(filteredPresets);
+    const [movedItem] = newFiltered.splice(index, 1);
+    newFiltered.splice(targetIndex, 0, movedItem);
+
+    let newFullPresets;
+    if (activeCategory === 'all') {
+      newFullPresets = newFiltered;
+    } else {
+      let subIdx = 0;
+      newFullPresets = presets.map(p => {
+        if (p.category === activeCategory) {
+          const replacement = newFiltered[subIdx];
+          subIdx++;
+          return replacement;
+        }
+        return p;
+      });
+    }
+
+    if (onReorderPresets) {
+      onReorderPresets(newFullPresets);
+    }
+  };
+
+  const handleCardClick = (preset) => {
+    if (isDraggingRef.current) return;
+    if (isEditMode) {
+      handleOpenEditModal(preset);
+    } else {
+      if (preset.isOpenPrice) {
+        const numericKeypad = parseFloat(keypadAmount);
+        if (!isNaN(numericKeypad) && numericKeypad > 0) {
+          // Auto-pickup pre-typed amount from manual keypad!
+          onAddToCart({
+            ...preset,
+            price: numericKeypad
+          }, itemMultiplier);
+          if (onClearKeypadAmount) onClearKeypadAmount();
+        } else {
+          // Trigger Open Price prompt modal
+          setOpenPriceTarget(preset);
+          setEnteredOpenPrice('');
+        }
+      } else {
+        onAddToCart(preset, itemMultiplier);
+      }
+    }
+  };
+
+  const handleConfirmOpenPrice = (e) => {
+    e.preventDefault();
+    const priceVal = parseFloat(enteredOpenPrice);
+    if (isNaN(priceVal) || priceVal <= 0 || !openPriceTarget) return;
+
+    onAddToCart({
+      ...openPriceTarget,
+      price: priceVal
+    }, itemMultiplier);
+
+    setOpenPriceTarget(null);
+    setEnteredOpenPrice('');
+  };
+
   const handleOpenAddModal = () => {
     setEditingPreset(null);
     setActiveModal('add');

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, DollarSign, Banknote, CreditCard, Receipt, Eye, Lock, Unlock, Trash2, ShieldAlert, Calendar, BarChart3, PieChart, TrendingUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, RotateCcw, Download, Edit3, Keyboard } from 'lucide-react';
+import { Search, DollarSign, Banknote, CreditCard, Receipt, Eye, Lock, Unlock, Trash2, ShieldAlert, Calendar, BarChart3, PieChart, TrendingUp, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, RotateCcw, Download, Edit3 } from 'lucide-react';
 import ReceiptModal from './ReceiptModal';
-import DateKeypadModal from './DateKeypadModal.jsx';
+import TouchCalendarModal from './TouchCalendarModal.jsx';
+import TouchDateRangeModal from './TouchDateRangeModal.jsx';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { exportSalesToCSV } from '../utils/csvExporter';
 
@@ -26,7 +27,8 @@ export default function SalesHistoryView({
   const [periodFilter, setPeriodFilter] = useState('month'); // 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'all' | 'custom'
   const [referenceDate, setReferenceDate] = useState(new Date());
   const [activeSubTab, setActiveSubTab] = useState('receipts'); // 'receipts' | 'analytics'
-  const [keypadModal, setKeypadModal] = useState({ isOpen: false, field: 'from', initialDate: '', title: '' });
+  const [calendarModal, setCalendarModal] = useState({ isOpen: false, field: 'from', initialDate: '', title: '' });
+  const [isRangeModalOpen, setIsRangeModalOpen] = useState(false);
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -530,15 +532,14 @@ export default function SalesHistoryView({
                 style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0 0.5rem', cursor: 'pointer' }}
                 onClick={() => {
                   const iso = computedDateRange.start.toISOString().slice(0, 10);
-                  setKeypadModal({ isOpen: true, field: 'reference', initialDate: iso, title: 'Přejít na Datum (Klávesnice)' });
+                  setCalendarModal({ isOpen: true, field: 'reference', initialDate: iso, title: 'Přejít na Datum (Kalendář)' });
                 }}
-                title="Přejít na přesné datum pomocí klávesnice"
+                title="Přejít na přesné datum v kalendáři"
               >
                 <Calendar size={16} style={{ color: 'var(--accent-emerald)' }} />
                 <span style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                   {periodBadgeLabel}
                 </span>
-                <Keyboard size={14} style={{ color: 'var(--text-muted)', marginLeft: '0.2rem' }} />
               </div>
 
               <button
@@ -553,7 +554,7 @@ export default function SalesHistoryView({
           )}
         </div>
 
-        {/* Custom Date Range Picker Block with Compact Inputs & Inline Shortcuts */}
+        {/* Custom Date Range Picker Block with Touch Calendar Buttons & Shortcuts */}
         {periodFilter === 'custom' && (
           <div style={{
             background: 'var(--bg-card)',
@@ -567,76 +568,79 @@ export default function SalesHistoryView({
             gap: '1rem',
             boxShadow: 'var(--shadow-md)'
           }}>
-            {/* Left: Compact Date Inputs Group + Touch Keypad Triggers */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>OD (Začátek):</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={e => setFromDate(e.target.value)}
-                    style={{
-                      width: '145px',
-                      padding: '0.45rem 0.6rem',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-primary)',
-                      colorScheme: 'dark',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.9rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      outline: 'none'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="nav-tab"
-                    onClick={() => setKeypadModal({ isOpen: true, field: 'from', initialDate: fromDate, title: 'Zadejte Datum OD (Začátek)' })}
-                    title="Ruční klávesnice pro datum OD"
-                    style={{ padding: '0.45rem 0.55rem' }}
-                  >
-                    <Keyboard size={16} style={{ color: 'var(--accent-blue)' }} />
-                  </button>
-                </div>
-              </div>
+            {/* Left: Touch Calendar Selector Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {/* Dual Range Button */}
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => setIsRangeModalOpen(true)}
+                style={{
+                  padding: '0.55rem 1rem',
+                  background: 'var(--accent-blue)',
+                  color: '#ffffff',
+                  borderRadius: 'var(--radius-md)',
+                  fontWeight: '800',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  border: 'none',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+                title="Otevřít vedle sebe dva kalendáře pro rychlý výběr rozsahu OD – DO"
+              >
+                <Calendar size={18} />
+                <span>Vybrat Rozsah Dat (Vedle Sebe)</span>
+              </button>
 
-              <span style={{ color: 'var(--text-muted)', fontWeight: '800', marginTop: '1.1rem' }}>➔</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="nav-tab"
+                  onClick={() => setCalendarModal({ isOpen: true, field: 'from', initialDate: fromDate, title: 'Vyberte Datum OD (Začátek)' })}
+                  style={{
+                    padding: '0.45rem 0.75rem',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--accent-blue)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.88rem',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>OD: {fromDate ? fromDate.split('-').reverse().join('. ') : 'Vybrat'}</span>
+                </button>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>DO (Konec):</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={e => setToDate(e.target.value)}
-                    style={{
-                      width: '145px',
-                      padding: '0.45rem 0.6rem',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-primary)',
-                      colorScheme: 'dark',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.9rem',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      outline: 'none'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="nav-tab"
-                    onClick={() => setKeypadModal({ isOpen: true, field: 'to', initialDate: toDate, title: 'Zadejte Datum DO (Konec)' })}
-                    title="Ruční klávesnice pro datum DO"
-                    style={{ padding: '0.45rem 0.55rem' }}
-                  >
-                    <Keyboard size={16} style={{ color: 'var(--accent-purple)' }} />
-                  </button>
-                </div>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '800' }}>➔</span>
+
+                <button
+                  type="button"
+                  className="nav-tab"
+                  onClick={() => setCalendarModal({ isOpen: true, field: 'to', initialDate: toDate, title: 'Vyberte Datum DO (Konec)' })}
+                  style={{
+                    padding: '0.45rem 0.75rem',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--accent-purple)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.88rem',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>DO: {toDate ? toDate.split('-').reverse().join('. ') : 'Vybrat'}</span>
+                </button>
               </div>
             </div>
 
@@ -1323,19 +1327,30 @@ export default function SalesHistoryView({
         />
       )}
 
-      <DateKeypadModal
-        isOpen={keypadModal.isOpen}
-        title={keypadModal.title}
-        initialDate={keypadModal.initialDate}
-        onClose={() => setKeypadModal(prev => ({ ...prev, isOpen: false }))}
+      <TouchCalendarModal
+        isOpen={calendarModal.isOpen}
+        title={calendarModal.title}
+        initialDate={calendarModal.initialDate}
+        onClose={() => setCalendarModal(prev => ({ ...prev, isOpen: false }))}
         onConfirm={(newIsoDate) => {
-          if (keypadModal.field === 'from') {
+          if (calendarModal.field === 'from') {
             setFromDate(newIsoDate);
-          } else if (keypadModal.field === 'to') {
+          } else if (calendarModal.field === 'to') {
             setToDate(newIsoDate);
-          } else if (keypadModal.field === 'reference') {
+          } else if (calendarModal.field === 'reference') {
             setReferenceDate(new Date(newIsoDate + 'T12:00:00'));
           }
+        }}
+      />
+
+      <TouchDateRangeModal
+        isOpen={isRangeModalOpen}
+        initialFromDate={fromDate}
+        initialToDate={toDate}
+        onClose={() => setIsRangeModalOpen(false)}
+        onConfirmRange={(newFrom, newTo) => {
+          setFromDate(newFrom);
+          setToDate(newTo);
         }}
       />
     </div>
