@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, X, Check, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, ChevronLeft, ChevronRight, X, Check, Sparkles } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const CZECH_MONTHS = [
@@ -22,15 +22,13 @@ export default function TouchDateRangeModal({
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10);
 
-  // Parse initial dates
   const defaultFrom = initialFromDate || todayIso;
   const defaultTo = initialToDate || todayIso;
 
   const [startDateIso, setStartDateIso] = useState(defaultFrom);
   const [endDateIso, setEndDateIso] = useState(defaultTo);
-  const [pickingState, setPickingState] = useState('start'); // 'start' | 'end'
+  const [pickingState, setPickingState] = useState('start');
 
-  // View state for Left Calendar (Right calendar is viewMonth + 1)
   const [viewYear, setViewYear] = useState(() => {
     const y = parseInt(defaultFrom.split('-')[0], 10);
     return isNaN(y) ? today.getFullYear() : y;
@@ -41,7 +39,6 @@ export default function TouchDateRangeModal({
     return isNaN(m) ? today.getMonth() : m;
   });
 
-  // View modes for direct pickers: 'days' | 'months' | 'years'
   const [leftViewMode, setLeftViewMode] = useState('days');
   const [rightViewMode, setRightViewMode] = useState('days');
 
@@ -65,11 +62,9 @@ export default function TouchDateRangeModal({
 
   if (!isOpen) return null;
 
-  // Calculate Right Calendar Year & Month
   const rightMonth = viewMonth === 11 ? 0 : viewMonth + 1;
   const rightYear = viewMonth === 11 ? viewYear + 1 : viewYear;
 
-  // Navigation handlers
   const handlePrevMonth = () => {
     if (viewMonth === 0) {
       setViewMonth(11);
@@ -88,21 +83,17 @@ export default function TouchDateRangeModal({
     }
   };
 
-  // Range Day Click Handler
   const handleDayClick = (clickedIso) => {
     if (!startDateIso || (startDateIso && endDateIso) || clickedIso < startDateIso) {
-      // Start new range selection
       setStartDateIso(clickedIso);
       setEndDateIso(null);
       setPickingState('end');
     } else {
-      // Complete range selection
       setEndDateIso(clickedIso);
       setPickingState('start');
     }
   };
 
-  // Shortcut Presets
   const applyPreset = (type) => {
     const now = new Date();
     const nowIso = now.toISOString().slice(0, 10);
@@ -139,17 +130,15 @@ export default function TouchDateRangeModal({
     setPickingState('start');
   };
 
-  // Helper to build 7x6 day grid cells for given year & month
   const buildCalendarGrid = (yr, mo) => {
     const cells = [];
     const firstDay = new Date(yr, mo, 1);
     const daysInActive = new Date(yr, mo + 1, 0).getDate();
     const daysInPrev = new Date(yr, mo, 0).getDate();
 
-    let dayOfWeek = firstDay.getDay(); // 0 = Sun, 1 = Mon ...
+    let dayOfWeek = firstDay.getDay();
     let leadCount = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-    // 1. Prev month
     for (let i = leadCount - 1; i >= 0; i--) {
       const prevDay = daysInPrev - i;
       const prevMo = mo === 0 ? 11 : mo - 1;
@@ -158,13 +147,11 @@ export default function TouchDateRangeModal({
       cells.push({ type: 'prev', day: prevDay, month: prevMo, year: prevYr, iso });
     }
 
-    // 2. Current month
     for (let d = 1; d <= daysInActive; d++) {
       const iso = `${yr}-${(mo + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
       cells.push({ type: 'current', day: d, month: mo, year: yr, iso });
     }
 
-    // 3. Next month fill to 42
     const fillCount = 42 - cells.length;
     for (let n = 1; n <= fillCount; n++) {
       const nextMo = mo === 11 ? 0 : mo + 1;
@@ -181,7 +168,6 @@ export default function TouchDateRangeModal({
 
   const yearRange = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
-  // Helper to determine day styling in range selection
   const getDayStyle = (cellIso, isCurrentMonth) => {
     const isStart = cellIso === startDateIso;
     const isEnd = cellIso === endDateIso;
@@ -194,7 +180,7 @@ export default function TouchDateRangeModal({
         color: '#ffffff',
         fontWeight: '800',
         border: '2px solid var(--accent-emerald)',
-        boxShadow: '0 0 10px rgba(16, 185, 129, 0.4)'
+        boxShadow: 'var(--shadow-glow)'
       };
     }
     if (isEnd) {
@@ -203,28 +189,28 @@ export default function TouchDateRangeModal({
         color: '#ffffff',
         fontWeight: '800',
         border: '2px solid var(--accent-purple)',
-        boxShadow: '0 0 10px rgba(168, 85, 247, 0.4)'
+        boxShadow: '0 0 12px rgba(139, 92, 246, 0.4)'
       };
     }
     if (isInRange) {
       return {
-        background: 'rgba(59, 130, 246, 0.22)',
-        color: 'var(--text-primary)',
+        background: 'rgba(59, 130, 246, 0.12)',
+        color: 'var(--accent-blue)',
         fontWeight: '700',
-        border: '1px solid rgba(59, 130, 246, 0.4)',
+        border: '1px solid rgba(59, 130, 246, 0.35)',
         borderRadius: '0px'
       };
     }
     if (isToday) {
       return {
-        background: isCurrentMonth ? 'var(--bg-input)' : 'transparent',
+        background: 'var(--bg-input)',
         color: 'var(--accent-blue)',
         fontWeight: '800',
         border: '2px solid var(--accent-blue)'
       };
     }
     return {
-      background: isCurrentMonth ? 'var(--bg-input)' : 'rgba(255, 255, 255, 0.02)',
+      background: isCurrentMonth ? 'var(--bg-card)' : 'var(--bg-input)',
       color: isCurrentMonth ? 'var(--text-primary)' : 'var(--text-muted)',
       fontWeight: '600',
       border: '1px solid var(--border-color)'
@@ -254,7 +240,7 @@ export default function TouchDateRangeModal({
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.78)',
+        background: 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
@@ -267,34 +253,32 @@ export default function TouchDateRangeModal({
         className="modal-container"
         style={{
           background: 'var(--bg-card)',
-          border: '1px solid var(--border-color)',
+          border: '2px solid var(--accent-blue)',
           borderRadius: '24px',
           maxWidth: '860px',
           width: '98%',
           padding: '1.6rem',
-          boxShadow: 'var(--shadow-xl)',
+          boxShadow: 'var(--shadow-md)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.1rem'
+          gap: '1.1rem',
+          color: 'var(--text-primary)'
         }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
             <Calendar size={22} />
-            <span>{title}</span>
+            <span style={{ letterSpacing: '-0.01em' }}>{title}</span>
           </div>
 
           <button
             type="button"
+            className="nav-tab"
             onClick={onClose}
             style={{
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '12px',
-              color: 'var(--text-muted)',
               padding: '0.45rem',
-              cursor: 'pointer',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -305,26 +289,72 @@ export default function TouchDateRangeModal({
         </div>
 
         {/* Quick Range Presets Bar */}
-        <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-input)', padding: '0.55rem 0.85rem', borderRadius: '16px' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.3rem' }}>
+        <div style={{
+          display: 'flex',
+          gap: '0.45rem',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          background: 'var(--bg-input)',
+          border: '1px solid var(--border-color)',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '16px'
+        }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <Sparkles size={13} style={{ color: 'var(--accent-blue)' }} />
             Rychlé volby:
           </span>
-          <button type="button" className="nav-tab" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => applyPreset('today')}>Dnes</button>
-          <button type="button" className="nav-tab" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => applyPreset('yesterday')}>Včera</button>
-          <button type="button" className="nav-tab" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => applyPreset('7days')}>Posledních 7 dní</button>
-          <button type="button" className="nav-tab" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => applyPreset('30days')}>Posledních 30 dní</button>
-          <button type="button" className="nav-tab" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => applyPreset('thisMonth')}>Tento měsíc</button>
-          <button type="button" className="nav-tab" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => applyPreset('lastMonth')}>Minulý měsíc</button>
+          {[
+            { label: 'Dnes', key: 'today' },
+            { label: 'Včera', key: 'yesterday' },
+            { label: 'Posledních 7 dní', key: '7days' },
+            { label: 'Posledních 30 dní', key: '30days' },
+            { label: 'Tento měsíc', key: 'thisMonth' },
+            { label: 'Minulý měsíc', key: 'lastMonth' }
+          ].map(p => (
+            <button
+              key={p.key}
+              type="button"
+              className="nav-tab"
+              onClick={() => applyPreset(p.key)}
+              style={{
+                padding: '0.35rem 0.7rem',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                borderRadius: '8px'
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
 
         {/* Dual Side-by-Side Calendars Container */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.25rem' }}>
           {/* Left Calendar (Start Month) */}
-          <div style={{ background: 'rgba(0, 0, 0, 0.15)', padding: '0.9rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <div style={{
+            background: 'var(--bg-input)',
+            padding: '1rem',
+            borderRadius: '16px',
+            border: '1px solid var(--border-color)'
+          }}>
             {/* Header Stepper Bar */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-              <button type="button" className="nav-tab" style={{ padding: '0.35rem 0.65rem' }} onClick={handlePrevMonth}>
-                <ChevronLeft size={18} />
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between',
+              marginBottom: '0.9rem',
+              background: 'var(--bg-card)',
+              padding: '0.4rem 0.6rem',
+              borderRadius: '12px',
+              border: '1px solid var(--border-color)'
+            }}>
+              <button
+                type="button"
+                className="nav-tab"
+                onClick={handlePrevMonth}
+                style={{ padding: '0.3rem 0.5rem', borderRadius: '6px' }}
+              >
+                <ChevronLeft size={20} />
               </button>
 
               <div style={{ display: 'flex', gap: '0.35rem' }}>
@@ -332,7 +362,13 @@ export default function TouchDateRangeModal({
                   type="button"
                   className="nav-tab"
                   onClick={() => setLeftViewMode(prev => prev === 'months' ? 'days' : 'months')}
-                  style={{ padding: '0.3rem 0.6rem', fontWeight: '800', color: 'var(--accent-blue)' }}
+                  style={{
+                    padding: '0.3rem 0.65rem',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    color: 'var(--accent-blue)',
+                    borderColor: 'var(--accent-blue)'
+                  }}
                 >
                   {CZECH_MONTHS[viewMonth]}
                 </button>
@@ -340,19 +376,38 @@ export default function TouchDateRangeModal({
                   type="button"
                   className="nav-tab"
                   onClick={() => setLeftViewMode(prev => prev === 'years' ? 'days' : 'years')}
-                  style={{ padding: '0.3rem 0.6rem', fontWeight: '800', color: 'var(--accent-purple)' }}
+                  style={{
+                    padding: '0.3rem 0.65rem',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    color: 'var(--accent-purple)',
+                    borderColor: 'var(--accent-purple)'
+                  }}
                 >
                   {viewYear}
                 </button>
               </div>
 
-              <div style={{ width: '32px' }} /> {/* Spacer */}
+              <div style={{ width: '32px' }} />
             </div>
 
             {leftViewMode === 'months' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.55rem' }}>
                 {CZECH_MONTHS.map((m, idx) => (
-                  <button key={m} type="button" className="nav-tab" style={{ height: '44px', fontWeight: '800' }} onClick={() => { setViewMonth(idx); setLeftViewMode('days'); }}>
+                  <button
+                    key={m}
+                    type="button"
+                    className="nav-tab"
+                    onClick={() => { setViewMonth(idx); setLeftViewMode('days'); }}
+                    style={{
+                      height: '44px',
+                      fontWeight: '800',
+                      background: idx === viewMonth ? 'var(--accent-blue)' : 'var(--bg-card)',
+                      color: idx === viewMonth ? '#ffffff' : 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px'
+                    }}
+                  >
                     {m}
                   </button>
                 ))}
@@ -360,9 +415,22 @@ export default function TouchDateRangeModal({
             )}
 
             {leftViewMode === 'years' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.55rem' }}>
                 {yearRange.map(yr => (
-                  <button key={yr} type="button" className="nav-tab" style={{ height: '44px', fontWeight: '800' }} onClick={() => { setViewYear(yr); setLeftViewMode('days'); }}>
+                  <button
+                    key={yr}
+                    type="button"
+                    className="nav-tab"
+                    onClick={() => { setViewYear(yr); setLeftViewMode('days'); }}
+                    style={{
+                      height: '44px',
+                      fontWeight: '800',
+                      background: yr === viewYear ? 'var(--accent-purple)' : 'var(--bg-card)',
+                      color: yr === viewYear ? '#ffffff' : 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px'
+                    }}
+                  >
                     {yr}
                   </button>
                 ))}
@@ -371,8 +439,8 @@ export default function TouchDateRangeModal({
 
             {leftViewMode === 'days' && (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.2rem', marginBottom: '0.4rem', textAlign: 'center' }}>
-                  {WEEKDAY_NAMES.map(w => <div key={w} style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>{w}</div>)}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.2rem', marginBottom: '0.45rem', textAlign: 'center' }}>
+                  {WEEKDAY_NAMES.map(w => <div key={w} style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)' }}>{w}</div>)}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
                   {leftCells.map((cell, idx) => (
@@ -382,13 +450,13 @@ export default function TouchDateRangeModal({
                       onClick={() => handleDayClick(cell.iso)}
                       style={{
                         height: '42px',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: '0.9rem',
+                        borderRadius: '8px',
+                        fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        transition: 'all 0.1s ease',
+                        transition: 'all 0.12s ease',
                         ...getDayStyle(cell.iso, cell.type === 'current')
                       }}
                     >
@@ -401,17 +469,37 @@ export default function TouchDateRangeModal({
           </div>
 
           {/* Right Calendar (Next Month) */}
-          <div style={{ background: 'rgba(0, 0, 0, 0.15)', padding: '0.9rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <div style={{
+            background: 'var(--bg-input)',
+            padding: '1rem',
+            borderRadius: '16px',
+            border: '1px solid var(--border-color)'
+          }}>
             {/* Header Stepper Bar */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-              <div style={{ width: '32px' }} /> {/* Spacer */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between',
+              marginBottom: '0.9rem',
+              background: 'var(--bg-card)',
+              padding: '0.4rem 0.6rem',
+              borderRadius: '12px',
+              border: '1px solid var(--border-color)'
+            }}>
+              <div style={{ width: '32px' }} />
 
               <div style={{ display: 'flex', gap: '0.35rem' }}>
                 <button
                   type="button"
                   className="nav-tab"
                   onClick={() => setRightViewMode(prev => prev === 'months' ? 'days' : 'months')}
-                  style={{ padding: '0.3rem 0.6rem', fontWeight: '800', color: 'var(--accent-blue)' }}
+                  style={{
+                    padding: '0.3rem 0.65rem',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    color: 'var(--accent-blue)',
+                    borderColor: 'var(--accent-blue)'
+                  }}
                 >
                   {CZECH_MONTHS[rightMonth]}
                 </button>
@@ -419,21 +507,45 @@ export default function TouchDateRangeModal({
                   type="button"
                   className="nav-tab"
                   onClick={() => setRightViewMode(prev => prev === 'years' ? 'days' : 'years')}
-                  style={{ padding: '0.3rem 0.6rem', fontWeight: '800', color: 'var(--accent-purple)' }}
+                  style={{
+                    padding: '0.3rem 0.65rem',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    color: 'var(--accent-purple)',
+                    borderColor: 'var(--accent-purple)'
+                  }}
                 >
                   {rightYear}
                 </button>
               </div>
 
-              <button type="button" className="nav-tab" style={{ padding: '0.35rem 0.65rem' }} onClick={handleNextMonth}>
-                <ChevronRight size={18} />
+              <button
+                type="button"
+                className="nav-tab"
+                onClick={handleNextMonth}
+                style={{ padding: '0.3rem 0.5rem', borderRadius: '6px' }}
+              >
+                <ChevronRight size={20} />
               </button>
             </div>
 
             {rightViewMode === 'months' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.55rem' }}>
                 {CZECH_MONTHS.map((m, idx) => (
-                  <button key={m} type="button" className="nav-tab" style={{ height: '44px', fontWeight: '800' }} onClick={() => { setViewMonth(idx === 0 ? 11 : idx - 1); setRightViewMode('days'); }}>
+                  <button
+                    key={m}
+                    type="button"
+                    className="nav-tab"
+                    onClick={() => { setViewMonth(idx === 0 ? 11 : idx - 1); setRightViewMode('days'); }}
+                    style={{
+                      height: '44px',
+                      fontWeight: '800',
+                      background: idx === rightMonth ? 'var(--accent-blue)' : 'var(--bg-card)',
+                      color: idx === rightMonth ? '#ffffff' : 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px'
+                    }}
+                  >
                     {m}
                   </button>
                 ))}
@@ -441,9 +553,22 @@ export default function TouchDateRangeModal({
             )}
 
             {rightViewMode === 'years' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.55rem' }}>
                 {yearRange.map(yr => (
-                  <button key={yr} type="button" className="nav-tab" style={{ height: '44px', fontWeight: '800' }} onClick={() => { setViewYear(yr); setRightViewMode('days'); }}>
+                  <button
+                    key={yr}
+                    type="button"
+                    className="nav-tab"
+                    onClick={() => { setViewYear(yr); setRightViewMode('days'); }}
+                    style={{
+                      height: '44px',
+                      fontWeight: '800',
+                      background: yr === rightYear ? 'var(--accent-purple)' : 'var(--bg-card)',
+                      color: yr === rightYear ? '#ffffff' : 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px'
+                    }}
+                  >
                     {yr}
                   </button>
                 ))}
@@ -452,8 +577,8 @@ export default function TouchDateRangeModal({
 
             {rightViewMode === 'days' && (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.2rem', marginBottom: '0.4rem', textAlign: 'center' }}>
-                  {WEEKDAY_NAMES.map(w => <div key={w} style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>{w}</div>)}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.2rem', marginBottom: '0.45rem', textAlign: 'center' }}>
+                  {WEEKDAY_NAMES.map(w => <div key={w} style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)' }}>{w}</div>)}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
                   {rightCells.map((cell, idx) => (
@@ -463,13 +588,13 @@ export default function TouchDateRangeModal({
                       onClick={() => handleDayClick(cell.iso)}
                       style={{
                         height: '42px',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: '0.9rem',
+                        borderRadius: '8px',
+                        fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        transition: 'all 0.1s ease',
+                        transition: 'all 0.12s ease',
                         ...getDayStyle(cell.iso, cell.type === 'current')
                       }}
                     >
@@ -482,15 +607,14 @@ export default function TouchDateRangeModal({
           </div>
         </div>
 
-        {/* Modal Bottom Actions & Range Status */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-          {/* Formatted Selected Range Badge */}
+        {/* Bottom Actions & Selected Range Display */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', fontWeight: '800' }}>
-            <span style={{ color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.12)', padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <span style={{ color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '10px', border: '1px solid var(--accent-emerald)' }}>
               OD: {formatIsoDisplay(startDateIso)}
             </span>
             <span style={{ color: 'var(--text-muted)' }}>➔</span>
-            <span style={{ color: 'var(--accent-purple)', background: 'rgba(168, 85, 247, 0.12)', padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+            <span style={{ color: 'var(--accent-purple)', background: 'rgba(168, 85, 247, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '10px', border: '1px solid var(--accent-purple)' }}>
               DO: {formatIsoDisplay(endDateIso || startDateIso)}
             </span>
           </div>
@@ -500,27 +624,32 @@ export default function TouchDateRangeModal({
               type="button"
               className="nav-tab"
               onClick={onClose}
-              style={{ padding: '0.65rem 1.25rem', fontWeight: '700' }}
+              style={{
+                padding: '0.7rem 1.4rem',
+                fontWeight: '700',
+                borderRadius: '12px'
+              }}
             >
               Zrušit
             </button>
 
             <button
               type="button"
+              className="primary-btn"
               onClick={handleSave}
               style={{
-                padding: '0.65rem 1.5rem',
+                padding: '0.7rem 1.75rem',
                 fontWeight: '800',
                 fontSize: '1rem',
                 background: 'var(--accent-emerald)',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: '0.55rem',
                 cursor: 'pointer',
-                boxShadow: 'var(--shadow-sm)'
+                boxShadow: 'var(--shadow-glow)'
               }}
             >
               <Check size={18} />
