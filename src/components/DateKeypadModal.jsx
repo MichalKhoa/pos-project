@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Delete, X, Check, RotateCcw } from 'lucide-react';
-import { useTranslation } from '../i18n/LanguageContext.jsx';
+
 
 const CZECH_MONTH_NAMES = [
   'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
@@ -14,7 +14,7 @@ export default function DateKeypadModal({
   onConfirm,
   title = 'Zadejte Datum'
 }) {
-  const { t } = useTranslation();
+
 
   // Helper: Convert YYYY-MM-DD to DDMMYYYY digit string
   const isoToDigits = (isoStr) => {

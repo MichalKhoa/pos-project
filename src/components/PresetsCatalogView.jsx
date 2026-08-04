@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Check, Calculator, Settings2 } from 'lucide-react';
-import { DEFAULT_CATEGORIES, COLOR_OPTIONS } from '../data/initialData';
+import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Calculator, Settings2 } from 'lucide-react';
+import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';

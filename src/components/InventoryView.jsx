@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Package, AlertTriangle, Check, Barcode, ShieldAlert, DollarSign, TrendingUp, RefreshCw, Zap, Plus, Tag, X, Calculator, Edit3 } from 'lucide-react';
+import { Search, Package, AlertTriangle, Check, Barcode, ShieldAlert, TrendingUp, Plus, Calculator, Edit3 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { savePresetBackend } from '../api/posApi';
 import PresetModal from './PresetModal';

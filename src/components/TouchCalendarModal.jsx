@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
-import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const CZECH_MONTHS = [
   'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
@@ -16,7 +15,7 @@ export default function TouchCalendarModal({
   onConfirm,
   title = 'Vyberte Datum'
 }) {
-  const { t } = useTranslation();
+
 
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10);
@@ -33,7 +32,11 @@ export default function TouchCalendarModal({
         }
       }
     }
-    return { year: today.getFullYear(), month: today.getMonth(), day: today.getDate(), iso: todayIso };
+    const parts = todayIso.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    return { year: y, month: m, day: d, iso: todayIso };
   }, [initialDate, todayIso]);
 
   const [viewYear, setViewYear] = useState(parsedInitial.year);

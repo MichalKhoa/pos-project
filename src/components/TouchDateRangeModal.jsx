@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, X, Check, Sparkles } from 'lucide-react';
-import { useTranslation } from '../i18n/LanguageContext.jsx';
+
 
 const CZECH_MONTHS = [
   'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
@@ -17,7 +17,6 @@ export default function TouchDateRangeModal({
   onConfirmRange,
   title = 'Vyberte Rozsah Dat (OD – DO)'
 }) {
-  const { t } = useTranslation();
 
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10);
@@ -27,7 +26,7 @@ export default function TouchDateRangeModal({
 
   const [startDateIso, setStartDateIso] = useState(defaultFrom);
   const [endDateIso, setEndDateIso] = useState(defaultTo);
-  const [pickingState, setPickingState] = useState('start');
+  const [, setPickingState] = useState('start');
 
   const [viewYear, setViewYear] = useState(() => {
     const y = parseInt(defaultFrom.split('-')[0], 10);
