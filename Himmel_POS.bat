@@ -1,38 +1,44 @@
 @echo off
-title Himmel POS — Silent Kiosk Launcher
+title Himmel POS — Cashier Mode
 echo ========================================================
-echo   Starting Himmel POS (Production Silent Mode)...
+echo   Starting Himmel POS (Cashier Ready Mode)...
 echo ========================================================
+echo.
 
-:: 0. Load environment variables from .env if present
-if exist "%~dp0backend\.env" (
-    for /f "usebackq tokens=1,* delims==" %%a in ("%~dp0backend\.env") do set "%%a=%%b"
-) else if exist "%~dp0.env" (
-    for /f "usebackq tokens=1,* delims==" %%a in ("%~dp0.env") do set "%%a=%%b"
-)
+:: 1. Navigate to script root
+cd /d "%~dp0"
 
-:: 1. Check if production build exists; if not, build it or launch Vite dev server
-set TARGET_URL=http://localhost:8000
+:: 2. Check/Build UI bundle
 if not exist "%~dp0dist\index.html" (
-    echo Building production UI bundle...
-    call npm run build >nul 2>&1
+    echo Building UI bundle for first-time startup...
+    call npm run build
 )
 
-:: 2. Launch Python FastAPI Backend silently in virtualenv
-echo Starting Python Backend Service (Silent)...
+:: 3. Stop any existing background POS processes to avoid port conflicts
+echo Checking for previous instances...
+taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
+
+:: 4. Start Python FastAPI backend in minimized window
+echo Starting Backend Service...
 start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && set ENV=production && python main.py"
 
-:: 3. Launch Litestream Replication silently if present
+:: 5. Start Litestream if present
 if exist "%~dp0backend\litestream.exe" (
-    echo Starting Database Replication (Silent)...
+    echo Starting Database Replication...
     start "Himmel POS Litestream" /min cmd /c "cd /d "%~dp0backend" && litestream.exe replicate -config litestream.yml"
 )
 
-:: 4. Wait for initialization
+:: 6. Wait for backend startup
+echo Waiting for backend to initialize...
 timeout /t 3 /nobreak >nul
 
-:: 5. Open Edge in Kiosk Window Mode
-echo Opening Cashier Display at %TARGET_URL%...
-start "Himmel POS App" msedge --app=%TARGET_URL% --start-maximized
+:: 7. Launch Cashier Display in Edge App Mode
+echo Opening Cashier Application...
+start "Himmel POS App" msedge --app=http://localhost:8000 --start-maximized
 
-echo Himmel POS is running in silent single-process mode.
+echo.
+echo ========================================================
+echo   Himmel POS is running!
+echo   To stop all services, run: Himmel_POS_Stop.bat
+echo ========================================================
+timeout /t 3 >nul

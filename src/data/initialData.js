@@ -1,9 +1,5 @@
 export const DEFAULT_CATEGORIES = [
-  { id: 'all', name: 'Všechny položky' },
-  { id: 'living', name: 'Obývák & Dekorace' },
-  { id: 'kitchen', name: 'Kuchyně & Jídelna' },
-  { id: 'bath', name: 'Koupelna' },
-  { id: 'custom', name: 'Rychlý prodej' }
+  { id: 'all', name: 'Všechny položky' }
 ];
 
 export const COLOR_OPTIONS = [
@@ -34,86 +30,74 @@ export const COLOR_OPTIONS = [
 
 export const DEFAULT_PRESETS = [
   {
-    id: 'preset-1',
-    name: 'Svíčka Vonná Premium',
-    price: 249,
+    id: 'preset-clothes',
+    name: 'Oblečení',
+    price: 0,
+    isOpenPrice: true,
+    isGeneralPreset: true,
     vat: 21,
-    category: 'living',
-    color: '#8b5cf6'
-  },
-  {
-    id: 'preset-2',
-    name: 'Váza Keramická bílá',
-    price: 389,
-    vat: 21,
-    category: 'living',
+    category: 'all',
     color: '#3b82f6'
   },
   {
-    id: 'preset-3',
-    name: 'Hrnek Keramický 350ml',
-    price: 149,
+    id: 'preset-shoes',
+    name: 'Boty',
+    price: 0,
+    isOpenPrice: true,
+    isGeneralPreset: true,
     vat: 21,
-    category: 'kitchen',
+    category: 'all',
+    color: '#8b5cf6'
+  },
+  {
+    id: 'preset-socks',
+    name: 'Ponožky',
+    price: 0,
+    isOpenPrice: true,
+    isGeneralPreset: true,
+    vat: 21,
+    category: 'all',
     color: '#10b981'
   },
   {
-    id: 'preset-4',
-    name: 'Sada Příborů 24ks',
-    price: 699,
+    id: 'preset-underwear',
+    name: 'Spodní prádlo',
+    price: 0,
+    isOpenPrice: true,
+    isGeneralPreset: true,
     vat: 21,
-    category: 'kitchen',
-    color: '#f59e0b'
-  },
-  {
-    id: 'preset-5',
-    name: 'Ručník Bavlna 50x100',
-    price: 199,
-    vat: 21,
-    category: 'bath',
-    color: '#06b6d4'
-  },
-  {
-    id: 'preset-6',
-    name: 'Dávkovač Mýdla Sklo',
-    price: 229,
-    vat: 21,
-    category: 'bath',
+    category: 'all',
     color: '#ec4899'
   },
   {
-    id: 'preset-7',
-    name: 'Eko Čistící Prostředek',
-    price: 119,
+    id: 'preset-home',
+    name: 'Domácí potřeby',
+    price: 0,
+    isOpenPrice: true,
+    isGeneralPreset: true,
     vat: 21,
-    category: 'bath',
-    color: '#14b8a6'
-  },
-  {
-    id: 'preset-8',
-    name: 'Polštář Dekorativní',
-    price: 299,
-    vat: 21,
-    category: 'living',
-    color: '#a855f7'
+    category: 'all',
+    color: '#06b6d4'
   },
   {
     id: 'preset-open-1',
     name: 'Volný Prodej Zboží',
     price: 0,
     isOpenPrice: true,
+    isGeneralPreset: true,
     vat: 21,
-    category: 'custom',
+    category: 'all',
     color: '#f59e0b'
   },
   {
     id: 'preset-open-2',
-    name: 'Dárkový Poukaz (Libovolná částka)',
+    name: 'Dárkový Poukaz',
     price: 0,
     isOpenPrice: true,
+    isGeneralPreset: true,
     vat: 0,
-    category: 'custom',
-    color: '#ec4899'
+    category: 'all',
+    color: '#f43f5e'
   }
 ];
 

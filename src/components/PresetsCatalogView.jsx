@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Check, Calculator, Settings2 } from 'lucide-react';
 import { DEFAULT_CATEGORIES, COLOR_OPTIONS } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
+import PresetModal from './PresetModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function PresetsCatalogView({
@@ -22,80 +23,30 @@ export default function PresetsCatalogView({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    isOpenPrice: false,
-    vat: 21,
-    category: 'living',
-    color: '#3b82f6'
-  });
-
   const filteredPresets = presets.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (p.price && p.price.toString().includes(searchTerm));
+                          (p.price && p.price.toString().includes(searchTerm)) ||
+                          (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
   const handleOpenAddModal = () => {
-    setFormData({
-      name: '',
-      price: '',
-      isOpenPrice: false,
-      vat: 21,
-      category: activeCategory === 'all' ? 'living' : activeCategory,
-      color: '#3b82f6'
-    });
+    setEditingPreset(null);
     setActiveModal('add');
   };
 
   const handleOpenEditModal = (preset) => {
     setEditingPreset(preset);
-    setFormData({
-      name: preset.name,
-      price: preset.isOpenPrice ? '' : preset.price.toString(),
-      isOpenPrice: !!preset.isOpenPrice,
-      vat: preset.vat,
-      category: preset.category || 'living',
-      color: preset.color || '#3b82f6'
-    });
     setActiveModal('edit');
   };
 
-  const handleSubmitForm = (e) => {
-    e.preventDefault();
-    if (!formData.name) return;
-
-    let numericPrice = parseFloat(formData.price);
-    if (formData.isOpenPrice) {
-      numericPrice = 0;
-    } else if (isNaN(numericPrice)) {
-      return;
-    }
-
+  const handleSavePreset = (presetData) => {
     if (activeModal === 'add') {
-      onAddPreset({
-        id: `preset-${Date.now()}`,
-        name: formData.name,
-        price: numericPrice,
-        isOpenPrice: formData.isOpenPrice,
-        vat: parseInt(formData.vat, 10),
-        category: formData.category,
-        color: formData.color
-      });
-    } else if (activeModal === 'edit' && editingPreset) {
-      onUpdatePreset({
-        ...editingPreset,
-        name: formData.name,
-        price: numericPrice,
-        isOpenPrice: formData.isOpenPrice,
-        vat: parseInt(formData.vat, 10),
-        category: formData.category,
-        color: formData.color
-      });
+      onAddPreset(presetData);
+    } else if (activeModal === 'edit') {
+      onUpdatePreset(presetData);
     }
-
     setActiveModal(null);
     setEditingPreset(null);
   };
@@ -215,6 +166,11 @@ export default function PresetsCatalogView({
                     </td>
                     <td style={{ fontWeight: '700', fontSize: '0.95rem' }}>
                       {preset.name}
+                      {preset.isGeneralPreset && (
+                        <span style={{ fontSize: '0.68rem', fontWeight: '600', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
+                          {t('presets.general_badge') || 'Druh zboží'}
+                        </span>
+                      )}
                     </td>
                     <td style={{ fontFamily: 'var(--font-mono)', color: preset.isOpenPrice ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontWeight: '800', fontSize: '1rem' }}>
                       {preset.isOpenPrice ? 'Otevřená' : `${preset.price} Kč`}
@@ -243,7 +199,7 @@ export default function PresetsCatalogView({
                         onClick={() => handleOpenEditModal(preset)}
                       >
                         <Edit3 size={14} />
-                        <span>Upravit</span>
+                        <span>{t('presets.edit')}</span>
                       </button>
                       <button className="delete-item-btn" onClick={() => handleDelete(preset.id)}>
                         <Trash2 size={16} />
@@ -264,9 +220,16 @@ export default function PresetsCatalogView({
               style={{ '--card-accent': preset.color || '#3b82f6', cursor: 'pointer' }}
               onClick={() => handleOpenEditModal(preset)}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div className="preset-name">{preset.name}</div>
-                <Edit3 size={14} style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="preset-name" style={{ flex: 1 }}>
+                  {preset.name}
+                  {preset.isGeneralPreset && (
+                    <span style={{ fontSize: '0.65rem', fontWeight: '600', background: 'rgba(255, 255, 255, 0.18)', color: 'rgba(255, 255, 255, 0.95)', padding: '1px 5px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
+                      {t('presets.general_badge') || 'Druh zboží'}
+                    </span>
+                  )}
+                </div>
+                <Edit3 size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, marginLeft: '4px' }} />
               </div>
               <div className="preset-footer">
                 {preset.isOpenPrice ? (
@@ -281,236 +244,23 @@ export default function PresetsCatalogView({
         </div>
       )}
 
-      {/* Add / Edit Modal */}
-      {(activeModal === 'add' || activeModal === 'edit') && (
-        <div className="modal-overlay" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-title">
-                <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-                <span>{activeModal === 'add' ? 'Přidat Novou Položku' : `Upravit: ${editingPreset?.name}`}</span>
-              </div>
-              <button className="close-modal-btn" onClick={() => setActiveModal(null)}>✕</button>
-            </div>
-
-            <form onSubmit={handleSubmitForm} className="modal-body">
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                  Název položky
-                </label>
-                <input
-                  type="text"
-                  placeholder="např. Vánoční svícen nebo Volné zboží"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '600'
-                  }}
-                  required
-                />
-              </div>
-
-              <div style={{
-                background: 'var(--bg-input)',
-                padding: '0.75rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}>
-                <input
-                  type="checkbox"
-                  id="isOpenPriceCatalog"
-                  checked={formData.isOpenPrice}
-                  onChange={e => setFormData({ ...formData, isOpenPrice: e.target.checked })}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-amber)' }}
-                />
-                <label htmlFor="isOpenPriceCatalog" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                  Otevřená cena (Zadat částku až při prodeji na pokladně)
-                </label>
-              </div>
-
-              {!formData.isOpenPrice ? (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                      Pevná cena v Kč s DPH
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="250"
-                      value={formData.price}
-                      onChange={e => setFormData({ ...formData, price: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)',
-                        fontWeight: '700',
-                        fontFamily: 'var(--font-mono)'
-                      }}
-                      required={!formData.isOpenPrice}
-                    />
-                  </div>
-
-                  <div style={{ width: '140px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                      Sazba DPH
-                    </label>
-                    <select
-                      value={formData.vat}
-                      onChange={e => setFormData({ ...formData, vat: parseInt(e.target.value, 10) })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)',
-                        fontWeight: '600'
-                      }}
-                    >
-                      <option value={21} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>21% (Základní)</option>
-                      <option value={12} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>12% (Snížená)</option>
-                      <option value={0} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>0% (Osvobozeno)</option>
-                    </select>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ width: '100%' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                    Sazba DPH pro volnou cenu
-                  </label>
-                  <select
-                    value={formData.vat}
-                    onChange={e => setFormData({ ...formData, vat: parseInt(e.target.value, 10) })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-primary)',
-                      fontWeight: '600'
-                    }}
-                  >
-                    <option value={21} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>21% (Základní)</option>
-                    <option value={12} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>12% (Snížená)</option>
-                    <option value={0} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>0% (Osvobozeno)</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600' }}>
-                    Kategorie
-                  </label>
-                  <button
-                    type="button"
-                    style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: '700' }}
-                    onClick={() => setIsCategoryModalOpen(true)}
-                  >
-                    + {t('presets.add_category')}
-                  </button>
-                </div>
-                <select
-                  value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '600'
-                  }}
-                >
-                  {categories.filter(c => c.id !== 'all').map(c => (
-                    <option key={c.id} value={c.id} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.4rem' }}>
-                  Barva tlačítka
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '0.65rem', maxHeight: '180px', overflowY: 'auto', padding: '4px 2px' }}>
-                  {COLOR_OPTIONS.map(c => {
-                    const isSelected = formData.color === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, color: c })}
-                        style={{
-                          height: '48px',
-                          borderRadius: '12px',
-                          background: c,
-                          border: isSelected ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.15)',
-                          boxShadow: isSelected ? `0 0 14px ${c}, 0 4px 10px rgba(0,0,0,0.5)` : '0 2px 5px rgba(0,0,0,0.2)',
-                          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          touchAction: 'manipulation',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {isSelected && <Check size={22} style={{ color: '#ffffff', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                {activeModal === 'edit' ? (
-                  <button
-                    type="button"
-                    className="clear-cart-btn"
-                    onClick={() => handleDelete(editingPreset.id)}
-                  >
-                    <Trash2 size={16} />
-                    <span>Smazat</span>
-                  </button>
-                ) : <div />}
-
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="nav-tab"
-                    onClick={() => setActiveModal(null)}
-                  >
-                    Zrušit
-                  </button>
-                  <button
-                    type="submit"
-                    className="pay-btn pay-btn-card"
-                    style={{ height: '44px', padding: '0 1.25rem' }}
-                  >
-                    <Check size={18} />
-                    <span>{activeModal === 'add' ? 'Přidat' : 'Uložit Změny'}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Preset Add / Edit Modal */}
+      <PresetModal
+        isOpen={activeModal === 'add' || activeModal === 'edit'}
+        mode={activeModal === 'add' ? 'add' : 'edit'}
+        preset={editingPreset}
+        categories={categories}
+        defaultCategory={activeCategory}
+        onClose={() => { setActiveModal(null); setEditingPreset(null); }}
+        onSave={handleSavePreset}
+        onDelete={editingPreset ? () => {
+          if (window.confirm('Opravdu chcete toto tlačítko smazat z katalogu?')) {
+            onDeletePreset(editingPreset.id);
+            setActiveModal(null);
+            setEditingPreset(null);
+          }
+        } : undefined}
+      />
 
       {/* Category Manager Modal */}
       {isCategoryModalOpen && (

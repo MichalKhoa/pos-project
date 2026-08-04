@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
 import { DEFAULT_CATEGORIES, COLOR_OPTIONS } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
+import PresetModal from './PresetModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function QuickPresetGrid({
@@ -32,221 +33,23 @@ export default function QuickPresetGrid({
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
   const [enteredOpenPrice, setEnteredOpenPrice] = useState('');
 
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    isOpenPrice: false,
-    vat: 21,
-    category: 'living',
-    color: '#3b82f6'
-  });
-
-  const filteredPresets = presets.filter(p => {
-    const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
-    const matchesSearch = !searchTerm.trim() ||
-      (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.price && p.price.toString().includes(searchTerm));
-    return matchesCategory && matchesSearch;
-  });
-
-  // Drag and Drop state
-  const [draggedIndex, setDraggedIndex] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
-  const isDraggingRef = useRef(false);
-
-  const handleDragStart = (e, index) => {
-    if (!isEditMode) return;
-    isDraggingRef.current = true;
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const handleDragOver = (e, index) => {
-    if (!isEditMode || draggedIndex === null) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragOverIndex !== index) {
-      setDragOverIndex(index);
-    }
-  };
-
-  const handleDragLeave = (e, index) => {
-    if (dragOverIndex === index) {
-      setDragOverIndex(null);
-    }
-  };
-
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault();
-    if (!isEditMode || draggedIndex === null || draggedIndex === dropIndex) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const newFiltered = Array.from(filteredPresets);
-    const [movedItem] = newFiltered.splice(draggedIndex, 1);
-    newFiltered.splice(dropIndex, 0, movedItem);
-
-    let newFullPresets;
-    if (activeCategory === 'all') {
-      newFullPresets = newFiltered;
-    } else {
-      let subIdx = 0;
-      newFullPresets = presets.map(p => {
-        if (p.category === activeCategory) {
-          const replacement = newFiltered[subIdx];
-          subIdx++;
-          return replacement;
-        }
-        return p;
-      });
-    }
-
-    if (onReorderPresets) {
-      onReorderPresets(newFullPresets);
-    }
-
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-    setTimeout(() => {
-      isDraggingRef.current = false;
-    }, 120);
-  };
-
-  const handleMovePosition = (index, direction, e) => {
-    if (e) e.stopPropagation();
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= filteredPresets.length) return;
-
-    const newFiltered = Array.from(filteredPresets);
-    const [movedItem] = newFiltered.splice(index, 1);
-    newFiltered.splice(targetIndex, 0, movedItem);
-
-    let newFullPresets;
-    if (activeCategory === 'all') {
-      newFullPresets = newFiltered;
-    } else {
-      let subIdx = 0;
-      newFullPresets = presets.map(p => {
-        if (p.category === activeCategory) {
-          const replacement = newFiltered[subIdx];
-          subIdx++;
-          return replacement;
-        }
-        return p;
-      });
-    }
-
-    if (onReorderPresets) {
-      onReorderPresets(newFullPresets);
-    }
-  };
-
   const handleOpenAddModal = () => {
-    setFormData({
-      name: '',
-      price: '',
-      isOpenPrice: false,
-      vat: 21,
-      category: activeCategory === 'all' ? 'living' : activeCategory,
-      color: '#3b82f6'
-    });
+    setEditingPreset(null);
     setActiveModal('add');
   };
 
   const handleOpenEditModal = (preset, e) => {
     if (e) e.stopPropagation();
     setEditingPreset(preset);
-    setFormData({
-      name: preset.name,
-      price: preset.isOpenPrice ? '' : preset.price.toString(),
-      isOpenPrice: !!preset.isOpenPrice,
-      vat: preset.vat,
-      category: preset.category || 'living',
-      color: preset.color || '#3b82f6'
-    });
     setActiveModal('edit');
   };
 
-  const handleCardClick = (preset) => {
-    if (isDraggingRef.current) return;
-    if (isEditMode) {
-      handleOpenEditModal(preset);
-    } else {
-      if (preset.isOpenPrice) {
-        const numericKeypad = parseFloat(keypadAmount);
-        if (!isNaN(numericKeypad) && numericKeypad > 0) {
-          // Auto-pickup pre-typed amount from manual keypad!
-          onAddToCart({
-            ...preset,
-            price: numericKeypad
-          }, itemMultiplier);
-          if (onClearKeypadAmount) onClearKeypadAmount();
-        } else {
-          // Trigger Open Price prompt modal
-          setOpenPriceTarget(preset);
-          setEnteredOpenPrice('');
-        }
-      } else {
-        onAddToCart(preset, itemMultiplier);
-      }
-    }
-  };
-
-  const handleConfirmOpenPrice = (e) => {
-    e.preventDefault();
-    const priceVal = parseFloat(enteredOpenPrice);
-    if (isNaN(priceVal) || priceVal <= 0 || !openPriceTarget) return;
-
-    onAddToCart({
-      ...openPriceTarget,
-      price: priceVal
-    }, itemMultiplier);
-
-    setOpenPriceTarget(null);
-    setEnteredOpenPrice('');
-  };
-
-  const handleSubmitForm = (e) => {
-    e.preventDefault();
-    if (!formData.name) return;
-
-    let numericPrice = parseFloat(formData.price);
-    if (formData.isOpenPrice) {
-      numericPrice = 0;
-    } else if (isNaN(numericPrice)) {
-      return;
-    }
-
+  const handleSavePreset = (presetData) => {
     if (activeModal === 'add') {
-      onAddPreset({
-        id: `preset-${Date.now()}`,
-        name: formData.name,
-        price: numericPrice,
-        isOpenPrice: formData.isOpenPrice,
-        vat: parseInt(formData.vat, 10),
-        category: formData.category,
-        color: formData.color
-      });
-    } else if (activeModal === 'edit' && editingPreset) {
-      onUpdatePreset({
-        ...editingPreset,
-        name: formData.name,
-        price: numericPrice,
-        isOpenPrice: formData.isOpenPrice,
-        vat: parseInt(formData.vat, 10),
-        category: formData.category,
-        color: formData.color
-      });
+      onAddPreset(presetData);
+    } else if (activeModal === 'edit') {
+      onUpdatePreset(presetData);
     }
-
     setActiveModal(null);
     setEditingPreset(null);
   };
@@ -438,7 +241,25 @@ export default function QuickPresetGrid({
                     <GripVertical size={16} />
                   </div>
                 )}
-                <div className="preset-name" style={{ flex: 1 }}>{preset.name}</div>
+                <div className="preset-name" style={{ flex: 1 }}>
+                  {preset.name}
+                  {preset.isGeneralPreset && (
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontWeight: '600',
+                      background: 'rgba(255, 255, 255, 0.18)',
+                      color: 'rgba(255, 255, 255, 0.95)',
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      marginLeft: '6px',
+                      verticalAlign: 'middle',
+                      display: 'inline-block',
+                      letterSpacing: '0.01em'
+                    }}>
+                      {t('presets.general_badge') || 'Druh zboží'}
+                    </span>
+                  )}
+                </div>
                 {isEditMode && (
                   <div style={{ display: 'flex', gap: '2px', flexShrink: 0, marginLeft: '4px', alignItems: 'center' }}>
                     <span
@@ -478,14 +299,14 @@ export default function QuickPresetGrid({
                     <span
                       style={{ background: 'var(--accent-amber)', color: '#000', borderRadius: '4px', padding: '3px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
                       onClick={(e) => handleOpenEditModal(preset, e)}
-                      title="Upravit"
+                      title={t('presets.edit')}
                     >
                       <Edit3 size={14} />
                     </span>
                     <span
                       style={{ background: 'var(--accent-rose)', color: '#fff', borderRadius: '4px', padding: '3px', marginLeft: '2px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
                       onClick={(e) => handleDelete(preset.id, e)}
-                      title="Smazat"
+                      title={t('presets.delete')}
                     >
                       <Trash2 size={14} />
                     </span>
@@ -550,11 +371,11 @@ export default function QuickPresetGrid({
             </div>
 
             <form onSubmit={handleConfirmOpenPrice} className="modal-body">
-              <div className="keypad-input-container">
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+              <div className="keypad-input-container" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0.75rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: '600' }}>
                   {t('presets.open_price_label')}
                 </div>
-                <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
                   {enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč'}
                 </div>
               </div>
@@ -562,7 +383,7 @@ export default function QuickPresetGrid({
               {/* Touch Numpad */}
               <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                 {['7', '8', '9'].map(num => (
-                  <button key={num} type="button" className="key-btn" style={{ height: '52px' }} onClick={() => setEnteredOpenPrice(prev => {
+                  <button key={num} type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
                     if (prev.includes('.')) {
                       const parts = prev.split('.');
                       if (parts[1] && parts[1].length >= 2) return prev;
@@ -573,14 +394,14 @@ export default function QuickPresetGrid({
                 <button
                   type="button"
                   className="key-btn key-action"
-                  style={{ height: '52px' }}
+                  style={{ height: '52px', aspectRatio: 'auto' }}
                   onClick={() => setEnteredOpenPrice(prev => prev.length > 1 ? prev.slice(0, -1) : '')}
                 >
                   ⌫
                 </button>
 
                 {['4', '5', '6'].map(num => (
-                  <button key={num} type="button" className="key-btn" style={{ height: '52px' }} onClick={() => setEnteredOpenPrice(prev => {
+                  <button key={num} type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
                     if (prev.includes('.')) {
                       const parts = prev.split('.');
                       if (parts[1] && parts[1].length >= 2) return prev;
@@ -591,14 +412,14 @@ export default function QuickPresetGrid({
                 <button
                   type="button"
                   className="key-btn key-action"
-                  style={{ height: '52px', fontSize: '0.9rem', fontWeight: '700' }}
+                  style={{ height: '52px', fontSize: '0.9rem', fontWeight: '700', aspectRatio: 'auto' }}
                   onClick={() => setEnteredOpenPrice('')}
                 >
                   C
                 </button>
 
                 {['1', '2', '3'].map(num => (
-                  <button key={num} type="button" className="key-btn" style={{ height: '52px' }} onClick={() => setEnteredOpenPrice(prev => {
+                  <button key={num} type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
                     if (prev.includes('.')) {
                       const parts = prev.split('.');
                       if (parts[1] && parts[1].length >= 2) return prev;
@@ -609,7 +430,7 @@ export default function QuickPresetGrid({
                 <button
                   type="button"
                   className="key-btn"
-                  style={{ height: '52px', fontSize: '1.4rem', fontWeight: '700', color: 'var(--accent-blue)' }}
+                  style={{ height: '52px', fontSize: '1.4rem', fontWeight: '700', color: 'var(--accent-blue)', aspectRatio: 'auto' }}
                   onClick={() => {
                     if (enteredOpenPrice.includes('.')) return;
                     setEnteredOpenPrice(prev => prev ? prev + '.' : '0.');
@@ -618,7 +439,7 @@ export default function QuickPresetGrid({
                   ,
                 </button>
 
-                <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2' }} onClick={() => setEnteredOpenPrice(prev => {
+                <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
                   if (prev.includes('.')) {
                     const parts = prev.split('.');
                     if (parts[1] && parts[1].length >= 2) return prev;
@@ -626,7 +447,7 @@ export default function QuickPresetGrid({
                   return prev.length < 10 ? prev + '0' : prev;
                 })}>0</button>
 
-                <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2' }} onClick={() => setEnteredOpenPrice(prev => {
+                <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
                   if (prev.includes('.')) {
                     const parts = prev.split('.');
                     if (parts[1] && parts[1].length >= 2) return prev;
@@ -659,233 +480,23 @@ export default function QuickPresetGrid({
         </div>
       )}
 
-      {/* Add / Edit Modal */}
-      {(activeModal === 'add' || activeModal === 'edit') && (
-        <div className="modal-overlay" onClick={() => setActiveModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-title">
-                <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-                <span>{activeModal === 'add' ? t('presets.add_preset_title') : t('presets.edit_preset_title')}</span>
-              </div>
-              <button className="close-modal-btn" onClick={() => setActiveModal(null)}>✕</button>
-            </div>
-
-            <form onSubmit={handleSubmitForm} className="modal-body">
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                  {t('presets.preset_name')}
-                </label>
-                <input
-                  type="text"
-                  placeholder="..."
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#ffffff'
-                  }}
-                  required
-                />
-              </div>
-
-              <div style={{
-                background: 'var(--bg-input)',
-                padding: '0.75rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}>
-                <input
-                  type="checkbox"
-                  id="isOpenPrice"
-                  checked={formData.isOpenPrice}
-                  onChange={e => setFormData({ ...formData, isOpenPrice: e.target.checked })}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-amber)' }}
-                />
-                <label htmlFor="isOpenPrice" style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                  {t('presets.open_price_label')}
-                </label>
-              </div>
-
-              {!formData.isOpenPrice && (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                      {t('presets.price')}
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="250"
-                      value={formData.price}
-                      onChange={e => setFormData({ ...formData, price: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        color: '#ffffff',
-                        fontFamily: 'var(--font-mono)'
-                      }}
-                      required={!formData.isOpenPrice}
-                    />
-                  </div>
-
-                  <div style={{ width: '130px' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                      {t('presets.vat_rate')}
-                    </label>
-                    <select
-                      value={formData.vat}
-                      onChange={e => setFormData({ ...formData, vat: parseInt(e.target.value, 10) })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        color: '#ffffff'
-                      }}
-                    >
-                      <option value={21}>21%</option>
-                      <option value={12}>12%</option>
-                      <option value={0}>0%</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {formData.isOpenPrice && (
-                <div style={{ width: '100%' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-                    {t('presets.vat_rate')}
-                  </label>
-                  <select
-                    value={formData.vat}
-                    onChange={e => setFormData({ ...formData, vat: parseInt(e.target.value, 10) })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      color: '#ffffff'
-                    }}
-                  >
-                    <option value={21}>21%</option>
-                    <option value={12}>12%</option>
-                    <option value={0}>0%</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {t('presets.col_category')}
-                  </label>
-                  <button
-                    type="button"
-                    style={{ background: 'transparent', color: 'var(--accent-blue)', fontSize: '0.75rem', fontWeight: '600' }}
-                    onClick={() => setIsCategoryModalOpen(true)}
-                  >
-                    + {t('presets.add_category')}
-                  </button>
-                </div>
-                <select
-                  value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#ffffff'
-                  }}
-                >
-                  {categories.filter(c => c.id !== 'all').map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: '700' }}>
-                  {t('presets.color_label')}
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: '0.65rem', maxHeight: '180px', overflowY: 'auto', padding: '4px 2px' }}>
-                  {COLOR_OPTIONS.map(c => {
-                    const isSelected = formData.color === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, color: c })}
-                        style={{
-                          height: '48px',
-                          borderRadius: '12px',
-                          background: c,
-                          border: isSelected ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.15)',
-                          boxShadow: isSelected ? `0 0 14px ${c}, 0 4px 10px rgba(0,0,0,0.5)` : '0 2px 5px rgba(0,0,0,0.2)',
-                          transform: isSelected ? 'scale(1.08)' : 'scale(1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          touchAction: 'manipulation',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {isSelected && <Check size={22} style={{ color: '#ffffff', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))' }} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                {activeModal === 'edit' ? (
-                  <button
-                    type="button"
-                    className="clear-cart-btn"
-                    onClick={() => handleDelete(editingPreset.id)}
-                  >
-                    <Trash2 size={16} />
-                    <span>{t('presets.delete')}</span>
-                  </button>
-                ) : <div />}
-
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="nav-tab"
-                    onClick={() => setActiveModal(null)}
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="pay-btn pay-btn-card"
-                    style={{ height: '44px', padding: '0 1.25rem' }}
-                  >
-                    <Check size={18} />
-                    <span>{activeModal === 'add' ? t('presets.add_category_btn') : t('common.save')}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Preset Add / Edit Modal */}
+      <PresetModal
+        isOpen={activeModal === 'add' || activeModal === 'edit'}
+        mode={activeModal === 'add' ? 'add' : 'edit'}
+        preset={editingPreset}
+        categories={categories}
+        defaultCategory={activeCategory}
+        onClose={() => { setActiveModal(null); setEditingPreset(null); }}
+        onSave={handleSavePreset}
+        onDelete={editingPreset ? () => {
+          if (window.confirm('Opravdu chcete toto tlačítko smazat?')) {
+            onDeletePreset(editingPreset.id);
+            setActiveModal(null);
+            setEditingPreset(null);
+          }
+        } : undefined}
+      />
 
       {/* Category Manager Modal */}
       {isCategoryModalOpen && (

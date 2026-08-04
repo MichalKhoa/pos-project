@@ -105,6 +105,7 @@ def init_db_schema():
         ("presets", "track_stock", "BOOLEAN DEFAULT 0"),
         ("presets", "min_stock_alert", "INTEGER DEFAULT 5"),
         ("presets", "barcode", "VARCHAR DEFAULT ''"),
+        ("presets", "is_general", "BOOLEAN DEFAULT 0"),
     ]
     from sqlalchemy import text
     with engine.connect() as conn:

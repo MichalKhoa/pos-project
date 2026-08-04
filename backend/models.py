@@ -127,6 +127,7 @@ class PresetModel(Base):
     vat = Column(Integer, default=21)
     color = Column(String, nullable=True)
     is_open_price = Column(Boolean, default=False)
+    is_general = Column(Boolean, default=False, nullable=False)
     position = Column(Integer, default=0)
     stock_quantity = Column(Integer, default=0, nullable=False)
     track_stock = Column(Boolean, default=False, nullable=False)

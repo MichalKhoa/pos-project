@@ -251,6 +251,23 @@ export default function App() {
           setStoreConfig(prev => ({ ...prev, ...data }));
         }
       });
+      fetchSalesHistoryBackend().then(backendSales => {
+        if (Array.isArray(backendSales) && backendSales.length > 0) {
+          setSalesHistory(prev => {
+            const backendIds = new Set(backendSales.map(s => s.id));
+            const backendReceipts = new Set(backendSales.map(s => s.receiptNumber).filter(Boolean));
+            // Keep local offline pending sales that aren't yet in backend DB
+            const pendingLocalSales = prev.filter(s => 
+              (s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false) &&
+              !backendIds.has(s.id) &&
+              !backendReceipts.has(s.receiptNumber)
+            );
+            const merged = [...pendingLocalSales, ...backendSales];
+            merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            return merged;
+          });
+        }
+      });
     };
 
     reloadBackendData();
@@ -573,7 +590,7 @@ export default function App() {
     setCategories(prev => prev.filter(c => c.id !== catId));
     deleteCategoryBackend(catId);
     // Reassign items from deleted category so no presets are orphaned
-    const fallbackCategory = categories.find(c => c.id !== 'all' && c.id !== catId)?.id || 'living';
+    const fallbackCategory = categories.find(c => c.id !== 'all' && c.id !== catId)?.id || 'all';
     setPresets(prev => prev.map(p => {
       if (p.category !== catId) return p;
       const updated = { ...p, category: fallbackCategory };
@@ -884,6 +901,7 @@ export default function App() {
             presets={presets}
             categories={categories}
             onUpdatePresets={setPresets}
+            onAddPreset={handleAddPreset}
           />
         )}
 

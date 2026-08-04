@@ -21,6 +21,7 @@ class PresetSchema(BaseModel):
     vat: Optional[int] = 21
     color: Optional[str] = "#3b82f6"
     isOpenPrice: Optional[bool] = False
+    isGeneralPreset: Optional[bool] = False
     position: Optional[int] = 0
     stockQuantity: Optional[int] = 0
     trackStock: Optional[bool] = False
@@ -35,24 +36,17 @@ class ReorderPresetsSchema(BaseModel):
 
 # Default Seed Data
 DEFAULT_CATEGORIES_DATA = [
-    {"id": "all", "name": "Všechny položky", "position": 0},
-    {"id": "living", "name": "Obývák & Dekorace", "position": 1},
-    {"id": "kitchen", "name": "Kuchyně & Jídelna", "position": 2},
-    {"id": "bath", "name": "Koupelna", "position": 3},
-    {"id": "custom", "name": "Rychlý prodej", "position": 4}
+    {"id": "all", "name": "Všechny položky", "position": 0}
 ]
 
 DEFAULT_PRESETS_DATA = [
-    {"id": "preset-1", "name": "Svíčka Vonná Premium", "price": 249, "vat": 21, "category": "living", "color": "#8b5cf6", "position": 0, "stock_quantity": 25, "track_stock": True, "min_stock_alert": 5, "barcode": "859123456701"},
-    {"id": "preset-2", "name": "Váza Keramická bílá", "price": 389, "vat": 21, "category": "living", "color": "#3b82f6", "position": 1, "stock_quantity": 12, "track_stock": True, "min_stock_alert": 3, "barcode": "859123456702"},
-    {"id": "preset-3", "name": "Hrnek Keramický 350ml", "price": 149, "vat": 21, "category": "kitchen", "color": "#10b981", "position": 2, "stock_quantity": 40, "track_stock": True, "min_stock_alert": 10, "barcode": "859123456703"},
-    {"id": "preset-4", "name": "Sada Příborů 24ks", "price": 699, "vat": 21, "category": "kitchen", "color": "#f59e0b", "position": 3, "stock_quantity": 8, "track_stock": True, "min_stock_alert": 2, "barcode": "859123456704"},
-    {"id": "preset-5", "name": "Ručník Bavlna 50x100", "price": 199, "vat": 21, "category": "bath", "color": "#06b6d4", "position": 4, "stock_quantity": 30, "track_stock": True, "min_stock_alert": 5, "barcode": "859123456705"},
-    {"id": "preset-6", "name": "Dávkovač Mýdla Sklo", "price": 229, "vat": 21, "category": "bath", "color": "#ec4899", "position": 5, "stock_quantity": 15, "track_stock": True, "min_stock_alert": 4, "barcode": "859123456706"},
-    {"id": "preset-7", "name": "Eko Čistící Prostředek", "price": 119, "vat": 21, "category": "bath", "color": "#14b8a6", "position": 6, "stock_quantity": 50, "track_stock": True, "min_stock_alert": 10, "barcode": "859123456707"},
-    {"id": "preset-8", "name": "Polštář Dekorativní", "price": 299, "vat": 21, "category": "living", "color": "#a855f7", "position": 7, "stock_quantity": 18, "track_stock": True, "min_stock_alert": 4, "barcode": "859123456708"},
-    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "price": 0, "vat": 21, "category": "custom", "color": "#f59e0b", "is_open_price": True, "position": 8, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-open-2", "name": "Dárkový Poukaz (Libovolná částka)", "price": 0, "vat": 0, "category": "custom", "color": "#ec4899", "is_open_price": True, "position": 9, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""}
+    {"id": "preset-clothes", "name": "Oblečení", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-shoes", "name": "Boty", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-socks", "name": "Ponožky", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-underwear", "name": "Spodní prádlo", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-home", "name": "Domácí potřeby", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-open-2", "name": "Dárkový Poukaz", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""}
 ]
 
 # --- CATEGORIES ENDPOINTS ---
@@ -96,25 +90,36 @@ def delete_category(cat_id: str, db: Session = Depends(get_db)):
 
 @router.get("/presets")
 def get_presets(db: Session = Depends(get_db)):
-    """Fetch quick item presets. Seeds defaults if DB empty."""
+    """Fetch quick item presets. Seeds defaults if DB empty or migrates legacy seed presets."""
     presets = db.query(PresetModel).order_by(PresetModel.position.asc()).all()
-    if not presets:
+
+    # Auto-migrate legacy sample item presets (preset-1 .. preset-8)
+    has_legacy = any(p.id in ["preset-1", "preset-2", "preset-3", "preset-4", "preset-5", "preset-6", "preset-7", "preset-8"] for p in presets)
+
+    if not presets or has_legacy:
+        if has_legacy:
+            db.query(PresetModel).filter(PresetModel.id.in_(["preset-1", "preset-2", "preset-3", "preset-4", "preset-5", "preset-6", "preset-7", "preset-8", "preset-open-1", "preset-open-2"])).delete(synchronize_session=False)
+            db.commit()
+
+        existing_ids = {p.id for p in db.query(PresetModel).all()}
         for p in DEFAULT_PRESETS_DATA:
-            db_preset = PresetModel(
-                id=p["id"],
-                name=p["name"],
-                price=p["price"],
-                vat=p["vat"],
-                category=p["category"],
-                color=p["color"],
-                is_open_price=p.get("is_open_price", False),
-                position=p["position"],
-                stock_quantity=p.get("stock_quantity", 0),
-                track_stock=p.get("track_stock", False),
-                min_stock_alert=p.get("min_stock_alert", 5),
-                barcode=p.get("barcode", "")
-            )
-            db.add(db_preset)
+            if p["id"] not in existing_ids:
+                db_preset = PresetModel(
+                    id=p["id"],
+                    name=p["name"],
+                    price=p["price"],
+                    vat=p["vat"],
+                    category=p["category"],
+                    color=p["color"],
+                    is_open_price=p.get("is_open_price", False),
+                    is_general=p.get("is_general", False),
+                    position=p["position"],
+                    stock_quantity=p.get("stock_quantity", 0),
+                    track_stock=p.get("track_stock", False),
+                    min_stock_alert=p.get("min_stock_alert", 5),
+                    barcode=p.get("barcode", "")
+                )
+                db.add(db_preset)
         db.commit()
         presets = db.query(PresetModel).order_by(PresetModel.position.asc()).all()
 
@@ -127,6 +132,7 @@ def get_presets(db: Session = Depends(get_db)):
             "vat": p.vat,
             "color": p.color,
             "isOpenPrice": p.is_open_price,
+            "isGeneralPreset": p.is_general if p.is_general is not None else False,
             "position": p.position,
             "stockQuantity": p.stock_quantity if p.stock_quantity is not None else 0,
             "trackStock": p.track_stock if p.track_stock is not None else False,
@@ -139,9 +145,18 @@ def get_presets(db: Session = Depends(get_db)):
 
 @router.get("/barcode/{code}")
 def get_preset_by_barcode(code: str, db: Session = Depends(get_db)):
-    """Fetch product preset matching scanned EAN/barcode."""
+    """Fetch product preset matching scanned EAN/barcode (supports single or comma-separated barcodes)."""
     clean_code = code.strip()
-    preset = db.query(PresetModel).filter(PresetModel.barcode == clean_code).first()
+    all_presets = db.query(PresetModel).all()
+    preset = None
+    for p in all_presets:
+        if not p.barcode:
+            continue
+        barcodes = [b.strip() for b in p.barcode.split(",") if b.strip()]
+        if clean_code in barcodes:
+            preset = p
+            break
+
     if not preset:
         raise HTTPException(status_code=404, detail=f"Zboží s čárovým kódem {clean_code} nebylo nalezeno.")
     return {
@@ -152,6 +167,7 @@ def get_preset_by_barcode(code: str, db: Session = Depends(get_db)):
         "vat": preset.vat,
         "color": preset.color,
         "isOpenPrice": preset.is_open_price,
+        "isGeneralPreset": preset.is_general or False,
         "position": preset.position,
         "stockQuantity": preset.stock_quantity or 0,
         "trackStock": preset.track_stock or False,
@@ -171,6 +187,7 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         existing.vat = preset.vat
         existing.color = preset.color
         existing.is_open_price = preset.isOpenPrice
+        existing.is_general = preset.isGeneralPreset if preset.isGeneralPreset is not None else False
         existing.position = preset.position
         existing.stock_quantity = preset.stockQuantity if preset.stockQuantity is not None else 0
         existing.track_stock = preset.trackStock if preset.trackStock is not None else False
@@ -185,6 +202,7 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
             vat=preset.vat,
             color=preset.color,
             is_open_price=preset.isOpenPrice,
+            is_general=preset.isGeneralPreset if preset.isGeneralPreset is not None else False,
             position=preset.position,
             stock_quantity=preset.stockQuantity if preset.stockQuantity is not None else 0,
             track_stock=preset.trackStock if preset.trackStock is not None else False,
@@ -202,6 +220,7 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         "vat": existing.vat,
         "color": existing.color,
         "isOpenPrice": existing.is_open_price,
+        "isGeneralPreset": existing.is_general,
         "position": existing.position,
         "stockQuantity": existing.stock_quantity,
         "trackStock": existing.track_stock,
