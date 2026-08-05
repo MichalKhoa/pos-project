@@ -6,7 +6,7 @@ const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
  */
 export async function fetchBackendRoot() {
   try {
-    const res = await fetch(`http://${API_HOST}:8000/`);
+    const res = await fetch(`http://${API_HOST}:8000/api/v1/status`);
     if (!res.ok) return { online: false };
     const data = await res.json();
     return { online: true, ...data };

@@ -95,6 +95,9 @@ class StoreConfigModel(Base):
     # Default POS Language Configuration ('cs', 'vi', 'en')
     default_language = Column(String, default="cs")
 
+    # Register Layout Configuration ('left' or 'right' for cart column)
+    cart_position = Column(String, default="left")
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

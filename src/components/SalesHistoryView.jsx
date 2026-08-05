@@ -6,11 +6,6 @@ import TouchDateRangeModal from './TouchDateRangeModal.jsx';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { exportSalesToCSV } from '../utils/csvExporter';
 
-const CZECH_MONTHS = [
-  'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
-  'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
-];
-
 export default function SalesHistoryView({
   salesHistory,
   storeConfig,
@@ -364,14 +359,7 @@ export default function SalesHistoryView({
   }, [periodFilteredSales, t]);
 
   const getPeriodLabel = () => {
-    if (periodFilter === 'today') return t('history.today');
-    if (periodFilter === 'year') return `${t('history.year')} ${selectedYear}`;
-    if (periodFilter === 'month') {
-      const monthText = selectedMonth === 'all' ? t('history.all_months') : CZECH_MONTHS[selectedMonth];
-      return `${monthText} ${selectedYear}`;
-    }
-    if (periodFilter === 'custom') return `${t('history.custom_date')} ${fromDate} - ${toDate}`;
-    return t('history.all_period');
+    return periodBadgeLabel || t('history.all_period');
   };
 
   return (
@@ -845,7 +833,7 @@ export default function SalesHistoryView({
                 <span>{t('history.category_sales')}</span>
               </h3>
 
-              <div style={{ flex: 1, overflowX: 'auto', maxHeight: '260px', overflowY: 'auto' }}>
+              <div style={{ flex: 1, overflowX: 'auto' }}>
                 {sortedCategories.length === 0 ? (
                   <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>No items in selected period.</div>
                 ) : (
@@ -963,7 +951,7 @@ export default function SalesHistoryView({
                 <span>{t('history.weekday_stats_title')}</span>
               </h3>
 
-              <div style={{ flex: 1, overflowX: 'auto', maxHeight: '260px', overflowY: 'auto' }}>
+              <div style={{ flex: 1, overflowX: 'auto' }}>
                 <table className="data-table">
                   <thead>
                     <tr>
@@ -1000,7 +988,7 @@ export default function SalesHistoryView({
                 <span>{t('history.daily_stats_title')}</span>
               </h3>
 
-              <div style={{ flex: 1, overflowX: 'auto', maxHeight: '260px', overflowY: 'auto' }}>
+              <div style={{ flex: 1, overflowX: 'auto' }}>
                 {dailySalesSummary.length === 0 ? (
                   <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{t('history.no_daily_sales')}</div>
                 ) : (

@@ -34,9 +34,10 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
     setEnteredPin(newPin);
     setErrorMsg('');
 
-    if (newPin.length >= 4) {
-      const unlocked = await verifyPin(newPin, true);
-      if (!unlocked && newPin.length === 8) {
+    const targetLength = storeConfig?.cashierPin?.length || 4;
+    if (newPin.length === targetLength) {
+      const unlocked = await verifyPin(newPin, false);
+      if (!unlocked) {
         setIsShaking(true);
         setTimeout(() => {
           setIsShaking(false);

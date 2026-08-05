@@ -44,6 +44,7 @@ class StoreConfigSchema(BaseModel):
     autoLockMinutes: Optional[int] = 15
     directHardwarePrint: Optional[bool] = True
     defaultLanguage: Optional[str] = "cs"
+    cartPosition: Optional[str] = "left"
 
 
 @router.get("")
@@ -79,7 +80,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "hasPin": bool(config.cashier_pin and config.cashier_pin != _hash_pin("1234")),
         "autoLockMinutes": config.auto_lock_minutes if config.auto_lock_minutes is not None else 15,
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
-        "defaultLanguage": config.default_language or "cs"
+        "defaultLanguage": config.default_language or "cs",
+        "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left"
     }
 
 
@@ -117,6 +119,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.autoLockMinutes is not None: config.auto_lock_minutes = data.autoLockMinutes
     if data.directHardwarePrint is not None: config.direct_hardware_print = data.directHardwarePrint
     if data.defaultLanguage is not None: config.default_language = data.defaultLanguage
+    if data.cartPosition is not None: config.cart_position = data.cartPosition
 
     db.commit()
     db.refresh(config)
@@ -147,10 +150,13 @@ def verify_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(g
                 config.cashier_pin = _hash_pin(stored)
                 db.commit()
             return {"status": "SUCCESS", "valid": True}
+        pin_rate_limiter.record_failed_attempt(client_ip)
         raise HTTPException(status_code=401, detail="Nesprávný PIN kód")
 
     if _hash_pin(data.pin) == stored:
         return {"status": "SUCCESS", "valid": True}
+
+    pin_rate_limiter.record_failed_attempt(client_ip)
     raise HTTPException(status_code=401, detail="Nesprávný PIN kód")
 
 

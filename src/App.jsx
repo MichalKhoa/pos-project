@@ -819,7 +819,7 @@ export default function App() {
       <main className="main-content">
         {activeTab === 'register' && (
           <>
-            <div className="pos-layout">
+            <div className={`pos-layout ${(storeConfig?.cartPosition || 'left') === 'left' ? 'cart-layout-left' : 'cart-layout-right'}`}>
               <div className={`pos-col-left${isMobile && mobilePosTab !== 'keypad' ? ' mobile-hidden' : ''}`}>
                 <ManualKeypad
                   onAddToCart={handleAddToCart}

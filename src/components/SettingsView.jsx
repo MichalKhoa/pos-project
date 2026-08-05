@@ -559,6 +559,20 @@ export default function SettingsView({
                 </div>
               </div>
 
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  Uspořádání Pokladny (Pozice Košíku)
+                </label>
+                <select
+                  value={config.cartPosition || 'left'}
+                  onChange={e => setConfig({ ...config, cartPosition: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--accent-emerald)', fontWeight: '800' }}
+                >
+                  <option value="left">🛒 Košík vlevo | Klávesy & Produkty vpravo (Doporučeno pro praváky)</option>
+                  <option value="right">Klávesy & Produkty vlevo | Košík vpravo 🛒</option>
+                </select>
+              </div>
+
               {/* Cashier Lock & Security Settings */}
               <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

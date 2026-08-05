@@ -19,6 +19,9 @@ class SimpleRateLimiter:
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Příliš mnoho neúspěšných pokusů. Zkuste to za minutu."
             )
-        self.attempts[client_ip].append(now)
+
+    def record_failed_attempt(self, client_ip: str):
+        self.attempts[client_ip].append(time.time())
 
 pin_rate_limiter = SimpleRateLimiter(max_requests=5, window_seconds=60)
+

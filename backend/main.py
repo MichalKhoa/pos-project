@@ -163,22 +163,48 @@ def startup_event():
         logger.warning(f"Failed to start EET resend daemon: {e}")
 
 
-# Single-Process Production Serving: Mount compiled React dist/ static assets if directory exists
+# Single-Process Production Serving: Serve compiled React dist/ static assets if directory exists
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
-if os.path.exists(dist_dir):
-    app.mount("/static_ui", StaticFiles(directory=dist_dir, html=True), name="static_ui")
-    logger.info(f"Production static UI files mounted from {dist_dir}")
 
-
-@app.get("/")
-def root():
+@app.get("/api/v1/status")
+@app.get("/api/status")
+def status_check():
     return {
         "status": "ONLINE",
         "app": "Himmel POS Python FastAPI Backend",
         "docs_url": "/docs",
         "version": "1.0.0"
     }
+
+if os.path.exists(dist_dir):
+    assets_dir = os.path.join(dist_dir, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="static_assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        file_path = os.path.join(dist_dir, full_path)
+        if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        index_file = os.path.join(dist_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return FileResponse(file_path)
+
+    logger.info(f"Production static UI files served from {dist_dir}")
+else:
+    @app.get("/")
+    def root():
+        return {
+            "status": "ONLINE",
+            "app": "Himmel POS Python FastAPI Backend",
+            "docs_url": "/docs",
+            "version": "1.0.0",
+            "notice": "Frontend build (dist) missing. Run 'npm run build' to generate static UI."
+        }
 
 
 @app.get("/api/v1/system/litestream-status")
