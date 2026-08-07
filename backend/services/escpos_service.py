@@ -142,70 +142,79 @@ class ESCPOSPrinterService:
             separator = "=" * line_width
             dash_line = "-" * line_width
 
-            # Uncomment and configure physical escpos printer driver when hardware attached:
-            """
-            from escpos.printer import Usb, Network, Serial
-
-            if self.interface_type == "USB":
-                printer = Usb(0x04b8, 0x0e15, 0) # Standard Epson/Xprinter USB vendor/product ID
-            elif self.interface_type == "NETWORK":
-                printer = Network(self.address, port=9100)
-            elif self.interface_type == "SERIAL":
-                printer = Serial(self.address, baudrate=9600)
-            else:
+            # 1. Attempt physical ESC/POS Hardware Connection if interface is configured
+            printer = None
+            try:
+                if self.interface_type == "USB":
+                    from escpos.printer import Usb, File
+                    if os.path.exists(self.address):
+                        printer = File(self.address)
+                    else:
+                        # Standard Epson/Xprinter/POS-58 USB vendor ID fallback
+                        printer = Usb(0x04b8, 0x0e15, 0)
+                elif self.interface_type == "NETWORK" and self.address:
+                    from escpos.printer import Network
+                    printer = Network(self.address, port=9100)
+                elif self.interface_type == "SERIAL" and self.address:
+                    from escpos.printer import Serial
+                    printer = Serial(self.address, baudrate=9600)
+            except Exception as conn_err:
+                logger.info(f"Physical ESC/POS printer hardware offline ({conn_err}), using print simulation fallback.")
                 printer = None
 
             if printer:
-                # Top padding margin (prevents top edge clipping on receipt header)
-                printer.text("\n\n\n\n")
+                # Top padding margin
+                printer.text("\n\n")
 
                 # Header
                 printer.set(align='center', font='a', width=2, height=2)
                 printer.text(f"{store_config.get('storeName', 'Himmel POS')}\n")
                 printer.set(align='center', font='a', width=1, height=1)
-                printer.text(f"{store_config.get('street')}\n{store_config.get('city')}\n")
-                printer.text(f"ICO: {store_config.get('ico')} DIC: {store_config.get('dic')}\n")
+                if store_config.get('street'):
+                    printer.text(f"{store_config.get('street')}\n")
+                if store_config.get('city'):
+                    printer.text(f"{store_config.get('city')}\n")
+                if store_config.get('ico') or store_config.get('dic'):
+                    printer.text(f"ICO: {store_config.get('ico', '')} DIC: {store_config.get('dic', '')}\n")
                 printer.text(separator + "\n")
                 printer.text(f"UCTENKA c. {sale_data.get('receiptNumber')}\n")
-                printer.text(f"{sale_data.get('timestamp')}\n")
+                printer.text(f"Datum: {sale_data.get('timestamp')}\n")
                 printer.text(dash_line + "\n")
 
                 # Line Items
                 printer.set(align='left')
                 for item in sale_data.get('items', []):
                     item_name = item['name'][:name_width]
-                    printer.text(f"{item_name:<{name_width}} {item['quantity']:>2}x {item['price']:>6.0f} Kc\n")
+                    printer.text(f"{item_name:<{name_width}} {item.get('quantity', 1):>2}x {item.get('price', 0):>6.0f} Kc\n")
 
                 printer.text(separator + "\n")
                 printer.set(align='right', font='a', width=2, height=2)
-                printer.text(f"CELKEM: {sale_data.get('totalAmount'):.0f} Kc\n")
+                printer.text(f"CELKEM: {sale_data.get('totalAmount', 0):.0f} Kc\n")
                 printer.set(align='left', font='a', width=1, height=1)
 
-                # Footer & EET Signatures
-                printer.text(f"Zpusob uchrady: {sale_data.get('paymentMethod').upper()}\n")
+                # Footer
+                pm = str(sale_data.get('paymentMethod', '')).upper()
+                printer.text(f"Zpusob uhrady: {pm}\n")
                 printer.text(dash_line + "\n")
-                if sale_data.get('fik_code') or sale_data.get('fik'):
-                    printer.text(f"FIK: {sale_data.get('fik_code') or sale_data.get('fik')}\n")
-                if sale_data.get('bkp_code') or sale_data.get('bkp'):
-                    printer.text(f"BKP: {sale_data.get('bkp_code') or sale_data.get('bkp')}\n")
-                if (sale_data.get('pkp_code') or sale_data.get('pkp')) and not (sale_data.get('fik_code') or sale_data.get('fik')):
-                    pkp_str = sale_data.get('pkp_code') or sale_data.get('pkp')
-                    printer.text(f"PKP: {pkp_str[:32]}...\n")
-                    printer.text("Vystaveno ve zjednodusenem (neonline) rezimu EET\n")
-                if not sale_data.get('fik_code') and not sale_data.get('fik') and not sale_data.get('pkp_code') and not sale_data.get('pkp'):
-                    printer.text("Rezim bez EET\n")
-                printer.set(align='center')
-                printer.text(f"\n{store_config.get('receiptFooter')}\n")
+                printer.text("Rezim bez EET\n")
+                if store_config.get('receiptFooter'):
+                    printer.set(align='center')
+                    printer.text(f"\n{store_config.get('receiptFooter')}\n")
 
-                # Bottom padding margin before physical paper cut (prevents cutter blade from clipping footer)
-                printer.text("\n\n\n\n\n\n\n")
+                # Bottom margin before cutter
+                printer.text("\n\n\n\n")
 
-                # Cut paper & open cash drawer
-                printer.cashdraw(2)
-                printer.cut()
+                # Cut paper & kick cash drawer pulse on cash payment
+                try:
+                    if pm in ["CASH", "HOTOVOST", "SPLIT"]:
+                        printer.cashdraw(2)
+                    printer.cut()
+                except Exception:
+                    pass
+
                 return True
-            """
 
+            # Simulation fallback when physical printer is not connected
             print(separator)
             print(f"--- PHYSICAL ESC/POS {paper_width}mm PRINT SIMULATION ---")
             print(f"Store: {store_config.get('storeName')}")

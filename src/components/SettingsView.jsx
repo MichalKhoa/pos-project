@@ -16,7 +16,10 @@ import {
   FileCheck,
   Printer,
   CreditCard,
-  Wifi
+  Wifi,
+  Lock,
+  Unlock,
+  Eye
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -35,6 +38,7 @@ import {
 } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
+import AdminPinModal from './AdminPinModal.jsx';
 
 function formatIban(val) {
   if (!val) return '';
@@ -47,7 +51,9 @@ export default function SettingsView({
   onSaveStoreConfig,
   presets,
   onResetData,
-  onNavigateToPresets
+  onNavigateToPresets,
+  isAdminMode,
+  onToggleAdminMode
 }) {
   const { t, language, setLanguage } = useTranslation();
   const [config, setConfig] = useState({
@@ -203,18 +209,51 @@ export default function SettingsView({
     loadBackendInfo();
   }, []);
 
+  const [pinModalState, setPinModalState] = useState(null); // { mode, onAuthenticated }
+
+  const requireAdminPin = (callback) => {
+    if (isAdminMode) {
+      callback();
+    } else {
+      setPinModalState({
+        mode: 'VERIFY',
+        onAuthenticated: () => {
+          setPinModalState(null);
+          if (onToggleAdminMode) onToggleAdminMode();
+          callback();
+        }
+      });
+    }
+  };
+
+  const handleOpenPinChange = () => {
+    requireAdminPin(() => {
+      setPinModalState({
+        mode: 'CHANGE_PIN',
+        onAuthenticated: (newPinVal) => {
+          const updated = { ...config, cashierPin: newPinVal };
+          setConfig(updated);
+          onSaveStoreConfig(updated);
+          setPinModalState(null);
+        }
+      });
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (config.cashierPin && (config.cashierPin.length < 4 || config.cashierPin.length > 8)) {
-      alert('PIN kód musí mít 4 až 8 číslic.');
-      return;
-    }
-    onSaveStoreConfig(config);
-    if (config.defaultLanguage) {
-      setLanguage(config.defaultLanguage);
-    }
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    requireAdminPin(() => {
+      if (config.cashierPin && (config.cashierPin.length < 4 || config.cashierPin.length > 8)) {
+        alert('PIN kód musí mít 4 až 8 číslic.');
+        return;
+      }
+      onSaveStoreConfig(config);
+      if (config.defaultLanguage) {
+        setLanguage(config.defaultLanguage);
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    });
   };
 
   const handleExportJSON = () => {
@@ -376,6 +415,111 @@ export default function SettingsView({
             style={{ padding: '0.4rem 0.6rem' }}
           >
             <RefreshCw size={16} className={backendLoading ? 'spin-icon' : ''} />
+          </button>
+        </div>
+      </div>
+
+      {/* Admin Mode Toggle Card */}
+      <div className="table-card" style={{ padding: '1.25rem 1.5rem', background: isAdminMode ? 'rgba(245, 158, 11, 0.08)' : 'var(--bg-card)', borderColor: isAdminMode ? 'var(--accent-amber)' : 'var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
+            {isAdminMode ? <Unlock size={20} style={{ color: 'var(--accent-amber)' }} /> : <Lock size={20} style={{ color: 'var(--text-muted)' }} />}
+            <span>{t('nav.admin') || 'Režim Správce Pokladny'}</span>
+            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: isAdminMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.06)', color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-muted)', fontWeight: '700' }}>
+              {isAdminMode ? (t('nav.admin_active') || 'AKTIVNÍ') : 'VYPNUTO'}
+            </span>
+          </div>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            {isAdminMode ? 'Režim správce je zapnutý. Máte přístup k mazání prodejů a pokročilým možnostem.' : 'Zapnutím správcovského režimu získáte přístup ke mazání testovacích prodejů a pokročilým funkcím.'}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="pay-btn"
+          style={{
+            height: '42px',
+            padding: '0 1.25rem',
+            fontSize: '0.9rem',
+            background: isAdminMode ? 'var(--accent-amber)' : 'var(--bg-main)',
+            color: isAdminMode ? '#ffffff' : 'var(--text-primary)',
+            border: isAdminMode ? 'none' : '1px solid var(--border-color)'
+          }}
+          onClick={onToggleAdminMode}
+        >
+          {isAdminMode ? <Unlock size={18} /> : <Lock size={18} />}
+          <span>{isAdminMode ? 'Deaktivovat Admin' : 'Aktivovat Režim Správce'}</span>
+        </button>
+      </div>
+
+      {/* High-Legibility Mode Section */}
+      <div className="table-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+          <Eye size={20} style={{ color: 'var(--accent-blue)' }} />
+          <span>Zobrazení a Čitelnost (Display & Legibility)</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+              Vysoká čitelnost a obří tlačítka (High-Legibility Mode)
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Zvětší dlaždice produktů a tlačítka o 25 % (min 80px), ztuční ceny na 18pt+ a upraví košík do přehledného jednorádkového zobrazení pro dotykové obrazovky.
+            </div>
+          </div>
+
+          <label className="switch-toggle" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.65rem' }}>
+            <input
+              type="checkbox"
+              checked={config.highLegibilityMode || false}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+                const updated = { ...config, highLegibilityMode: isChecked };
+                setConfig(updated);
+                onSaveStoreConfig(updated);
+              }}
+              style={{ width: '22px', height: '22px', cursor: 'pointer' }}
+            />
+            <span style={{ fontWeight: '800', fontSize: '0.92rem', color: config.highLegibilityMode ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
+              {config.highLegibilityMode ? 'ZAPNUTO' : 'VYPNUTO'}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {/* Admin PIN Security & Management Card */}
+      <div className="table-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+          <Shield size={20} style={{ color: 'var(--accent-amber)' }} />
+          <span>Bezpečnost & Správa Admin PIN</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+              Kód Admin PIN: <span style={{ fontFamily: 'monospace', letterSpacing: '2px', color: 'var(--accent-amber)' }}>••••</span>
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Admin PIN chrání nastavení, certifikáty a možnost mazat prodeje před neoprávněným zásahem.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="clear-cart-btn"
+            style={{
+              padding: '0.5rem 1rem',
+              fontSize: '0.88rem',
+              fontWeight: '800',
+              borderColor: 'var(--accent-amber)',
+              color: 'var(--accent-amber)',
+              background: 'rgba(245, 158, 11, 0.1)'
+            }}
+            onClick={handleOpenPinChange}
+          >
+            <Lock size={15} />
+            <span>Změnit Admin PIN</span>
           </button>
         </div>
       </div>
@@ -1228,6 +1372,18 @@ export default function SettingsView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin PIN Verification & Change Modal */}
+      {pinModalState && (
+        <AdminPinModal
+          mode={pinModalState.mode}
+          storeConfig={config}
+          onSuccess={(pin) => {
+            if (pinModalState.onAuthenticated) pinModalState.onAuthenticated(pin);
+          }}
+          onClose={() => setPinModalState(null)}
+        />
       )}
     </div>
   );

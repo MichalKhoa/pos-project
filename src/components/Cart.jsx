@@ -1,6 +1,53 @@
-import React from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+
+function ClearedCartBanner({ snapshot, onRestore, onDismiss }) {
+  const [progress, setProgress] = useState(100);
+
+  useEffect(() => {
+    if (!snapshot) return;
+    setProgress(100);
+    const startTime = Date.now();
+    const duration = 8000;
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+      setProgress(remaining);
+      if (remaining <= 0) clearInterval(interval);
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [snapshot]);
+
+  const itemTotalCount = snapshot?.snapshot?.cartItems?.reduce((s, i) => s + i.quantity, 0) || 0;
+
+  return (
+    <div className="cleared-cart-restore-banner">
+      <div className="cleared-banner-title">
+        <RotateCcw size={22} className="cleared-banner-icon" />
+        <div>
+          <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent-blue)' }}>
+            Košík byl vysypán
+          </div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            {itemTotalCount} položek v paměti (8s)
+          </div>
+        </div>
+      </div>
+
+      <button type="button" className="restore-cart-btn" onClick={onRestore}>
+        <RotateCcw size={16} />
+        <span>Obnovit košík</span>
+      </button>
+
+      <div className="cleared-banner-progress-bg">
+        <div className="cleared-banner-progress-fill" style={{ width: `${progress}%` }} />
+      </div>
+    </div>
+  );
+}
 
 export default function Cart({
   cartItems,
@@ -9,7 +56,10 @@ export default function Cart({
   onClearCart,
   onOpenPayment,
   cartDiscountPercent = 0,
-  onOpenCustomDiscount
+  onOpenCustomDiscount,
+  clearedCartSnapshot = null,
+  onRestoreClearedCart = null,
+  onDismissClearedCart = null
 }) {
   const { t } = useTranslation();
   const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
@@ -110,11 +160,21 @@ export default function Cart({
       <div className="cart-items-container">
         {cartItems.length === 0 ? (
           <div className="empty-cart">
-            <div className="empty-cart-icon">
-              <ShoppingCart size={28} />
-            </div>
-            <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{t('cart.empty')}</div>
-            <div style={{ fontSize: '0.8rem' }}>{t('cart.empty_sub')}</div>
+            {clearedCartSnapshot ? (
+              <ClearedCartBanner
+                snapshot={clearedCartSnapshot}
+                onRestore={onRestoreClearedCart}
+                onDismiss={onDismissClearedCart}
+              />
+            ) : (
+              <>
+                <div className="empty-cart-icon">
+                  <ShoppingCart size={28} />
+                </div>
+                <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{t('cart.empty')}</div>
+                <div style={{ fontSize: '0.8rem' }}>{t('cart.empty_sub')}</div>
+              </>
+            )}
           </div>
         ) : (
           cartItems.map((item, index) => {
@@ -147,16 +207,16 @@ export default function Cart({
 
                     <div className="cart-stepper-box">
                       <button type="button" className="cart-stepper-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>
-                        <Minus size={10} />
+                        <Minus size={12} />
                       </button>
                       <span className="cart-stepper-num">{item.quantity}</span>
                       <button type="button" className="cart-stepper-btn" onClick={() => onUpdateQty(item.id, item.quantity + 1)}>
-                        <Plus size={10} />
+                        <Plus size={12} />
                       </button>
                     </div>
 
-                    <button type="button" className="cart-del-btn" onClick={() => onRemoveItem(item.id)} title="Smazat položku">
-                      <Trash2 size={14} />
+                    <button type="button" className="cart-del-btn touch-target-lg" onClick={() => onRemoveItem(item.id)} title="Smazat položku">
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>

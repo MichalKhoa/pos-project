@@ -73,14 +73,17 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          display: 'flex',
+          display: 'inline-flex',
           alignItems: 'center',
           gap: '0.4rem',
           background: 'var(--bg-main)',
           color: 'var(--text-primary)',
           border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-sm)',
-          padding: compact ? '0.3rem 0.5rem' : '0.45rem 0.75rem',
+          borderRadius: '999px',
+          padding: compact ? '0 0.6rem' : '0.45rem 0.75rem',
+          height: '36px',
+          boxSizing: 'border-box',
+          whiteSpace: 'nowrap',
           fontSize: '0.8rem',
           fontWeight: '800',
           cursor: 'pointer',

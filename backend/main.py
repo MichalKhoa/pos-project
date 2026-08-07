@@ -150,6 +150,19 @@ def startup_event():
     wal_thread = threading.Thread(target=_wal_checkpoint_loop, daemon=True)
     wal_thread.start()
 
+    # 3. Hourly Automated Database Backup daemon (every 60 minutes)
+    def _hourly_backup_loop():
+        from services.backup_service import create_database_backup
+        while True:
+            time.sleep(3600)
+            try:
+                create_database_backup()
+            except Exception as e:
+                logger.warning(f"Error in hourly database backup daemon: {e}")
+
+    backup_thread = threading.Thread(target=_hourly_backup_loop, daemon=True)
+    backup_thread.start()
+
     try:
         from services.email_payment_listener import start_email_listener_from_env
         start_email_listener_from_env()

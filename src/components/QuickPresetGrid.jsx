@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X, ChevronLeft, ChevronRight, FolderPlus } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
@@ -19,7 +19,8 @@ export default function QuickPresetGrid({
   onDeletePreset,
   onReorderPresets,
   keypadAmount = '',
-  onClearKeypadAmount
+  onClearKeypadAmount,
+  isAdminMode = false
 }) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -28,6 +29,33 @@ export default function QuickPresetGrid({
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
+
+  // Category Bar Scroll State
+  const categoryBarRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkCategoryScroll = () => {
+    if (categoryBarRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = categoryBarRef.current;
+      setCanScrollLeft(scrollLeft > 2);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+    }
+  };
+
+  useEffect(() => {
+    checkCategoryScroll();
+    window.addEventListener('resize', checkCategoryScroll);
+    return () => window.removeEventListener('resize', checkCategoryScroll);
+  }, [categories]);
+
+  const handleScrollCategories = (direction) => {
+    if (categoryBarRef.current) {
+      const scrollAmount = direction === 'left' ? -180 : 180;
+      categoryBarRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      setTimeout(checkCategoryScroll, 300);
+    }
+  };
 
   // Open Price Prompt Modal State
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
@@ -229,8 +257,8 @@ export default function QuickPresetGrid({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {/* Quick Product Search Bar */}
-          <div className="keypad-input-container" style={{ width: '180px', padding: '0.2rem 0.5rem', height: '32px' }}>
-            <Search size={14} style={{ color: 'var(--text-muted)', marginRight: '4px' }} />
+          <div className="keypad-input-container" style={{ minWidth: '160px', flex: '1 1 180px', maxWidth: '240px', padding: '0 0.6rem', height: '36px', boxSizing: 'border-box' }}>
+            <Search size={14} style={{ color: 'var(--text-muted)', marginRight: '6px', flexShrink: 0 }} />
             <input
               type="text"
               className="keypad-label-input"
@@ -277,43 +305,85 @@ export default function QuickPresetGrid({
             </div>
           )}
 
-          <button
-            className={`nav-tab ${isEditMode ? 'active' : ''}`}
-            style={{
-              padding: '0.35rem 0.75rem',
-              fontSize: '0.8rem',
-              background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
-              color: isEditMode ? '#000000' : 'var(--text-secondary)',
-              fontWeight: '700'
-            }}
-            onClick={() => setIsEditMode(!isEditMode)}
-          >
-            {isEditMode ? <Check size={14} /> : <Settings2 size={14} />}
-            <span>{isEditMode ? 'OK' : t('presets.edit')}</span>
-          </button>
+          {/* Admin-Only Category & Catalog Edit Action Buttons */}
+          {isAdminMode && (
+            <>
+              <button
+                type="button"
+                className="nav-tab"
+                style={{
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.8rem',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: 'var(--accent-blue)',
+                  fontWeight: '700',
+                  gap: '0.35rem'
+                }}
+                onClick={() => setIsCategoryModalOpen(true)}
+                title={t('presets.manage_categories')}
+              >
+                <FolderPlus size={14} />
+                <span>{t('presets.add_category')}</span>
+              </button>
+
+              <button
+                className={`nav-tab ${isEditMode ? 'active' : ''}`}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  fontSize: '0.8rem',
+                  background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
+                  color: isEditMode ? '#000000' : 'var(--text-secondary)',
+                  fontWeight: '700'
+                }}
+                onClick={() => setIsEditMode(!isEditMode)}
+              >
+                {isEditMode ? <Check size={14} /> : <Settings2 size={14} />}
+                <span>{isEditMode ? 'OK' : t('presets.edit')}</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="category-bar">
-        {categories.map(cat => (
+      {/* Scrollable Category Filter Bar */}
+      <div className="category-bar-wrapper">
+        {canScrollLeft && (
           <button
-            key={cat.id}
-            className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
-            onClick={() => setActiveCategory(cat.id)}
+            type="button"
+            className="category-scroll-btn scroll-btn-left"
+            onClick={() => handleScrollCategories('left')}
+            title="Posunout kategorie vlevo"
           >
-            {cat.id === 'all' ? t('presets.all') : cat.name}
+            <ChevronLeft size={16} />
           </button>
-        ))}
+        )}
 
-        <button
-          className="category-chip"
-          style={{ borderStyle: 'dashed', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          onClick={() => setIsCategoryModalOpen(true)}
-          title={t('presets.manage_categories')}
+        <div
+          ref={categoryBarRef}
+          className="category-bar"
+          onScroll={checkCategoryScroll}
         >
-          <Settings2 size={14} />
-          <span>{t('presets.add_category')}</span>
-        </button>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat.id)}
+            >
+              {cat.id === 'all' ? t('presets.all') : cat.name}
+            </button>
+          ))}
+        </div>
+
+        {canScrollRight && (
+          <button
+            type="button"
+            className="category-scroll-btn scroll-btn-right"
+            onClick={() => handleScrollCategories('right')}
+            title="Posunout kategorie vpravo"
+          >
+            <ChevronRight size={16} />
+          </button>
+        )}
       </div>
 
       {isEditMode && (

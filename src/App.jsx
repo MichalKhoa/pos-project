@@ -3,6 +3,8 @@ import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
 import Cart from './components/Cart';
+import ToastUndo from './components/ToastUndo';
+import { useCart } from './hooks/useCart';
 import PaymentModal from './components/PaymentModal';
 import ReceiptModal from './components/ReceiptModal';
 import SalesHistoryView from './components/SalesHistoryView';
@@ -11,6 +13,7 @@ import InventoryView from './components/InventoryView';
 import SettingsView from './components/SettingsView';
 import PendingSyncModal from './components/PendingSyncModal';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
+import CheckoutFlashBanner from './components/CheckoutFlashBanner';
 import ShutdownModal from './components/ShutdownModal';
 import RefundModal from './components/RefundModal';
 import CalendarModal from './components/CalendarModal';
@@ -32,6 +35,7 @@ export default function App() {
   const [isSyncingQueue, setIsSyncingQueue] = useState(false);
   const [snoozedUntil, setSnoozedUntil] = useState(0);
   const [syncNotification, setSyncNotification] = useState(null);
+  const [flashBanner, setFlashBanner] = useState(null);
   const [isAppLocked, setIsAppLocked] = useState(false);
   const [mobilePosTab, setMobilePosTab] = useState('keypad');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
@@ -76,6 +80,12 @@ export default function App() {
     }
   });
 
+  // Sync high-legibility density mode to DOM root attribute
+  useEffect(() => {
+    const isHigh = !!storeConfig?.highLegibilityMode;
+    document.documentElement.setAttribute('data-density', isHigh ? 'high' : 'normal');
+  }, [storeConfig?.highLegibilityMode]);
+
   const [salesHistory, setSalesHistory] = useState(() => {
     try {
       const saved = localStorage.getItem('himmel_pos_sales');
@@ -107,11 +117,28 @@ export default function App() {
     ];
   });
 
-  const [cartItems, setCartItems] = useState([]);
+  const {
+    cartItems,
+    setCartItems,
+    cartDiscountPercent,
+    setCartDiscountPercent,
+    itemMultiplier,
+    setItemMultiplier,
+    addToCart,
+    updateQuantity: handleUpdateQty,
+    updateItemDiscount: handleUpdateItemDiscount,
+    removeItem: handleRemoveItem,
+    clearCart: handleClearCart,
+    undoToast,
+    undoLastAction,
+    dismissUndoToast,
+    clearedCartSnapshot,
+    restoreClearedCart,
+    dismissClearedCartSnapshot
+  } = useCart();
+
   const [keypadAmount, setKeypadAmount] = useState('');
-  const [itemMultiplier, setItemMultiplier] = useState(1);
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [cartDiscountPercent, setCartDiscountPercent] = useState(0);
   const [paymentModalMethod, setPaymentModalMethod] = useState(null); // 'cash' | 'card' | 'split' | null
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
   const [refundTargetSale, setRefundTargetSale] = useState(null);
@@ -452,30 +479,17 @@ export default function App() {
     const itemPrice = parseFloat(item.price);
     const qtyToAdd = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
 
-    setCartItems(prevItems => {
-      const existingIdx = prevItems.findIndex(i =>
-        i.id === item.id &&
-        Math.abs(parseFloat(i.price) - itemPrice) < 0.001 &&
-        parseInt(i.vat ?? 21, 10) === itemVat &&
-        (i.discountPercent || 0) === (item.discountPercent || 0)
-      );
-
-      if (existingIdx > -1) {
-        const updated = [...prevItems];
-        updated[existingIdx] = {
-          ...updated[existingIdx],
-          quantity: updated[existingIdx].quantity + qtyToAdd
-        };
-        return updated;
-      } else {
-        return [...prevItems, { ...item, price: itemPrice, vat: itemVat, quantity: qtyToAdd, discountPercent: item.discountPercent || 0 }];
-      }
-    });
+    addToCart({
+      ...item,
+      price: itemPrice,
+      vat: itemVat,
+      discountPercent: item.discountPercent || 0
+    }, qtyToAdd);
 
     if (itemMultiplier !== 1) {
       setItemMultiplier(1);
     }
-  }, [itemMultiplier]);
+  }, [addToCart, itemMultiplier, setItemMultiplier]);
 
   // Global Numpad & Physical Keyboard Listener for POS Register
   useEffect(() => {
@@ -603,19 +617,6 @@ export default function App() {
 
   const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
 
-  const handleUpdateQty = (itemId, newQty) => {
-    if (newQty <= 0) {
-      handleRemoveItem(itemId);
-      return;
-    }
-    const clampedQty = Math.min(9999, newQty);
-    setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, quantity: clampedQty } : item));
-  };
-
-  const handleUpdateItemDiscount = (itemId, discountPercent) => {
-    setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, discountPercent } : item));
-  };
-
   const handleOpenCustomDiscountModal = (item = null) => {
     setDiscountModalSelectedItem(item);
     setIsDiscountModalOpen(true);
@@ -648,15 +649,6 @@ export default function App() {
         setCartDiscountPercent(Math.min(100, Math.round(pct * 10) / 10));
       }
     }
-  };
-
-  const handleRemoveItem = (itemId) => {
-    setCartItems(prev => prev.filter(item => item.id !== itemId));
-  };
-
-  const handleClearCart = () => {
-    setCartItems([]);
-    setCartDiscountPercent(0);
   };
 
   // Preset operations
@@ -779,6 +771,12 @@ export default function App() {
     setPaymentModalMethod(null);
     setCartItems([]);
     setCartDiscountPercent(0);
+
+    setFlashBanner({
+      type: 'SUCCESS',
+      message: 'Zaplaceno!',
+      amount: finalGrandTotal
+    });
   };
 
   const handleResetData = () => {
@@ -847,6 +845,7 @@ export default function App() {
                   onReorderPresets={handleReorderPresets}
                   keypadAmount={keypadAmount}
                   onClearKeypadAmount={() => setKeypadAmount('')}
+                  isAdminMode={isAdminMode}
                 />
               </div>
 
@@ -861,6 +860,9 @@ export default function App() {
                   cartDiscountPercent={cartDiscountPercent}
                   onSetCartDiscountPercent={setCartDiscountPercent}
                   onOpenCustomDiscount={handleOpenCustomDiscountModal}
+                  clearedCartSnapshot={clearedCartSnapshot}
+                  onRestoreClearedCart={restoreClearedCart}
+                  onDismissClearedCart={dismissClearedCartSnapshot}
                 />
               </div>
             </div>
@@ -939,6 +941,8 @@ export default function App() {
             presets={presets}
             onResetData={handleResetData}
             onNavigateToPresets={() => setActiveTab('presets')}
+            isAdminMode={isAdminMode}
+            onToggleAdminMode={handleToggleAdminMode}
           />
         )}
       </main>
@@ -1029,6 +1033,18 @@ export default function App() {
           }}
         />
       )}
+      {/* Toast Undo Notification Overlay */}
+      <ToastUndo
+        undoToast={undoToast}
+        onUndo={undoLastAction}
+        onDismiss={dismissUndoToast}
+      />
+
+      {/* Visual Scan & Checkout Flash Banner */}
+      <CheckoutFlashBanner
+        flashBanner={flashBanner}
+        onDismiss={() => setFlashBanner(null)}
+      />
     </div>
   );
 }

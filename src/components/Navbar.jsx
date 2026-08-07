@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, Unlock, AlertTriangle, Power, Calendar, Sun, Moon, Package } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
+import { soundFx } from '../utils/audio';
 
 export default function Navbar({
   activeTab,
   setActiveTab,
   storeConfig,
-  isAdminMode,
-  onToggleAdminMode,
   pendingCount = 0,
   onOpenSyncModal,
   onOpenShutdownModal,
@@ -21,8 +20,21 @@ export default function Navbar({
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('pos_theme') || 'light';
   });
+  const [soundEnabled, setSoundEnabled] = useState(() => soundFx.isSoundEnabled());
+  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
   const [latency, setLatency] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
+
+  const handleToggleSound = () => {
+    const next = !soundEnabled;
+    soundFx.setSoundEnabled(next);
+    setSoundEnabled(next);
+  };
+
+  const handleNavTabSelect = (tabKey) => {
+    setActiveTab(tabKey);
+    setIsNavDrawerOpen(false);
+  };
 
   // Apply theme attribute to html root element
   useEffect(() => {
@@ -112,106 +124,170 @@ export default function Navbar({
         </button>
       </nav>
 
-      <div className="nav-meta">
-        {/* Custom SVG Language Switcher Dropdown */}
-        <LanguageSelector compact />
-
-        {/* Combined EET 2.0 & Online Latency Status Pill */}
-        <div
-          className="status-badge"
-          style={{ gap: '0.4rem', opacity: storeConfig?.eetEnabled === false ? 0.85 : 1 }}
-          title={
-            storeConfig?.eetEnabled === false
-              ? 'EET evidování je v nastavení vypnuto'
-              : isOnline ? `EET 2.0 Online • Odezva backendu: ${latency !== null ? latency : '--'} ms` : 'EET Offline'
-          }
-        >
-          <span className={storeConfig?.eetEnabled === false ? '' : isOnline ? 'status-dot' : 'status-dot-offline'} style={{ background: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)', borderRadius: '50%', width: '8px', height: '8px' }}></span>
-          <ShieldCheck size={14} style={{ color: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
-          <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>
-            {storeConfig?.eetEnabled === false ? (t('nav.eet_off') || 'EET Vypnuto') : `EET 2.0 • ${isOnline ? `${latency !== null ? latency : 12}ms` : t('nav.offline')}`}
-          </span>
-        </div>
-
-        {/* Compact Theme Mode Switcher Icon Button */}
+      <div className={`nav-meta ${isNavDrawerOpen ? 'drawer-open' : ''}`}>
+        {/* Hamburger Drawer Toggle Button (Visible on screens < 900px) */}
         <button
           type="button"
-          className="status-badge"
-          style={{ cursor: 'pointer', padding: '0.4rem 0.6rem', background: 'var(--bg-main)' }}
-          onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
-          title={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
+          className="nav-hamburger-btn"
+          onClick={() => setIsNavDrawerOpen(!isNavDrawerOpen)}
+          title="Nabídka stavu a rychlých nástrojů"
         >
-          {theme === 'light' ? <Moon size={15} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={15} style={{ color: 'var(--accent-amber)' }} />}
+          {isNavDrawerOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        {pendingCount > 0 && (
-          <button
-            className="status-badge badge-pending-sync pulse-badge"
-            onClick={onOpenSyncModal}
-            title="Klikněte pro odeslání neodeslaných účtenek na EET"
-          >
-            <AlertTriangle size={14} />
-            <span>{pendingCount} {t('nav.not_sent')}</span>
-          </button>
-        )}
+        {/* Status badges container (desktop flex row / mobile slide drawer) */}
+        <div className={`nav-status-group ${isNavDrawerOpen ? 'show-drawer' : ''}`}>
+          {/* Mobile View Drawer Nav Section (Visible inside mobile drawer) */}
+          <div className="drawer-nav-section">
+            <div className="drawer-section-title">{t('nav.section_title') || 'Navigace'}</div>
+            <div className="drawer-nav-grid">
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'register' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('register')}
+              >
+                <ShoppingBag size={18} />
+                <span>{t('nav.register')}</span>
+              </button>
 
-        <button
-          className="status-badge"
-          style={{
-            cursor: 'pointer',
-            background: isAdminMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.05)',
-            color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-muted)',
-            borderColor: isAdminMode ? 'var(--accent-amber)' : 'var(--border-color)',
-            transition: 'all 0.2s ease'
-          }}
-          onClick={onToggleAdminMode}
-          title={isAdminMode ? 'Režim správce je AKTIVNÍ' : 'Klikněte pro aktivaci Admin režimu'}
-        >
-          {isAdminMode ? <Unlock size={14} /> : <Lock size={14} />}
-          <span>{isAdminMode ? t('nav.admin_active') : t('nav.admin')}</span>
-        </button>
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('inventory')}
+              >
+                <Package size={18} />
+                <span>{t('nav.inventory') || 'Sklad'}</span>
+              </button>
 
-        {/* Streamlined Quick Lock Icon Button */}
-        <button
-          type="button"
-          className="status-badge"
-          style={{ cursor: 'pointer', padding: '0.4rem 0.6rem', background: 'var(--bg-main)' }}
-          onClick={onLockApp}
-          title="Zamknout pokladnu (Quick Lock)"
-        >
-          <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
-        </button>
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'presets' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('presets')}
+              >
+                <Tag size={18} />
+                <span>{t('nav.presets')}</span>
+              </button>
 
-        <button
-          className="status-badge btn-shutdown-badge"
-          onClick={onOpenShutdownModal}
-          title="Ukončit směnu a vypnout pokladní systém"
-          style={{ cursor: 'pointer' }}
-        >
-          <Power size={14} />
-          <span>{t('nav.shutdown')}</span>
-        </button>
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('history')}
+              >
+                <History size={18} />
+                <span>{t('nav.history')}</span>
+              </button>
 
-        <button
-          type="button"
-          className="time-display-btn"
-          onClick={onOpenCalendarModal}
-          title="Klikněte pro otevření kalendáře a přehledu tržeb"
-        >
-          <div className="time-badge-icon">
-            <Calendar size={13} />
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('settings')}
+              >
+                <Settings size={18} />
+                <span>{t('nav.settings')}</span>
+              </button>
+            </div>
           </div>
-          <span style={{ fontWeight: '700', textTransform: 'capitalize', letterSpacing: '-0.01em' }}>
-            {currentTime.toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric' })}
-          </span>
-          <div className="time-badge-divider" />
-          <div className="time-badge-clock">
-            <Clock size={13} style={{ color: 'var(--accent-emerald)' }} />
-            <span>
-              {currentTime.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+
+          {/* Custom SVG Language Switcher Dropdown */}
+          <LanguageSelector compact />
+
+          {/* Combined EET 2.0 & Online Latency Status Pill */}
+          <div
+            className="status-badge nav-badge-eet"
+            style={{ gap: '0.4rem', opacity: storeConfig?.eetEnabled === false ? 0.85 : 1 }}
+            title={
+              storeConfig?.eetEnabled === false
+                ? 'EET evidování je v nastavení vypnuto'
+                : isOnline ? `EET 2.0 Online • Odezva backendu: ${latency !== null ? latency : '--'} ms` : 'EET Offline'
+            }
+          >
+            <span className={storeConfig?.eetEnabled === false ? '' : isOnline ? 'status-dot' : 'status-dot-offline'} style={{ background: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)', borderRadius: '50%', width: '8px', height: '8px' }}></span>
+            <ShieldCheck size={14} style={{ color: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
+            <span className="eet-status-text">
+              {storeConfig?.eetEnabled === false ? (t('nav.eet_off') || 'EET Vypnuto') : `EET 2.0 • ${isOnline ? `${latency !== null ? latency : 12}ms` : t('nav.offline')}`}
             </span>
           </div>
-        </button>
+
+          {/* Compact Theme Mode Switcher Icon Button */}
+          <button
+            type="button"
+            className="status-badge nav-badge-theme"
+            style={{ cursor: 'pointer', background: 'var(--bg-main)' }}
+            onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+            title={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
+          >
+            {theme === 'light' ? <Moon size={15} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={15} style={{ color: 'var(--accent-amber)' }} />}
+          </button>
+
+          {/* Sound Effects Volume Mute Toggle */}
+          <button
+            type="button"
+            className="status-badge nav-badge-sound"
+            style={{ cursor: 'pointer', background: 'var(--bg-main)' }}
+            onClick={handleToggleSound}
+            title={soundEnabled ? 'Zvuky jsou zapnuty (Klikněte pro ztišení)' : 'Zvuky jsou vypnuty (Klikněte pro zapnutí)'}
+          >
+            {soundEnabled ? (
+              <Volume2 size={15} style={{ color: 'var(--accent-blue)' }} />
+            ) : (
+              <VolumeX size={15} style={{ color: 'var(--text-muted)' }} />
+            )}
+          </button>
+
+          {pendingCount > 0 && (
+            <button
+              className="status-badge badge-pending-sync pulse-badge nav-badge-sync"
+              onClick={onOpenSyncModal}
+              title="Klikněte pro odeslání neodeslaných účtenek na EET"
+            >
+              <AlertTriangle size={14} />
+              <span>{pendingCount} {t('nav.not_sent')}</span>
+            </button>
+          )}
+
+          {/* Streamlined Quick Lock Icon Button */}
+          <button
+            type="button"
+            className="status-badge nav-badge-lock"
+            style={{ cursor: 'pointer', background: 'var(--bg-main)' }}
+            onClick={onLockApp}
+            title="Zamknout pokladnu (Quick Lock)"
+          >
+            <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
+          </button>
+
+          {/* Icon-Only Turn Off / Shutdown Button */}
+          <button
+            type="button"
+            className="status-badge nav-badge-shutdown"
+            onClick={onOpenShutdownModal}
+            title={t('nav.shutdown') || 'Ukončit směnu a vypnout pokladní systém'}
+            style={{ cursor: 'pointer', background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.25)', padding: '0.4rem 0.65rem' }}
+          >
+            <Power size={15} style={{ color: 'var(--accent-rose)' }} />
+          </button>
+
+          <button
+            type="button"
+            className="time-display-btn"
+            onClick={onOpenCalendarModal}
+            title="Klikněte pro otevření kalendáře a přehledu tržeb"
+          >
+            <div className="time-badge-icon">
+              <Calendar size={13} />
+            </div>
+            <span className="time-badge-date" style={{ fontWeight: '700', textTransform: 'capitalize', letterSpacing: '-0.01em' }}>
+              {currentTime.toLocaleDateString(t('locale') || 'cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' })}
+            </span>
+            <div className="time-badge-divider" />
+            <div className="time-badge-clock">
+              <Clock size={13} style={{ color: 'var(--accent-emerald)' }} />
+              <span>
+                {currentTime.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </button>
+        </div>
       </div>
     </header>
   );

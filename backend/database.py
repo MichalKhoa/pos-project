@@ -85,6 +85,7 @@ def init_db_schema():
         ("store_config", "printer_paper_width", "VARCHAR DEFAULT '80'"),
         ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
         ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),
+        ("store_config", "cart_position", "VARCHAR DEFAULT 'left'"),
         ("sales", "cart_discount_percent", "FLOAT DEFAULT 0"),
         ("sales", "split_details", "VARCHAR DEFAULT ''"),
         ("sales", "eic_popl", "VARCHAR DEFAULT ''"),
