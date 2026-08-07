@@ -211,26 +211,24 @@ export default function Navbar({
           {/* Compact Theme Mode Switcher Icon Button */}
           <button
             type="button"
-            className="status-badge nav-badge-theme"
-            style={{ cursor: 'pointer', background: 'var(--bg-main)' }}
+            className="nav-action-btn nav-badge-theme"
             onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
             title={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
           >
-            {theme === 'light' ? <Moon size={15} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={15} style={{ color: 'var(--accent-amber)' }} />}
+            {theme === 'light' ? <Moon size={16} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={16} style={{ color: 'var(--accent-amber)' }} />}
           </button>
 
           {/* Sound Effects Volume Mute Toggle */}
           <button
             type="button"
-            className="status-badge nav-badge-sound"
-            style={{ cursor: 'pointer', background: 'var(--bg-main)' }}
+            className="nav-action-btn nav-badge-sound"
             onClick={handleToggleSound}
             title={soundEnabled ? 'Zvuky jsou zapnuty (Klikněte pro ztišení)' : 'Zvuky jsou vypnuty (Klikněte pro zapnutí)'}
           >
             {soundEnabled ? (
-              <Volume2 size={15} style={{ color: 'var(--accent-blue)' }} />
+              <Volume2 size={16} style={{ color: 'var(--accent-blue)' }} />
             ) : (
-              <VolumeX size={15} style={{ color: 'var(--text-muted)' }} />
+              <VolumeX size={16} style={{ color: 'var(--text-muted)' }} />
             )}
           </button>
 
@@ -248,23 +246,21 @@ export default function Navbar({
           {/* Streamlined Quick Lock Icon Button */}
           <button
             type="button"
-            className="status-badge nav-badge-lock"
-            style={{ cursor: 'pointer', background: 'var(--bg-main)' }}
+            className="nav-action-btn btn-lock nav-badge-lock"
             onClick={onLockApp}
             title="Zamknout pokladnu (Quick Lock)"
           >
-            <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
+            <Lock size={16} style={{ color: 'var(--accent-amber)' }} />
           </button>
 
           {/* Icon-Only Turn Off / Shutdown Button */}
           <button
             type="button"
-            className="status-badge nav-badge-shutdown"
+            className="nav-action-btn btn-shutdown nav-badge-shutdown"
             onClick={onOpenShutdownModal}
             title={t('nav.shutdown') || 'Ukončit směnu a vypnout pokladní systém'}
-            style={{ cursor: 'pointer', background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.25)', padding: '0.4rem 0.65rem' }}
           >
-            <Power size={15} style={{ color: 'var(--accent-rose)' }} />
+            <Power size={16} style={{ color: 'var(--accent-rose)' }} />
           </button>
 
           <button

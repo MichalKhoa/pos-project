@@ -19,7 +19,9 @@ import {
   Wifi,
   Lock,
   Unlock,
-  Eye
+  Eye,
+  Settings,
+  HardDrive
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -56,6 +58,8 @@ export default function SettingsView({
   onToggleAdminMode
 }) {
   const { t, language, setLanguage } = useTranslation();
+  const [activeSubTab, setActiveSubTab] = useState('store');
+
   const [config, setConfig] = useState({
     id_provozovny: '11',
     id_pokl: '1',
@@ -92,6 +96,7 @@ export default function SettingsView({
   const [updateData, setUpdateData] = useState(null);
   const [applyLoading, setApplyLoading] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateResult, setUpdateResult] = useState(null);
 
   // Upload Form State
   const [selectedFile, setSelectedFile] = useState(null);
@@ -105,6 +110,7 @@ export default function SettingsView({
 
   // Queue Processing State
   const [queueLoading, setQueueLoading] = useState(false);
+  const [queueResult, setQueueResult] = useState(null);
 
   // ČSOB Terminal Ingenico Move 3500 State
   const [termEnabled, setTermEnabled] = useState(false);
@@ -209,7 +215,7 @@ export default function SettingsView({
     loadBackendInfo();
   }, []);
 
-  const [pinModalState, setPinModalState] = useState(null); // { mode, onAuthenticated }
+  const [pinModalState, setPinModalState] = useState(null);
 
   const requireAdminPin = (callback) => {
     if (isAdminMode) {
@@ -390,9 +396,10 @@ export default function SettingsView({
 
   return (
     <div className="full-view-container">
-      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Top Header & Connection Badge */}
+      <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div className="section-title" style={{ fontSize: '1.4rem' }}>
-          <Store size={24} style={{ color: 'var(--accent-purple)' }} />
+          <Settings size={24} style={{ color: 'var(--accent-purple)' }} />
           <span>{t('settings.title')}</span>
         </div>
 
@@ -419,137 +426,121 @@ export default function SettingsView({
         </div>
       </div>
 
-      {/* Admin Mode Toggle Card */}
-      <div className="table-card" style={{ padding: '1.25rem 1.5rem', background: isAdminMode ? 'rgba(245, 158, 11, 0.08)' : 'var(--bg-card)', borderColor: isAdminMode ? 'var(--accent-amber)' : 'var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
-            {isAdminMode ? <Unlock size={20} style={{ color: 'var(--accent-amber)' }} /> : <Lock size={20} style={{ color: 'var(--text-muted)' }} />}
-            <span>{t('nav.admin') || 'Režim Správce Pokladny'}</span>
-            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: isAdminMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.06)', color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-muted)', fontWeight: '700' }}>
-              {isAdminMode ? (t('nav.admin_active') || 'AKTIVNÍ') : 'VYPNUTO'}
-            </span>
-          </div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            {isAdminMode ? 'Režim správce je zapnutý. Máte přístup k mazání prodejů a pokročilým možnostem.' : 'Zapnutím správcovského režimu získáte přístup ke mazání testovacích prodejů a pokročilým funkcím.'}
-          </div>
-        </div>
+      {/* Clean Subtab Category Selector */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', overflowX: 'auto', paddingBottom: '0.25rem', borderBottom: '1px solid var(--border-color)' }}>
+        <button
+          type="button"
+          className={`nav-tab ${activeSubTab === 'store' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('store')}
+          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Store size={18} />
+          <span>Prodejna & Rozvržení</span>
+        </button>
 
         <button
           type="button"
-          className="pay-btn"
-          style={{
-            height: '42px',
-            padding: '0 1.25rem',
-            fontSize: '0.9rem',
-            background: isAdminMode ? 'var(--accent-amber)' : 'var(--bg-main)',
-            color: isAdminMode ? '#ffffff' : 'var(--text-primary)',
-            border: isAdminMode ? 'none' : '1px solid var(--border-color)'
-          }}
-          onClick={onToggleAdminMode}
+          className={`nav-tab ${activeSubTab === 'hardware' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('hardware')}
+          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          {isAdminMode ? <Unlock size={18} /> : <Lock size={18} />}
-          <span>{isAdminMode ? 'Deaktivovat Admin' : 'Aktivovat Režim Správce'}</span>
+          <Printer size={18} />
+          <span>Tiskárna & Periferie</span>
         </button>
-      </div>
-
-      {/* High-Legibility Mode Section */}
-      <div className="table-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
-          <Eye size={20} style={{ color: 'var(--accent-blue)' }} />
-          <span>Zobrazení a Čitelnost (Display & Legibility)</span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-              Vysoká čitelnost a obří tlačítka (High-Legibility Mode)
-            </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Zvětší dlaždice produktů a tlačítka o 25 % (min 80px), ztuční ceny na 18pt+ a upraví košík do přehledného jednorádkového zobrazení pro dotykové obrazovky.
-            </div>
-          </div>
-
-          <label className="switch-toggle" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.65rem' }}>
-            <input
-              type="checkbox"
-              checked={config.highLegibilityMode || false}
-              onChange={(e) => {
-                const isChecked = e.target.checked;
-                const updated = { ...config, highLegibilityMode: isChecked };
-                setConfig(updated);
-                onSaveStoreConfig(updated);
-              }}
-              style={{ width: '22px', height: '22px', cursor: 'pointer' }}
-            />
-            <span style={{ fontWeight: '800', fontSize: '0.92rem', color: config.highLegibilityMode ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
-              {config.highLegibilityMode ? 'ZAPNUTO' : 'VYPNUTO'}
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {/* Admin PIN Security & Management Card */}
-      <div className="table-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
-          <Shield size={20} style={{ color: 'var(--accent-amber)' }} />
-          <span>Bezpečnost & Správa Admin PIN</span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-              Kód Admin PIN: <span style={{ fontFamily: 'monospace', letterSpacing: '2px', color: 'var(--accent-amber)' }}>••••</span>
-            </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Admin PIN chrání nastavení, certifikáty a možnost mazat prodeje před neoprávněným zásahem.
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="clear-cart-btn"
-            style={{
-              padding: '0.5rem 1rem',
-              fontSize: '0.88rem',
-              fontWeight: '800',
-              borderColor: 'var(--accent-amber)',
-              color: 'var(--accent-amber)',
-              background: 'rgba(245, 158, 11, 0.1)'
-            }}
-            onClick={handleOpenPinChange}
-          >
-            <Lock size={15} />
-            <span>Změnit Admin PIN</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Preset Catalog Shortcut Banner */}
-      <div className="table-card" style={{ padding: '1.25rem 1.5rem', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.12))', borderColor: 'rgba(59, 130, 246, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-            <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-            <span>{t('presets.title')}</span>
-          </div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            {t('settings.catalog_desc', { count: presets.length })}
-          </div>
-        </div>
 
         <button
-          className="pay-btn pay-btn-card"
-          style={{ height: '42px', padding: '0 1.25rem', fontSize: '0.85rem' }}
-          onClick={onNavigateToPresets}
+          type="button"
+          className={`nav-tab ${activeSubTab === 'terminal' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('terminal')}
+          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          <span>{t('settings.open_catalog')}</span>
-          <ArrowRight size={16} />
+          <CreditCard size={18} />
+          <span>Platební Terminál</span>
+        </button>
+
+        <button
+          type="button"
+          className={`nav-tab ${activeSubTab === 'security' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('security')}
+          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Shield size={18} />
+          <span>Bezpečnost & PIN</span>
+        </button>
+
+        <button
+          type="button"
+          className={`nav-tab ${activeSubTab === 'system' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('system')}
+          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <HardDrive size={18} />
+          <span>Zálohy & Systém</span>
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
-        {/* Left Column Stack: Store Config + CSOB Terminal Config */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Store Config Form */}
+      {/* SUBTAB 1: STORE & LAYOUT */}
+      {activeSubTab === 'store' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* High-Legibility Mode Section */}
+          <div className="table-card" style={{ padding: '1.25rem 1.5rem' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+              <Eye size={20} style={{ color: 'var(--accent-blue)' }} />
+              <span>Zobrazení a Čitelnost (Display & Legibility)</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                  Vysoká čitelnost a obří tlačítka (High-Legibility Mode)
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Zvětší dlaždice produktů a tlačítka o 25 % (min 80px), ztuční ceny na 18pt+ a upraví košík do přehledného jednorádkového zobrazení pro dotykové obrazovky.
+                </div>
+              </div>
+
+              <label className="switch-toggle" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.65rem' }}>
+                <input
+                  type="checkbox"
+                  checked={config.highLegibilityMode || false}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    const updated = { ...config, highLegibilityMode: isChecked };
+                    setConfig(updated);
+                    onSaveStoreConfig(updated);
+                  }}
+                  style={{ width: '22px', height: '22px', cursor: 'pointer' }}
+                />
+                <span style={{ fontWeight: '800', fontSize: '0.92rem', color: config.highLegibilityMode ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
+                  {config.highLegibilityMode ? 'ZAPNUTO' : 'VYPNUTO'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Preset Catalog Shortcut Banner */}
+          <div className="table-card" style={{ padding: '1.25rem 1.5rem', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.12))', borderColor: 'rgba(59, 130, 246, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
+                <span>{t('presets.title')}</span>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                {t('settings.catalog_desc', { count: presets.length })}
+              </div>
+            </div>
+
+            <button
+              className="pay-btn pay-btn-card"
+              style={{ height: '42px', padding: '0 1.25rem', fontSize: '0.85rem' }}
+              onClick={onNavigateToPresets}
+            >
+              <span>{t('settings.open_catalog')}</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+
+          {/* Store Info Form */}
           <div className="table-card" style={{ padding: '1.5rem' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Store size={18} style={{ color: 'var(--accent-blue)' }} />
@@ -632,35 +623,6 @@ export default function SettingsView({
                 />
               </div>
 
-              {/* EET Register Parameters */}
-              <div style={{ display: 'flex', gap: '0.75rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                    {t('settings.unit_no')}
-                  </label>
-                  <input
-                    type="text"
-                    value={config.id_provozovny || '11'}
-                    onChange={e => setConfig({ ...config, id_provozovny: e.target.value })}
-                    style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
-                    required
-                  />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                    {t('settings.register_no')}
-                  </label>
-                  <input
-                    type="text"
-                    value={config.id_pokl || '1'}
-                    onChange={e => setConfig({ ...config, id_pokl: e.target.value })}
-                    style={{ width: '100%', padding: '0.45rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
-                    required
-                  />
-                </div>
-              </div>
-
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
@@ -687,20 +649,6 @@ export default function SettingsView({
                     style={{ width: '100%' }}
                   />
                 </div>
-
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                    {t('settings.environment')}
-                  </label>
-                  <select
-                    value={config.eet_environment || 'playground'}
-                    onChange={e => setConfig({ ...config, eet_environment: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--accent-purple)', fontWeight: '800' }}
-                  >
-                    <option value="playground">Playground</option>
-                    <option value="production">Production</option>
-                  </select>
-                </div>
               </div>
 
               <div>
@@ -717,51 +665,30 @@ export default function SettingsView({
                 </select>
               </div>
 
-              {/* Cashier Lock & Security Settings */}
-              <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Shield size={16} style={{ color: 'var(--accent-amber)' }} />
-                  <span>Zabezpečení a Uzamčení Pokladny</span>
-                </label>
+              <button type="submit" className="pay-btn pay-btn-card" style={{ height: '46px', marginTop: '0.5rem' }}>
+                <Save size={18} />
+                <span>{saveSuccess ? t('common.saved') : t('settings.save_store')}</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                      PIN kód pokladny (4–8 číslic)
-                    </label>
-                    <input
-                      type="password"
-                      maxLength={8}
-                      value={config.cashierPin || '1234'}
-                      onChange={e => setConfig({ ...config, cashierPin: e.target.value.replace(/\D/g, '').slice(0, 8) })}
-                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '0.2em' }}
-                    />
-                  </div>
+      {/* SUBTAB 2: HARDWARE & PRINTER */}
+      {activeSubTab === 'hardware' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Printer size={20} style={{ color: 'var(--accent-blue)' }} />
+              <span>Nastavení Tiskárny Účtenek (ESC/POS)</span>
+            </h3>
 
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                      Automatické zamknutí
-                    </label>
-                    <select
-                      value={config.autoLockMinutes !== undefined ? config.autoLockMinutes : 15}
-                      onChange={e => setConfig({ ...config, autoLockMinutes: parseInt(e.target.value, 10) })}
-                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '700' }}
-                    >
-                      <option value={15}>Po 15 minutách neaktivity (Doporučeno)</option>
-                      <option value={5}>Po 5 minutách neaktivity</option>
-                      <option value={30}>Po 30 minutách neaktivity</option>
-                      <option value={0}>Vypnuto (Pouze ruční zamknutí)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Thermal Receipt Printer Device Selector & Width Calibration */}
-              <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                   <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <Printer size={16} style={{ color: 'var(--accent-blue)' }} />
-                    <span>Výběr Připojené Tiskárny Účtenek</span>
+                    <span>Výběr Připojeného Tiskového Zařízení</span>
                   </label>
                   <button
                     type="button"
@@ -769,114 +696,63 @@ export default function SettingsView({
                     onClick={handleScanPrinters}
                     disabled={scanningPrinters}
                     style={{ height: '30px', padding: '0 0.6rem', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                    title="Obnovit seznam připojených tiskáren"
                   >
                     <RefreshCw size={12} className={scanningPrinters ? 'spin-icon' : ''} />
                     <span>{scanningPrinters ? 'Hledám...' : 'Obnovit'}</span>
                   </button>
                 </div>
 
-                {/* Device Selector Dropdown */}
-                <div style={{ marginBottom: '0.65rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                    Detekované Tiskové Zařízení
-                  </label>
-                  <select
-                    value={config.printerAddress || '/dev/usb/lp0'}
-                    onChange={e => {
-                      const selectedAddr = e.target.value;
-                      const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
-                      const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
-                      setConfig({
-                        ...config,
-                        printerAddress: selectedAddr,
-                        printerInterface: interfaceType
-                      });
-                    }}
-                    style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.85rem' }}
-                  >
-                    {printerDevices.map(dev => (
-                      <option key={dev.id} value={dev.address} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                        {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}{dev.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Network IP or Custom Address Input (if Custom/Network selected) */}
-                {config.printerInterface === 'NETWORK' && (
-                  <div style={{ marginBottom: '0.65rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                      IP Adresa Síťové Tiskárny (Port 9100)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="192.168.1.100"
-                      value={config.printerAddress}
-                      onChange={e => setConfig({ ...config, printerAddress: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
-                    />
-                  </div>
-                )}
-
-                {/* Paper Roll Width Selection */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
-                    Šířka Papírové Role (Termotisk)
-                  </label>
-                  <select
-                    value={config.printerPaperWidth || '80'}
-                    onChange={e => setConfig({ ...config, printerPaperWidth: e.target.value })}
-                    style={{ width: '100%', padding: '0.55rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '800', fontSize: '0.85rem' }}
-                  >
-                    <option value="80" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                      80 mm (72 mm tisknutelná šířka • 48 znaků)
+                <select
+                  value={config.printerAddress || '/dev/usb/lp0'}
+                  onChange={e => {
+                    const selectedAddr = e.target.value;
+                    const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
+                    const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
+                    setConfig({
+                      ...config,
+                      printerAddress: selectedAddr,
+                      printerInterface: interfaceType
+                    });
+                  }}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem' }}
+                >
+                  {printerDevices.map(dev => (
+                    <option key={dev.id} value={dev.address} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                      {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}{dev.name}
                     </option>
-                    <option value="58" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                      58 mm (48 mm tisknutelná šířka • 32 znaků)
-                    </option>
-                    <option value="A4" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                      Formát A4 (Faktura / Daňový doklad • 210 x 297 mm)
-                    </option>
-                  </select>
-                </div>
+                  ))}
+                </select>
+              </div>
 
-                {/* Direct Silent Hardware Print vs Debug Preview Modal */}
-                <div style={{ marginTop: '0.65rem', padding: '0.65rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                      ⚡ Přímý HW Tisk (Bez popup okna)
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={config.directHardwarePrint !== false}
-                      onChange={e => setConfig({ ...config, directHardwarePrint: e.target.checked })}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                  </label>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    {config.directHardwarePrint !== false
-                      ? 'Odesílá účtenku rovnou na fyzickou tiskárnu. Pop-up okno se nezobrazuje.'
-                      : '🐞 Režim Náhledu / Vývoje (Debug): Zobrazí náhledové okno s možností ručního tisku.'}
-                  </div>
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  Šířka Papírové Role (Termotisk)
+                </label>
+                <select
+                  value={config.printerPaperWidth || '80'}
+                  onChange={e => setConfig({ ...config, printerPaperWidth: e.target.value })}
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '800', fontSize: '0.9rem' }}
+                >
+                  <option value="80">80 mm (72 mm tisknutelná šířka • 48 znaků na řádek)</option>
+                  <option value="58">58 mm (48 mm tisknutelná šířka • 32 znaků na řádek)</option>
+                  <option value="A4">Formát A4 (Faktura / Daňový doklad)</option>
+                </select>
+              </div>
 
-                {/* Printer Width Calibration Test Button */}
-                <div style={{ marginTop: '0.6rem', padding: '0.65rem', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: '800', marginBottom: '0.3rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Printer size={14} style={{ color: 'var(--accent-blue)' }} />
-                    <span>{t('settings.printer_calibration')}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="nav-tab"
-                    onClick={handlePrintWidthRulerTest}
-                    style={{ width: '100%', padding: '0.45rem', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '700' }}
-                  >
-                    <Printer size={14} />
-                    <span>{t('settings.print_test_ruler')} ({config.printerPaperWidth === '58' ? '48 mm' : '72 mm'})</span>
-                  </button>
+              <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '0.4rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Printer size={16} style={{ color: 'var(--accent-blue)' }} />
+                  <span>{t('settings.printer_calibration')}</span>
                 </div>
+                <button
+                  type="button"
+                  className="nav-tab"
+                  onClick={handlePrintWidthRulerTest}
+                  style={{ width: '100%', padding: '0.65rem', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700' }}
+                >
+                  <Printer size={16} />
+                  <span>{t('settings.print_test_ruler')} ({config.printerPaperWidth === '58' ? '48 mm' : '72 mm'})</span>
+                </button>
               </div>
 
               <div>
@@ -885,24 +761,33 @@ export default function SettingsView({
                 </label>
                 <input
                   type="text"
-                  value={config.receiptFooter}
+                  value={config.receiptFooter || ''}
                   onChange={e => setConfig({ ...config, receiptFooter: e.target.value })}
                   style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
                 />
               </div>
 
-              <button type="submit" className="pay-btn pay-btn-card" style={{ height: '46px', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                className="pay-btn pay-btn-card"
+                onClick={handleSubmit}
+                style={{ height: '46px', marginTop: '0.5rem' }}
+              >
                 <Save size={18} />
                 <span>{saveSuccess ? t('common.saved') : t('settings.save_store')}</span>
               </button>
-            </form>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* ČSOB Payment Terminal Ingenico Move 3500 Preparation Card */}
+      {/* SUBTAB 3: PAYMENT TERMINAL */}
+      {activeSubTab === 'terminal' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="table-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <CreditCard size={18} style={{ color: 'var(--accent-blue)' }} />
+                <CreditCard size={20} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.csob_title')}</span>
               </h3>
               <span className="status-badge" style={{
@@ -912,7 +797,7 @@ export default function SettingsView({
                 padding: '0.3rem 0.65rem',
                 fontSize: '0.75rem'
               }}>
-                {termIp ? `IP: ${termIp}:${termPort}` : (language === 'vi' ? 'Chờ IP' : language === 'en' ? 'Awaiting IP' : 'Příprava (Čekání na IP)')}
+                {termIp ? `IP: ${termIp}:${termPort}` : 'Ruční zadaní (Čekání na IP zdroje)'}
               </span>
             </div>
 
@@ -1049,6 +934,7 @@ export default function SettingsView({
               <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.85rem', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>{t('settings.reconcile')}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Odeslat denní uzávěrku transakcí na bankovní terminál</div>
                 </div>
                 <button
                   type="button"
@@ -1069,18 +955,220 @@ export default function SettingsView({
             </form>
           </div>
         </div>
+      )}
 
-        {/* EET 2.0 Certificate Management & Live Testing */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* EET Operation Mode Toggle Card */}
-          <div className="table-card" style={{ padding: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+      {/* SUBTAB 4: SECURITY & ADMIN PIN */}
+      {activeSubTab === 'security' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Admin Mode Toggle Card */}
+          <div className="table-card" style={{ padding: '1.25rem 1.5rem', background: isAdminMode ? 'rgba(245, 158, 11, 0.08)' : 'var(--bg-card)', borderColor: isAdminMode ? 'var(--accent-amber)' : 'var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
+                {isAdminMode ? <Unlock size={20} style={{ color: 'var(--accent-amber)' }} /> : <Lock size={20} style={{ color: 'var(--text-muted)' }} />}
+                <span>Režim Správce Pokladny (Admin Mode)</span>
+                <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: isAdminMode ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.06)', color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-muted)', fontWeight: '700' }}>
+                  {isAdminMode ? 'AKTIVNÍ' : 'VYPNUTO'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                {isAdminMode ? 'Režim správce je zapnutý. Máte přístup k mazání prodejů a pokročilým možnostem.' : 'Zapnutím správcovského režimu získáte přístup ke mazání testovacích prodejů a pokročilým funkcím.'}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="pay-btn"
+              style={{
+                height: '42px',
+                padding: '0 1.25rem',
+                fontSize: '0.9rem',
+                background: isAdminMode ? 'var(--accent-amber)' : 'var(--bg-main)',
+                color: isAdminMode ? '#ffffff' : 'var(--text-primary)',
+                border: isAdminMode ? 'none' : '1px solid var(--border-color)'
+              }}
+              onClick={onToggleAdminMode}
+            >
+              {isAdminMode ? <Unlock size={18} /> : <Lock size={18} />}
+              <span>{isAdminMode ? 'Deaktivovat Admin' : 'Aktivovat Režim Správce'}</span>
+            </button>
+          </div>
+
+          {/* Admin PIN Security & Management Card */}
+          <div className="table-card" style={{ padding: '1.25rem 1.5rem' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+              <Shield size={20} style={{ color: 'var(--accent-amber)' }} />
+              <span>Bezpečnost & Správa Admin PIN</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                  Kód Admin PIN: <span style={{ fontFamily: 'monospace', letterSpacing: '2px', color: 'var(--accent-amber)' }}>••••</span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Admin PIN chrání nastavení, certifikáty a možnost mazat prodeje před neoprávněným zásahem.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="clear-cart-btn"
+                style={{
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.88rem',
+                  fontWeight: '800',
+                  borderColor: 'var(--accent-amber)',
+                  color: 'var(--accent-amber)',
+                  background: 'rgba(245, 158, 11, 0.1)'
+                }}
+                onClick={handleOpenPinChange}
+              >
+                <Lock size={15} />
+                <span>Změnit Admin PIN</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Cashier PIN & Auto Lock Settings */}
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Shield size={18} style={{ color: 'var(--accent-blue)' }} />
+              <span>Zabezpečení a Uzamčení Pokladny</span>
+            </h3>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    PIN kód pokladny (4–8 číslic)
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={8}
+                    value={config.cashierPin || '1234'}
+                    onChange={e => setConfig({ ...config, cashierPin: e.target.value.replace(/\D/g, '').slice(0, 8) })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '0.2em' }}
+                  />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                    Automatické zamknutí
+                  </label>
+                  <select
+                    value={config.autoLockMinutes !== undefined ? config.autoLockMinutes : 15}
+                    onChange={e => setConfig({ ...config, autoLockMinutes: parseInt(e.target.value, 10) })}
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: '700' }}
+                  >
+                    <option value={15}>Po 15 minutách neaktivity (Doporučeno)</option>
+                    <option value={5}>Po 5 minutách neaktivity</option>
+                    <option value={30}>Po 30 minutách neaktivity</option>
+                    <option value={0}>Vypnuto (Pouze ruční zamknutí)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" className="pay-btn pay-btn-card" style={{ height: '46px', marginTop: '0.5rem' }}>
+                <Save size={18} />
+                <span>{saveSuccess ? t('common.saved') : t('settings.save_store')}</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SUBTAB 5: SYSTEM & BACKUPS */}
+      {activeSubTab === 'system' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Backup Management */}
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <HardDrive size={18} style={{ color: 'var(--accent-emerald)' }} />
+              <span>Zálohování & Obnova Databází (Local & JSON)</span>
+            </h3>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+              <button className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.65rem' }} onClick={handleExportJSON}>
+                <Download size={16} />
+                <span>{t('settings.export_backup')}</span>
+              </button>
+
+              <label className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.65rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <Upload size={16} />
+                <span>{t('settings.import_backup')}</span>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportJSON}
+                  style={{ display: 'none' }}
+                />
+              </label>
+
+              <button className="nav-tab" style={{ padding: '0.65rem', color: 'var(--accent-rose)' }} onClick={onResetData}>
+                <Trash2 size={16} />
+                <span>Resetovat Data</span>
+              </button>
+            </div>
+
+            {/* Litestream Status Panel */}
+            <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Shield size={14} style={{ color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
+                  <span>Litestream Cloud Replikace (WAL)</span>
+                </span>
+                <span className="status-badge" style={{
+                  padding: '0.2rem 0.5rem',
+                  fontSize: '0.7rem',
+                  background: litestreamData?.is_running ? 'rgba(5, 150, 105, 0.15)' : litestreamData?.litestream_configured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(100, 116, 139, 0.15)',
+                  color: litestreamData?.is_running ? 'var(--accent-emerald)' : litestreamData?.litestream_configured ? 'var(--accent-amber)' : 'var(--text-muted)'
+                }}>
+                  {litestreamData?.is_running ? '🟢 Aktivní replikace' : litestreamData?.litestream_configured ? '🟡 Konfigurace OK' : '⚪ Neaktivní'}
+                </span>
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                {litestreamData?.message || 'Kontrola stavu replikace SQLite databáze...'}
+              </div>
+            </div>
+          </div>
+
+          {/* System Updates Management */}
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <RefreshCw size={18} style={{ color: 'var(--accent-blue)' }} />
+              <span>{t('settings.updates_title')}</span>
+            </h3>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+              <div>
+                <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                  Verze: {updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className="nav-tab"
+                  disabled={updateLoading}
+                  onClick={handleCheckUpdate}
+                  style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
+                >
+                  <RefreshCw size={14} className={updateLoading ? 'spin' : ''} />
+                  <span>Zkontrolovat aktualizace</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Czech EET Fiscalization (Optional) */}
+          <div className="table-card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
               <div>
                 <div style={{ fontWeight: '800', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
                   <Shield size={18} style={{ color: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
                   <span>{t('settings.eet_toggle_label')}</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.3rem', lineHeight: '1.4' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>
                   {t('settings.eet_toggle_desc')}
                 </div>
               </div>
@@ -1107,222 +1195,15 @@ export default function SettingsView({
                 </span>
               </label>
             </div>
+
             {!config.eetEnabled && (
-              <div style={{ marginTop: '0.85rem', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', fontSize: '0.8rem', color: 'var(--accent-blue)' }}>
+              <div style={{ padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', fontSize: '0.8rem', color: 'var(--accent-blue)' }}>
                 {t('settings.eet_disabled_banner')}
               </div>
             )}
           </div>
-
-          {/* Certificate Status Card */}
-          <div className="table-card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Shield size={18} style={{ color: certInfo?.loaded ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
-              <span>{t('settings.cert_title')}</span>
-            </h3>
-
-            {certInfo?.loaded ? (
-              <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.3)', padding: '1rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', lineHeight: '1.6' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-emerald)', fontWeight: '800', marginBottom: '0.5rem' }}>
-                  <CheckCircle size={18} />
-                  <span>{t('settings.cert_active')}</span>
-                </div>
-                <div><strong>Subject:</strong> {certInfo.subject}</div>
-                <div><strong>Issuer:</strong> {certInfo.issuer}</div>
-                <div><strong>S/N:</strong> <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{certInfo.serial_number}</span></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.4rem', color: 'var(--text-secondary)' }}>
-                  <Calendar size={14} />
-                  <span>Valid to: <strong>{new Date(certInfo.not_valid_after).toLocaleDateString()}</strong></span>
-                </div>
-              </div>
-            ) : (
-              <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-amber)', fontWeight: '700', marginBottom: '0.3rem' }}>
-                  <AlertCircle size={18} />
-                  <span>{t('settings.cert_missing')}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Certificate Upload Form */}
-            <form onSubmit={handleCertUpload} style={{ marginTop: '1.25rem', borderTop: '1px border var(--border-color)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>{t('settings.cert_upload_label')}</div>
-
-              <input
-                type="file"
-                accept=".p12,.pfx"
-                onChange={e => setSelectedFile(e.target.files[0])}
-                style={{ fontSize: '0.8rem', padding: '0.4rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}
-              />
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="password"
-                  placeholder={t('settings.cert_password')}
-                  value={certPassword}
-                  onChange={e => setCertPassword(e.target.value)}
-                  style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}
-                />
-
-                <button
-                  type="submit"
-                  disabled={!selectedFile || uploadLoading || !backendConnected}
-                  className="pay-btn pay-btn-card"
-                  style={{ height: '40px', padding: '0 1rem', fontSize: '0.8rem' }}
-                >
-                  <Upload size={14} />
-                  <span>{uploadLoading ? '...' : t('settings.upload_btn')}</span>
-                </button>
-              </div>
-
-              {uploadResult && (
-                <div style={{
-                  fontSize: '0.8rem',
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: 'var(--radius-md)',
-                  background: uploadResult.status === 'SUCCESS' ? 'rgba(5, 150, 105, 0.15)' : 'rgba(225, 29, 72, 0.15)',
-                  color: uploadResult.status === 'SUCCESS' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-                  marginTop: '0.3rem'
-                }}>
-                  {uploadResult.message || uploadResult.detail}
-                </div>
-              )}
-            </form>
-          </div>
-
-          {/* Live Verification & Queue Control Card */}
-          <div className="table-card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Send size={18} style={{ color: 'var(--accent-purple)' }} />
-              <span>{t('settings.eet_queue_title')}</span>
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button
-                className="pay-btn pay-btn-card"
-                disabled={verifyLoading || !backendConnected}
-                onClick={handleTestVerify}
-                style={{ height: '44px', fontSize: '0.85rem' }}
-              >
-                <FileCheck size={16} />
-                <span>{verifyLoading ? '...' : t('settings.test_eet_btn')}</span>
-              </button>
-
-              {verifyResult && (
-                <div style={{
-                  padding: '0.85rem',
-                  borderRadius: 'var(--radius-md)',
-                  background: verifyResult.status === 'SUCCESS' ? 'rgba(5, 150, 105, 0.12)' : 'rgba(225, 29, 72, 0.12)',
-                  border: `1px solid ${verifyResult.status === 'SUCCESS' ? 'rgba(5, 150, 105, 0.3)' : 'rgba(225, 29, 72, 0.3)'}`,
-                  fontSize: '0.8rem',
-                  lineHeight: '1.5'
-                }}>
-                  <div style={{ fontWeight: '800', color: verifyResult.status === 'SUCCESS' ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
-                    {verifyResult.status === 'SUCCESS' ? '✓ OK' : '✕ Error'}
-                  </div>
-                  <div>{verifyResult.detail}</div>
-                </div>
-              )}
-
-              {/* Offline Queue Section */}
-              <div style={{ marginTop: '0.75rem', borderTop: '1px border var(--border-color)', paddingTop: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>Offline Queue</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Pending: <strong>{eetStatusData?.pending_offline_sales || 0}</strong>
-                  </div>
-                </div>
-
-                <button
-                  className="nav-tab"
-                  disabled={queueLoading || !backendConnected || (eetStatusData?.pending_offline_sales || 0) === 0}
-                  onClick={handleProcessQueue}
-                  style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
-                >
-                  <Send size={14} />
-                  <span>{queueLoading ? '...' : t('settings.process_queue_btn')}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* System Updates Management */}
-          <div className="table-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <RefreshCw size={18} style={{ color: 'var(--accent-blue)' }} />
-              <span>{t('settings.updates_title')}</span>
-            </h3>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-              <div>
-                <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                  Version: {updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  className="nav-tab"
-                  disabled={updateLoading}
-                  onClick={handleCheckUpdate}
-                  style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
-                >
-                  <RefreshCw size={14} className={updateLoading ? 'spin' : ''} />
-                  <span>Check</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Backup Management */}
-          <div className="table-card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem' }}>{t('settings.backup_title')}</h3>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <button className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.6rem' }} onClick={handleExportJSON}>
-                <Download size={16} />
-                <span>{t('settings.export_backup')}</span>
-              </button>
-
-              <label className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.6rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                <Upload size={16} />
-                <span>{t('settings.import_backup')}</span>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportJSON}
-                  style={{ display: 'none' }}
-                />
-              </label>
-
-              <button className="nav-tab" style={{ padding: '0.6rem', color: 'var(--accent-rose)' }} onClick={onResetData}>
-                <Trash2 size={16} />
-                <span>Resetovat Data</span>
-              </button>
-            </div>
-
-            {/* Litestream Cloud Replication Status Panel */}
-            <div style={{ marginTop: '1rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <span style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Shield size={14} style={{ color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
-                  <span>Litestream Cloud Replikace (WAL)</span>
-                </span>
-                <span className="status-badge" style={{
-                  padding: '0.2rem 0.5rem',
-                  fontSize: '0.7rem',
-                  background: litestreamData?.is_running ? 'rgba(5, 150, 105, 0.15)' : litestreamData?.litestream_configured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(100, 116, 139, 0.15)',
-                  color: litestreamData?.is_running ? 'var(--accent-emerald)' : litestreamData?.litestream_configured ? 'var(--accent-amber)' : 'var(--text-muted)'
-                }}>
-                  {litestreamData?.is_running ? '🟢 Aktivní replikace' : litestreamData?.litestream_configured ? '🟡 Konfigurace OK' : '⚪ Neaktivní'}
-                </span>
-              </div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                {litestreamData?.message || 'Kontrola stavu replikace SQLite databáze...'}
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Confirmation Modal for System Update */}
       {showUpdateModal && (
