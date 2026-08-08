@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles, RefreshCw, Wifi } from 'lucide-react';
-import { fetchTerminalConfig, payWithTerminal } from '../api/posApi';
+import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 const COINS = [1, 2, 5, 10, 20, 50];
@@ -27,6 +27,22 @@ export default function PaymentModal({
       if (cfg) setTermConfig(cfg);
     });
   }, []);
+
+  // Broadcast display state when activeMethod changes
+  useEffect(() => {
+    if (activeMethod === 'qr') {
+      const vs = `${new Date().getFullYear()}${Math.floor(1000 + Math.random() * 9000)}`;
+      broadcastCustomerDisplay({
+        type: 'PAYMENT_PENDING',
+        totalAmount,
+        payment: {
+          method: 'QR_CODE',
+          vs,
+          iban: storeConfig?.merchant_iban || 'CZ0000000000000000000000'
+        }
+      });
+    }
+  }, [activeMethod, totalAmount, storeConfig]);
 
   // Split payment state
   const [splitCashStr, setSplitCashStr] = useState('0');
@@ -128,6 +144,16 @@ export default function PaymentModal({
 
   const handleComplete = () => {
     if (activeMethod === 'cash' && changeDue < 0) return;
+
+    // Broadcast success to customer display
+    broadcastCustomerDisplay({
+      type: 'PAYMENT_SUCCESS',
+      totalAmount,
+      payment: {
+        method: activeMethod === 'qr' ? 'QR_CODE' : activeMethod,
+        receiptNo: `2026-${Math.floor(100000 + Math.random() * 900000)}`
+      }
+    });
 
     if (activeMethod === 'split') {
       onCompleteSale({

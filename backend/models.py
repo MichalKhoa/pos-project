@@ -98,6 +98,9 @@ class StoreConfigModel(Base):
     # Register Layout Configuration ('left' or 'right' for cart column)
     cart_position = Column(String, default="left")
 
+    # Customer Display Custom Greeting / Title
+    customer_display_title = Column(String, default="Vítejte u nás")
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

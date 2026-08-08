@@ -556,5 +556,21 @@ export async function fetchLitestreamStatus() {
   }
 }
 
-
+/**
+ * Broadcast display event to secondary customer screens / phone displays
+ */
+export async function broadcastCustomerDisplay(payload) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/display/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to broadcast customer display payload:', err);
+    return null;
+  }
+}
 

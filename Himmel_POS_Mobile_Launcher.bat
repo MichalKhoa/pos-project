@@ -25,16 +25,18 @@ start "Himmel POS Frontend" /min cmd /c "cd /d "%~dp0" && npm run dev -- --host 
 :: 4. Wait for services to bind
 timeout /t 3 /nobreak >nul
 
-:: 5. Detect and display local network IP addresses
+:: 5. Detect and display local network IP addresses & Customer Display URLs
 echo.
 echo ========================================================
-echo   📱 OPEN THIS URL ON YOUR PHONE (CHROME):
+echo   📱 OPEN THESE URLS ON YOUR PHONE / TABLET:
 echo ========================================================
-powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | Select-Object -ExpandProperty IPAddress | ForEach-Object { Write-Host '   👉 Single-Process URL: http://' $_ ':8000' -ForegroundColor Green; Write-Host '   👉 Dev Server URL:      http://' $_ ':5173' -ForegroundColor Yellow }"
+powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | Select-Object -ExpandProperty IPAddress | ForEach-Object { Write-Host '   👉 Phone Customer Screen: http://' $_ ':8000/#/customer-display' -ForegroundColor Green; Write-Host '   👉 Cashier Register URL:  http://' $_ ':8000' -ForegroundColor Cyan; Write-Host '   👉 Customer Screen (Dev): http://' $_ ':5173/#/customer-display' -ForegroundColor Yellow }"
 echo ========================================================
 echo.
 echo Notes:
 echo  1. Ensure your phone is connected to the SAME Wi-Fi network.
-echo  2. Keep this window open while using the app on your phone.
+echo  2. Open the Phone Customer Screen URL on your secondary phone/tablet.
+echo  3. Keep this window open while using Himmel POS.
 echo.
 pause
+

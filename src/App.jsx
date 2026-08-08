@@ -19,11 +19,22 @@ import RefundModal from './components/RefundModal';
 import CalendarModal from './components/CalendarModal';
 import DiscountModal from './components/DiscountModal';
 import LockScreenModal from './components/LockScreenModal';
+import CustomerDisplayView from './components/CustomerDisplayView';
 import { soundFx } from './utils/audio';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
-import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend } from './api/posApi';
+import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay } from './api/posApi';
 
 export default function App() {
+  const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setIsCustomerDisplayMode(window.location.hash === '#/customer-display');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('register');
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -96,25 +107,7 @@ export default function App() {
     } catch (e) {
       console.warn('Failed to load initial sales history:', e);
     }
-    // Initial sample transaction for demonstration
-    return [
-      normalizeSale({
-        id: 'sale-1',
-        receiptNumber: '2026-0001',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        items: [
-          { name: 'Svíčka Vonná Premium', price: 249, quantity: 2, vat: 21 },
-          { name: 'Hrnek Keramický 350ml', price: 149, quantity: 1, vat: 21 }
-        ],
-        totalAmount: 647,
-        paymentMethod: 'cash',
-        tenderedAmount: 1000,
-        changeDue: 353,
-        taxSummary: {
-          21: { rate: 21, gross: 647, net: 534.71, tax: 112.29 }
-        }
-      })
-    ];
+    return [];
   });
 
   const {
@@ -125,8 +118,10 @@ export default function App() {
     itemMultiplier,
     setItemMultiplier,
     addToCart,
+    addItem: handleAddItem,
     updateQuantity: handleUpdateQty,
     updateItemDiscount: handleUpdateItemDiscount,
+    applyCartDiscount: handleApplyCartDiscount,
     removeItem: handleRemoveItem,
     clearCart: handleClearCart,
     undoToast,
@@ -136,6 +131,22 @@ export default function App() {
     restoreClearedCart,
     dismissClearedCartSnapshot
   } = useCart();
+
+  const computedTotalAmount = cartItems.reduce((sum, item) => {
+    const disc = item.discountPercent || 0;
+    const effectivePrice = item.price * (1 - disc / 100);
+    return sum + (effectivePrice * item.quantity);
+  }, 0) * (1 - cartDiscountPercent / 100);
+
+  // Broadcast live cart changes to customer display
+  useEffect(() => {
+    if (isCustomerDisplayMode) return;
+    broadcastCustomerDisplay({
+      type: cartItems.length > 0 ? 'CART_UPDATE' : 'CART_CLEAR',
+      cart: cartItems.map(i => ({ name: i.name, qty: i.quantity, price: i.price, vatRate: i.vat })),
+      totalAmount: Math.round(computedTotalAmount)
+    });
+  }, [cartItems, computedTotalAmount, isCustomerDisplayMode]);
 
   const [keypadAmount, setKeypadAmount] = useState('');
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -404,6 +415,33 @@ export default function App() {
       clearInterval(checkInterval);
     };
   }, [storeConfig?.autoLockMinutes, isAppLocked]);
+
+  // Intercept window close button (X) -> prompt user on close & trigger backend shutdown on exit
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handleUnload = () => {
+      const host = window.location.hostname || 'localhost';
+      const shutdownUrl = `http://${host}:8000/api/v1/system/shutdown`;
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(shutdownUrl);
+      } else {
+        fetch(shutdownUrl, { method: 'POST', keepalive: true }).catch(() => {});
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleUnload);
+    };
+  }, []);
+
 
   const handleSnoozeSync = () => {
     // Snooze modal for 5 minutes
@@ -790,6 +828,10 @@ export default function App() {
       setCartItems([]);
     }
   };
+
+  if (isCustomerDisplayMode) {
+    return <CustomerDisplayView storeConfig={storeConfig} />;
+  }
 
   return (
     <div className={`app-container ${activeTab === 'register' ? 'pos-mode' : 'scroll-mode'}`}>

@@ -45,6 +45,7 @@ class StoreConfigSchema(BaseModel):
     directHardwarePrint: Optional[bool] = True
     defaultLanguage: Optional[str] = "cs"
     cartPosition: Optional[str] = "left"
+    customerDisplayTitle: Optional[str] = "Vítejte u nás"
 
 
 @router.get("")
@@ -81,7 +82,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "autoLockMinutes": config.auto_lock_minutes if config.auto_lock_minutes is not None else 15,
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
         "defaultLanguage": config.default_language or "cs",
-        "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left"
+        "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left",
+        "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás"
     }
 
 
@@ -108,6 +110,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.idPokl is not None: config.id_pokl = data.idPokl
     if data.eetEnabled is not None: config.eet_enabled = data.eetEnabled
     if data.eetEnvironment is not None: config.eet_environment = data.eetEnvironment
+    if data.customerDisplayTitle is not None: config.customer_display_title = data.customerDisplayTitle
     if data.csobTerminalEnabled is not None: config.csob_terminal_enabled = data.csobTerminalEnabled
     if data.csobTerminalIp is not None: config.csob_terminal_ip = data.csobTerminalIp
     if data.csobTerminalPort is not None: config.csob_terminal_port = data.csobTerminalPort

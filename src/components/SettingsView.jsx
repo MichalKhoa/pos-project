@@ -550,14 +550,27 @@ export default function SettingsView({
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                  {t('settings.store_name')}
+                  {t('settings.store_name')} (Právnická osoba / Účtenka)
                 </label>
                 <input
                   type="text"
-                  value={config.storeName}
+                  value={config.storeName || ''}
                   onChange={e => setConfig({ ...config, storeName: e.target.value })}
                   style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  Pozdrav / Název na zákaznickém displeji (např. "Vítejte u nášeho obchodníka" nebo "Vítejte u Táty")
+                </label>
+                <input
+                  type="text"
+                  value={config.customerDisplayTitle || ''}
+                  onChange={e => setConfig({ ...config, customerDisplayTitle: e.target.value })}
+                  placeholder="např. Vítejte v našem obchodě"
+                  style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
                 />
               </div>
 
