@@ -32,13 +32,14 @@ export default function PaymentModal({
   useEffect(() => {
     if (activeMethod === 'qr') {
       const vs = `${new Date().getFullYear()}${Math.floor(1000 + Math.random() * 9000)}`;
+      const iban = storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || 'CZ6508000000001234567890';
       broadcastCustomerDisplay({
         type: 'PAYMENT_PENDING',
         totalAmount,
         payment: {
           method: 'QR_CODE',
           vs,
-          iban: storeConfig?.merchant_iban || 'CZ0000000000000000000000'
+          iban
         }
       });
     }
@@ -734,8 +735,8 @@ export default function PaymentModal({
               const merchantIban = rawIban.replace(/\s/g, '').toUpperCase();
               const varSymbol = Date.now().toString().slice(-8);
               const spdString = `SPD*1.0*ACC:${merchantIban}*AM:${totalAmount.toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba Himmel POS`;
-              const apiHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-              const qrImageUrl = `http://${apiHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(spdString)}`;
+              const currentHost = typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : (window.location.hostname || 'localhost');
+              const qrImageUrl = `http://${currentHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(spdString)}`;
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

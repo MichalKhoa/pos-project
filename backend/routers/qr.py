@@ -54,24 +54,30 @@ def generate_spd_qr(
     Generates official Czech Banking Association (ČBA) Short Payment Descriptor (SPD) QR code PNG offline.
     Verifies merchant IBAN directly against server database configuration for maximum security.
     """
-    # Sanitize and resolve merchant IBAN from database if placeholder or empty
-    target_iban = iban.strip() if iban else ""
+    # Safely extract string parameters
+    target_iban = (iban if isinstance(iban, str) else "").strip()
+    target_vs = vs if isinstance(vs, str) else ""
+    target_ks = ks if isinstance(ks, str) else "0008"
+    target_ss = ss if isinstance(ss, str) else ""
+    target_msg = msg if isinstance(msg, str) else "Platba Himmel POS"
+    target_recipient = recipient if isinstance(recipient, str) else ""
+
     if not target_iban or target_iban.startswith("CZ000000"):
         cfg = db.query(StoreConfigModel).first()
-        if cfg and cfg.merchant_iban and not cfg.merchant_iban.startswith("CZ000000"):
-            target_iban = cfg.merchant_iban.strip()
+        if cfg and cfg.bank_account_iban and not cfg.bank_account_iban.startswith("CZ000000"):
+            target_iban = cfg.bank_account_iban.strip()
         else:
-            target_iban = "CZ0000000000000000000000"
+            target_iban = "CZ6508000000001234567890"
 
     from services.qr_bank_service import CzechBankQRPaymentService
     service = CzechBankQRPaymentService(account_iban=target_iban)
     spd_data = service.generate_qr_string(
         amount=amount,
-        variable_symbol=vs,
-        message=msg,
-        constant_symbol=ks,
-        specific_symbol=ss,
-        recipient_name=recipient
+        variable_symbol=target_vs,
+        message=target_msg,
+        constant_symbol=target_ks,
+        specific_symbol=target_ss,
+        recipient_name=target_recipient
     )
     return generate_qr_code(data=spd_data)
 

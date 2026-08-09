@@ -46,6 +46,8 @@ class StoreConfigSchema(BaseModel):
     defaultLanguage: Optional[str] = "cs"
     cartPosition: Optional[str] = "left"
     customerDisplayTitle: Optional[str] = "Vítejte u nás"
+    customerDisplayAutoSleep: Optional[bool] = True
+    customerDisplayStandbyDelay: Optional[int] = 10
 
 
 @router.get("")
@@ -83,7 +85,9 @@ def get_store_config(db: Session = Depends(get_db)):
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
         "defaultLanguage": config.default_language or "cs",
         "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left",
-        "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás"
+        "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás",
+        "customerDisplayAutoSleep": getattr(config, 'customer_display_auto_sleep', True) if getattr(config, 'customer_display_auto_sleep', None) is not None else True,
+        "customerDisplayStandbyDelay": getattr(config, 'customer_display_standby_delay', 10) or 10
     }
 
 
@@ -111,6 +115,8 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.eetEnabled is not None: config.eet_enabled = data.eetEnabled
     if data.eetEnvironment is not None: config.eet_environment = data.eetEnvironment
     if data.customerDisplayTitle is not None: config.customer_display_title = data.customerDisplayTitle
+    if data.customerDisplayAutoSleep is not None: config.customer_display_auto_sleep = data.customerDisplayAutoSleep
+    if data.customerDisplayStandbyDelay is not None: config.customer_display_standby_delay = data.customerDisplayStandbyDelay
     if data.csobTerminalEnabled is not None: config.csob_terminal_enabled = data.csobTerminalEnabled
     if data.csobTerminalIp is not None: config.csob_terminal_ip = data.csobTerminalIp
     if data.csobTerminalPort is not None: config.csob_terminal_port = data.csobTerminalPort

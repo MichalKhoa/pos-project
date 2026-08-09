@@ -4314,11 +4314,11 @@ label {
 
 .cd-list-header {
   display: grid;
-  grid-template-columns: 1fr 75px 175px;
+  grid-template-columns: 1fr 60px 120px;
   align-items: center;
-  padding: 0.85rem 1.25rem;
+  padding: 0.85rem 1rem;
   background: #e2e8f0;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 900;
   text-transform: uppercase;
   color: #1e293b;
@@ -4344,9 +4344,9 @@ label {
 
 .cd-cart-item {
   display: grid;
-  grid-template-columns: 1fr 75px 175px;
+  grid-template-columns: 1fr 60px 120px;
   align-items: center;
-  padding: 0.8rem 0.85rem;
+  padding: 0.8rem 0.65rem;
   border-bottom: 1.5px solid #cbd5e1;
   transition: background 0.15s ease;
 }
@@ -4361,6 +4361,7 @@ label {
   color: #0f172a;
   line-height: 1.25;
   letter-spacing: -0.01em;
+  padding-right: 0.5rem;
 }
 
 .cd-item-vat {
@@ -4380,15 +4381,15 @@ label {
   color: #1d4ed8;
   border: 1.5px solid rgba(37, 99, 235, 0.35);
   font-weight: 900;
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.55rem;
   border-radius: 9999px;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   display: inline-block;
   white-space: nowrap;
 }
 
 .cd-item-price {
-  font-size: 1.55rem;
+  font-size: 1.48rem;
   font-weight: 900;
   color: #047857;
   text-align: right;
@@ -4561,6 +4562,15 @@ label {
   font-weight: 800;
 }
 
+.cd-detail-val.iban {
+  font-size: 1.12rem;
+  word-break: break-word;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+  display: block;
+}
+
 .cd-detail-val.amount {
   color: #047857;
   font-size: 1.8rem;
@@ -4661,5 +4671,48 @@ label {
   color: #475569;
   font-size: 1.1rem;
   font-weight: 700;
+}
+
+/* 100% Pitch-Black Standby Mode on Disconnect / POS PC Shutdown */
+.cd-standby-blackout {
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+.cd-standby-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+.cd-standby-content:hover {
+  opacity: 0.8;
+}
+
+.cd-standby-icon {
+  color: #64748b;
+}
+
+.cd-standby-content p {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+  color: #94a3b8;
+}
+
+.cd-standby-content span {
+  font-size: 0.95rem;
+  color: #64748b;
 }
 

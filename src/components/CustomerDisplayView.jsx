@@ -9,8 +9,52 @@ export default function CustomerDisplayView({ storeConfig }) {
     payment: null
   });
   const [isConnected, setIsConnected] = useState(false);
+  const [isStandbyBlackout, setIsStandbyBlackout] = useState(false);
   const [countdown, setCountdown] = useState(null);
   const wsRef = useRef(null);
+  const wakeLockRef = useRef(null);
+  const standbyTimerRef = useRef(null);
+
+  // Request Screen WakeLock to keep display awake when connected
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator && !wakeLockRef.current) {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+        console.log('[CustomerDisplay] Screen WakeLock acquired');
+      }
+    } catch (err) {
+      console.warn('[CustomerDisplay] WakeLock request failed:', err);
+    }
+    // Fully Kiosk JS API integration for native hardware screen wake
+    try {
+      if (window.fully && typeof window.fully.turnScreenOn === 'function') {
+        window.fully.turnScreenOn();
+      }
+    } catch (e) {
+      // Ignored if not running inside Fully Kiosk
+    }
+  };
+
+  // Release Screen WakeLock on disconnect so phone screen can power off
+  const releaseWakeLock = () => {
+    try {
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
+        console.log('[CustomerDisplay] Screen WakeLock released');
+      }
+    } catch (err) {
+      console.warn('[CustomerDisplay] WakeLock release failed:', err);
+    }
+    // Fully Kiosk JS API integration for native hardware screen off
+    try {
+      if (window.fully && typeof window.fully.turnScreenOff === 'function') {
+        window.fully.turnScreenOff();
+      }
+    } catch (e) {
+      // Ignored if not running inside Fully Kiosk
+    }
+  };
 
   // Determine WebSocket URL based on current browser host
   const getWsUrl = () => {
@@ -29,6 +73,9 @@ export default function CustomerDisplayView({ storeConfig }) {
 
         ws.onopen = () => {
           setIsConnected(true);
+          setIsStandbyBlackout(false);
+          if (standbyTimerRef.current) clearTimeout(standbyTimerRef.current);
+          requestWakeLock();
           console.log('[CustomerDisplay] WebSocket connected to backend');
         };
 
@@ -66,11 +113,24 @@ export default function CustomerDisplayView({ storeConfig }) {
 
         ws.onclose = () => {
           setIsConnected(false);
-          console.log('[CustomerDisplay] WebSocket closed. Retrying in 3s...');
+          releaseWakeLock();
+          const autoSleepEnabled = storeConfig?.customerDisplayAutoSleep !== false && storeConfig?.customer_display_auto_sleep !== false;
+          const delayMs = (storeConfig?.customerDisplayStandbyDelay || storeConfig?.customer_display_standby_delay || 10) * 1000;
+
+          if (autoSleepEnabled) {
+            console.log(`[CustomerDisplay] WebSocket closed. Starting ${delayMs / 1000}s standby blackout timer...`);
+            if (!standbyTimerRef.current) {
+              standbyTimerRef.current = setTimeout(() => {
+                setIsStandbyBlackout(true);
+              }, delayMs);
+            }
+          }
+
           reconnectTimer = setTimeout(connectWebSocket, 3000);
         };
       } catch (err) {
         setIsConnected(false);
+        releaseWakeLock();
         reconnectTimer = setTimeout(connectWebSocket, 3000);
       }
     };
@@ -79,6 +139,8 @@ export default function CustomerDisplayView({ storeConfig }) {
 
     return () => {
       if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (standbyTimerRef.current) clearTimeout(standbyTimerRef.current);
+      releaseWakeLock();
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -113,6 +175,19 @@ export default function CustomerDisplayView({ storeConfig }) {
     : itemsSum;
   const isQrMode = displayState.type === 'PAYMENT_PENDING' && displayState.payment?.method === 'QR_CODE';
   const isSuccessMode = displayState.type === 'PAYMENT_SUCCESS';
+
+  // If backend is shut down / disconnected for >10s, enter 100% pitch black standby mode
+  if (isStandbyBlackout && !isConnected) {
+    return (
+      <div className="cd-standby-blackout" onClick={() => setIsStandbyBlackout(false)}>
+        <div className="cd-standby-content">
+          <WifiOff size={32} className="cd-standby-icon" />
+          <p>Displej v režimu spánku (Pokladna vypnuta)</p>
+          <span>Displej se automaticky probudí po zapnutí pokladny</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="customer-display-root">
@@ -180,31 +255,53 @@ export default function CustomerDisplayView({ storeConfig }) {
               Naskenujte tento QR kód ve své mobilní bance pro okamžitý převod:
             </p>
 
-            <div className="cd-qr-frame">
-              <img
-                src={
-                  displayState.payment?.qrImageUrl ||
-                  `http://${window.location.hostname || 'localhost'}:8000/api/v1/qr/spd?iban=${encodeURIComponent(storeConfig?.merchant_iban || 'CZ0000000000000000000000')}&amount=${totalAmount}&vs=${displayState.payment?.vs || '20260001'}&msg=${encodeURIComponent('Platba ' + storeName)}`
-                }
-                alt="QR Kód pro platbu"
-                className="cd-qr-image"
-              />
-            </div>
+            {/* Robust relative QR code URL resolver */}
+            {(() => {
+              const currentIban = storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || 'CZ6508000000001234567890';
+              const rawUrl = displayState.payment?.qrImageUrl;
+              let finalQrUrl = `/api/v1/qr/spd?iban=${encodeURIComponent(currentIban)}&amount=${totalAmount}&vs=${displayState.payment?.vs || '20260001'}&msg=${encodeURIComponent('Platba ' + storeName)}`;
 
-            <div className="cd-qr-details-grid">
-              <div className="cd-qr-detail-box">
-                <span className="cd-detail-lbl">Částka k úhradě</span>
-                <strong className="cd-detail-val amount">{totalAmount.toFixed(0)} Kč</strong>
-              </div>
-              <div className="cd-qr-detail-box">
-                <span className="cd-detail-lbl">Variabilní symbol</span>
-                <strong className="cd-detail-val">{displayState.payment?.vs || '---'}</strong>
-              </div>
-              <div className="cd-qr-detail-box wide">
-                <span className="cd-detail-lbl">Příjemce / Číslo účtu (IBAN)</span>
-                <strong className="cd-detail-val iban">{storeConfig?.merchant_iban || 'CZ0000000000000000000000'}</strong>
-              </div>
-            </div>
+              if (rawUrl && typeof rawUrl === 'string') {
+                if (rawUrl.startsWith('data:image/')) {
+                  finalQrUrl = rawUrl;
+                } else {
+                  const apiIndex = rawUrl.indexOf('/api/');
+                  if (apiIndex !== -1) {
+                    finalQrUrl = rawUrl.substring(apiIndex);
+                  }
+                }
+              }
+
+              const cleanIban = currentIban.replace(/\s/g, '').toUpperCase();
+              const formattedIban = cleanIban.match(/.{1,4}/g)?.join(' ') || cleanIban;
+
+              return (
+                <>
+                  <div className="cd-qr-frame">
+                    <img
+                      src={finalQrUrl}
+                      alt="QR Kód pro platbu"
+                      className="cd-qr-image"
+                    />
+                  </div>
+
+                  <div className="cd-qr-details-grid">
+                    <div className="cd-qr-detail-box">
+                      <span className="cd-detail-lbl">Částka k úhradě</span>
+                      <strong className="cd-detail-val amount">{totalAmount.toFixed(0)} Kč</strong>
+                    </div>
+                    <div className="cd-qr-detail-box">
+                      <span className="cd-detail-lbl">Variabilní symbol</span>
+                      <strong className="cd-detail-val">{displayState.payment?.vs || '---'}</strong>
+                    </div>
+                    <div className="cd-qr-detail-box wide">
+                      <span className="cd-detail-lbl">Příjemce / Číslo účtu (IBAN)</span>
+                      <strong className="cd-detail-val iban">{formattedIban}</strong>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             <div className="cd-qr-pulse-bar">
               <div className="cd-pulse-dot" />

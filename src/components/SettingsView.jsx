@@ -574,6 +574,37 @@ export default function SettingsView({
                 />
               </div>
 
+              <div style={{ padding: '0.85rem', background: 'rgba(59, 130, 246, 0.06)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  <input
+                    type="checkbox"
+                    checked={config.customerDisplayAutoSleep !== false}
+                    onChange={e => setConfig({ ...config, customerDisplayAutoSleep: e.target.checked })}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span>Zhasínat zákaznický displej při vypnutí pokladny (Auto-Sleep / Standby)</span>
+                </label>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', paddingLeft: '1.8rem' }}>
+                  Po vypnutí pokladny nebo odpojení sítě se zákaznický displej automaticky přepne do OLED černé obrazovky a zhasne podsvícení. Po zapnutí pokladny se ihned probudí.
+                </p>
+
+                {config.customerDisplayAutoSleep !== false && (
+                  <div style={{ paddingLeft: '1.8rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Prodleva do zhasnutí:</span>
+                    <select
+                      value={config.customerDisplayStandbyDelay || 10}
+                      onChange={e => setConfig({ ...config, customerDisplayStandbyDelay: parseInt(e.target.value, 10) || 10 })}
+                      style={{ padding: '0.35rem 0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontWeight: '700' }}
+                    >
+                      <option value={5}>5 sekund</option>
+                      <option value={10}>10 sekund (Doporučeno)</option>
+                      <option value={30}>30 sekund</option>
+                      <option value={60}>1 minuta</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{t('settings.street')}</label>

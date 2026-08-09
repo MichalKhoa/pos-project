@@ -7,10 +7,11 @@ SQLite persistence layer located at `backend/data/pos_store.db`.
 - `SaleItemModel`: Individual line items linked to `SaleModel` foreign key (`name`, `quantity`, `unit_price`, `vat_rate`, `discount_percent`).
 - `PresetModel` (`presets` table): Stock quantity (`stock_quantity`), tracking flag (`track_stock`), min stock alert level (`min_stock_alert`), and EAN barcode (`barcode`).
 - `EetAuditLogModel` (`eet_audit_logs` table): Complete audit log of EET retry submissions and response codes.
-- `StoreConfigModel`: Store details (name, IČO, DIČ, address, IBAN), EET config (certificate path, Fernet AES-256 encrypted password, environment, provozovna, pokladna), printer config, security lock config, ČSOB terminal settings.
+- `StoreConfigModel`: Store details (name, IČO, DIČ, address, `bank_account_iban`), customer display greeting/title (`customer_display_title`), auto-sleep settings (`customer_display_auto_sleep`, `customer_display_standby_delay`), EET config (certificate path, Fernet AES-256 encrypted password, environment, provozovna, pokladna), printer config, security lock config, ČSOB terminal settings.
 - `ReceiptSequenceModel`: Atomic yearly sequence counters (`year`, `last_seq`) ensuring duplicate-safe receipt numbers (`YYYY-XXXXXX`).
 
-## Safety, Performance & Backups (`/backend/database.py` & `/backend/services/backup_service.py`)
+## Dynamic Auto-Migration & Self-Healing (`/backend/database.py`)
+- **Dynamic Auto-Migration (`init_db_schema()`)**: Uses `sqlalchemy.inspect(engine)` on startup to compare Python models against physical SQLite tables. Automatically detects and executes `ALTER TABLE {table} ADD COLUMN {col} {type} DEFAULT ...` for any newly added model columns without manual migration lists.
 - **Directory Security**: Database housed in `backend/data/pos_store.db` with `0o700` restricted directory permissions and legacy DB path auto-migration.
 - **WAL & Concurrency**: Enabled `PRAGMA journal_mode = WAL;`, `PRAGMA foreign_keys = ON;`, `PRAGMA busy_timeout = 15000;`.
 - **Self-Healing**: Startup `PRAGMA quick_check;` and 15-minute periodic `PRAGMA wal_checkpoint(PASSIVE);` daemon.
