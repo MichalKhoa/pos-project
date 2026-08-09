@@ -33,11 +33,9 @@ if [ ! -d "$SCRIPT_DIR/node_modules" ]; then
     npm install
 fi
 
-# 3. Check/Build UI bundle
-if [ ! -f "$SCRIPT_DIR/dist/index.html" ]; then
-    echo "[INFO] Building UI bundle for first-time startup..."
-    npm run build
-fi
+# 3. Build UI bundle for fresh startup
+echo "[INFO] Building latest touchscreen UI bundle..."
+npm run build
 
 # 4. Stop any existing background POS processes to avoid port conflicts
 echo "[INFO] Checking for previous instances..."

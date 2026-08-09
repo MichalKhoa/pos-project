@@ -17,11 +17,9 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-:: 3. Check/Build UI bundle
-if not exist "%~dp0dist\index.html" (
-    echo Building UI bundle for first-time startup...
-    call npm run build
-)
+:: 3. Build UI bundle for fresh startup
+echo Building UI bundle for startup...
+call npm run build
 
 :: 4. Stop any existing background POS processes to avoid port conflicts
 echo Checking for previous instances...
