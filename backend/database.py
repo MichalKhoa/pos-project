@@ -64,6 +64,7 @@ Base = declarative_base()
 
 def init_db_schema():
     """Dynamically detects & auto-migrates any missing table columns in SQLite database on startup."""
+    import models
     from sqlalchemy import inspect, text
     Base.metadata.create_all(bind=engine)
 

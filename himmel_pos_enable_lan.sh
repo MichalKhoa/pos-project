@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Himmel POS — Linux LAN & Firewall Setup Script
+# Himmel POS — Linux Remote Mobile / LAN Setup Script
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
@@ -23,7 +23,7 @@ EOF
 else
     grep -q "^HOST=" "$ENV_FILE" || echo "HOST=0.0.0.0" >> "$ENV_FILE"
     grep -q "^ALLOWED_ORIGINS=" "$ENV_FILE" || echo "ALLOWED_ORIGINS=*" >> "$ENV_FILE"
-    echo "[OK] Updated backend/.env settings."
+    echo "[OK] Configured backend/.env for 0.0.0.0 binding and CORS."
 fi
 
 # 2. Configure UFW Firewall if installed
@@ -31,10 +31,10 @@ echo ""
 echo "[2/3] Checking firewall (UFW)..."
 if command -v ufw &>/dev/null; then
     if sudo ufw status | grep -q "active"; then
-        echo "[INFO] Opening ports 5173 and 8000 in ufw..."
+        echo "[INFO] Opening ports 5173 and 8000 in UFW..."
         sudo ufw allow 5173/tcp comment "Himmel POS Frontend" >/dev/null
         sudo ufw allow 8000/tcp comment "Himmel POS Backend" >/dev/null
-        echo "[OK] Ports 5173 and 8000 allowed in UFW."
+        echo "[OK] Firewall rules for ports 5173 and 8000 configured successfully."
     else
         echo "[INFO] UFW is inactive. Ports 5173 & 8000 are accessible."
     fi
@@ -42,7 +42,7 @@ else
     echo "[INFO] UFW not installed. Ensure ports 5173 & 8000 are open in your system firewall."
 fi
 
-# 3. Print Local IPv4 Addresses
+# 3. Print Local IPv4 Addresses for Phone Access
 echo ""
 echo "[3/3] Detecting Local Network IP Address..."
 echo "--------------------------------------------------------"
@@ -50,7 +50,10 @@ IP_LIST=$(hostname -I 2>/dev/null)
 for ip in $IP_LIST; do
     case "$ip" in
         127.*|169.254.*) ;;
-        *) echo "  -> Phone Web URL: http://$ip:5173" ;;
+        *)
+            echo "  -> Production URL: http://$ip:8000"
+            echo "  -> Dev Server URL: http://$ip:5173"
+            ;;
     esac
 done
 echo "--------------------------------------------------------"
@@ -58,8 +61,8 @@ echo "--------------------------------------------------------"
 echo ""
 echo "========================================================"
 echo "  ✅ LINUX LAN & MOBILE ACCESS CONFIGURED!"
-echo "  1. Ensure phone is on the SAME Wi-Fi / LAN network."
-echo "  2. Open one of the URLs above on your phone browser."
+echo "  1. Ensure phone is on the SAME Wi-Fi router."
+echo "  2. Open one of the Production URLs above on your phone browser."
 echo "  3. Start POS using: ./himmel_pos.sh"
 echo "========================================================"
 echo ""

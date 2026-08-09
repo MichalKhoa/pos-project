@@ -337,13 +337,18 @@ def shutdown_system(request: Request):
 
     def terminate():
         try:
-            # Target POS launcher terminal windows and app instances (avoiding indiscriminate process kills)
-            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Web*"], shell=False, capture_output=True)
-            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Launcher*"], shell=False, capture_output=True)
-            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Kiosk Launcher*"], shell=False, capture_output=True)
-            subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq http://localhost:5173*"], shell=False, capture_output=True)
-            subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq Himmel POS App*"], shell=False, capture_output=True)
-            subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Backend*"], shell=False, capture_output=True)
+            import sys
+            if sys.platform == "win32":
+                # Target POS launcher terminal windows and app instances (avoiding indiscriminate process kills)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Web*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Launcher*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Kiosk Launcher*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq http://localhost:5173*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq Himmel POS App*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Backend*"], shell=False, capture_output=True)
+            else:
+                subprocess.run(["pkill", "-f", "vite"], shell=False, capture_output=True)
+                subprocess.run(["pkill", "-f", "main.py"], shell=False, capture_output=True)
         except Exception as e:
             logger.warning(f"Error during terminal cleanup: {e}")
         finally:
