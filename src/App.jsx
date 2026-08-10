@@ -22,7 +22,7 @@ import LockScreenModal from './components/LockScreenModal';
 import CustomerDisplayView from './components/CustomerDisplayView';
 import { soundFx } from './utils/audio';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
-import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay, deleteSaleBackend, purgeAllSalesBackend } from './api/posApi';
+import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay, deleteSaleBackend, purgeAllSalesBackend, openCashDrawerBackend } from './api/posApi';
 
 export default function App() {
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
@@ -144,7 +144,7 @@ export default function App() {
     broadcastCustomerDisplay({
       type: cartItems.length > 0 ? 'CART_UPDATE' : 'CART_CLEAR',
       cart: cartItems.map(i => ({ name: i.name, qty: i.quantity, price: i.price, vatRate: i.vat })),
-      totalAmount: Math.round(computedTotalAmount)
+      totalAmount: Math.round((computedTotalAmount + Number.EPSILON) * 100) / 100
     });
   }, [cartItems, computedTotalAmount, isCustomerDisplayMode]);
 
@@ -153,6 +153,35 @@ export default function App() {
   const [paymentModalMethod, setPaymentModalMethod] = useState(null); // 'cash' | 'card' | 'split' | null
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
   const [refundTargetSale, setRefundTargetSale] = useState(null);
+
+  // Open Cash Drawer Handler
+  const handleOpenCashDrawer = async () => {
+    soundFx.playCashChime();
+    setFlashBanner({
+      type: 'info',
+      message: 'Otevírání peněžní zásuvky...'
+    });
+    try {
+      const res = await openCashDrawerBackend();
+      if (res && res.success) {
+        setFlashBanner({
+          type: 'success',
+          message: res.physical ? 'Peněžní zásuvka byla úspěšně otevřena' : 'Signál otevření peněžní zásuvky odeslán (simulace)'
+        });
+      } else {
+        setFlashBanner({
+          type: 'warning',
+          message: 'Nepodařilo se uvolnit peněžní zásuvku'
+        });
+      }
+    } catch (err) {
+      setFlashBanner({
+        type: 'error',
+        message: `Chyba při otevírání zásuvky: ${err.message}`
+      });
+    }
+    setTimeout(() => setFlashBanner(null), 3000);
+  };
 
   // Admin Mode & Test Sales Management
   const handleToggleAdminMode = () => {
@@ -780,7 +809,8 @@ export default function App() {
         vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
         discount_percent: item.discountPercent || 0
       })),
-      totalAmount: finalGrandTotal,
+      totalAmount: paymentMethod === 'cash' ? Math.round(finalGrandTotal) : finalGrandTotal,
+      cashRounding: paymentMethod === 'cash' ? Math.round((Math.round(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
       cartDiscountPercent,
       paymentMethod,
       splitDetails: splitDetails || null,
@@ -848,6 +878,7 @@ export default function App() {
         onOpenShutdownModal={() => setShowShutdownModal(true)}
         onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
         onLockApp={() => setIsAppLocked(true)}
+        onOpenCashDrawer={handleOpenCashDrawer}
       />
 
       {syncNotification && (
@@ -907,6 +938,7 @@ export default function App() {
                   clearedCartSnapshot={clearedCartSnapshot}
                   onRestoreClearedCart={restoreClearedCart}
                   onDismissClearedCart={dismissClearedCartSnapshot}
+                  onOpenCashDrawer={handleOpenCashDrawer}
                 />
               </div>
             </div>
@@ -1009,12 +1041,13 @@ export default function App() {
         <PaymentModal
           method={paymentModalMethod}
           storeConfig={storeConfig}
-          totalAmount={cartItems.reduce((sum, item) => {
+          totalAmount={Math.round((cartItems.reduce((sum, item) => {
             const disc = item.discountPercent || 0;
             return sum + (item.price * (1 - disc / 100) * item.quantity);
-          }, 0) * (1 - cartDiscountPercent / 100)}
+          }, 0) * (1 - cartDiscountPercent / 100) + Number.EPSILON) * 100) / 100}
           onClose={() => setPaymentModalMethod(null)}
           onCompleteSale={handleCompleteSale}
+          onOpenCashDrawer={handleOpenCashDrawer}
         />
       )}
 

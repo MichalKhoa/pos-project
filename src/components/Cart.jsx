@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Vault } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 function ClearedCartBanner({ snapshot, onRestore, onDismiss }) {
@@ -59,7 +59,8 @@ export default function Cart({
   onOpenCustomDiscount,
   clearedCartSnapshot = null,
   onRestoreClearedCart = null,
-  onDismissClearedCart = null
+  onDismissClearedCart = null,
+  onOpenCashDrawer = null
 }) {
   const { t } = useTranslation();
   const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
@@ -120,40 +121,42 @@ export default function Cart({
           )}
         </div>
 
-        {cartItems.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
-            {/* Open Custom Discount Modal for Cart */}
-            <button
-              type="button"
-              className="clear-cart-btn"
-              style={{
-                background: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
-                color: cartDiscountPercent > 0 ? 'var(--accent-blue)' : 'var(--text-secondary)',
-                borderColor: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.3)' : 'var(--border-color)',
-                padding: '0.35rem 0.65rem',
-                fontSize: '0.8rem',
-                fontWeight: '800',
-                whiteSpace: 'nowrap'
-              }}
-              onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
-              title={t('cart.discount')}
-            >
-              <Percent size={13} />
-              <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount_short')}</span>
-            </button>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
+          {cartItems.length > 0 && (
+            <>
+              {/* Open Custom Discount Modal for Cart */}
+              <button
+                type="button"
+                className="clear-cart-btn"
+                style={{
+                  background: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
+                  color: cartDiscountPercent > 0 ? 'var(--accent-blue)' : 'var(--text-secondary)',
+                  borderColor: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.3)' : 'var(--border-color)',
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.8rem',
+                  fontWeight: '800',
+                  whiteSpace: 'nowrap'
+                }}
+                onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
+                title={t('cart.discount')}
+              >
+                <Percent size={13} />
+                <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount_short')}</span>
+              </button>
 
-            <button
-              type="button"
-              className="clear-cart-btn"
-              style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-              onClick={onClearCart}
-              title={t('cart.clear')}
-            >
-              <Trash2 size={13} />
-              <span>{t('cart.clear')}</span>
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                className="clear-cart-btn"
+                style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                onClick={onClearCart}
+                title={t('cart.clear')}
+              >
+                <Trash2 size={13} />
+                <span>{t('cart.clear')}</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Cart Items List */}
@@ -301,25 +304,24 @@ export default function Cart({
         {cartItems.length > 0 && (
           <button
             type="button"
-            className="nav-tab"
-            style={{
-              width: '100%',
-              justifyContent: 'center',
-              padding: '0.6rem',
-              fontSize: '0.82rem',
-              background: 'rgba(124, 58, 237, 0.1)',
-              color: 'var(--accent-purple)',
-              border: '1px solid rgba(124, 58, 237, 0.3)',
-              fontWeight: '700',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
+            className="split-pay-btn"
             onClick={() => onOpenPayment('split')}
           >
             <Split size={16} style={{ flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
+            <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
+          </button>
+        )}
+
+        {/* Cashier Drawer Release Button (Bottom of Cart) */}
+        {onOpenCashDrawer && (
+          <button
+            type="button"
+            className="cart-drawer-btn"
+            onClick={onOpenCashDrawer}
+            title={t('cart.open_drawer') || 'Otevřít zásuvku'}
+          >
+            <Vault size={16} style={{ flexShrink: 0 }} />
+            <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
           </button>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X, Vault } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
@@ -13,7 +13,8 @@ export default function Navbar({
   onOpenSyncModal,
   onOpenShutdownModal,
   onOpenCalendarModal,
-  onLockApp
+  onLockApp,
+  onOpenCashDrawer
 }) {
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -242,6 +243,21 @@ export default function Navbar({
               <span>{pendingCount} {t('nav.not_sent')}</span>
             </button>
           )}
+
+          {/* Open Cash Drawer Button */}
+          <button
+            type="button"
+            className="nav-action-btn nav-badge-drawer"
+            onClick={onOpenCashDrawer}
+            title={t('nav.open_drawer') || 'Otevřít peněžní zásuvku'}
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              color: 'var(--accent-emerald)'
+            }}
+          >
+            <Vault size={16} style={{ color: 'var(--accent-emerald)' }} />
+          </button>
 
           {/* Streamlined Quick Lock Icon Button */}
           <button

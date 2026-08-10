@@ -44,3 +44,20 @@ def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
 
     return {"status": "PRINTED", "physical": True, "receiptNumber": req.saleData.get("receiptNumber")}
 
+
+@router.post("/open-drawer")
+def open_cash_drawer(db: Session = Depends(get_db)):
+    """Trigger physical ESC/POS pulse signal to release the cash drawer."""
+    config = db.query(StoreConfigModel).first()
+    interface = config.printer_interface if config else "USB"
+    address = config.printer_address if config else "/dev/usb/lp0"
+
+    printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
+    res = printer_service.open_cash_drawer()
+
+    if isinstance(res, dict) and not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to open cash drawer"))
+
+    return {"status": res.get("status", "OPENED"), "physical": res.get("physical", False), "success": True}
+
+

@@ -109,6 +109,36 @@ class SoundEffectsManager {
       // Ignore audio errors
     }
   }
+
+  playCashChime() {
+    if (!this.enabled) return;
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      // Mechanical latch click followed by dual bell resonance (cash register pop)
+      [1200, 2400, 3200].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = idx === 0 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.2, now + idx * 0.04 + 0.1);
+
+        gain.gain.setValueAtTime(0.35, now + idx * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.2);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 0.2);
+      });
+    } catch {
+      // Ignore audio errors
+    }
+  }
 }
 
 export const soundFx = new SoundEffectsManager();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles, RefreshCw, Wifi } from 'lucide-react';
+import { Banknote, CreditCard, QrCode, CheckCircle2, Split, Coins, Delete, RotateCcw, Sparkles, RefreshCw, Wifi, Vault } from 'lucide-react';
 import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
@@ -11,7 +11,8 @@ export default function PaymentModal({
   totalAmount,
   storeConfig,
   onClose,
-  onCompleteSale
+  onCompleteSale,
+  onOpenCashDrawer = null
 }) {
   const { t } = useTranslation();
   const [tenderedStr, setTenderedStr] = useState('0');
@@ -64,8 +65,9 @@ export default function PaymentModal({
     setSplitStep(1);
   }, [totalAmount]);
 
+  const effectiveCashTotal = Math.round(totalAmount);
   const tenderedVal = parseFloat(tenderedStr) || 0;
-  const changeDue = tenderedVal - totalAmount;
+  const changeDue = activeMethod === 'cash' ? (tenderedVal - effectiveCashTotal) : (tenderedVal - totalAmount);
 
   // Split payment amounts
   const splitCashVal = parseFloat(splitCashStr) || 0;
@@ -73,7 +75,7 @@ export default function PaymentModal({
 
   const handleCashAdd = (val) => {
     if (val === 'exact') {
-      setTenderedStr(totalAmount.toString());
+      setTenderedStr(effectiveCashTotal.toString());
       return;
     }
     if (val === 'clear') {
@@ -271,8 +273,21 @@ export default function PaymentModal({
             {/* Grand Total Sidebar Card */}
             <div className="sidebar-total-card">
               <span className="sidebar-total-label">{t('payment.total_due')}</span>
-              <span className="sidebar-total-amount">{totalAmount.toFixed(0)} Kč</span>
+              <span className="sidebar-total-amount">{totalAmount.toFixed(2)} Kč</span>
             </div>
+
+            {/* Quick Cashier Drawer Release Button in Payment Modal */}
+            {onOpenCashDrawer && (
+              <button
+                type="button"
+                className="payment-modal-drawer-btn"
+                onClick={onOpenCashDrawer}
+                title={t('cart.open_drawer') || 'Otevřít zásuvku'}
+              >
+                <Vault size={16} style={{ flexShrink: 0 }} />
+                <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
+              </button>
+            )}
           </div>
 
           {/* MAIN CONTENT AREA */}
@@ -329,7 +344,7 @@ export default function PaymentModal({
                       onClick={() => handleCashAdd('exact')}
                     >
                       <Sparkles size={15} />
-                      <span>{t('payment.exact')} ({totalAmount.toFixed(0)} Kč)</span>
+                      <span>{t('payment.exact')} ({effectiveCashTotal.toFixed(0)} Kč)</span>
                     </button>
                     <button
                       type="button"
@@ -437,7 +452,7 @@ export default function PaymentModal({
                     onClick={handleComplete}
                   >
                     <CheckCircle2 size={24} />
-                    <span>{t('payment.complete_sale')} ({totalAmount.toFixed(0)} Kč)</span>
+                    <span>{t('payment.complete_sale')} ({effectiveCashTotal.toFixed(0)} Kč)</span>
                   </button>
                 </div>
               </div>
@@ -479,13 +494,13 @@ export default function PaymentModal({
                         {t('payment.split_card_remaining')}:
                       </span>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
-                        {splitCardVal.toFixed(0)} Kč
+                        {splitCardVal.toFixed(2)} Kč
                       </span>
                     </div>
 
                     {/* Quick Ratio & Cash Shortcut Buttons */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <button type="button" className="vat-btn" style={{ padding: '0.65rem', fontWeight: '800' }} onClick={() => setSplitCashStr((totalAmount / 2).toFixed(0))}>50% / 50%</button>
+                      <button type="button" className="vat-btn" style={{ padding: '0.65rem', fontWeight: '800' }} onClick={() => setSplitCashStr((totalAmount / 2).toFixed(2))}>50% / 50%</button>
                       <button type="button" className="vat-btn" style={{ padding: '0.65rem' }} onClick={() => setSplitCashStr('100')}>100 Kč</button>
                       <button type="button" className="vat-btn" style={{ padding: '0.65rem' }} onClick={() => setSplitCashStr('200')}>200 Kč</button>
                       <button type="button" className="vat-btn" style={{ padding: '0.65rem' }} onClick={() => setSplitCashStr('500')}>500 Kč</button>
@@ -532,7 +547,7 @@ export default function PaymentModal({
                         onClick={() => setSplitStep(2)}
                       >
                         <CreditCard size={22} />
-                        <span>{t('payment.proceed_to_card', { amount: splitCardVal.toFixed(0) })}</span>
+                        <span>{t('payment.proceed_to_card', { amount: splitCardVal.toFixed(2) })}</span>
                       </button>
                     ) : (
                       <button
@@ -541,7 +556,7 @@ export default function PaymentModal({
                         onClick={handleComplete}
                       >
                         <CheckCircle2 size={24} />
-                        <span>{t('payment.complete_split')} ({totalAmount.toFixed(0)} Kč)</span>
+                        <span>{t('payment.complete_split')} ({totalAmount.toFixed(2)} Kč)</span>
                       </button>
                     )}
                   </div>
@@ -559,7 +574,7 @@ export default function PaymentModal({
                       ← {t('payment.back_to_cash')}
                     </button>
                     <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '700' }}>
-                      {t('payment.cash')}: {splitCashVal.toFixed(0)} Kč | {t('payment.card')}: {splitCardVal.toFixed(0)} Kč
+                      {t('payment.cash')}: {splitCashVal.toFixed(2)} Kč | {t('payment.card')}: {splitCardVal.toFixed(2)} Kč
                     </div>
                   </div>
 
@@ -567,7 +582,7 @@ export default function PaymentModal({
                     <CreditCard size={56} style={{ color: 'var(--accent-blue)', marginBottom: '0.8rem' }} />
                     <div style={{ fontWeight: '800', fontSize: '1.3rem', marginBottom: '0.4rem' }}>{t('payment.card_instruction')}</div>
                     <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
-                      {t('payment.split_card_remaining')}: <strong>{splitCardVal.toFixed(0)} Kč</strong>
+                      {t('payment.split_card_remaining')}: <strong>{splitCardVal.toFixed(2)} Kč</strong>
                     </div>
 
                     {/* ČSOB Terminal Status Banner for split card portion */}
@@ -591,8 +606,8 @@ export default function PaymentModal({
                       </div>
                       <div style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                         {(termConfig?.enabled && termConfig?.ip)
-                          ? t('payment.card_auto_sub', { amount: splitCardVal.toFixed(0) })
-                          : t('payment.card_manual_sub', { amount: splitCardVal.toFixed(0) })
+                          ? t('payment.card_auto_sub', { amount: splitCardVal.toFixed(2) })
+                          : t('payment.card_manual_sub', { amount: splitCardVal.toFixed(2) })
                         }
                       </div>
                     </div>
@@ -643,7 +658,7 @@ export default function PaymentModal({
                       onClick={handleComplete}
                     >
                       <CheckCircle2 size={22} />
-                      <span>{(termConfig?.enabled && termConfig?.ip) ? t('payment.card_manual_override') : `${t('payment.card_confirm_manual')} (${splitCardVal.toFixed(0)} Kč)`}</span>
+                      <span>{(termConfig?.enabled && termConfig?.ip) ? t('payment.card_manual_override') : `${t('payment.card_confirm_manual')} (${splitCardVal.toFixed(2)} Kč)`}</span>
                     </button>
                   </div>
                 </div>
@@ -656,7 +671,7 @@ export default function PaymentModal({
                 <div style={{ textAlign: 'center', padding: '2.5rem 2rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                   <CreditCard size={64} style={{ color: 'var(--accent-blue)', marginBottom: '0.8rem' }} />
                   <div style={{ fontWeight: '800', fontSize: '1.4rem', marginBottom: '0.4rem' }}>{t('payment.card_instruction')}</div>
-                  <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{t('payment.total_due')}: <strong>{totalAmount.toFixed(0)} Kč</strong></div>
+                  <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{t('payment.total_due')}: <strong>{totalAmount.toFixed(2)} Kč</strong></div>
 
                   {/* ČSOB Terminal Status Banner */}
                   <div style={{
@@ -679,8 +694,8 @@ export default function PaymentModal({
                     </div>
                     <div style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                       {(termConfig?.enabled && termConfig?.ip)
-                        ? t('payment.card_auto_sub', { amount: totalAmount.toFixed(0) })
-                        : t('payment.card_manual_sub', { amount: totalAmount.toFixed(0) })
+                        ? t('payment.card_auto_sub', { amount: totalAmount.toFixed(2) })
+                        : t('payment.card_manual_sub', { amount: totalAmount.toFixed(2) })
                       }
                     </div>
                   </div>
@@ -731,7 +746,7 @@ export default function PaymentModal({
                     onClick={handleComplete}
                   >
                     <CheckCircle2 size={22} />
-                    <span>{(termConfig?.enabled && termConfig?.ip) ? t('payment.card_manual_override') : `${t('payment.card_confirm_manual')} (${totalAmount.toFixed(0)} Kč)`}</span>
+                    <span>{(termConfig?.enabled && termConfig?.ip) ? t('payment.card_manual_override') : `${t('payment.card_confirm_manual')} (${totalAmount.toFixed(2)} Kč)`}</span>
                   </button>
                 </div>
               </div>
@@ -778,7 +793,7 @@ export default function PaymentModal({
                     onClick={handleComplete}
                   >
                     <CheckCircle2 size={24} />
-                    <span>Potvrdit Přijatou QR Platbu ({totalAmount.toFixed(0)} Kč)</span>
+                    <span>Potvrdit Přijatou QR Platbu ({totalAmount.toFixed(2)} Kč)</span>
                   </button>
                 </div>
               );

@@ -11,7 +11,8 @@ export const translations = {
       shutdown: "Vypnout",
       offline: "Offline",
       not_sent: "Neodesláno",
-      eet_off: "EET Vypnuto"
+      eet_off: "EET Vypnuto",
+      open_drawer: "Otevřít zásuvku"
     },
     cart: {
       title: "Nákupní košík",
@@ -27,7 +28,8 @@ export const translations = {
       tax_base: "Základ daně (Netto):",
       tax_total: "DPH celkem:",
       custom_sale: "Rychlý prodej / Volná částka",
-      vat: "DPH"
+      vat: "DPH",
+      open_drawer: "Otevřít zásuvku"
     },
     keypad: {
       manual_title: "Ruční Zadání Částky",
@@ -36,7 +38,11 @@ export const translations = {
       ready: "Připraveno",
       add_to_cart: "Přidat do Košíku",
       enter_amount: "Zadejte Částku",
-      cancel_multiplier: "Zrušit"
+      cancel_multiplier: "Zrušit",
+      quick_count: "Rychlé množství",
+      inc_qty: "Pridat 1ks",
+      dec_qty: "Odebrat 1ks",
+      multiplier: "Násobič"
     },
     calendar: {
       title: "Kalendář Směny & Státní Svátky ČR",
@@ -364,7 +370,8 @@ export const translations = {
       tax_base: "Tiền hàng (chưa thuế):",
       tax_total: "Tổng DPH:",
       custom_sale: "Bán nhanh / Số tiền tự do",
-      vat: "DPH"
+      vat: "DPH",
+      open_drawer: "Mở ngăn kéo"
     },
     keypad: {
       manual_title: "Nhập Số Tiền Thủ Công",
@@ -698,7 +705,8 @@ export const translations = {
       tax_base: "Tax base (Net):",
       tax_total: "Total VAT:",
       custom_sale: "Quick Sale / Open Amount",
-      vat: "VAT"
+      vat: "VAT",
+      open_drawer: "Open Drawer"
     },
     keypad: {
       manual_title: "Manual Amount Entry",

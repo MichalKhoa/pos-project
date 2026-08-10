@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X, ChevronLeft, ChevronRight, FolderPlus } from 'lucide-react';
+import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X, ChevronLeft, ChevronRight, FolderPlus, ChevronUp, ChevronDown } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
@@ -60,6 +60,7 @@ export default function QuickPresetGrid({
   // Open Price Prompt Modal State
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
   const [enteredOpenPrice, setEnteredOpenPrice] = useState('');
+  const [openPriceQty, setOpenPriceQty] = useState(1);
 
   const filteredPresets = presets.filter(p => {
     const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
@@ -191,6 +192,7 @@ export default function QuickPresetGrid({
           // Trigger Open Price prompt modal
           setOpenPriceTarget(preset);
           setEnteredOpenPrice('');
+          setOpenPriceQty(itemMultiplier > 1 ? itemMultiplier : 1);
         }
       } else {
         onAddToCart(preset, itemMultiplier);
@@ -206,10 +208,11 @@ export default function QuickPresetGrid({
     onAddToCart({
       ...openPriceTarget,
       price: priceVal
-    }, itemMultiplier);
+    }, openPriceQty);
 
     setOpenPriceTarget(null);
     setEnteredOpenPrice('');
+    setOpenPriceQty(1);
   };
 
   const handleOpenAddModal = () => {
@@ -592,13 +595,64 @@ export default function QuickPresetGrid({
             </div>
 
             <form onSubmit={handleConfirmOpenPrice} className="modal-body">
-              <div className="keypad-input-container" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0.75rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: '600' }}>
+              {/* Amount display */}
+              <div style={{
+                background: 'var(--bg-input)', borderRadius: '10px',
+                border: openPriceQty > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                boxShadow: openPriceQty > 1 ? '0 0 12px rgba(245,158,11,0.2)' : 'none',
+                padding: '0.5rem 0.85rem', textAlign: 'right', transition: 'all 0.2s ease'
+              }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--text-muted)', textAlign: 'left' }}>
                   {t('presets.open_price_label')}
                 </div>
-                <div style={{ fontSize: '2.2rem', fontWeight: '900', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
-                  {enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč'}
+                <div style={{ fontSize: openPriceQty > 1 ? '1.55rem' : '2rem', fontWeight: '900', color: openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
+                  {openPriceQty > 1
+                    ? `${openPriceQty} × ${enteredOpenPrice ? `${enteredOpenPrice} Kč` : '___ Kč'}`
+                    : (enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč')}
                 </div>
+                {openPriceQty > 1 && enteredOpenPrice && parseFloat(enteredOpenPrice) > 0 && (
+                  <div style={{ fontSize: '0.84rem', fontWeight: '800', fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', borderTop: '1px dashed rgba(245,158,11,0.35)', paddingTop: '2px', marginTop: '2px' }}>
+                    = Celkem {(openPriceQty * parseFloat(enteredOpenPrice)).toLocaleString('cs-CZ')} Kč
+                  </div>
+                )}
+              </div>
+
+              {/* Qty arrow stepper — directly below price */}
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setOpenPriceQty(prev => Math.max(1, prev - 1))}
+                  disabled={openPriceQty <= 1}
+                  style={{
+                    flex: 1, height: '36px', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
+                    background: openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--bg-input)',
+                    border: '1.5px solid var(--border-color)',
+                    fontWeight: '900', fontSize: '0.85rem',
+                    color: openPriceQty > 1 ? '#000' : 'var(--text-muted)',
+                    opacity: openPriceQty <= 1 ? 0.38 : 1,
+                    cursor: openPriceQty > 1 ? 'pointer' : 'default',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Snížit množství"
+                >
+                  <ChevronDown size={16} /><span>-1</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenPriceQty(prev => prev + 1)}
+                  style={{
+                    flex: 1, height: '36px', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none', fontWeight: '900', fontSize: '0.85rem', color: '#fff',
+                    cursor: 'pointer', boxShadow: '0 2px 6px rgba(16,185,129,0.35)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Zvýšit množství"
+                >
+                  <ChevronUp size={16} /><span>+1</span>
+                </button>
               </div>
 
               {/* Touch Numpad */}

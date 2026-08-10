@@ -360,3 +360,69 @@ class ESCPOSPrinterService:
             logger.error(f"Failed to print thermal receipt: {e}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
 
+    def open_cash_drawer(self) -> dict:
+        """
+        Sends pulse signal to thermal printer cash drawer RJ11/RJ12 port to kick the drawer open.
+        """
+        logger.info(f"Opening cash drawer via printer interface {self.interface_type}")
+        try:
+            printer = None
+            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                from escpos.printer import Win32Raw
+                target_name = self.address
+                if not target_name or target_name.startswith('/dev/'):
+                    target_name = ""
+                    try:
+                        import win32print
+                        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                        pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                        if pos_printers:
+                            target_name = pos_printers[0]
+                        elif printers:
+                            target_name = printers[0]
+                    except Exception:
+                        pass
+                printer = Win32Raw(target_name)
+            elif self.interface_type == "USB":
+                from escpos.printer import Usb, File
+                if os.path.exists(self.address):
+                    printer = File(self.address)
+                else:
+                    printer = Usb(0x04b8, 0x0e15, 0)
+            elif self.interface_type == "NETWORK" and self.address:
+                from escpos.printer import Network
+                printer = Network(self.address, port=9100)
+            elif self.interface_type == "SERIAL" and self.address:
+                from escpos.printer import Serial
+                printer = Serial(self.address, baudrate=9600)
+
+            if printer:
+                try:
+                    if hasattr(printer, 'open'):
+                        printer.open("Himmel_POS_Drawer_Kick")
+                    # Try kicking pin 2 and pin 5 to cover all cash drawer wiring types
+                    try:
+                        printer.cashdraw(2)
+                    except Exception:
+                        pass
+                    try:
+                        printer.cashdraw(5)
+                    except Exception:
+                        pass
+                    return {"success": True, "physical": True, "status": "OPENED"}
+                except Exception as kick_err:
+                    logger.warning(f"Cash drawer kick warning: {kick_err}")
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
+            print("--- CASH DRAWER OPEN SIGNAL SIMULATED ---")
+            return {"success": True, "physical": False, "status": "SIMULATED"}
+        except Exception as err:
+            logger.error(f"Failed to open cash drawer: {err}")
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
+
+

@@ -274,6 +274,23 @@ export async function printReceiptBackend(saleData, storeConfig) {
 }
 
 /**
+ * Trigger physical cash drawer release pulse via printer service
+ */
+export async function openCashDrawerBackend() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/open-drawer`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Physical cash drawer pulse failed or backend offline:', err);
+    return { success: true, physical: false, status: 'SIMULATED' };
+  }
+}
+
+
+/**
  * Scan and fetch list of connected hardware printer devices from backend
  */
 export async function fetchPrinterDevices() {
