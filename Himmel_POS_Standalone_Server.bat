@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-title Himmel POS Kiosk Launcher
+title Himmel POS — Standalone Backend Server Mode
 echo ========================================================
-echo   Starting Himmel POS in Dedicated Touch Kiosk Mode...
+echo   Starting Himmel POS (Headless Server Mode)
 echo ========================================================
 echo.
 
@@ -21,18 +21,6 @@ if %errorlevel% neq 0 (
     )
 )
 
-where node >nul 2>&1
-if %errorlevel% neq 0 (
-    if not exist "%~dp0dist\index.html" (
-        echo [WARNING] Node.js missing and dist\index.html build not found.
-        echo Press 'B' to bypass or any other key to launch installer...
-        set /p "CHOICE=Choice [B to bypass]: "
-        if /i "!CHOICE!" neq "B" (
-            call "%~dp0Himmel_POS_Install.bat"
-        )
-    )
-)
-
 :: 2. Ensure backend\.env exists with LAN configuration (0.0.0.0)
 if not exist "%~dp0backend\.env" (
     (
@@ -42,8 +30,8 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-:: 3. Build production UI bundle before startup
-echo [NPM] Building production UI bundle (npm run build)...
+:: 3. Build UI bundle so static files served by FastAPI are up to date
+echo [NPM] Building fresh UI static assets (npm run build)...
 where npm >nul 2>&1
 if %errorlevel% equ 0 (
     call npm run build
@@ -54,16 +42,18 @@ if %errorlevel% equ 0 (
 )
 
 :: 4. Stop existing POS backend instances
+echo Stopping existing backend processes...
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
 
-:: 5. Launch Python FastAPI Backend silently in background (with venv)
-echo Starting Himmel POS Backend Service...
-start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && set ENV=production && python main.py"
+:: 5. Launch Python FastAPI Backend in persistent background console
+echo Starting Himmel POS Server on 0.0.0.0:8000...
+start "Himmel POS Backend Server" cmd /k "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && set ENV=production && python main.py"
 
-:: 6. Wait 3 seconds for backend to initialize
-echo Waiting for backend server...
-timeout /t 3 /nobreak >nul
-
-:: 7. Open MS Edge in Full-Screen Kiosk Mode
-echo Launching Full-Screen Touch Kiosk Mode...
-start "Himmel POS App" msedge --kiosk http://localhost:8000 --edge-kiosk-type=fullscreen
+echo.
+echo ========================================================
+echo   ✅ HIMMEL POS SERVER IS ACTIVE!
+echo   - Local Register: http://localhost:8000
+echo   - OpenAPI Docs:   http://localhost:8000/docs
+echo   - Keep this console window open to maintain server operation.
+echo ========================================================
+timeout /t 5 >nul

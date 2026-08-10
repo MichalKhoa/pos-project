@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 title Himmel POS — Automated App Updater
 echo ========================================================
 echo   Updating Himmel POS to Latest Version from GitHub
@@ -15,24 +16,44 @@ taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq Himmel POS App*" >nul 2>&1
 :: 2. Pull latest release changes from GitHub repository
 echo.
 echo [2/5] Fetching latest release from GitHub (git pull origin master)...
-git pull origin master
-if %errorlevel% neq 0 (
-    echo [WARNING] Git pull failed or offline. Proceeding with local build...
+where git >nul 2>&1
+if %errorlevel% equ 0 (
+    git pull origin master
+    if !errorlevel! neq 0 (
+        echo [WARNING] Git pull failed or offline. Proceeding with local build...
+    )
+) else (
+    echo [WARNING] Git not found. Proceeding with local build...
 )
 
 :: 3. Update Python virtual environment & database schema
 echo.
 echo [3/5] Updating Python packages & auto-migrating database...
 cd /d "%~dp0backend"
-call .\venv\Scripts\python.exe -m pip install -r requirements.txt --quiet
-call .\venv\Scripts\python.exe -c "from database import engine, Base; Base.metadata.create_all(bind=engine); print('Database schema OK')"
+if exist "venv\Scripts\python.exe" (
+    call .\venv\Scripts\python.exe -m pip install -r requirements.txt --quiet
+    call .\venv\Scripts\python.exe -c "from database import engine, Base; Base.metadata.create_all(bind=engine); print('Database schema OK')"
+) else (
+    where python >nul 2>&1
+    if !errorlevel! equ 0 (
+        python -m pip install -r requirements.txt --quiet
+        python -c "from database import engine, Base; Base.metadata.create_all(bind=engine); print('Database schema OK')"
+    ) else (
+        echo [WARNING] Python environment not found. Skipping python update step.
+    )
+)
 
-:: 4. Install npm packages & compile React frontend
+:: 4. Install npm packages & compile React frontend UI bundle
 echo.
-echo [4/5] Building latest React touchscreen UI bundle...
+echo [4/5] Building latest React touchscreen UI bundle (npm run build)...
 cd /d "%~dp0"
-call npm install --no-audit --no-fund
-call npm run build
+where npm >nul 2>&1
+if %errorlevel% equ 0 (
+    call npm install --no-audit --no-fund
+    call npm run build
+) else (
+    echo [WARNING] npm not found. Skipping npm build step.
+)
 
 :: 5. Restart Background Service / Register Application
 echo.

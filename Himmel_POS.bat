@@ -1,12 +1,37 @@
 @echo off
+setlocal enabledelayedexpansion
 title Himmel POS — Cashier & Customer Display Mode
 echo ========================================================
 echo   Starting Himmel POS (Cashier & Customer Display)...
 echo ========================================================
 echo.
 
-:: 1. Navigate to script root
 cd /d "%~dp0"
+
+:: 1. Verify Prerequisites (Python & Node.js with Bypass option)
+where python >nul 2>&1
+if %errorlevel% neq 0 (
+    if not exist "%~dp0backend\venv\Scripts\python.exe" (
+        echo [WARNING] Python missing in PATH and backend\venv.
+        echo Press 'B' to bypass or any other key to launch installer...
+        set /p "CHOICE=Choice [B to bypass]: "
+        if /i "!CHOICE!" neq "B" (
+            call "%~dp0Himmel_POS_Install.bat"
+        )
+    )
+)
+
+where node >nul 2>&1
+if %errorlevel% neq 0 (
+    if not exist "%~dp0dist\index.html" (
+        echo [WARNING] Node.js missing and frontend build (dist) not found.
+        echo Press 'B' to bypass or any other key to launch installer...
+        set /p "CHOICE=Choice [B to bypass]: "
+        if /i "!CHOICE!" neq "B" (
+            call "%~dp0Himmel_POS_Install.bat"
+        )
+    )
+)
 
 :: 2. Ensure backend\.env exists with LAN configuration (0.0.0.0)
 if not exist "%~dp0backend\.env" (
@@ -17,9 +42,16 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-:: 3. Build UI bundle for fresh startup
-echo Building UI bundle for startup...
-call npm run build
+:: 3. Build UI bundle for fresh startup before frontend starts
+echo [NPM] Building fresh UI bundle (npm run build)...
+where npm >nul 2>&1
+if %errorlevel% equ 0 (
+    call npm run build
+) else (
+    if not exist "%~dp0dist\index.html" (
+        echo [WARNING] npm command not found and dist\index.html missing!
+    )
+)
 
 :: 4. Stop any existing background POS processes to avoid port conflicts
 echo Checking for previous instances...
@@ -58,4 +90,3 @@ echo   Himmel POS is running!
 echo   To stop all services, run: Himmel_POS_Stop.bat
 echo ========================================================
 timeout /t 5 >nul
-

@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 :: Ensure admin rights
 net session >nul 2>&1
 if %errorlevel% neq 0 (
@@ -21,10 +22,15 @@ set BACKEND_DIR=%~dp0backend
 set PYTHON_EXE=%BACKEND_DIR%\venv\Scripts\python.exe
 
 if not exist "%PYTHON_EXE%" (
-    echo [ERROR] Virtual environment not found at %PYTHON_EXE%.
-    echo Please run Himmel_POS_Install.bat first!
-    pause
-    exit /b 1
+    where python >nul 2>&1
+    if !errorlevel! equ 0 (
+        for /f "tokens=*" %%p in ('where python') do set "PYTHON_EXE=%%p"
+    ) else (
+        echo [ERROR] Python environment not found at %PYTHON_EXE% or system PATH.
+        echo Please run Himmel_POS_Install.bat first!
+        pause
+        exit /b 1
+    )
 )
 
 :: 1. Create Windows Scheduled Task for Silent Startup

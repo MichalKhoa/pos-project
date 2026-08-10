@@ -1,11 +1,39 @@
 @echo off
+setlocal enabledelayedexpansion
 title Himmel POS — Mobile & LAN Launcher
 echo ========================================================
 echo   Himmel POS — Starting for Phone / LAN Access
 echo ========================================================
 echo.
 
-:: 1. Ensure backend\.env exists with LAN configuration
+cd /d "%~dp0"
+
+:: 1. Verify Prerequisites (Python & Node.js with Bypass option)
+where python >nul 2>&1
+if %errorlevel% neq 0 (
+    if not exist "%~dp0backend\venv\Scripts\python.exe" (
+        echo [WARNING] Python missing in PATH and backend\venv.
+        echo Press 'B' to bypass or any other key to launch installer...
+        set /p "CHOICE=Choice [B to bypass]: "
+        if /i "!CHOICE!" neq "B" (
+            call "%~dp0Himmel_POS_Install.bat"
+        )
+    )
+)
+
+where node >nul 2>&1
+if %errorlevel% neq 0 (
+    if not exist "%~dp0dist\index.html" (
+        echo [WARNING] Node.js missing in PATH and dist\index.html missing.
+        echo Press 'B' to bypass or any other key to launch installer...
+        set /p "CHOICE=Choice [B to bypass]: "
+        if /i "!CHOICE!" neq "B" (
+            call "%~dp0Himmel_POS_Install.bat"
+        )
+    )
+)
+
+:: 2. Ensure backend\.env exists with LAN configuration
 if not exist "%~dp0backend\.env" (
     (
         echo HOST=0.0.0.0
@@ -14,18 +42,28 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-:: 2. Launch Python FastAPI Backend
+:: 3. Build production UI bundle before startup
+echo [NPM] Building fresh UI bundle (npm run build)...
+where npm >nul 2>&1
+if %errorlevel% equ 0 (
+    call npm run build
+)
+
+:: 4. Launch Python FastAPI Backend
 echo Starting Python Backend Service...
-start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && python main.py"
+start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && set ENV=production && python main.py"
 
-:: 3. Launch Vite Dev Server on 0.0.0.0
-echo Starting Vite Frontend Server...
-start "Himmel POS Frontend" /min cmd /c "cd /d "%~dp0" && npm run dev -- --host 0.0.0.0"
+:: 5. Launch Vite Dev Server on 0.0.0.0 (if npm available)
+where npm >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Starting Vite Frontend Server...
+    start "Himmel POS Frontend" /min cmd /c "cd /d "%~dp0" && npm run dev -- --host 0.0.0.0"
+)
 
-:: 4. Wait for services to bind
+:: 6. Wait for services to bind
 timeout /t 3 /nobreak >nul
 
-:: 5. Detect and display local network IP addresses & Customer Display URLs
+:: 7. Detect and display local network IP addresses & Customer Display URLs
 echo.
 echo ========================================================
 echo   📱 OPEN THESE URLS ON YOUR PHONE / TABLET:
@@ -39,4 +77,3 @@ echo  2. Open the Phone Customer Screen URL on your secondary phone/tablet.
 echo  3. Keep this window open while using Himmel POS.
 echo.
 pause
-

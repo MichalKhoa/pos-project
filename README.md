@@ -75,9 +75,19 @@ pos-project-himmel/
 │   ├── App.jsx               # Root application component and state router
 │   ├── App.css               # Application layout styling
 │   └── index.css             # Design tokens and theme system
-├── Himmel_POS.bat            # Windows 1-click desktop register launcher
-├── Himmel_POS_Mobile_Launcher.bat # Windows 1-click phone/LAN launcher (shows phone URLs)
-├── Himmel_POS_Kiosk.bat      # Windows 1-click full-screen kiosk mode launcher
+├── Himmel_POS_Install.bat    # 1-Click Installer (Winget auto-install for Python/Node, venv, build & shortcut)
+├── Himmel_POS.bat            # Standard Cashier & Customer Display launcher
+├── Himmel_POS_Debug.bat      # Debug mode launcher (live logging windows & dev server)
+├── Himmel_POS_Kiosk.bat      # Full-screen touch kiosk mode launcher
+├── Himmel_POS_Mobile_Launcher.bat # Mobile phone / LAN launcher (displays network URLs)
+├── Himmel_POS_Customer_Display.bat # Dedicated secondary monitor customer screen launcher
+├── Himmel_POS_Standalone_Server.bat # Headless server launcher for dedicated POS server node
+├── Himmel_POS_Enable_LAN.bat # Administrator script to configure Windows Defender Firewall & .env
+├── Himmel_POS_Service_Install.bat # Registers Python backend as Windows Scheduled Task background service
+├── Himmel_POS_Service_Stop.bat # Unregisters Windows background service
+├── Himmel_POS_Stop.bat       # Stops all running Himmel POS processes and browser windows
+├── Himmel_POS_Update.bat     # Pulls latest GitHub code, updates venv, migrates DB & rebuilds frontend UI
+├── Himmel_Backend_Settings.bat # Launches desktop GUI configuration utility
 ├── index.html                # Vite main HTML entry point
 ├── package.json              # Frontend npm dependencies and scripts
 └── vite.config.js            # Vite configuration
@@ -87,11 +97,17 @@ pos-project-himmel/
 
 ## ⚡ Quick Start
 
-### Option 1: Automated Launch on Windows (Recommended)
+### Option 1: Automated Installation & Launch on Windows (Recommended)
 
-Simply double-click either launcher script in the root directory:
-- **`Himmel_POS.bat`**: Starts the Python backend and Vite web server silently, then opens Himmel POS in an Edge Desktop Window.
-- **`Himmel_POS_Kiosk.bat`**: Starts all services and opens the POS application in full-screen Kiosk mode.
+1. **Install System Prereqs**: Run `Himmel_POS_Install.bat`.
+   - Automatically detects Python & Node.js. Offers 1-click installation via Winget or bypass options.
+   - Automatically sets up Python virtual environment, installs packages, runs `npm install`, compiles frontend (`npm run build`), and places a desktop shortcut.
+2. **Launch Application**:
+   - **`Himmel_POS.bat`**: Standard cashier register app window.
+   - **`Himmel_POS_Kiosk.bat`**: Full-screen touch kiosk mode.
+   - **`Himmel_POS_Customer_Display.bat`**: Secondary screen customer display.
+   - **`Himmel_POS_Mobile_Launcher.bat`**: Mobile register & smartphone customer screen access.
+   - **`Himmel_POS_Standalone_Server.bat`**: Headless POS server daemon.
 
 ---
 
