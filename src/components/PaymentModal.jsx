@@ -32,10 +32,9 @@ export default function PaymentModal({
   useEffect(() => {
     broadcastCustomerDisplay({
       type: 'PAYMENT_PENDING',
-      totalAmount,
-      cart: cartItems
+      totalAmount
     });
-  }, [totalAmount, cartItems]);
+  }, [totalAmount]);
 
   // Broadcast display state when activeMethod changes
   useEffect(() => {
