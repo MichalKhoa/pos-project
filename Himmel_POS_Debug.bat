@@ -64,7 +64,22 @@ timeout /t 3 /nobreak >nul
 
 :: 8. Launch Browser
 echo Opening browser at http://localhost:5173 ...
-start "Himmel POS App (Debug)" msedge --app=http://localhost:5173 --start-maximized
+
+set "EDGE_EXE="
+if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+) else if exist "C:\Program Files\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+) else (
+    where msedge >nul 2>&1
+    if !errorlevel! equ 0 set "EDGE_EXE=msedge"
+)
+
+if defined EDGE_EXE (
+    start "Himmel POS App (Debug)" "%EDGE_EXE%" --app=http://localhost:5173 --start-maximized
+) else (
+    start http://localhost:5173
+)
 
 echo.
 echo ========================================================

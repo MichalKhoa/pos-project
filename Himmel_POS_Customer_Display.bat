@@ -38,7 +38,22 @@ if %errorlevel% neq 0 (
 
 :: 4. Launch Edge directly into Customer Display route in full app mode
 echo Opening Customer Display Screen...
-start "Himmel POS Customer Display" msedge --app=http://localhost:8000/#/customer-display --start-maximized
+
+set "EDGE_EXE="
+if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+) else if exist "C:\Program Files\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+) else (
+    where msedge >nul 2>&1
+    if !errorlevel! equ 0 set "EDGE_EXE=msedge"
+)
+
+if defined EDGE_EXE (
+    start "Himmel POS Customer Display" "%EDGE_EXE%" --app=http://localhost:8000/#/customer-display --start-maximized
+) else (
+    start http://localhost:8000/#/customer-display
+)
 
 echo.
 echo ========================================================
