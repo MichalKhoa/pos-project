@@ -53,17 +53,32 @@ if %errorlevel% equ 0 (
     )
 )
 
-:: 4. Stop existing POS backend instances
-taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
+:: 4. Check if backend is already running on port 8000
+netstat -ano | findstr :8000 >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [INFO] Backend is already active on port 8000.
+) else (
+    echo Starting Himmel POS Backend Service...
+    start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && set ENV=production && python main.py"
+    echo Waiting for backend server...
+    timeout /t 3 /nobreak >nul
+)
 
-:: 5. Launch Python FastAPI Backend silently in background (with venv)
-echo Starting Himmel POS Backend Service...
-start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && (if exist venv\Scripts\activate.bat call venv\Scripts\activate.bat) && set ENV=production && python main.py"
-
-:: 6. Wait 3 seconds for backend to initialize
-echo Waiting for backend server...
-timeout /t 3 /nobreak >nul
-
-:: 7. Open MS Edge in Full-Screen Kiosk Mode
+:: 5. Open MS Edge in Full-Screen Kiosk Mode
 echo Launching Full-Screen Touch Kiosk Mode...
-start "Himmel POS App" msedge --kiosk http://localhost:8000 --edge-kiosk-type=fullscreen
+
+set "EDGE_EXE="
+if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+) else if exist "C:\Program Files\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+) else (
+    where msedge >nul 2>&1
+    if !errorlevel! equ 0 set "EDGE_EXE=msedge"
+)
+
+if defined EDGE_EXE (
+    start "Himmel POS App" "%EDGE_EXE%" --kiosk http://localhost:8000 --edge-kiosk-type=fullscreen
+) else (
+    start http://localhost:8000
+)
