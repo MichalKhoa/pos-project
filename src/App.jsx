@@ -24,6 +24,16 @@ import { soundFx } from './utils/audio';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
 import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay, deleteSaleBackend, purgeAllSalesBackend, openCashDrawerBackend } from './api/posApi';
 
+const sanitizePresets = (list) => {
+  if (!Array.isArray(list)) return list;
+  return list.map(p => {
+    if (p && p.isGeneralPreset) {
+      return { ...p, trackStock: false, stockQuantity: 0 };
+    }
+    return p;
+  });
+};
+
 export default function App() {
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
 
@@ -70,16 +80,6 @@ export default function App() {
       return DEFAULT_CATEGORIES;
     }
   });
-
-  const sanitizePresets = (list) => {
-    if (!Array.isArray(list)) return list;
-    return list.map(p => {
-      if (p && p.isGeneralPreset) {
-        return { ...p, trackStock: false, stockQuantity: 0 };
-      }
-      return p;
-    });
-  };
 
   const [presets, setPresets] = useState(() => {
     try {
