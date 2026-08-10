@@ -373,17 +373,20 @@ if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
-    is_dev = os.getenv("ENV", "development").lower() == "development"
+    is_dev = os.getenv("ENV", "production").lower() == "development"
     backend_dir = os.path.dirname(os.path.abspath(__file__))
-    uvicorn.run(
-        "main:app",
-        host=host,
-        port=port,
-        reload=is_dev,
-        reload_dirs=[
+    
+    kwargs = {
+        "host": host,
+        "port": port,
+        "reload": is_dev,
+    }
+    if is_dev:
+        kwargs["reload_dirs"] = [
             os.path.join(backend_dir, "routers"),
             os.path.join(backend_dir, "services")
-        ],
-        reload_includes=["main.py", "database.py", "models.py"]
-    )
+        ]
+        kwargs["reload_includes"] = ["main.py", "database.py", "models.py"]
+        
+    uvicorn.run("main:app", **kwargs)
 

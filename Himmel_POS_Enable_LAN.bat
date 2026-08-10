@@ -1,11 +1,11 @@
 @echo off
-title Himmel POS — Enable Mobile / LAN Access
+title Himmel POS - Enable Mobile / LAN Access
 echo ========================================================
-echo   Himmel POS — Remote Mobile / LAN Access Setup
+echo   Himmel POS - Remote Mobile / LAN Access Setup
 echo ========================================================
 echo.
 
-:: 1. Check & Elevate to Administrator Rights
+REM 1. Check and Elevate to Administrator Rights
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo [INFO] Requesting Administrator privileges to configure Windows Firewall...
@@ -13,7 +13,7 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: 2. Configure Windows Defender Firewall Inbound Rules
+REM 2. Configure Windows Defender Firewall Inbound Rules
 echo [1/3] Adding Windows Defender Firewall Inbound Rules...
 netsh advfirewall firewall delete rule name="Himmel POS Frontend (Port 5173)" >nul 2>&1
 netsh advfirewall firewall delete rule name="Himmel POS Backend (Port 8000)" >nul 2>&1
@@ -24,10 +24,10 @@ netsh advfirewall firewall add rule name="Himmel POS Backend (Port 8000)" dir=in
 if %errorlevel% equ 0 (
     echo [OK] Firewall rules for ports 5173 and 8000 configured successfully.
 ) else (
-    echo [WARNING] Firewall configuration encountered an issue. Please verify ports 5173 & 8000 manually.
+    echo [WARNING] Firewall configuration encountered an issue. Please verify ports 5173 and 8000 manually.
 )
 
-:: 3. Configure backend/.env for LAN host binding
+REM 3. Configure backend\.env for LAN host binding
 echo.
 echo [2/3] Updating backend environment configuration (backend\.env)...
 
@@ -39,7 +39,7 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
     echo [OK] Created backend\.env with HOST=0.0.0.0 and ALLOWED_ORIGINS=*
 ) else (
-    :: Update or append HOST and ALLOWED_ORIGINS settings
+    REM Update or append HOST and ALLOWED_ORIGINS settings
     findstr /i "^HOST=" "%~dp0backend\.env" >nul 2>&1
     if %errorlevel% neq 0 (
         echo HOST=0.0.0.0 >> "%~dp0backend\.env"
@@ -51,7 +51,7 @@ if not exist "%~dp0backend\.env" (
     echo [OK] Configured backend\.env for 0.0.0.0 binding and CORS.
 )
 
-:: 4. Display Local IPv4 Addresses for Phone Access
+REM 4. Display Local IPv4 Addresses for Phone Access
 echo.
 echo [3/3] Detecting Local Network IP Address...
 echo --------------------------------------------------------
@@ -60,10 +60,11 @@ echo --------------------------------------------------------
 
 echo.
 echo ========================================================
-echo   ✅ LAN & MOBILE ACCESS CONFIGURED SUCCESSFULLY!
+echo   LAN and MOBILE ACCESS CONFIGURED SUCCESSFULLY!
 echo   1. Ensure phone is connected to the SAME Wi-Fi router.
 echo   2. Type one of the Green URLs above into your phone browser.
 echo   3. Start the POS application using Himmel_POS.bat
 echo ========================================================
 echo.
 pause
+
