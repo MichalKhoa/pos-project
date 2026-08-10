@@ -46,13 +46,13 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-REM 3. Ensure UI bundle (dist\index.html) is built
-if not exist "%~dp0dist\index.html" (
-    echo [NPM] Building production UI bundle
-    where npm >nul 2>&1
-    if %errorlevel% equ 0 (
-        call npm run build
-    ) else (
+REM 3. Build production UI bundle before startup
+echo [NPM] Building production UI bundle
+where npm >nul 2>&1
+if %errorlevel% equ 0 (
+    call npm run build
+) else (
+    if not exist "%~dp0dist\index.html" (
         echo [WARNING] npm command not found and dist\index.html missing!
     )
 )
