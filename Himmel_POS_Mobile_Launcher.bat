@@ -68,7 +68,7 @@ echo.
 echo ========================================================
 echo   📱 OPEN THESE URLS ON YOUR PHONE / TABLET:
 echo ========================================================
-powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | Select-Object -ExpandProperty IPAddress | ForEach-Object { Write-Host '   👉 Phone Customer Screen: http://' $_ ':8000/#/customer-display' -ForegroundColor Green; Write-Host '   👉 Cashier Register URL:  http://' $_ ':8000' -ForegroundColor Cyan; Write-Host '   👉 Customer Screen (Dev): http://' $_ ':5173/#/customer-display' -ForegroundColor Yellow }"
+powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | ForEach-Object { Write-Host ('   👉 Phone Customer Screen: http://' + $_.IPAddress + ':8000/#/customer-display') -ForegroundColor Green; Write-Host ('   👉 Cashier Register URL:  http://' + $_.IPAddress + ':8000') -ForegroundColor Cyan; Write-Host ('   👉 Customer Screen (Dev): http://' + $_.IPAddress + ':5173/#/customer-display') -ForegroundColor Yellow }"
 echo ========================================================
 echo.
 echo Notes:

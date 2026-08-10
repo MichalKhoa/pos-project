@@ -78,7 +78,7 @@ echo.
 echo ========================================================
 echo   📱 PHONE CUSTOMER DISPLAY URL (Open on your phone):
 echo ========================================================
-powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | Select-Object -ExpandProperty IPAddress | ForEach-Object { Write-Host '   👉 Phone Customer Screen: http://' $_ ':8000/#/customer-display' -ForegroundColor Green }"
+powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | ForEach-Object { Write-Host ('   👉 Phone Customer Screen: http://' + $_.IPAddress + ':8000/#/customer-display') -ForegroundColor Green }"
 echo ========================================================
 echo.
 

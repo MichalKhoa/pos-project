@@ -55,7 +55,7 @@ if not exist "%~dp0backend\.env" (
 echo.
 echo [3/3] Detecting Local Network IP Address...
 echo --------------------------------------------------------
-powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | Select-Object -ExpandProperty IPAddress | ForEach-Object { Write-Host '  -> Production URL: http://' $_ ':8000' -ForegroundColor Green; Write-Host '  -> Dev Server URL: http://' $_ ':5173' -ForegroundColor Yellow }"
+powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | ForEach-Object { Write-Host ('  -> Production URL: http://' + $_.IPAddress + ':8000') -ForegroundColor Green; Write-Host ('  -> Dev Server URL: http://' + $_.IPAddress + ':5173') -ForegroundColor Yellow }"
 echo --------------------------------------------------------
 
 echo.
