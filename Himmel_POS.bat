@@ -46,13 +46,13 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-REM 3. Build UI bundle for fresh startup before frontend starts
-echo [NPM] Building fresh UI bundle (npm run build)...
-where npm >nul 2>&1
-if %errorlevel% equ 0 (
-    call npm run build
-) else (
-    if not exist "%~dp0dist\index.html" (
+REM 3. Ensure UI bundle (dist\index.html) is built
+if not exist "%~dp0dist\index.html" (
+    echo [NPM] Building UI bundle (npm run build)...
+    where npm >nul 2>&1
+    if %errorlevel% equ 0 (
+        call npm run build
+    ) else (
         echo [WARNING] npm command not found and dist\index.html missing!
     )
 )
@@ -102,7 +102,7 @@ if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
 )
 
 if not "!EDGE_EXE!"=="" (
-    start "Himmel POS App" "!EDGE_EXE!" --app=http://localhost:8000 --start-maximized
+    start "" "!EDGE_EXE!" --app=http://localhost:8000 --start-maximized
 ) else (
     start http://localhost:8000
 )

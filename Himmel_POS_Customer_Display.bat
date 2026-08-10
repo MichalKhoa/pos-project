@@ -57,7 +57,7 @@ if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
 )
 
 if not "!EDGE_EXE!"=="" (
-    start "Himmel POS Customer Display" "!EDGE_EXE!" --app=http://localhost:8000/#/customer-display --start-maximized
+    start "" "!EDGE_EXE!" --app=http://localhost:8000/#/customer-display --start-maximized
 ) else (
     start http://localhost:8000/#/customer-display
 )
