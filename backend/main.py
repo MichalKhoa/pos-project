@@ -177,14 +177,19 @@ def startup_event():
 
 
 # Single-Process Production Serving: Serve compiled React dist/ static assets dynamically
+import mimetypes
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
+
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
 assets_dir = os.path.join(dist_dir, "assets")
 
-if os.path.exists(assets_dir):
-    app.mount("/assets", StaticFiles(directory=assets_dir), name="static_assets")
+# Ensure assets dir exists so mount does not fail
+os.makedirs(assets_dir, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=assets_dir), name="static_assets")
 
 @app.get("/api/v1/status")
 @app.get("/api/status")
@@ -202,20 +207,14 @@ async def serve_spa(full_path: str):
     if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
         
-    # Dynamically mount /assets if created after startup
-    if not os.path.exists(assets_dir) and os.path.exists(os.path.join(dist_dir, "assets")):
-        try:
-            app.mount("/assets", StaticFiles(directory=os.path.join(dist_dir, "assets")), name="static_assets")
-        except Exception:
-            pass
-
-    file_path = os.path.join(dist_dir, full_path)
+    file_path = os.path.normpath(os.path.join(dist_dir, full_path))
     if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
-        return FileResponse(file_path)
+        media_type, _ = mimetypes.guess_type(file_path)
+        return FileResponse(file_path, media_type=media_type)
 
     index_file = os.path.join(dist_dir, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        return FileResponse(index_file, media_type="text/html")
 
     return {
         "status": "ONLINE",
