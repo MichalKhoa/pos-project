@@ -71,13 +71,24 @@ export default function App() {
     }
   });
 
+  const sanitizePresets = (list) => {
+    if (!Array.isArray(list)) return list;
+    return list.map(p => {
+      if (p && p.isGeneralPreset) {
+        return { ...p, trackStock: false, stockQuantity: 0 };
+      }
+      return p;
+    });
+  };
+
   const [presets, setPresets] = useState(() => {
     try {
       const saved = localStorage.getItem('himmel_pos_presets');
       const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRESETS;
+      const initial = Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRESETS;
+      return sanitizePresets(initial);
     } catch {
-      return DEFAULT_PRESETS;
+      return sanitizePresets(DEFAULT_PRESETS);
     }
   });
 
@@ -313,7 +324,7 @@ export default function App() {
         if (Array.isArray(data) && data.length > 0) setCategories(data);
       });
       fetchPresetsBackend().then(data => {
-        if (Array.isArray(data) && data.length > 0) setPresets(data);
+        if (Array.isArray(data) && data.length > 0) setPresets(sanitizePresets(data));
       });
       fetchStoreConfigBackend().then(data => {
         if (data && typeof data === 'object') {
@@ -349,7 +360,7 @@ export default function App() {
         if (e.key === 'himmel_pos_categories' && Array.isArray(data)) {
           setCategories(data);
         } else if (e.key === 'himmel_pos_presets' && Array.isArray(data)) {
-          setPresets(data);
+          setPresets(sanitizePresets(data));
         } else if (e.key === 'himmel_pos_config' && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
         } else if (e.key === 'himmel_pos_sales' && Array.isArray(data)) {

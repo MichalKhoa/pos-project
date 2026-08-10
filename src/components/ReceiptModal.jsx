@@ -84,12 +84,12 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       }
       return `
         <tr>
-          <td style="text-align:left; width:54%; padding:2px 0; word-break:break-word;">
+          <td style="text-align:left; width:50%; padding:2px 0; word-break:break-word;">
             <div>${itemName} ${disc > 0 ? `(-${disc}%)` : ''}</div>
             <div style="font-size:${is58mm ? '7.5px' : '8.5px'}; color:#555;">DPH ${item.vat}%</div>
           </td>
-          <td style="text-align:center; width:16%; padding:2px 0;">${item.quantity}</td>
-          <td style="text-align:right; width:30%; padding:2px 0;">${(effPrice * item.quantity).toFixed(0)} Kč</td>
+          <td style="text-align:center; width:15%; padding:2px 0;">${item.quantity}</td>
+          <td style="text-align:right; width:35%; padding:2px 0; white-space:nowrap;">${(effPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
         </tr>
       `;
     }).join('');
@@ -437,9 +437,9 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <table className="receipt-table" style={{ tableLayout: 'fixed', width: '100%' }}>
               <thead>
                 <tr style={{ fontSize: is58mm ? '0.65rem' : '0.75rem' }}>
-                  <th style={{ width: '55%', textAlign: 'left' }}>Položka</th>
+                  <th style={{ width: '50%', textAlign: 'left' }}>Položka</th>
                   <th style={{ width: '15%', textAlign: 'center' }}>Ks</th>
-                  <th style={{ width: '30%', textAlign: 'right' }}>Cena</th>
+                  <th style={{ width: '35%', textAlign: 'right' }}>Cena</th>
                 </tr>
               </thead>
               <tbody>
@@ -453,7 +453,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                         <div style={{ fontSize: is58mm ? '0.6rem' : '0.65rem', color: '#666' }}>DPH {item.vat}%</div>
                       </td>
                       <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ textAlign: 'right' }}>{(unitPrice * item.quantity).toFixed(0)} Kč</td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>{(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
                     </tr>
                   );
                 })}
@@ -527,8 +527,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                     <thead>
                       <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left' }}>
                         <th style={{ textAlign: 'left' }}>Sazba</th>
-                        <th style={{ textAlign: 'right' }}>Základ</th>
-                        <th style={{ textAlign: 'right' }}>Daň</th>
+                        <th style={{ textAlign: 'right' }}>Základ (Netto)</th>
+                        <th style={{ textAlign: 'right' }}>Daň (DPH)</th>
                         <th style={{ textAlign: 'right' }}>Brutto</th>
                       </tr>
                     </thead>

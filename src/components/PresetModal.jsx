@@ -32,17 +32,18 @@ export default function PresetModal({
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && preset) {
+        const isGen = !!preset.isGeneralPreset;
         setFormData({
           name: preset.name || '',
           price: preset.isOpenPrice ? '' : (preset.price !== undefined ? preset.price.toString() : ''),
           isOpenPrice: !!preset.isOpenPrice,
-          isGeneralPreset: !!preset.isGeneralPreset,
+          isGeneralPreset: isGen,
           vat: preset.vat !== undefined ? preset.vat : 21,
           category: preset.category || 'all',
           color: preset.color || '#3b82f6',
           barcode: preset.barcode || '',
-          trackStock: preset.trackStock !== undefined ? preset.trackStock : true,
-          stockQuantity: preset.stockQuantity !== undefined ? preset.stockQuantity : 10,
+          trackStock: isGen ? false : (preset.trackStock !== undefined ? preset.trackStock : true),
+          stockQuantity: isGen ? 0 : (preset.stockQuantity !== undefined ? preset.stockQuantity : 10),
           minStockAlert: preset.minStockAlert !== undefined ? preset.minStockAlert : 5
         });
       } else {
@@ -76,19 +77,20 @@ export default function PresetModal({
       return;
     }
 
+    const isGen = !!formData.isGeneralPreset;
     const result = {
       ...(preset || {}),
       id: mode === 'edit' && preset ? preset.id : `preset-${Date.now()}`,
       name: formData.name.trim(),
       price: numericPrice,
       isOpenPrice: formData.isOpenPrice,
-      isGeneralPreset: formData.isGeneralPreset,
+      isGeneralPreset: isGen,
       vat: parseInt(formData.vat, 10),
       category: formData.category,
       color: formData.color,
       barcode: formData.barcode.trim(),
-      trackStock: formData.trackStock,
-      stockQuantity: parseInt(formData.stockQuantity || '0', 10),
+      trackStock: isGen ? false : formData.trackStock,
+      stockQuantity: isGen ? 0 : parseInt(formData.stockQuantity || '0', 10),
       minStockAlert: parseInt(formData.minStockAlert || '5', 10)
     };
 
@@ -157,7 +159,14 @@ export default function PresetModal({
                 type="checkbox"
                 id="isGeneralPresetModal"
                 checked={formData.isGeneralPreset}
-                onChange={e => setFormData({ ...formData, isGeneralPreset: e.target.checked })}
+                onChange={e => {
+                  const isGen = e.target.checked;
+                  setFormData(prev => ({
+                    ...prev,
+                    isGeneralPreset: isGen,
+                    ...(isGen ? { trackStock: false, stockQuantity: 0 } : {})
+                  }));
+                }}
                 style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-blue)' }}
               />
               <label htmlFor="isGeneralPresetModal" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>

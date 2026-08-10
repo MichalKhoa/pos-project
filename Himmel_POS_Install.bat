@@ -135,15 +135,22 @@ if not exist "%~dp0backend\.env" (
     echo [OK] backend\.env configuration already exists.
 )
 
-REM 5. Create Desktop Shortcut Automatically
+REM 5. Register and Boot Windows Background Service Automatically
 echo.
-echo [5/5] Creating Desktop Shortcut...
+echo [5/6] Registering and booting Himmel POS Background Service...
+call "%~dp0Himmel_POS_Service_Install.bat" --silent
+
+REM 6. Create Desktop Shortcut Automatically
+echo.
+echo [6/6] Creating Desktop Shortcut...
 powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Himmel POS.lnk')); $s.TargetPath='%~dp0Himmel_POS.bat'; $s.WorkingDirectory='%~dp0'; $s.IconLocation='C:\Windows\System32\shell32.dll,13'; $s.Save()" >nul 2>&1
 
 echo.
 echo ========================================================
 echo   INSTALLATION COMPLETED SUCCESSFULLY!
-echo   Desktop shortcut "Himmel POS" has been created.
+echo   - Background Service active on port 8000.
+echo   - Auto-boots silently in background on Windows startup.
+echo   - Desktop shortcut "Himmel POS" has been created.
 echo ========================================================
 echo.
 pause

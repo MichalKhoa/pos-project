@@ -37,7 +37,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#3b82f6'
+    color: '#3b82f6',
+    trackStock: false,
+    stockQuantity: 0
   },
   {
     id: 'preset-shoes',
@@ -47,7 +49,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#8b5cf6'
+    color: '#8b5cf6',
+    trackStock: false,
+    stockQuantity: 0
   },
   {
     id: 'preset-socks',
@@ -57,7 +61,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#10b981'
+    color: '#10b981',
+    trackStock: false,
+    stockQuantity: 0
   },
   {
     id: 'preset-underwear',
@@ -67,7 +73,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#ec4899'
+    color: '#ec4899',
+    trackStock: false,
+    stockQuantity: 0
   },
   {
     id: 'preset-home',
@@ -77,7 +85,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#06b6d4'
+    color: '#06b6d4',
+    trackStock: false,
+    stockQuantity: 0
   },
   {
     id: 'preset-open-1',
@@ -87,7 +97,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#f59e0b'
+    color: '#f59e0b',
+    trackStock: false,
+    stockQuantity: 0
   },
   {
     id: 'preset-open-2',
@@ -97,7 +109,9 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 0,
     category: 'all',
-    color: '#f43f5e'
+    color: '#f43f5e',
+    trackStock: false,
+    stockQuantity: 0
   }
 ];
 

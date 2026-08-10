@@ -543,7 +543,7 @@ export default function QuickPresetGrid({
                   <>
                     <div className="preset-price">{preset.price} Kč</div>
                     <div className="preset-vat">
-                      {preset.trackStock && (
+                      {!preset.isGeneralPreset && preset.trackStock && (
                         <span
                           style={{
                             marginRight: '6px',
@@ -563,7 +563,7 @@ export default function QuickPresetGrid({
                   </>
                 ) : (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    {preset.trackStock && (
+                    {!preset.isGeneralPreset && preset.trackStock && (
                       <span style={{ fontSize: '0.72rem', fontWeight: '800', color: (preset.stockQuantity || 0) <= 0 ? 'var(--accent-rose)' : 'var(--text-muted)' }}>
                         📦 {preset.stockQuantity || 0} ks
                       </span>
