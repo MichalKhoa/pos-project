@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 title Himmel POS - Cashier and Customer Display Mode
 echo ========================================================
-echo   Starting Himmel POS (Cashier and Customer Display)...
+echo   Starting Himmel POS - Cashier and Customer Display
 echo ========================================================
 echo.
 
@@ -18,7 +18,7 @@ REM 1. Verify Prerequisites (Python and Node.js with Bypass option)
 where python >nul 2>&1
 if %errorlevel% neq 0 if not exist "%~dp0backend\venv\Scripts\python.exe" (
     echo [WARNING] Python missing in PATH and backend\venv.
-    echo Press 'B' to bypass or any other key to launch installer...
+    echo Press 'B' to bypass or any other key to launch installer
     set "CHOICE="
     set /p "CHOICE=Choice [B to bypass]: "
     if /i "!CHOICE!" neq "B" (
@@ -29,7 +29,7 @@ if %errorlevel% neq 0 if not exist "%~dp0backend\venv\Scripts\python.exe" (
 where node >nul 2>&1
 if %errorlevel% neq 0 if not exist "%~dp0dist\index.html" (
     echo [WARNING] Node.js missing and frontend build dist not found.
-    echo Press 'B' to bypass or any other key to launch installer...
+    echo Press 'B' to bypass or any other key to launch installer
     set "CHOICE="
     set /p "CHOICE=Choice [B to bypass]: "
     if /i "!CHOICE!" neq "B" (
@@ -48,7 +48,7 @@ if not exist "%~dp0backend\.env" (
 
 REM 3. Ensure UI bundle (dist\index.html) is built
 if not exist "%~dp0dist\index.html" (
-    echo [NPM] Building UI bundle (npm run build)...
+    echo [NPM] Building UI bundle
     where npm >nul 2>&1
     if %errorlevel% equ 0 (
         call npm run build
@@ -80,7 +80,7 @@ if exist "%~dp0backend\litestream.exe" (
 REM 6. Display Local Network IP and Phone Customer Screen URLs
 echo.
 echo ========================================================
-echo   PHONE CUSTOMER DISPLAY URL (Open on your phone):
+echo   PHONE CUSTOMER DISPLAY URL - Open on your phone:
 echo ========================================================
 powershell -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*'} | ForEach-Object { Write-Host ('   Phone Customer Screen: http://' + $_.IPAddress + ':8000/#/customer-display') -ForegroundColor Green }"
 echo ========================================================

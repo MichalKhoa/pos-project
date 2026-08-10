@@ -18,7 +18,7 @@ REM 1. Verify Prerequisites (Python and Node.js with Bypass option)
 where python >nul 2>&1
 if %errorlevel% neq 0 if not exist "%~dp0backend\venv\Scripts\python.exe" (
     echo [WARNING] Python missing in PATH and backend\venv.
-    echo Press 'B' to bypass or any other key to launch installer...
+    echo Press 'B' to bypass or any other key to launch installer
     set "CHOICE="
     set /p "CHOICE=Choice [B to bypass]: "
     if /i "!CHOICE!" neq "B" (
@@ -29,7 +29,7 @@ if %errorlevel% neq 0 if not exist "%~dp0backend\venv\Scripts\python.exe" (
 where node >nul 2>&1
 if %errorlevel% neq 0 if not exist "%~dp0dist\index.html" (
     echo [WARNING] Node.js missing in PATH and dist\index.html missing.
-    echo Press 'B' to bypass or any other key to launch installer...
+    echo Press 'B' to bypass or any other key to launch installer
     set "CHOICE="
     set /p "CHOICE=Choice [B to bypass]: "
     if /i "!CHOICE!" neq "B" (
@@ -46,11 +46,13 @@ if not exist "%~dp0backend\.env" (
     ) > "%~dp0backend\.env"
 )
 
-REM 3. Build production UI bundle before startup
-echo [NPM] Building fresh UI bundle (npm run build)...
-where npm >nul 2>&1
-if %errorlevel% equ 0 (
-    call npm run build
+REM 3. Ensure UI bundle (dist\index.html) is built
+if not exist "%~dp0dist\index.html" (
+    echo [NPM] Building fresh UI bundle
+    where npm >nul 2>&1
+    if %errorlevel% equ 0 (
+        call npm run build
+    )
 )
 
 REM 4. Launch Python FastAPI Backend
