@@ -28,6 +28,15 @@ export default function PaymentModal({
     });
   }, []);
 
+  // Broadcast PAYMENT_PENDING as soon as payment modal opens (moved to payment)
+  useEffect(() => {
+    broadcastCustomerDisplay({
+      type: 'PAYMENT_PENDING',
+      totalAmount,
+      cart: cartItems
+    });
+  }, [totalAmount, cartItems]);
+
   // Broadcast display state when activeMethod changes
   useEffect(() => {
     if (activeMethod === 'qr') {

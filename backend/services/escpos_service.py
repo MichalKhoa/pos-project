@@ -31,12 +31,33 @@ def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
 def detect_connected_printers():
     """
     Scans host system for connected thermal printer hardware devices:
+    - Windows Spooler Printers (win32print)
     - USB Direct Nodes (/dev/usb/lp*, /dev/usblp*)
     - Serial/TTY Nodes (/dev/ttyUSB*, /dev/ttyACM*)
     - CUPS System Printers
     - Network / Browser Print
     """
     devices = []
+
+    # 0. Check Windows installed printers via win32print when running on Windows
+    if os.name == 'nt':
+        try:
+            import win32print
+            printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
+            for idx, p in enumerate(printers):
+                pname = p[2]
+                port = p[1]
+                is_pos = any(kw in pname.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL", "TICKETING", "TM-T", "TSP", "STAR"])
+                devices.append({
+                    "id": pname,
+                    "name": f"Windows Tiskárna ({pname} • {port})",
+                    "interface": "WIN32",
+                    "address": pname,
+                    "status": "CONNECTED",
+                    "is_default": is_pos or (idx == 0)
+                })
+        except Exception as win_err:
+            logger.warning(f"Failed to scan Windows printers via win32print: {win_err}")
 
     # 1. Check USB Thermal Printer character devices (/dev/usb/lp0, lp1, etc.)
     usb_paths = sorted(glob.glob("/dev/usb/lp*") + glob.glob("/dev/usblp*"))
@@ -47,8 +68,9 @@ def detect_connected_printers():
             "interface": "USB",
             "address": path,
             "status": "CONNECTED",
-            "is_default": idx == 0
+            "is_default": (not devices) and (idx == 0)
         })
+
 
     # 2. Check Serial/TTY POS Printer ports (/dev/ttyUSB*, /dev/ttyACM*)
     tty_paths = sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/ttyACM*"))
@@ -117,17 +139,18 @@ def detect_connected_printers():
 class ESCPOSPrinterService:
     """
     Thermal ESC/POS Hardware Printer Service.
-    Supports USB (/dev/usb/lp0), Serial (COM / /dev/ttyUSB0), or Network IP (9100).
+    Supports USB (/dev/usb/lp0), Serial (COM / /dev/ttyUSB0), Win32 (Windows Spooler), or Network IP (9100).
     """
 
     def __init__(self, interface_type: str = "DUMMY", address: str = "/dev/usb/lp0"):
         self.interface_type = interface_type.upper()
         self.address = address
 
-    def print_receipt(self, sale_data: dict, store_config: dict) -> bool:
+    def print_receipt(self, sale_data: dict, store_config: dict) -> dict:
         """
         Prints a formatted 58mm or 80mm thermal receipt using python-escpos.
         If physical printer is not connected, logs receipt output cleanly to console.
+        Returns a dict: {"success": True, "physical": True/False, "status": "PRINTED"/"SIMULATED"}
         """
         paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
         is_a4 = paper_width == "A4"
@@ -145,7 +168,23 @@ class ESCPOSPrinterService:
             # 1. Attempt physical ESC/POS Hardware Connection if interface is configured
             printer = None
             try:
-                if self.interface_type == "USB":
+                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                    from escpos.printer import Win32Raw
+                    target_name = self.address
+                    if not target_name or target_name.startswith('/dev/'):
+                        target_name = ""
+                        try:
+                            import win32print
+                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                            if pos_printers:
+                                target_name = pos_printers[0]
+                            elif printers:
+                                target_name = printers[0]
+                        except Exception:
+                            pass
+                    printer = Win32Raw(target_name)
+                elif self.interface_type == "USB":
                     from escpos.printer import Usb, File
                     if os.path.exists(self.address):
                         printer = File(self.address)
@@ -163,56 +202,148 @@ class ESCPOSPrinterService:
                 printer = None
 
             if printer:
-                # Top padding margin
-                printer.text("\n\n")
-
-                # Header
-                printer.set(align='center', font='a', width=2, height=2)
-                printer.text(f"{store_config.get('storeName', 'Himmel POS')}\n")
-                printer.set(align='center', font='a', width=1, height=1)
-                if store_config.get('street'):
-                    printer.text(f"{store_config.get('street')}\n")
-                if store_config.get('city'):
-                    printer.text(f"{store_config.get('city')}\n")
-                if store_config.get('ico') or store_config.get('dic'):
-                    printer.text(f"ICO: {store_config.get('ico', '')} DIC: {store_config.get('dic', '')}\n")
-                printer.text(separator + "\n")
-                printer.text(f"UCTENKA c. {sale_data.get('receiptNumber')}\n")
-                printer.text(f"Datum: {sale_data.get('timestamp')}\n")
-                printer.text(dash_line + "\n")
-
-                # Line Items
-                printer.set(align='left')
-                for item in sale_data.get('items', []):
-                    item_name = item['name'][:name_width]
-                    printer.text(f"{item_name:<{name_width}} {item.get('quantity', 1):>2}x {item.get('price', 0):>6.0f} Kc\n")
-
-                printer.text(separator + "\n")
-                printer.set(align='right', font='a', width=2, height=2)
-                printer.text(f"CELKEM: {sale_data.get('totalAmount', 0):.0f} Kc\n")
-                printer.set(align='left', font='a', width=1, height=1)
-
-                # Footer
-                pm = str(sale_data.get('paymentMethod', '')).upper()
-                printer.text(f"Zpusob uhrady: {pm}\n")
-                printer.text(dash_line + "\n")
-                printer.text("Rezim bez EET\n")
-                if store_config.get('receiptFooter'):
-                    printer.set(align='center')
-                    printer.text(f"\n{store_config.get('receiptFooter')}\n")
-
-                # Bottom margin before cutter
-                printer.text("\n\n\n\n")
-
-                # Cut paper & kick cash drawer pulse on cash payment
                 try:
-                    if pm in ["CASH", "HOTOVOST", "SPLIT"]:
-                        printer.cashdraw(2)
-                    printer.cut()
-                except Exception:
-                    pass
+                    if hasattr(printer, 'open'):
+                        printer.open(f"Himmel_POS_Receipt_{sale_data.get('receiptNumber')}")
+                except Exception as open_err:
+                    logger.warning(f"Failed to open printer device ({open_err}), falling back to simulation.")
+                    printer = None
 
-                return True
+            if printer:
+                try:
+                    is_refund = sale_data.get("isRefund") or sale_data.get("is_refund")
+                    receipt_num = sale_data.get("receiptNumber", "")
+                    orig_num = sale_data.get("originalReceiptNumber") or sale_data.get("original_receipt_number")
+                    refund_reason = sale_data.get("refundReason") or sale_data.get("refund_reason")
+
+                    # Store Header
+                    printer.set(align='center', font='a', width=2, height=2)
+                    printer.text(f"{store_config.get('storeName', 'Himmel POS')}\n")
+                    printer.set(align='center', font='a', width=1, height=1)
+                    if store_config.get('street'):
+                        printer.text(f"{store_config.get('street')}\n")
+                    if store_config.get('city'):
+                        printer.text(f"{store_config.get('city')}\n")
+                    if store_config.get('ico') or store_config.get('dic'):
+                        printer.text(f"ICO: {store_config.get('ico', '')} DIC: {store_config.get('dic', '')}\n")
+                    printer.text(separator + "\n")
+
+                    # Document Title & Timestamp
+                    title = f"STORNO DOKLAD c. {receipt_num}" if is_refund else f"UCTENKA c. {receipt_num}"
+                    printer.set(align='center', font='a', width=1, height=1)
+                    printer.text(f"{title}\n")
+                    if is_refund and orig_num:
+                        printer.text(f"Puvodni doklad: #{orig_num}\n")
+                    if is_refund and refund_reason:
+                        printer.text(f"Duvod: {refund_reason}\n")
+                    ts_val = str(sale_data.get("timestamp", ""))
+                    if ts_val:
+                        printer.text(f"{ts_val[:19].replace('T', ' ')}\n")
+                    printer.text(dash_line + "\n")
+
+                    # Items Header
+                    printer.set(align='left')
+                    if is_58mm:
+                        printer.text(f"{'Polozka':<18} {'Ks':^4} {'Cena':>8}\n")
+                    else:
+                        printer.text(f"{'Polozka':<28} {'Ks':^6} {'Cena':>12}\n")
+                    printer.text(dash_line + "\n")
+
+                    # Line Items
+                    name_w = 18 if is_58mm else 28
+                    for item in sale_data.get('items', []):
+                        qty = item.get('quantity', 1)
+                        disc = item.get('discountPercent') or item.get('discount_percent') or 0
+                        price = item.get('price', 0) * (1 - disc / 100)
+                        tot = price * qty
+                        name = item.get('name', '')[:name_w]
+                        if is_58mm:
+                            printer.text(f"{name:<18} {qty:^4} {tot:>8.0f} Kc\n")
+                        else:
+                            printer.text(f"{name:<28} {qty:^6} {tot:>12.0f} Kc\n")
+                        if disc > 0:
+                            printer.text(f"  (-{disc}% sleva)\n")
+
+                    printer.text(separator + "\n")
+
+                    # Total Banner
+                    printer.set(align='right', font='a', width=2, height=2)
+                    tot_label = "STORNO:" if is_refund else "CELKEM:"
+                    printer.text(f"{tot_label} {sale_data.get('totalAmount', 0):.0f} Kc\n")
+                    printer.set(align='left', font='a', width=1, height=1)
+                    printer.text(dash_line + "\n")
+
+                    # Payment Method & Cash Tendered
+                    pm = str(sale_data.get('paymentMethod', '')).upper()
+                    pm_label = "HOTOVOST" if pm in ["CASH", "HOTOVOST"] else ("KARTA" if pm in ["CARD", "KARTA"] else ("KOMBINOVANA" if pm in ["SPLIT"] else "QR PLATBA"))
+                    printer.text(f"Zpusob uhrady: {pm_label}\n")
+                    if pm in ["CASH", "HOTOVOST"]:
+                        tend = sale_data.get("tenderedAmount") or sale_data.get("tendered_amount") or 0
+                        chg = sale_data.get("changeDue") or sale_data.get("change_due") or 0
+                        printer.text(f"Prijato: {tend:.0f} Kc | Vraceno: {chg:.0f} Kc\n")
+                    printer.text(dash_line + "\n")
+
+                    # Tax Summary Breakdown (Rozpis DPH)
+                    tax_summary = sale_data.get("taxSummary") or sale_data.get("tax_summary")
+                    if tax_summary and isinstance(tax_summary, dict):
+                        printer.text("Rozpis DPH:\n")
+                        if is_58mm:
+                            printer.text(f"{'Sazba':<6} {'Zaklad':>12} {'Dan':>12}\n")
+                            for t in tax_summary.values():
+                                r = f"{t.get('rate')}%"
+                                net = f"{t.get('net', 0):.2f}"
+                                tax = f"{t.get('tax', 0):.2f}"
+                                printer.text(f"{r:<6} {net:>12} {tax:>12}\n")
+                        else:
+                            printer.text(f"{'Sazba':<8} {'Zaklad (Netto)':>12} {'Dan (DPH)':>12} {'Brutto':>12}\n")
+                            for t in tax_summary.values():
+                                r = f"{t.get('rate')}%"
+                                net = f"{t.get('net', 0):.2f}"
+                                tax = f"{t.get('tax', 0):.2f}"
+                                gross = f"{t.get('gross', 0):.2f}"
+                                printer.text(f"{r:<8} {net:>12} {tax:>12} {gross:>12}\n")
+                        printer.text(dash_line + "\n")
+
+                    # Fiscal / EET block
+                    fik = sale_data.get("fik") or sale_data.get("fik_code")
+                    bkp = sale_data.get("bkp") or sale_data.get("bkp_code")
+                    if fik:
+                        printer.text(f"EET FIK: {fik}\n")
+                    if bkp:
+                        printer.text(f"EET BKP: {bkp}\n")
+                    if not fik and not bkp:
+                        printer.set(align='center')
+                        printer.text("Rezim provozu: Bez EET\n")
+
+                    printer.text(dash_line + "\n")
+
+                    # Footer
+                    footer = store_config.get('receiptFooter') or "Dekujeme za vas nakup!"
+                    printer.set(align='center')
+                    printer.text(f"{footer}\n")
+
+                    # Bottom margin before cutter
+                    printer.text("\n\n")
+
+                    # Cut paper & kick cash drawer pulse on cash payment
+                    try:
+                        if pm in ["CASH", "HOTOVOST", "SPLIT"]:
+                            printer.cashdraw(2)
+                        printer.cut()
+                    except Exception:
+                        pass
+
+                    return {"success": True, "physical": True, "status": "PRINTED"}
+                except Exception as print_exec_err:
+                    logger.error(f"Error during ESC/POS print execution: {print_exec_err}")
+                    return {"success": False, "physical": False, "status": "ERROR", "error": str(print_exec_err)}
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
 
             # Simulation fallback when physical printer is not connected
             print(separator)
@@ -223,8 +354,9 @@ class ESCPOSPrinterService:
             print(f"Total Amount: {sale_data.get('totalAmount')} Kč")
             print(f"Payment Method: {sale_data.get('paymentMethod')}")
             print(separator)
-            return True
+            return {"success": True, "physical": False, "status": "SIMULATED"}
 
         except Exception as e:
             logger.error(f"Failed to print thermal receipt: {e}")
-            return False
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
+

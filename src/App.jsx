@@ -22,7 +22,7 @@ import LockScreenModal from './components/LockScreenModal';
 import CustomerDisplayView from './components/CustomerDisplayView';
 import { soundFx } from './utils/audio';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
-import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay } from './api/posApi';
+import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay, deleteSaleBackend, purgeAllSalesBackend } from './api/posApi';
 
 export default function App() {
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
@@ -159,15 +159,17 @@ export default function App() {
     setIsAdminMode(!isAdminMode);
   };
 
-  const handleDeleteSale = (saleId) => {
+  const handleDeleteSale = async (saleId) => {
     if (window.confirm('Opravdu chcete smazat tento testovací prodej? Tržby se okamžitě přepočítají.')) {
       setSalesHistory(prev => prev.filter(s => s.id !== saleId));
+      await deleteSaleBackend(saleId);
     }
   };
 
-  const handleClearAllTestSales = () => {
+  const handleClearAllTestSales = async () => {
     if (window.confirm('Opravdu chcete smazat VŠECHNY testovací prodeje? Všechny rozpracované účtenky budou vymazány.')) {
       setSalesHistory([]);
+      await purgeAllSalesBackend();
     }
   };
 

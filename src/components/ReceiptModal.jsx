@@ -23,22 +23,24 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
   const isA4 = paperWidth === 'A4';
   const is58mm = !isA4 && (paperWidth === '58' || paperWidth === '48');
 
-  const handlePrint = (forceDebugWindow = false) => {
+  const handlePrint = async (forceDebugWindow = false) => {
     if (isPrinting) return;
     setIsPrinting(true);
 
-    // 1. Send hardware thermal print payload directly to Python ESC/POS backend service
-    printReceiptBackend(saleData, storeConfig).catch(() => {});
-
     const isDirectPrint = storeConfig?.directHardwarePrint !== false && !forceDebugWindow;
 
-    // Direct HW print mode: print silently without opening browser pop-up screen
+    // 1. Attempt hardware direct print silently if directHardwarePrint is enabled
     if (isDirectPrint) {
-      setTimeout(() => setIsPrinting(false), 800);
-      return;
+      const res = await printReceiptBackend(saleData, storeConfig);
+      // If hardware physical thermal print succeeded, close printing state without popup
+      if (res && res.status === 'PRINTED' && res.physical !== false) {
+        setTimeout(() => setIsPrinting(false), 600);
+        return;
+      }
+      console.warn('Physical thermal printer hardware not detected or simulated. Falling back to system print window...');
     }
 
-    // 2. Debug / Preview mode: Open dedicated print preview window
+    // 2. Debug / Fallback mode: Open dedicated print preview window
     const printWin = window.open('', '_blank', 'width=450,height=700');
     if (!printWin) {
       window.print();
@@ -284,34 +286,33 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
           <title>Účtenka č. ${receiptNum}</title>
           <style>
             @page { margin: 0; size: auto; }
-            body { font-family: monospace, monospace; font-size: ${fontSize}; line-height: 1.25; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
-            .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${is58mm ? '18mm 2mm 28mm 2mm' : '22mm 4mm 35mm 4mm'}; box-sizing: border-box; text-align: left; }
+            body { font-family: monospace, monospace; font-size: ${fontSize}; line-height: 1.3; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
+            .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${is58mm ? '4mm 2mm 12mm 2mm' : '6mm 4mm 16mm 4mm'}; box-sizing: border-box; text-align: left; }
             .center { text-align: center; }
             .bold { font-weight: bold; }
-            .dashed { border-top: 1px dashed #000; margin: 4px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
-            .total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: ${is58mm ? '11px' : '13px'}; font-weight: bold; display: flex; justify-content: space-between; margin: 5px 0; }
+            .dashed { border-top: 1px dashed #000; margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 5px 0; table-layout: fixed; }
+            .total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 6px 0; font-size: ${is58mm ? '13px' : '18px'}; font-weight: bold; display: flex; justify-content: space-between; margin: 6px 0; }
           </style>
         </head>
         <body>
           <div class="receipt-box">
-            <img src="${himmelLogo}" style="width: ${logoSize}; height: ${logoSize}; display: block; margin: 0 auto 4px auto;" />
-            <div class="center bold" style="font-size: ${is58mm ? '11px' : '14px'};">${storeName}</div>
-            <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${street}</div>
-            <div class="center" style="font-size: ${is58mm ? '8.5px' : '10px'};">${city}</div>
-            <div class="center" style="margin-top:2px; font-size: ${is58mm ? '8px' : '9.5px'};">IČO: ${ico} | DIČ: ${dic}</div>
+            <div class="center bold" style="font-size: ${is58mm ? '13px' : '17px'};">${storeName}</div>
+            <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'};">${street}</div>
+            <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'};">${city}</div>
+            <div class="center" style="margin-top:2px; font-size: ${is58mm ? '9px' : '11.5px'};">IČO: ${ico} | DIČ: ${dic}</div>
             <div class="dashed"></div>
-            <div class="center bold" style="font-size: ${is58mm ? '10px' : '12px'};">
+            <div class="center bold" style="font-size: ${is58mm ? '11px' : '15px'};">
               ${isRefund ? `STORNO DOKLAD č. ${receiptNum}` : `ÚČTENKA č. ${receiptNum}`}
             </div>
-            ${isRefund && origNumber ? `<div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; font-weight: bold;">Původní doklad č.: #${origNumber}</div>` : ''}
-            ${isRefund && reasonText ? `<div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; font-style: italic;">Důvod: ${reasonText}</div>` : ''}
-            <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'};">${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</div>
+            ${isRefund && origNumber ? `<div class="center" style="font-size: ${is58mm ? '9px' : '11px'}; font-weight: bold;">Původní doklad č.: #${origNumber}</div>` : ''}
+            ${isRefund && reasonText ? `<div class="center" style="font-size: ${is58mm ? '9px' : '11px'}; font-style: italic;">Důvod: ${reasonText}</div>` : ''}
+            <div class="center" style="font-size: ${is58mm ? '9px' : '11px'};">${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</div>
             <div class="dashed"></div>
 
             <table>
               <thead>
-                <tr style="border-bottom: 1px dashed #000; font-size: ${is58mm ? '8.5px' : '9.5px'};">
+                <tr style="border-bottom: 1px dashed #000; font-size: ${is58mm ? '9.5px' : '12.5px'};">
                   <th style="text-align:left; width:54%;">Položka</th>
                   <th style="text-align:center; width:16%;">Ks</th>
                   <th style="text-align:right; width:30%;">Cena</th>
@@ -405,8 +406,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             className={`receipt-paper printable-receipt ${is58mm ? 'paper-58mm' : 'paper-80mm'}`}
             style={{
               width: is58mm ? '220px' : '320px',
-              padding: is58mm ? '18px 8px 26px 8px' : '26px 14px 36px 14px',
-              fontSize: is58mm ? '0.7rem' : '0.8rem',
+              padding: is58mm ? '8px 8px 16px 8px' : '10px 14px 18px 14px',
+              fontSize: is58mm ? '0.75rem' : '0.95rem',
               lineHeight: is58mm ? '1.25' : '1.35'
             }}
           >

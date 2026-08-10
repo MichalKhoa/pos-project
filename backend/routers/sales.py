@@ -4,7 +4,9 @@ from typing import List, Optional
 from database import get_db
 from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel
 from services.eet_service import CzechEETService
+from services.security_utils import parse_iso_timestamp, round_currency
 from pydantic import BaseModel
+
 from datetime import datetime
 
 router = APIRouter(prefix="/api/v1/sales", tags=["Sales Ledger"])
@@ -48,7 +50,9 @@ class SaleItemSchema(BaseModel):
     price: float
     quantity: int = 1
     vat: int = 21
-    discount_percent: float = 0.0
+    discount_percent: Optional[float] = 0.0
+    discountPercent: Optional[float] = 0.0
+
 
 
 class CreateSaleSchema(BaseModel):
@@ -254,16 +258,25 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
     return {"status": "UPDATED", "sale_id": sale_id}
 
 
-@router.delete("/{sale_id}")
-def delete_sale(sale_id: str, request: Request, db: Session = Depends(get_db)):
-    """Delete a test sale transaction (Admin Mode - Protected)."""
-    client_host = request.client.host if request.client else ""
-    if client_host not in ("127.0.0.1", "::1", "localhost", "testclient"):
+@router.delete("/purge-all")
+def purge_all_sales(request: Request, db: Session = Depends(get_db)):
+    """Delete all sales transactions (Admin Mode - Protected)."""
+    admin_header = request.headers.get("X-Admin-Override", "")
+    if admin_header.lower() != "true":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Transaction deletion is restricted to localhost admin session."
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Vyžadováno potvrzení administrátorského oprávnění (X-Admin-Override header)."
         )
 
+    db.query(SaleItemModel).delete()
+    db.query(SaleModel).delete()
+    db.commit()
+    return {"status": "DELETED_ALL"}
+
+
+@router.delete("/{sale_id}")
+def delete_sale(sale_id: str, request: Request, db: Session = Depends(get_db)):
+    """Delete a single test sale transaction (Admin Mode - Protected)."""
     admin_header = request.headers.get("X-Admin-Override", "")
     if admin_header.lower() != "true":
         raise HTTPException(
@@ -278,4 +291,5 @@ def delete_sale(sale_id: str, request: Request, db: Session = Depends(get_db)):
     db.delete(sale)
     db.commit()
     return {"status": "DELETED", "sale_id": sale_id}
+
 

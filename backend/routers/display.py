@@ -61,6 +61,10 @@ async def customer_display_websocket(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
+from services.hardware_display_service import HardwareLCDService
+
+hardware_lcd = HardwareLCDService(port="COM3")
+
 @router.post("/display/broadcast")
 async def broadcast_display_event(
     payload: Dict[str, Any] = Body(...),
@@ -68,7 +72,7 @@ async def broadcast_display_event(
 ):
     """
     HTTP POST endpoint allowing POS register app or backend services to broadcast customer display events.
-    Verifies payload structure before dispatching to WebSocket clients.
+    Verifies payload structure before dispatching to WebSocket clients and hardware VFD display on COM3.
     """
     # Sanitize and validate basic payload structure
     msg_type = payload.get("type", "CART_CLEAR")
@@ -79,6 +83,14 @@ async def broadcast_display_event(
         )
 
     await manager.broadcast_cart_update(payload)
-    return {"status": "SUCCESS", "active_displays": len(manager.active_connections)}
+    
+    # Send update to hardware serial VFD/LCD customer display on COM3
+    try:
+        hardware_lcd.send_display_update(payload)
+    except Exception as e:
+        logger.debug(f"Hardware LCD display update failed: {e}")
+
+    return {"status": "SUCCESS", "active_displays": len(manager.active_connections), "hardware_display": True}
+
 
 

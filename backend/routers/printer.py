@@ -28,9 +28,19 @@ def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
     address = config.printer_address if config else "/dev/usb/lp0"
 
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
-    success = printer_service.print_receipt(req.saleData, req.storeConfig)
+    res = printer_service.print_receipt(req.saleData, req.storeConfig)
 
-    if not success:
+    if isinstance(res, dict):
+        if not res.get("success"):
+            raise HTTPException(status_code=500, detail=res.get("error", "Failed to print to hardware thermal printer"))
+        return {
+            "status": res.get("status", "PRINTED"),
+            "physical": res.get("physical", False),
+            "receiptNumber": req.saleData.get("receiptNumber")
+        }
+
+    if not res:
         raise HTTPException(status_code=500, detail="Failed to print to hardware thermal printer")
 
-    return {"status": "PRINTED", "receiptNumber": req.saleData.get("receiptNumber")}
+    return {"status": "PRINTED", "physical": True, "receiptNumber": req.saleData.get("receiptNumber")}
+

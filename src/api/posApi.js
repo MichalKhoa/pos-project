@@ -181,6 +181,46 @@ export async function updateSaleRefundStatusBackend(saleId, refundStatus, refund
 }
 
 /**
+ * Delete a single test sale transaction from backend SQLite DB (Admin Mode)
+ */
+export async function deleteSaleBackend(saleId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/sales/${saleId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Override': 'true'
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`Failed to delete sale ${saleId} in backend:`, err);
+    return null;
+  }
+}
+
+/**
+ * Purge ALL test sales transactions from backend SQLite DB (Admin Mode)
+ */
+export async function purgeAllSalesBackend() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/sales/purge-all`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Override': 'true'
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to purge all test sales in backend:', err);
+    return null;
+  }
+}
+
+/**
  * Fetch sales history ledger from backend
  */
 export async function fetchSalesHistoryBackend() {
@@ -194,6 +234,7 @@ export async function fetchSalesHistoryBackend() {
     return null;
   }
 }
+
 
 /**
  * Safely request backend service shutdown at end of cashier shift

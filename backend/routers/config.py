@@ -20,34 +20,35 @@ def _is_hashed(value: str) -> bool:
 
 
 class StoreConfigSchema(BaseModel):
-    storeName: Optional[str] = "Himmel Home s.r.o."
-    street: Optional[str] = "Václavské náměstí 15"
-    city: Optional[str] = "110 00 Praha 1"
-    ico: Optional[str] = "12345678"
-    dic: Optional[str] = "CZ12345678"
-    registerNo: Optional[str] = "Pokladna #01"
-    defaultVat: Optional[int] = 21
-    receiptFooter: Optional[str] = "Děkujeme za váš nákup!"
-    bankAccountIban: Optional[str] = "CZ6508000000001234567890"
-    printerInterface: Optional[str] = "USB"
-    printerAddress: Optional[str] = "/dev/usb/lp0"
-    printerPaperWidth: Optional[str] = "80"
-    idProvozovny: Optional[str] = "11"
-    idPokl: Optional[str] = "1"
-    eetEnabled: Optional[bool] = False
-    eetEnvironment: Optional[str] = "playground"
-    csobTerminalEnabled: Optional[bool] = False
-    csobTerminalIp: Optional[str] = ""
-    csobTerminalPort: Optional[int] = 8888
-    csobTerminalId: Optional[str] = ""
-    cashierPin: Optional[str] = "1234"
-    autoLockMinutes: Optional[int] = 15
-    directHardwarePrint: Optional[bool] = True
-    defaultLanguage: Optional[str] = "cs"
-    cartPosition: Optional[str] = "left"
-    customerDisplayTitle: Optional[str] = "Vítejte u nás"
-    customerDisplayAutoSleep: Optional[bool] = True
-    customerDisplayStandbyDelay: Optional[int] = 10
+    storeName: Optional[str] = None
+    street: Optional[str] = None
+    city: Optional[str] = None
+    ico: Optional[str] = None
+    dic: Optional[str] = None
+    registerNo: Optional[str] = None
+    defaultVat: Optional[int] = None
+    receiptFooter: Optional[str] = None
+    bankAccountIban: Optional[str] = None
+    printerInterface: Optional[str] = None
+    printerAddress: Optional[str] = None
+    printerPaperWidth: Optional[str] = None
+    idProvozovny: Optional[str] = None
+    idPokl: Optional[str] = None
+    eetEnabled: Optional[bool] = None
+    eetEnvironment: Optional[str] = None
+    csobTerminalEnabled: Optional[bool] = None
+    csobTerminalIp: Optional[str] = None
+    csobTerminalPort: Optional[int] = None
+    csobTerminalId: Optional[str] = None
+    cashierPin: Optional[str] = None
+    autoLockMinutes: Optional[int] = None
+    directHardwarePrint: Optional[bool] = None
+    defaultLanguage: Optional[str] = None
+    cartPosition: Optional[str] = None
+    customerDisplayTitle: Optional[str] = None
+    customerDisplayAutoSleep: Optional[bool] = None
+    customerDisplayStandbyDelay: Optional[int] = None
+
 
 
 @router.get("")
