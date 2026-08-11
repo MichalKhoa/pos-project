@@ -13,16 +13,16 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale }) {
+export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale, disableAutoPrint = false }) {
   const [isPrinting, setIsPrinting] = useState(false);
   const autoPrintTriggeredRef = useRef(false);
 
   useEffect(() => {
-    if (storeConfig?.autoPrintReceipt && saleData && !autoPrintTriggeredRef.current) {
+    if (!disableAutoPrint && storeConfig?.autoPrintReceipt && saleData && !autoPrintTriggeredRef.current) {
       autoPrintTriggeredRef.current = true;
       handlePrint(false);
     }
-  }, [storeConfig?.autoPrintReceipt, saleData]);
+  }, [storeConfig?.autoPrintReceipt, saleData, disableAutoPrint]);
 
   if (!saleData) return null;
 

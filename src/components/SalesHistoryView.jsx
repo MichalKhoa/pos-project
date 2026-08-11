@@ -1312,6 +1312,7 @@ export default function SalesHistoryView({
           storeConfig={storeConfig}
           onClose={() => setSelectedSale(null)}
           onNewSale={() => setSelectedSale(null)}
+          disableAutoPrint={true}
         />
       )}
 
