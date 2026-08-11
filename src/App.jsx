@@ -128,6 +128,10 @@ export default function App() {
     setCartDiscountPercent,
     itemMultiplier,
     setItemMultiplier,
+    parkedCarts,
+    parkCurrentCart,
+    restoreParkedCart,
+    deleteParkedCart,
     addToCart,
     addItem: handleAddItem,
     updateQuantity: handleUpdateQty,
@@ -903,7 +907,7 @@ export default function App() {
       <main className="main-content">
         {activeTab === 'register' && (
           <>
-            <div className={`pos-layout ${(storeConfig?.cartPosition || 'left') === 'left' ? 'cart-layout-left' : 'cart-layout-right'}`}>
+            <div className={`pos-layout cart-layout-${storeConfig?.cartPosition || 'middle'}`}>
               <div className={`pos-col-left${isMobile && mobilePosTab !== 'keypad' ? ' mobile-hidden' : ''}`}>
                 <ManualKeypad
                   onAddToCart={handleAddToCart}
@@ -912,6 +916,13 @@ export default function App() {
                   itemMultiplier={itemMultiplier}
                   setItemMultiplier={setItemMultiplier}
                   defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
+                  onOpenCashDrawer={handleOpenCashDrawer}
+                  onApplyDiscount={handleApplyCartDiscount}
+                  parkedCarts={parkedCarts}
+                  onParkCart={parkCurrentCart}
+                  onRestoreParkedCart={restoreParkedCart}
+                  onDeleteParkedCart={deleteParkedCart}
+                  hasCartItems={cartItems.length > 0}
                 />
               </div>
 

@@ -700,11 +700,12 @@ export default function SettingsView({
                   Uspořádání Pokladny (Pozice Košíku)
                 </label>
                 <select
-                  value={config.cartPosition || 'left'}
+                  value={config.cartPosition || 'middle'}
                   onChange={e => setConfig({ ...config, cartPosition: e.target.value })}
                   style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--accent-emerald)', fontWeight: '800' }}
                 >
-                  <option value="left">🛒 Košík vlevo | Klávesy & Produkty vpravo (Doporučeno pro praváky)</option>
+                  <option value="middle">📦 Produkty Vlevo | 🔢 Klávesnice UPROSTŘED | 🛒 Košík Vpravo (Doporučeno pro Seniory)</option>
+                  <option value="left">🛒 Košík vlevo | Klávesy & Produkty vpravo</option>
                   <option value="right">Klávesy & Produkty vlevo | Košík vpravo 🛒</option>
                 </select>
               </div>

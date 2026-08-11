@@ -5,6 +5,25 @@ export function useCart() {
   const [cartDiscountPercent, setCartDiscountPercent] = useState(0);
   const [itemMultiplier, setItemMultiplier] = useState(1);
 
+  // Parked Carts state (temporary cart storage for holding transactions)
+  const [parkedCarts, setParkedCarts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('himmel_pos_parked_carts');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('himmel_pos_parked_carts', JSON.stringify(parkedCarts));
+    } catch (e) {
+      console.warn('Failed to save parked carts:', e);
+    }
+  }, [parkedCarts]);
+
   // Undo Toast state (for 4s item additions & removals)
   const [undoToast, setUndoToast] = useState(null);
   const toastTimerRef = useRef(null);
@@ -175,6 +194,52 @@ export function useCart() {
     setClearedCartSnapshot(null);
   }, []);
 
+  const parkCurrentCart = useCallback(() => {
+    if (cartItems.length === 0) return null;
+    const total = cartItems.reduce((sum, i) => {
+      const disc = i.discountPercent || 0;
+      return sum + (parseFloat(i.price) * (1 - disc / 100) * i.quantity);
+    }, 0) * (1 - cartDiscountPercent / 100);
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+
+    const newHold = {
+      id: `hold-${Date.now()}`,
+      timeStr,
+      items: cartItems,
+      cartDiscountPercent,
+      itemMultiplier,
+      totalAmount: total,
+      itemCount: cartItems.reduce((sum, i) => sum + i.quantity, 0)
+    };
+
+    setParkedCarts(prev => [newHold, ...prev]);
+    setCartItems([]);
+    setCartDiscountPercent(0);
+    setItemMultiplier(1);
+    dismissUndoToast();
+    return newHold;
+  }, [cartItems, cartDiscountPercent, itemMultiplier, dismissUndoToast]);
+
+  const restoreParkedCart = useCallback((id) => {
+    let restored = null;
+    setParkedCarts(prev => {
+      const target = prev.find(p => p.id === id);
+      if (!target) return prev;
+      restored = target;
+      setCartItems(target.items);
+      setCartDiscountPercent(target.cartDiscountPercent || 0);
+      setItemMultiplier(target.itemMultiplier || 1);
+      return prev.filter(p => p.id !== id);
+    });
+    return restored;
+  }, []);
+
+  const deleteParkedCart = useCallback((id) => {
+    setParkedCarts(prev => prev.filter(p => p.id !== id));
+  }, []);
+
   return {
     cartItems,
     setCartItems,
@@ -182,6 +247,10 @@ export function useCart() {
     setCartDiscountPercent,
     itemMultiplier,
     setItemMultiplier,
+    parkedCarts,
+    parkCurrentCart,
+    restoreParkedCart,
+    deleteParkedCart,
     addToCart,
     updateQuantity,
     updateItemDiscount,
