@@ -236,8 +236,9 @@ class ESCPOSPrinterService:
                     printer.text(separator + "\n")
 
                     # Document Title & Timestamp
-                    title = f"STORNO DOKLAD c. {receipt_num}" if is_refund else f"UCTENKA c. {receipt_num}"
+                    title = f"STORNO DOKLAD c. {receipt_num}" if is_refund else f"== DANOVY DOKLAD c. {receipt_num} =="
                     printer.set(align='center', font='a', width=1, height=1)
+                    printer.text(dash_line + "\n")
                     printer.text(f"{title}\n")
                     if is_refund and orig_num:
                         printer.text(f"Puvodni doklad: #{orig_num}\n")
@@ -251,7 +252,7 @@ class ESCPOSPrinterService:
                             formatted_ts = dt.strftime("%d.%m.%Y %H:%M:%S")
                         except Exception:
                             formatted_ts = ts_val[:19].replace('T', ' ')
-                        printer.text(f"{formatted_ts}\n")
+                        printer.text(f"Datum a cas: {formatted_ts}\n")
                     printer.text(dash_line + "\n")
 
                     # Items Header

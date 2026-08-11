@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Printer, CheckCircle, RotateCcw } from 'lucide-react';
 import { printReceiptBackend } from '../api/posApi';
-import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -115,12 +114,12 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       }
       return `
         <tr>
-          <td style="text-align:left; width:50%; padding:2px 0; word-break:break-word;">
-            <div>${itemName} ${disc > 0 ? `(-${disc}%)` : ''}</div>
-            <div style="font-size:${is58mm ? '7.5px' : '8.5px'}; color:#555;">DPH ${item.vat}%</div>
+          <td style="text-align:left; width:50%; padding: 4px 0; word-break: break-word;">
+            <div style="font-weight: 800; font-size: ${is58mm ? '9.5px' : '12px'}; color: #000;">${itemName} ${disc > 0 ? `<span style="font-style: italic; color: #dc2626;">(-${disc}%)</span>` : ''}</div>
+            <div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">DPH ${item.vat}%</div>
           </td>
-          <td style="text-align:center; width:15%; padding:2px 0;">${item.quantity}</td>
-          <td style="text-align:right; width:35%; padding:2px 0; white-space:nowrap;">${(effPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
+          <td style="text-align: center; width: 15%; padding: 4px 0; font-weight: 800; font-size: ${is58mm ? '9.5px' : '12px'};">${item.quantity}</td>
+          <td style="text-align: right; width: 35%; padding: 4px 0; font-weight: 900; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${(effPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
         </tr>
       `;
     }).join('');
@@ -148,41 +147,41 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
           </tbody>
         </table>
       ` : (is58mm ? `
-        <table style="width:100%; border-collapse:collapse; font-size:8px; margin-top:2px;">
+        <table style="width:100%; border-collapse:collapse; font-size:8.5px; margin-top:3px;">
           <thead>
-            <tr style="border-bottom:1px dashed #000; text-align:left;">
-              <th style="text-align:left;">Sazba</th>
-              <th style="text-align:right;">Základ</th>
-              <th style="text-align:right;">Daň</th>
+            <tr style="border-bottom:1px dashed #000; text-align:left; font-weight:900;">
+              <th style="text-align:left; padding: 2px 0;">Sazba</th>
+              <th style="text-align:right; padding: 2px 0;">Základ</th>
+              <th style="text-align:right; padding: 2px 0;">Daň</th>
             </tr>
           </thead>
           <tbody>
             ${Object.values(saleData.taxSummary).map(t => `
               <tr>
-                <td style="text-align:left;">${t.rate}%</td>
-                <td style="text-align:right;">${t.net.toFixed(2)}</td>
-                <td style="text-align:right;">${t.tax.toFixed(2)}</td>
+                <td style="text-align:left; font-weight:bold; padding: 2px 0;">${t.rate}%</td>
+                <td style="text-align:right; font-family:monospace; padding: 2px 0;">${t.net.toFixed(2)}</td>
+                <td style="text-align:right; font-family:monospace; padding: 2px 0;">${t.tax.toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
       ` : `
-        <table style="width:100%; border-collapse:collapse; font-size:9px; margin-top:2px;">
+        <table style="width:100%; border-collapse:collapse; font-size:9.5px; margin-top:3px;">
           <thead>
-            <tr style="border-bottom:1px dashed #000; text-align:left;">
-              <th style="text-align:left;">Sazba</th>
-              <th style="text-align:right;">Základ (Netto)</th>
-              <th style="text-align:right;">Daň (DPH)</th>
-              <th style="text-align:right;">Brutto</th>
+            <tr style="border-bottom:1px dashed #000; text-align:left; font-weight:900;">
+              <th style="text-align:left; padding: 2px 0;">Sazba</th>
+              <th style="text-align:right; padding: 2px 0;">Základ (Netto)</th>
+              <th style="text-align:right; padding: 2px 0;">Daň (DPH)</th>
+              <th style="text-align:right; padding: 2px 0;">Brutto</th>
             </tr>
           </thead>
           <tbody>
             ${Object.values(saleData.taxSummary).map(t => `
               <tr>
-                <td style="text-align:left;">${t.rate}%</td>
-                <td style="text-align:right;">${t.net.toFixed(2)} Kč</td>
-                <td style="text-align:right;">${t.tax.toFixed(2)} Kč</td>
-                <td style="text-align:right;">${t.gross.toFixed(2)} Kč</td>
+                <td style="text-align:left; font-weight:bold; padding: 2px 0;">${t.rate}%</td>
+                <td style="text-align:right; font-family:monospace; padding: 2px 0;">${t.net.toFixed(2)} Kč</td>
+                <td style="text-align:right; font-family:monospace; padding: 2px 0;">${t.tax.toFixed(2)} Kč</td>
+                <td style="text-align:right; font-family:monospace; font-weight:bold; padding: 2px 0;">${t.gross.toFixed(2)} Kč</td>
               </tr>
             `).join('')}
           </tbody>
@@ -201,69 +200,61 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Faktura / Daňový Doklad č. ${receiptNum}</title>
+            <title>Faktura / Daňový doklad č. ${receiptNum}</title>
             <style>
-              @page { size: A4 portrait; margin: 15mm; }
-              body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #111827; margin: 0; padding: 0; background: #fff; }
-              .a4-container { width: 100%; max-width: 190mm; margin: 0 auto; padding: 15mm 10mm 25mm 10mm; box-sizing: border-box; }
-              .flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
-              .header-box { border-bottom: 2px solid #111827; padding-bottom: 15px; margin-bottom: 20px; }
-              .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
-              table.items-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11px; }
-              table.items-table th { background: #f3f4f6; border-bottom: 2px solid #374151; padding: 8px; font-weight: 700; }
-              .total-banner { background: #f8fafc; border: 2px solid #1e293b; padding: 12px 16px; border-radius: 4px; text-align: right; margin-top: 15px; }
-              .eet-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 10px; margin-top: 20px; word-break: break-all; }
+              @page { margin: 15mm; size: A4; }
+              body { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; color: #1f2937; margin: 0; padding: 0; background: #fff; }
+              .invoice-card { max-width: 800px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px; }
+              .inv-header { display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 20px; }
+              .inv-title { font-size: 22px; font-weight: 800; color: #1e3a8a; margin: 0; }
+              .inv-meta { font-size: 12px; color: #4b5563; text-align: right; }
+              .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+              .inv-box { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 6px; padding: 12px 16px; }
+              .inv-box-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+              th { background: #f3f4f6; padding: 8px; font-weight: 700; color: #374151; font-size: 11px; }
+              .grand-total-box { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
             </style>
           </head>
           <body>
-            <div class="a4-container">
-              <div class="flex-between header-box">
-                <div style="display:flex; gap:12px; align-items:center;">
-                  <img src="${himmelLogo}" style="width: 48px; height: 48px;" />
-                  <div>
-                    <div style="font-size: 18px; font-weight: 800; color: #111827;">${storeName}</div>
-                    <div style="color:#4b5563; font-size:11px;">${street}, ${city}</div>
-                    <div style="color:#4b5563; font-size:11px;">IČO: ${ico} | DIČ: ${dic}</div>
-                  </div>
+            <div class="invoice-card">
+              <div class="inv-header">
+                <div>
+                  <h1 class="inv-title">${isRefund ? 'STORNO DOKLAD / DOBROPIS' : 'FAKTURA - DAŇOVÝ DOKLAD'}</h1>
+                  <div style="font-size: 14px; font-weight: 700; color: #2563eb; margin-top: 4px;">Číslo dokladu: ${receiptNum}</div>
                 </div>
-                <div style="text-align: right;">
-                  <div style="font-size: 18px; font-weight: 800; color: ${isRefund ? '#dc2626' : '#1e40af'};">
-                    ${isRefund ? 'STORNO DOKLAD / DOBROPIS' : 'DAŇOVÝ DOKLAD - ÚČTENKA'}
-                  </div>
-                  <div style="font-size: 14px; font-weight: 700; margin-top:2px;">č. ${receiptNum}</div>
-                  <div style="color:#6b7280; font-size:10px; margin-top:4px;">Datum vystavení: ${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</div>
-                  ${isRefund && origNumber ? `<div style="font-weight:700; color:#dc2626;">Původní doklad: #${origNumber}</div>` : ''}
+                <div class="inv-meta">
+                  <div>Datum vystavení: <strong>${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</strong></div>
+                  <div>Způsob úhrady: <strong>${payLabel}</strong></div>
+                  ${isRefund && origNumber ? `<div style="color: #dc2626; font-weight: 700; margin-top: 2px;">Původní doklad: #${origNumber}</div>` : ''}
                 </div>
               </div>
 
-              <div class="flex-between" style="margin-bottom: 20px; gap: 20px;">
-                <div style="flex:1; background:#f9fafb; padding:12px; border-radius:4px; border:1px solid #e5e7eb;">
-                  <div class="section-title">Dodavatel (Prodávající)</div>
-                  <div style="font-weight:700; font-size:12px;">${storeName}</div>
+              <div class="inv-grid">
+                <div class="inv-box">
+                  <div class="inv-box-title">Dodavatel (Prodejce)</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #111827;">${storeName}</div>
                   <div>${street}</div>
                   <div>${city}</div>
-                  <div style="margin-top:4px;">IČO: <b>${ico}</b> | DIČ: <b>${dic}</b></div>
+                  <div style="margin-top: 6px; font-weight: 600;">IČO: ${ico} | DIČ: ${dic}</div>
+                  <div style="font-size: 10px; color: #6b7280;">Provozovna č.: ${idProvozovny} | ${registerNo}</div>
                 </div>
-
-                <div style="flex:1; background:#f9fafb; padding:12px; border-radius:4px; border:1px solid #e5e7eb;">
-                  <div class="section-title">Platební Údaje</div>
-                  <div>Způsob úhrady: <b>${payLabel}</b></div>
-                  <div>Označení pokladny: <b>${registerNo}</b></div>
-                  <div>Provozovna ID: <b>${idProvozovny}</b></div>
-                  ${saleData.paymentMethod === 'cash' ? `<div>Přijatá hotovost: ${saleData.tenderedAmount || 0} Kč</div>` : ''}
+                <div class="inv-box">
+                  <div class="inv-box-title">Odběratel (Zákazník)</div>
+                  <div style="font-size: 13px; font-weight: 700; color: #374151;">Koncový zákazník</div>
+                  <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Běžný hotovostní / kartový prodej</div>
                 </div>
               </div>
 
-              <div class="section-title">Rozpis Položek Nákupu</div>
-              <table class="items-table">
+              <table>
                 <thead>
                   <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="text-align: left; width: 45%;">Název Položky</th>
-                    <th style="width: 12%;">Množství</th>
-                    <th style="text-align: right; width: 13%;">Cena / Ks</th>
-                    <th style="width: 10%;">DPH</th>
-                    <th style="text-align: right; width: 15%;">Celkem s DPH</th>
+                    <th style="width: 40px; text-align: center;">#</th>
+                    <th style="text-align: left;">Položka / Název zboží</th>
+                    <th style="width: 70px; text-align: center;">Množství</th>
+                    <th style="width: 90px; text-align: right;">Jedn. cena</th>
+                    <th style="width: 60px; text-align: center;">DPH %</th>
+                    <th style="width: 100px; text-align: right;">Celkem s DPH</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,27 +262,21 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                 </tbody>
               </table>
 
-              <div class="total-banner">
-                <span style="font-size: 13px; font-weight: 700; color: #4b5563; margin-right: 15px;">CELKEM K ${isRefund ? 'VRÁCENÍ' : 'ÚHRADĚ'}:</span>
-                <span style="font-size: 22px; font-weight: 900; color: #111827;">${saleData.totalAmount.toFixed(2)} Kč</span>
+              <div class="grand-total-box">
+                <div>
+                  <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #1e40af;">Celkem k úhradě včetně DPH</div>
+                  <div style="font-size: 11px; color: #3b82f6;">Způsob úhrady: ${payLabel}</div>
+                </div>
+                <div style="font-size: 24px; font-weight: 900; color: #1e3a8a;">${saleData.totalAmount.toFixed(2)} Kč</div>
               </div>
 
-              <div style="margin-top: 20px;">
-                <div class="section-title">Rekapitulace DPH</div>
-                ${taxHtml}
-              </div>
+              ${taxHtml}
 
-              <div class="eet-box">
-                <div style="font-weight:700; margin-bottom:4px;">ELEKTRONICKÁ EVIDENCE TRŽEB (EET 2.0 - ${fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})</div>
-                ${fik ? `<div>FIK: ${fik}</div>` : ''}
-                ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
-                ${pkp && !fik ? `<div>PKP: ${pkp}</div>` : ''}
-                ${!fik && (pkp || saleData.eet_status === 'OFFLINE_PENDING') ? `<div style="font-weight:700; margin-top:4px; color:#b45309;">Vystaveno ve zjednodušeném (neonline) režimu EET</div>` : ''}
-              </div>
-
-              <div style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 10px;">
+              <div style="margin-top: 24px; border-top: 1px dashed #d1d5db; padding-top: 12px; font-size: 10px; color: #6b7280; display: flex; justify-content: space-between;">
+                <div>
+                  ${(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? 'Režim provozu: Běžný prodej bez EET' : `EET FIK: ${fik || 'N/A'} | BKP: ${bkp || 'N/A'}`}
+                </div>
                 <div>${receiptFooter}</div>
-                <div style="margin-top: 2px;">Vystaveno v pokladním systému Himmel POS</div>
               </div>
             </div>
             <script>
@@ -308,8 +293,6 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
       return;
     }
 
-
-
     printWin.document.write(`
       <!DOCTYPE html>
       <html>
@@ -322,9 +305,9 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             .center { text-align: center; }
             .bold { font-weight: 900; }
             .dashed { border-top: 1px dashed #000; margin: 6px 0; }
-            .double-line { border-top: 2px dashed #000; border-bottom: 3px double #000; padding: 6px 0; margin: 6px 0; }
+            .divider-title { border: 1px dashed #000; padding: 4px 0; margin: 6px 0; font-size: ${is58mm ? '11px' : '13.5px'}; font-weight: 900; letter-spacing: 0.5px; text-align: center; }
             table { width: 100%; border-collapse: collapse; margin: 5px 0; table-layout: fixed; }
-            .total-row { display: flex; justify-content: space-between; font-size: ${is58mm ? '13px' : '17px'}; font-weight: 900; }
+            .total-row { display: flex; justify-content: space-between; font-size: ${is58mm ? '13.5px' : '17px'}; font-weight: 900; }
           </style>
         </head>
         <body>
@@ -334,8 +317,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'}; color: #333;">${city}</div>
             <div class="center bold" style="margin-top:2px; font-size: ${is58mm ? '9px' : '11.5px'};">IČO: ${ico} | DIČ: ${dic}</div>
             
-            <div class="dashed"></div>
-            <div class="center bold" style="font-size: ${is58mm ? '11px' : '14px'}; letter-spacing: 0.8px;">
+            <div class="divider-title">
               ${isRefund ? `↩️ STORNO DOKLAD č. ${receiptNum}` : `══ DAŇOVÝ DOKLAD č. ${receiptNum} ══`}
             </div>
             ${isRefund && origNumber ? `<div class="center bold" style="font-size: ${is58mm ? '9px' : '11px'}; color: #dc2626;">Původní doklad č.: #${origNumber}</div>` : ''}
@@ -346,9 +328,9 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <table>
               <thead>
                 <tr style="border-bottom: 2px dashed #000; font-size: ${is58mm ? '9.5px' : '12px'}; text-transform: uppercase;">
-                  <th style="text-align:left; width:54%;">Položka</th>
-                  <th style="text-align:center; width:16%;">Ks</th>
-                  <th style="text-align:right; width:30%;">Cena</th>
+                  <th style="text-align:left; width:50%; padding: 4px 0;">Položka</th>
+                  <th style="text-align:center; width:15%; padding: 4px 0;">Ks</th>
+                  <th style="text-align:right; width:35%; padding: 4px 0;">Cena</th>
                 </tr>
               </thead>
               <tbody>
@@ -356,7 +338,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               </tbody>
             </table>
 
-            <div class="double-line">
+            <div style="border-top: 2px dashed #000; border-bottom: 3px double #000; padding: 8px 0; margin: 6px 0;">
               <div class="total-row">
                 <span>CELKEM K ${isRefund ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
                 <span>${saleData.totalAmount.toFixed(0)} Kč</span>
@@ -366,7 +348,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <div style="font-size: ${is58mm ? '8.5px' : '10px'}; margin: 4px 0;">
               <div style="display:flex; justify-content:space-between;">
                 <span>Způsob úhrady:</span>
-                <span class="bold">${payLabel}</span>
+                <span class="bold" style="letter-spacing: 0.5px;">${payLabel}</span>
               </div>
               ${saleData.paymentMethod === 'split' && saleData.splitDetails ? `
                 <div style="font-size: ${is58mm ? '7.5px' : '9px'}; margin-top:2px;">
@@ -376,24 +358,24 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               ` : ''}
               ${saleData.paymentMethod === 'cash' ? `
                 <div style="display:flex; justify-content:space-between;"><span>Přijatá hotovost:</span><span class="bold">${(saleData.tenderedAmount || 0).toFixed(0)} Kč</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Vrácená hotovost:</span><span class="bold">${(saleData.changeDue || 0).toFixed(0)} Kč</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Vrácená hotovost:</span><span class="bold" style="color: #059669;">${(saleData.changeDue || 0).toFixed(0)} Kč</span></div>
               ` : ''}
             </div>
 
             <div class="dashed"></div>
-            <div style="font-size: ${is58mm ? '8.5px' : '10px'}; font-weight: bold; margin-bottom: 2px;">ROZPIS DPH:</div>
+            <div style="font-size: ${is58mm ? '8.5px' : '10px'}; font-weight: 900; margin-bottom: 2px;">REKAPITULACE DPH:</div>
             ${taxHtml}
 
             <div class="dashed"></div>
             <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; word-break: break-all;">
               ${(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? `
-                <div class="bold">Režim provozu: Běžný prodej bez EET</div>
+                <div class="bold">REŽIM PROVOZU: BĚŽNÝ PRODEJ BEZ EET</div>
               ` : `
                 <div class="bold">EET 2.0 (${fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})</div>
                 ${fik ? `<div>FIK: ${fik}</div>` : ''}
                 ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
                 ${pkp && !fik ? `<div>PKP: ${pkp.slice(0, 32)}...</div>` : ''}
-                ${!fik && (pkp || saleData.eet_status === 'OFFLINE_PENDING') ? `<div class="bold" style="margin-top:2px;">Vystaveno ve zjednodušeném (neonline) režimu EET</div>` : ''}
+                ${!fik && (pkp || saleData.eet_status === 'OFFLINE_PENDING') ? `<div class="bold" style="margin-top:2px; color: #b45309;">Vystaveno ve zjednodušeném (neonline) režimu EET</div>` : ''}
               `}
             </div>
 
@@ -416,9 +398,6 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     printWin.document.close();
     setTimeout(() => setIsPrinting(false), 1500);
   };
-
-
-
 
   return (
     <div className="modal-overlay">
@@ -478,10 +457,6 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             }}
           >
             <div className="receipt-header">
-              {/* Optional Store Logo Header */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.4rem' }}>
-                <img src={himmelLogo} alt="Himmel Logo" style={{ height: is58mm ? '28px' : '36px', opacity: 0.9 }} />
-              </div>
               <div className="receipt-store-name" style={{ fontSize: is58mm ? '1.05rem' : '1.25rem' }}>{storeConfig.storeName}</div>
               <div style={{ fontSize: is58mm ? '0.72rem' : '0.82rem', color: '#444' }}>{storeConfig.street}</div>
               <div style={{ fontSize: is58mm ? '0.72rem' : '0.82rem', color: '#444' }}>{storeConfig.city}</div>
