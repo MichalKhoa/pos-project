@@ -29,7 +29,11 @@ export const translations = {
       tax_total: "DPH celkem:",
       custom_sale: "Rychlý prodej / Volná částka",
       vat: "DPH",
-      open_drawer: "Otevřít zásuvku"
+      open_drawer: "Otevřít pokladní zásuvku",
+      refund_title: "↩️ Vratka / Vrácení Zboží",
+      refund_customer: "↩️ K VRÁCENÍ ZÁKAZNÍKOVI:",
+      refund_cash: "Vrátit Hotovost",
+      refund_card: "Vrátit na Kartu"
     },
     keypad: {
       manual_title: "Ruční Zadání Částky",
@@ -42,7 +46,9 @@ export const translations = {
       quick_count: "Rychlé množství",
       inc_qty: "Pridat 1ks",
       dec_qty: "Odebrat 1ks",
-      multiplier: "Násobič"
+      multiplier: "Násobič",
+      sign_toggle: "± Vratka",
+      return_item_default: "↩️ Vratka / Vrácené zboží"
     },
     calendar: {
       title: "Kalendář Směny & Státní Svátky ČR",
@@ -147,7 +153,11 @@ export const translations = {
       barcodes_placeholder: "např. 859123456701, 859123456702",
       vat_standard: "21% (Základní)",
       vat_reduced: "12% (Snížená)",
-      vat_zero: "0% (Osvobozeno)"
+      vat_zero: "0% (Osvobozeno)",
+      preset_icon: "Ikona položky",
+      preset_photo: "Fotografie položky",
+      upload_photo: "Nahrát foto",
+      no_icon: "Bez ikony"
     },
     inventory: {
       title: "Správa Skladu & Čárových Kódů",
@@ -293,6 +303,12 @@ export const translations = {
       print_test_ruler: "Vytisknout Testovací Pravítko Šířky",
       receipt_footer: "Text v zápatí účtenky",
       save_store: "Uložit Nastavení Prodejny",
+      grid_density_label: "Velikost & Počet Sloupců Tlačítek Sortimentu (Grid Density)",
+      grid_auto: "⚡ Automaticky (Auto-fit podle rozlišení obrazovky)",
+      grid_3_cols: "📐 3 Sloupce (Velká přehledná tlačítka / Menší dotykovky)",
+      grid_4_cols: "🖥️ 4 Sloupce (Standardní velikost)",
+      grid_5_cols: "⚡ 5 Sloupců (Kompaktní hustota)",
+      grid_6_cols: "🚀 6 Sloupců (Maximální počet položek bez scrollování)",
       csob_title: "Platební Terminál ČSOB (Ingenico Move 3500)",
       csob_mode: "Režim Komunikace s Platebním Terminálem",
       csob_manual_mode: "💳 Ruční Samostatný Režim",
@@ -371,7 +387,11 @@ export const translations = {
       tax_total: "Tổng DPH:",
       custom_sale: "Bán nhanh / Số tiền tự do",
       vat: "DPH",
-      open_drawer: "Mở ngăn kéo"
+      open_drawer: "Mở ngăn kéo tiền",
+      refund_title: "↩️ Trả Hàng / Hoàn Tiền",
+      refund_customer: "↩️ HOÀN TIỀN CHO KHÁCH:",
+      refund_cash: "Hoàn Tiền Mặt",
+      refund_card: "Hoàn Vào Thẻ"
     },
     keypad: {
       manual_title: "Nhập Số Tiền Thủ Công",
@@ -380,7 +400,9 @@ export const translations = {
       ready: "Sẵn sàng",
       add_to_cart: "Thêm Vào Giỏ Hàng",
       enter_amount: "Nhập Số Tiền",
-      cancel_multiplier: "Hủy"
+      cancel_multiplier: "Hủy",
+      sign_toggle: "± Trả hàng",
+      return_item_default: "↩️ Hàng trả lại"
     },
     calendar: {
       title: "Lịch Ca Làm Việc & Ngày Lễ Séc",
@@ -485,7 +507,11 @@ export const translations = {
       barcodes_placeholder: "ví dụ 859123456701, 859123456702",
       vat_standard: "21% (Chuẩn)",
       vat_reduced: "12% (Giảm)",
-      vat_zero: "0% (Miễn thuế)"
+      vat_zero: "0% (Miễn thuế)",
+      preset_icon: "Biểu tượng sản phẩm",
+      preset_photo: "Ảnh sản phẩm",
+      upload_photo: "Tải ảnh lên",
+      no_icon: "Không dùng biểu tượng"
     },
     history: {
       title: "Lịch Sử & Tổng Quan Bán Hàng",
@@ -605,6 +631,12 @@ export const translations = {
       print_test_ruler: "In Thước Kiểm Tra Khổ Giấy",
       receipt_footer: "Lời cảm ơn chân hóa đơn",
       save_store: "Lưu Cài Đặt Cửa Hàng",
+      grid_density_label: "Số Cột Hiển Thị Sản Phẩm (Grid Density)",
+      grid_auto: "⚡ Tự động (Theo màn hình)",
+      grid_3_cols: "📐 3 Cột (Nút lớn dễ chọn)",
+      grid_4_cols: "🖥️ 4 Cột (Tiêu chuẩn)",
+      grid_5_cols: "⚡ 5 Cột (Nhỏ gọn)",
+      grid_6_cols: "🚀 6 Cột (Hiển thị tối đa)",
       csob_title: "Máy Quẹt Thẻ ČSOB (Ingenico Move 3500)",
       csob_mode: "Chế Độ Kết Nối Máy Quẹt Thẻ",
       csob_manual_mode: "💳 Chế Độ Thủ Công Độc Lập",
@@ -706,7 +738,11 @@ export const translations = {
       tax_total: "Total VAT:",
       custom_sale: "Quick Sale / Open Amount",
       vat: "VAT",
-      open_drawer: "Open Drawer"
+      open_drawer: "Open Cash Drawer",
+      refund_title: "↩️ Item Return / Refund",
+      refund_customer: "↩️ REFUND TO CUSTOMER:",
+      refund_cash: "Refund Cash",
+      refund_card: "Refund to Card"
     },
     keypad: {
       manual_title: "Manual Amount Entry",
@@ -715,7 +751,9 @@ export const translations = {
       ready: "Ready",
       add_to_cart: "Add to Cart",
       enter_amount: "Enter Amount",
-      cancel_multiplier: "Cancel"
+      cancel_multiplier: "Cancel",
+      sign_toggle: "± Refund",
+      return_item_default: "↩️ Returned Item"
     },
     calendar: {
       title: "Shift Calendar & Czech National Holidays",
@@ -820,7 +858,11 @@ export const translations = {
       barcodes_placeholder: "e.g. 859123456701, 859123456702",
       vat_standard: "21% (Standard)",
       vat_reduced: "12% (Reduced)",
-      vat_zero: "0% (Exempt)"
+      vat_zero: "0% (Exempt)",
+      preset_icon: "Item Icon",
+      preset_photo: "Item Photo",
+      upload_photo: "Upload Photo",
+      no_icon: "No Icon"
     },
     history: {
       title: "Sales History & Ledger Overview",
@@ -940,6 +982,12 @@ export const translations = {
       print_test_ruler: "Print Test Margin Ruler",
       receipt_footer: "Receipt Footer Text",
       save_store: "Save Store Settings",
+      grid_density_label: "Product Grid Columns (Grid Density)",
+      grid_auto: "⚡ Auto-fit (Responsive Screen)",
+      grid_3_cols: "📐 3 Columns (Large Touch Buttons)",
+      grid_4_cols: "🖥️ 4 Columns (Standard)",
+      grid_5_cols: "⚡ 5 Columns (Compact)",
+      grid_6_cols: "🚀 6 Columns (Maximum Density)",
       csob_title: "ČSOB Payment Terminal (Ingenico Move 3500)",
       csob_mode: "Payment Terminal Communication Mode",
       csob_manual_mode: "💳 Manual Standalone Mode",

@@ -712,18 +712,18 @@ export default function SettingsView({
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                  Velikost & Počet Sloupců Tlačítek Sortimentu (Grid Density)
+                  {t('settings.grid_density_label')}
                 </label>
                 <select
                   value={config.presetGridColumns || 'auto'}
                   onChange={e => setConfig({ ...config, presetGridColumns: e.target.value })}
                   style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--accent-blue)', fontWeight: '800' }}
                 >
-                  <option value="auto">⚡ Automaticky (Auto-fit podle rozlišení obrazovky)</option>
-                  <option value="3">📐 3 Sloupce (Velká přehledná tlačítka / Menší dotykovky)</option>
-                  <option value="4">🖥️ 4 Sloupce (Standardní velikost)</option>
-                  <option value="5">⚡ 5 Sloupců (Kompaktní hustota)</option>
-                  <option value="6">🚀 6 Sloupců (Maximální počet položek bez scrollování)</option>
+                  <option value="auto">{t('settings.grid_auto')}</option>
+                  <option value="3">{t('settings.grid_3_cols')}</option>
+                  <option value="4">{t('settings.grid_4_cols')}</option>
+                  <option value="5">{t('settings.grid_5_cols')}</option>
+                  <option value="6">{t('settings.grid_6_cols')}</option>
                 </select>
               </div>
 
