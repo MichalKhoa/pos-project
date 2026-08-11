@@ -56,6 +56,7 @@ export default function PaymentModal({
 
   // Split payment state
   const [splitCashStr, setSplitCashStr] = useState('0');
+  const [splitStep, setSplitStep] = useState(1);
 
   const isRefund = totalAmount < 0;
   const absTotal = Math.abs(totalAmount);
