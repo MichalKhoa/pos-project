@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Delete, PlusCircle, ChevronUp, ChevronDown, Percent, Unlock, PauseCircle, PlayCircle, X, Trash2, Clock, ShoppingBag } from 'lucide-react';
+import { Calculator, Delete, PlusCircle, ChevronUp, ChevronDown, Percent, PauseCircle, PlayCircle, X, Trash2, Clock, ShoppingBag } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import CashDrawerIcon from './CashDrawerIcon';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -495,22 +496,24 @@ export default function ManualKeypad({
             className="key-btn"
             onClick={onOpenCashDrawer}
             style={{
-              height: '36px',
-              fontSize: '0.78rem',
-              fontWeight: '800',
-              background: 'rgba(245,158,11,0.08)',
-              color: 'var(--accent-amber)',
-              border: '1px solid rgba(245,158,11,0.3)',
-              borderRadius: '8px',
+              height: '42px',
+              fontSize: '0.84rem',
+              fontWeight: '900',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)',
+              color: '#f59e0b',
+              border: '1.5px solid rgba(245, 158, 11, 0.5)',
+              borderRadius: '10px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.4rem',
-              width: '100%'
+              gap: '0.5rem',
+              width: '100%',
+              boxShadow: '0 3px 10px rgba(245, 158, 11, 0.15)',
+              cursor: 'pointer'
             }}
             title="Otevřít Pokladní Zásuvku"
           >
-            <Unlock size={14} />
+            <CashDrawerIcon size={18} color="#f59e0b" />
             <span>Otevřít pokladní zásuvku</span>
           </button>
         )}

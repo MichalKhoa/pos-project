@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Vault } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import CashDrawerIcon from './CashDrawerIcon';
 
 function ClearedCartBanner({ snapshot, onRestore, onDismiss }) {
   const [progress, setProgress] = useState(100);
@@ -337,10 +338,28 @@ export default function Cart({
             type="button"
             className="cart-drawer-btn"
             onClick={onOpenCashDrawer}
-            title={t('cart.open_drawer') || 'Otevřít zásuvku'}
+            title={t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}
+            style={{
+              height: '44px',
+              fontSize: '0.86rem',
+              fontWeight: '900',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)',
+              color: '#f59e0b',
+              border: '1.5px solid rgba(245, 158, 11, 0.5)',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              width: '100%',
+              cursor: 'pointer',
+              boxShadow: '0 3px 12px rgba(245, 158, 11, 0.18)',
+              transition: 'all 0.15s ease',
+              marginTop: '0.35rem'
+            }}
           >
-            <Vault size={16} style={{ flexShrink: 0 }} />
-            <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
+            <CashDrawerIcon size={18} color="#f59e0b" />
+            <span>{t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}</span>
           </button>
         )}
       </div>
