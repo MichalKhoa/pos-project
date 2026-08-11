@@ -192,7 +192,7 @@ export default function QuickPresetGrid({
     } else {
       if (preset.isOpenPrice) {
         const numericKeypad = parseFloat(keypadAmount);
-        if (!isNaN(numericKeypad) && numericKeypad > 0) {
+        if (!isNaN(numericKeypad) && numericKeypad !== 0) {
           // Auto-pickup pre-typed amount from manual keypad!
           onAddToCart({
             ...preset,
@@ -203,7 +203,7 @@ export default function QuickPresetGrid({
           // Trigger Open Price prompt modal
           setOpenPriceTarget(preset);
           setEnteredOpenPrice('');
-          setOpenPriceQty(itemMultiplier > 1 ? itemMultiplier : 1);
+          setOpenPriceQty(itemMultiplier !== 1 ? itemMultiplier : 1);
         }
       } else {
         onAddToCart(preset, itemMultiplier);
@@ -214,7 +214,7 @@ export default function QuickPresetGrid({
   const handleConfirmOpenPrice = (e) => {
     e.preventDefault();
     const priceVal = parseFloat(enteredOpenPrice);
-    if (isNaN(priceVal) || priceVal <= 0 || !openPriceTarget) return;
+    if (isNaN(priceVal) || priceVal === 0 || !openPriceTarget) return;
 
     onAddToCart({
       ...openPriceTarget,
@@ -672,20 +672,20 @@ export default function QuickPresetGrid({
               {/* Amount display */}
               <div style={{
                 background: 'var(--bg-input)', borderRadius: '10px',
-                border: openPriceQty > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)',
-                boxShadow: openPriceQty > 1 ? '0 0 12px rgba(245,158,11,0.2)' : 'none',
+                border: (openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? '2px solid var(--accent-rose)' : (openPriceQty > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)'),
+                boxShadow: (openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? '0 0 12px rgba(239, 68, 68, 0.3)' : (openPriceQty > 1 ? '0 0 12px rgba(245,158,11,0.2)' : 'none'),
                 padding: '0.5rem 0.85rem', textAlign: 'right', transition: 'all 0.2s ease'
               }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--text-muted)', textAlign: 'left' }}>
-                  {t('presets.open_price_label')}
+                <div style={{ fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.06em', color: (openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? 'var(--accent-rose)' : (openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--text-muted)'), textAlign: 'left' }}>
+                  {(openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? '↩️ VRATKA ZBOŽÍ (Zadána záporná částka)' : t('presets.open_price_label')}
                 </div>
-                <div style={{ fontSize: openPriceQty > 1 ? '1.55rem' : '2rem', fontWeight: '900', color: openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
-                  {openPriceQty > 1
+                <div style={{ fontSize: openPriceQty !== 1 ? '1.55rem' : '2rem', fontWeight: '900', color: (openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? 'var(--accent-rose)' : (openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--accent-emerald)'), fontFamily: 'var(--font-mono)', lineHeight: 1.2 }}>
+                  {openPriceQty !== 1
                     ? `${openPriceQty} × ${enteredOpenPrice ? `${enteredOpenPrice} Kč` : '___ Kč'}`
                     : (enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč')}
                 </div>
-                {openPriceQty > 1 && enteredOpenPrice && parseFloat(enteredOpenPrice) > 0 && (
-                  <div style={{ fontSize: '0.84rem', fontWeight: '800', fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', borderTop: '1px dashed rgba(245,158,11,0.35)', paddingTop: '2px', marginTop: '2px' }}>
+                {openPriceQty !== 1 && enteredOpenPrice && parseFloat(enteredOpenPrice) !== 0 && (
+                  <div style={{ fontSize: '0.84rem', fontWeight: '800', fontFamily: 'var(--font-mono)', color: (openPriceQty * parseFloat(enteredOpenPrice)) < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)', borderTop: '1px dashed rgba(245,158,11,0.35)', paddingTop: '2px', marginTop: '2px' }}>
                     = Celkem {(openPriceQty * parseFloat(enteredOpenPrice)).toLocaleString('cs-CZ')} Kč
                   </div>
                 )}
@@ -695,26 +695,28 @@ export default function QuickPresetGrid({
               <div style={{ display: 'flex', gap: '0.4rem' }}>
                 <button
                   type="button"
-                  onClick={() => setOpenPriceQty(prev => Math.max(1, prev - 1))}
-                  disabled={openPriceQty <= 1}
+                  onClick={() => setOpenPriceQty(prev => {
+                    if (prev === 1) return -1;
+                    if (prev === -1) return -2;
+                    return prev - 1;
+                  })}
                   style={{
                     flex: 1, height: '36px', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-                    background: openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--bg-input)',
-                    border: '1.5px solid var(--border-color)',
+                    background: openPriceQty < 0 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
+                    border: openPriceQty < 0 ? 'none' : '1.5px solid var(--border-color)',
                     fontWeight: '900', fontSize: '0.85rem',
-                    color: openPriceQty > 1 ? '#000' : 'var(--text-muted)',
-                    opacity: openPriceQty <= 1 ? 0.38 : 1,
-                    cursor: openPriceQty > 1 ? 'pointer' : 'default',
+                    color: (openPriceQty < 0 || openPriceQty > 1) ? '#fff' : 'var(--text-primary)',
+                    cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
-                  title="Snížit množství"
+                  title="Snížit množství / Přepnout na Vratku (-1x)"
                 >
-                  <ChevronDown size={16} /><span>-1</span>
+                  <ChevronDown size={16} /><span>{openPriceQty === 1 ? '↩️ -1ks Vratka' : '-1ks'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setOpenPriceQty(prev => prev + 1)}
+                  onClick={() => setOpenPriceQty(prev => (prev < 0 ? 1 : prev + 1))}
                   style={{
                     flex: 1, height: '36px', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
@@ -788,7 +790,7 @@ export default function QuickPresetGrid({
                   ,
                 </button>
 
-                <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
+                <button type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
                   if (prev.includes('.')) {
                     const parts = prev.split('.');
                     if (parts[1] && parts[1].length >= 2) return prev;
@@ -796,13 +798,28 @@ export default function QuickPresetGrid({
                   return prev.length < 10 ? prev + '0' : prev;
                 })}>0</button>
 
-                <button type="button" className="key-btn" style={{ height: '52px', gridColumn: 'span 2', aspectRatio: 'auto' }} onClick={() => setEnteredOpenPrice(prev => {
-                  if (prev.includes('.')) {
-                    const parts = prev.split('.');
-                    if (parts[1] && parts[1].length >= 2) return prev;
-                  }
-                  return prev.length < 10 ? prev + '00' : prev;
-                })}>00</button>
+                <button
+                  type="button"
+                  className="key-btn"
+                  style={{
+                    height: '52px',
+                    fontSize: '0.82rem',
+                    fontWeight: '900',
+                    background: enteredOpenPrice.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.15)',
+                    color: enteredOpenPrice.startsWith('-') ? '#ffffff' : 'var(--accent-rose)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    gridColumn: 'span 3',
+                    aspectRatio: 'auto'
+                  }}
+                  onClick={() => setEnteredOpenPrice(prev => {
+                    if (!prev) return '-';
+                    if (prev.startsWith('-')) return prev.slice(1);
+                    return '-' + prev;
+                  })}
+                  title="Změnit znaménko / Vratka"
+                >
+                  ± Vratka (Překlopit zápornou cenu)
+                </button>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
