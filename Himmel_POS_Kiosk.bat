@@ -60,12 +60,19 @@ if %errorlevel% equ 0 (
 REM 4. Check if backend is already running on port 8000
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo [INFO] Backend is already active on port 8000.
+    echo [INFO] Backend is active on port 8000.
 ) else (
-    echo Starting Himmel POS Backend Service...
-    start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
-    echo Waiting for backend server...
-    timeout /t 3 /nobreak >nul 2>&1
+    sc query HimmelPOSBackend >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [INFO] Starting Himmel POS NSSM Windows Service...
+        net start HimmelPOSBackend >nul 2>&1
+        timeout /t 2 /nobreak >nul 2>&1
+    ) else (
+        echo Starting Himmel POS Backend Service...
+        start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
+        echo Waiting for backend server...
+        timeout /t 3 /nobreak >nul 2>&1
+    )
 )
 
 REM 5. Open MS Edge in Full-Screen Kiosk Mode

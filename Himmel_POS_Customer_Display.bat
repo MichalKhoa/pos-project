@@ -38,9 +38,16 @@ if not exist "%~dp0dist\index.html" (
 REM 3. Check if backend is already running; if not, launch it
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Starting Python Backend Service...
-    start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
-    timeout /t 3 /nobreak >nul 2>&1
+    sc query HimmelPOSBackend >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo Starting Himmel POS NSSM Windows Service...
+        net start HimmelPOSBackend >nul 2>&1
+        timeout /t 2 /nobreak >nul 2>&1
+    ) else (
+        echo Starting Python Backend Service...
+        start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
+        timeout /t 3 /nobreak >nul 2>&1
+    )
 )
 
 REM 4. Launch Edge directly into Customer Display route in full app mode

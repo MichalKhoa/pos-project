@@ -57,14 +57,20 @@ if %errorlevel% equ 0 (
 
 REM 5. Restart Background Service / Register Application
 echo.
-echo [5/5] Restarting Himmel POS...
-schtasks /query /tn "HimmelPOSBackend" >nul 2>&1
+echo [5/5] Restarting Himmel POS Service...
+sc query HimmelPOSBackend >nul 2>&1
 if %errorlevel% equ 0 (
-    echo Starting Background Service...
-    schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
+    echo Starting NSSM Windows Service...
+    net start HimmelPOSBackend >nul 2>&1
 ) else (
-    echo Launching Register Desktop App...
-    start "" "%~dp0Himmel_POS.bat"
+    schtasks /query /tn "HimmelPOSBackend" >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo Starting Scheduled Task Service...
+        schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
+    ) else (
+        echo Launching Register Desktop App...
+        start "" "%~dp0Himmel_POS.bat"
+    )
 )
 
 echo.

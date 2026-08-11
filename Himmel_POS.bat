@@ -62,10 +62,17 @@ netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo [INFO] Backend is already running on port 8000.
 ) else (
-    echo [INFO] Starting Backend Service - LAN and Customer Display Ready...
-    start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
-    echo Waiting for backend server initialization...
-    timeout /t 3 /nobreak >nul
+    sc query HimmelPOSBackend >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [INFO] Starting Himmel POS NSSM Windows Service...
+        net start HimmelPOSBackend >nul 2>&1
+        timeout /t 2 /nobreak >nul 2>&1
+    ) else (
+        echo [INFO] Starting Backend Service - LAN and Customer Display Ready...
+        start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
+        echo Waiting for backend server initialization...
+        timeout /t 3 /nobreak >nul
+    )
 )
 
 REM 5. Start Litestream if present and not running

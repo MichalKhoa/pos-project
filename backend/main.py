@@ -344,6 +344,9 @@ def shutdown_system(request: Request):
         try:
             import sys
             if sys.platform == "win32":
+                # Stop NSSM service cleanly if installed & active
+                subprocess.run(["net", "stop", "HimmelPOSBackend"], shell=False, capture_output=True)
+
                 # Target POS launcher terminal windows and app instances (avoiding indiscriminate process kills)
                 subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Web*"], shell=False, capture_output=True)
                 subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Launcher*"], shell=False, capture_output=True)

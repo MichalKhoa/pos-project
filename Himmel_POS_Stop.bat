@@ -5,7 +5,14 @@ echo   Stopping all Himmel POS Services and Terminals...
 echo ========================================================
 echo.
 
-REM 1. Close command prompt windows by window title
+REM 1. Stop NSSM Windows Service if installed
+sc query HimmelPOSBackend >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Stopping Himmel POS Windows Service...
+    net stop HimmelPOSBackend >nul 2>&1
+)
+
+REM 2. Close command prompt windows by window title
 echo Closing Backend Terminals...
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
 

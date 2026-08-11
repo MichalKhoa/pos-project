@@ -56,8 +56,17 @@ if not exist "%~dp0dist\index.html" (
 )
 
 REM 4. Launch Python FastAPI Backend
-echo Starting Python Backend Service...
-start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
+netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
+if %errorlevel% neq 0 (
+    sc query HimmelPOSBackend >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo Starting Himmel POS NSSM Windows Service...
+        net start HimmelPOSBackend >nul 2>&1
+    ) else (
+        echo Starting Python Backend Service...
+        start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
+    )
+)
 
 REM 5. Launch Vite Dev Server on 0.0.0.0 (if npm available)
 where npm >nul 2>&1
