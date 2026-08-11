@@ -221,10 +221,14 @@ export default function ManualKeypad({
           type="button"
           onClick={() => {
             triggerKeyAnimation('DEC_QTY');
+            if (amountStr && !amountStr.startsWith('-') && itemMultiplier === 1) {
+              setAmountStr('-' + amountStr);
+              return;
+            }
             if (setItemMultiplier) {
               setItemMultiplier(prev => {
-                if (prev === 1) return -1; // Switch directly to -1 return multiplier
-                if (prev < 0) return prev - 1; // e.g. -1 -> -2 (increases refund count)
+                if (prev === 1) return -1;
+                if (prev < 0) return prev - 1;
                 return prev - 1;
               });
             }
@@ -232,27 +236,31 @@ export default function ManualKeypad({
           style={{
             flex: 1, height: '34px', display: 'flex', alignItems: 'center',
             justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-            background: itemMultiplier < 0 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
-            border: itemMultiplier < 0 ? 'none' : '1.5px solid var(--border-color)',
-            fontWeight: '900', fontSize: '0.82rem',
-            color: (itemMultiplier < 0 || itemMultiplier > 1) ? '#fff' : 'var(--text-primary)',
+            background: (itemMultiplier < 0 || (amountStr && amountStr.startsWith('-'))) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
+            border: (itemMultiplier < 0 || (amountStr && amountStr.startsWith('-'))) ? 'none' : '1.5px solid var(--border-color)',
+            fontWeight: '900', fontSize: '0.85rem',
+            color: (itemMultiplier < 0 || itemMultiplier > 1 || (amountStr && amountStr.startsWith('-'))) ? '#fff' : 'var(--text-primary)',
             cursor: 'pointer',
-            transition: 'all 0.15s ease', boxShadow: itemMultiplier < 0 ? '0 2px 8px rgba(239,68,68,0.35)' : 'none'
+            transition: 'all 0.15s ease', boxShadow: (itemMultiplier < 0 || (amountStr && amountStr.startsWith('-'))) ? '0 2px 8px rgba(239,68,68,0.35)' : 'none'
           }}
-          title="Více do vratky (-1ks)"
+          title="Snížit množství / Vratka (-1)"
         >
           <ChevronDown size={16} />
-          <span>{itemMultiplier === 1 ? '↩️ -1ks Vratka' : '-1ks Vratka'}</span>
+          <span>-1</span>
         </button>
 
         <button
           type="button"
           onClick={() => {
             triggerKeyAnimation('INC_QTY');
+            if (amountStr && amountStr.startsWith('-') && itemMultiplier === 1) {
+              setAmountStr(amountStr.slice(1));
+              return;
+            }
             if (setItemMultiplier) {
               setItemMultiplier(prev => {
-                if (prev === -1) return 1; // Exit refund mode back to +1
-                if (prev < -1) return prev + 1; // e.g. -3 -> -2 (decreases refund count)
+                if (prev === -1) return 1;
+                if (prev < -1) return prev + 1;
                 return (prev || 1) + 1;
               });
             }
@@ -260,17 +268,15 @@ export default function ManualKeypad({
           style={{
             flex: 1, height: '34px', display: 'flex', alignItems: 'center',
             justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-            background: itemMultiplier < 0 ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            border: itemMultiplier < 0 ? '1.5px solid rgba(16, 185, 129, 0.4)' : 'none',
-            fontWeight: '900', fontSize: '0.82rem',
-            color: itemMultiplier < 0 ? 'var(--accent-emerald)' : '#fff',
-            cursor: 'pointer', boxShadow: itemMultiplier < 0 ? 'none' : '0 2px 8px rgba(16,185,129,0.35)',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            border: 'none', fontWeight: '900', fontSize: '0.85rem', color: '#fff',
+            cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
             transition: 'all 0.15s ease'
           }}
-          title={itemMultiplier < 0 ? 'Méně z vratky (+1ks)' : 'Zvýšit množství (+1ks)'}
+          title="Zvýšit množství (+1)"
         >
           <ChevronUp size={16} />
-          <span>{itemMultiplier < 0 ? 'Ubrat vratku (+1ks)' : '+1ks'}</span>
+          <span>+1</span>
         </button>
       </div>
 

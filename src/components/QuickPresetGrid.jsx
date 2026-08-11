@@ -695,45 +695,55 @@ export default function QuickPresetGrid({
               <div style={{ display: 'flex', gap: '0.4rem' }}>
                 <button
                   type="button"
-                  onClick={() => setOpenPriceQty(prev => {
-                    if (prev === 1) return -1;
-                    if (prev < 0) return prev - 1; // e.g. -1 -> -2
-                    return prev - 1;
-                  })}
+                  onClick={() => {
+                    if (enteredOpenPrice && !enteredOpenPrice.startsWith('-') && openPriceQty === 1) {
+                      setEnteredOpenPrice('-' + enteredOpenPrice);
+                      return;
+                    }
+                    setOpenPriceQty(prev => {
+                      if (prev === 1) return -1;
+                      if (prev < 0) return prev - 1;
+                      return prev - 1;
+                    });
+                  }}
                   style={{
                     flex: 1, height: '36px', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-                    background: openPriceQty < 0 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
-                    border: openPriceQty < 0 ? 'none' : '1.5px solid var(--border-color)',
+                    background: (openPriceQty < 0 || (enteredOpenPrice && enteredOpenPrice.startsWith('-'))) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (openPriceQty > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
+                    border: (openPriceQty < 0 || (enteredOpenPrice && enteredOpenPrice.startsWith('-'))) ? 'none' : '1.5px solid var(--border-color)',
                     fontWeight: '900', fontSize: '0.85rem',
-                    color: (openPriceQty < 0 || openPriceQty > 1) ? '#fff' : 'var(--text-primary)',
+                    color: (openPriceQty < 0 || openPriceQty > 1 || (enteredOpenPrice && enteredOpenPrice.startsWith('-'))) ? '#fff' : 'var(--text-primary)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
-                  title="Více do vratky (-1ks)"
+                  title="Snížit množství / Vratka (-1)"
                 >
-                  <ChevronDown size={16} /><span>{openPriceQty === 1 ? '↩️ -1ks Vratka' : '-1ks Vratka'}</span>
+                  <ChevronDown size={16} /><span>-1</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setOpenPriceQty(prev => {
-                    if (prev === -1) return 1; // Exit refund mode back to +1
-                    if (prev < -1) return prev + 1; // e.g. -3 -> -2
-                    return prev + 1;
-                  })}
+                  onClick={() => {
+                    if (enteredOpenPrice && enteredOpenPrice.startsWith('-') && openPriceQty === 1) {
+                      setEnteredOpenPrice(enteredOpenPrice.slice(1));
+                      return;
+                    }
+                    setOpenPriceQty(prev => {
+                      if (prev === -1) return 1;
+                      if (prev < -1) return prev + 1;
+                      return prev + 1;
+                    });
+                  }}
                   style={{
                     flex: 1, height: '36px', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-                    background: openPriceQty < 0 ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    border: openPriceQty < 0 ? '1.5px solid rgba(16, 185, 129, 0.4)' : 'none',
-                    fontWeight: '900', fontSize: '0.85rem',
-                    color: openPriceQty < 0 ? 'var(--accent-emerald)' : '#fff',
-                    cursor: 'pointer', boxShadow: openPriceQty < 0 ? 'none' : '0 2px 6px rgba(16,185,129,0.35)',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none', fontWeight: '900', fontSize: '0.85rem', color: '#fff',
+                    cursor: 'pointer', boxShadow: '0 2px 6px rgba(16,185,129,0.35)',
                     transition: 'all 0.15s ease'
                   }}
-                  title={openPriceQty < 0 ? 'Méně z vratky (+1ks)' : 'Zvýšit množství (+1ks)'}
+                  title="Zvýšit množství (+1)"
                 >
-                  <ChevronUp size={16} /><span>{openPriceQty < 0 ? 'Ubrat vratku (+1ks)' : '+1ks'}</span>
+                  <ChevronUp size={16} /><span>+1</span>
                 </button>
               </div>
 
@@ -809,7 +819,7 @@ export default function QuickPresetGrid({
                   className="key-btn"
                   style={{
                     height: '52px',
-                    fontSize: '0.82rem',
+                    fontSize: '0.85rem',
                     fontWeight: '900',
                     background: enteredOpenPrice.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.15)',
                     color: enteredOpenPrice.startsWith('-') ? '#ffffff' : 'var(--accent-rose)',
@@ -824,7 +834,7 @@ export default function QuickPresetGrid({
                   })}
                   title="Změnit znaménko / Vratka"
                 >
-                  ± Vratka (Překlopit zápornou cenu)
+                  ± Vratka
                 </button>
               </div>
 
@@ -840,11 +850,14 @@ export default function QuickPresetGrid({
                 <button
                   type="submit"
                   className="pay-btn pay-btn-cash"
-                  style={{ flex: 1.5, height: '48px' }}
-                  disabled={!enteredOpenPrice || parseFloat(enteredOpenPrice) <= 0}
+                  style={{
+                    flex: 1.5, height: '48px',
+                    background: (openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined
+                  }}
+                  disabled={!enteredOpenPrice || isNaN(parseFloat(enteredOpenPrice)) || parseFloat(enteredOpenPrice) === 0}
                 >
                   <Check size={18} />
-                  <span>{t('keypad.add_to_cart')}</span>
+                  <span>{(openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? 'Vrátit zboží (Vratka)' : t('keypad.add_to_cart')}</span>
                 </button>
               </div>
             </form>
