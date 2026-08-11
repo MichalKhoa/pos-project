@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Printer, CheckCircle, RotateCcw } from 'lucide-react';
 import { printReceiptBackend } from '../api/posApi';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
@@ -15,6 +15,14 @@ function escapeHtml(str) {
 
 export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale }) {
   const [isPrinting, setIsPrinting] = useState(false);
+  const autoPrintTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (storeConfig?.autoPrintReceipt && saleData && !autoPrintTriggeredRef.current) {
+      autoPrintTriggeredRef.current = true;
+      handlePrint(false);
+    }
+  }, [storeConfig?.autoPrintReceipt, saleData]);
 
   if (!saleData) return null;
 
@@ -395,10 +403,39 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         </div>
 
         <div className="modal-body" style={{ alignItems: 'center' }}>
-          {/* Printer Width Format Badge */}
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
-            <Printer size={14} style={{ color: 'var(--accent-blue)' }} />
-            <span>Formát tiskárny: {isA4 ? 'Formát A4 (Faktura / Daňový doklad)' : (is58mm ? '58 mm rola (48 mm tisková hlava)' : '80 mm rola (72 mm tisková hlava)')}</span>
+          {/* Top Streamlined Action Buttons */}
+          <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
+            <button
+              className="pay-btn pay-btn-card"
+              style={{ flex: 1, height: '48px', fontSize: '0.85rem' }}
+              onClick={() => handlePrint(false)}
+              disabled={isPrinting}
+            >
+              <Printer size={16} />
+              <span>{isPrinting ? 'Tisknu...' : (storeConfig?.directHardwarePrint !== false ? '⚡ Přímý Tisk Účtenky' : 'Tisk Účtenky')}</span>
+            </button>
+
+            <button
+              className="pay-btn pay-btn-cash"
+              style={{ flex: 1, height: '48px', fontSize: '0.85rem' }}
+              onClick={onNewSale}
+            >
+              <RotateCcw size={16} />
+              <span>Nový Prodej</span>
+            </button>
+
+            {/* Debug Preview Window Button */}
+            {storeConfig?.directHardwarePrint !== false && (
+              <button
+                type="button"
+                className="key-btn"
+                style={{ width: '100%', height: '34px', fontSize: '0.75rem', color: 'var(--text-muted)' }}
+                onClick={() => handlePrint(true)}
+                title="Otevřít systémové náhledové okno pro ladění a vývoj"
+              >
+                🐞 Náhled pro Vývoj (Debug Window)
+              </button>
+            )}
           </div>
 
           {/* Printable Thermal Receipt Area */}
@@ -579,39 +616,6 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             <div style={{ textAlign: 'center', marginTop: '0.6rem', fontSize: is58mm ? '0.65rem' : '0.7rem', fontWeight: '600' }}>
               {storeConfig.receiptFooter}
             </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '1rem', flexWrap: 'wrap' }}>
-            <button
-              className="pay-btn pay-btn-card"
-              style={{ flex: 1, height: '48px', fontSize: '0.85rem' }}
-              onClick={() => handlePrint(false)}
-            >
-              <Printer size={16} />
-              <span>{storeConfig?.directHardwarePrint !== false ? '⚡ Přímý Tisk Účtenky' : 'Tisk Účtenky'}</span>
-            </button>
-
-            <button
-              className="pay-btn pay-btn-cash"
-              style={{ flex: 1, height: '48px', fontSize: '0.85rem' }}
-              onClick={onNewSale}
-            >
-              <RotateCcw size={16} />
-              <span>Nový Prodej</span>
-            </button>
-
-            {/* Debug Preview Window Button */}
-            {storeConfig?.directHardwarePrint !== false && (
-              <button
-                type="button"
-                className="key-btn"
-                style={{ width: '100%', height: '34px', fontSize: '0.75rem', marginTop: '0.2rem', color: 'var(--text-muted)' }}
-                onClick={() => handlePrint(true)}
-                title="Otevřít systémové náhledové okno pro ladění a vývoj"
-              >
-                🐞 Náhled pro Vývoj (Debug Window)
-              </button>
-            )}
           </div>
         </div>
       </div>

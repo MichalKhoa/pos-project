@@ -103,6 +103,9 @@ class StoreConfigModel(Base):
     customer_display_auto_sleep = Column(Boolean, default=True)
     customer_display_standby_delay = Column(Integer, default=10)
 
+    # Automatic Receipt Printing on Finished Transactions
+    auto_print_receipt = Column(Boolean, default=False)
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

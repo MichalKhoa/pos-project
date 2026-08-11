@@ -784,6 +784,35 @@ export default function SettingsView({
                 </select>
               </div>
 
+              {/* Auto-Print Receipt Setting Card */}
+              <div style={{ padding: '0.85rem 1rem', background: 'rgba(16, 185, 129, 0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Printer size={16} style={{ color: 'var(--accent-emerald)' }} />
+                    <span>Automatický tisk účtenky při dokončení prodeje (Auto-Print)</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Po dokončení úhrady se účtenka ihned automaticky vytiskne na tiskárně bez nutnosti klikat na tlačítko Tisk.
+                  </div>
+                </div>
+                <label className="switch-toggle" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.65rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={config.autoPrintReceipt || false}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      const updated = { ...config, autoPrintReceipt: isChecked };
+                      setConfig(updated);
+                      onSaveStoreConfig(updated);
+                    }}
+                    style={{ width: '22px', height: '22px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: '800', fontSize: '0.9rem', color: config.autoPrintReceipt ? 'var(--accent-emerald)' : 'var(--text-secondary)' }}>
+                    {config.autoPrintReceipt ? 'ZAPNUTO' : 'VYPNUTO'}
+                  </span>
+                </label>
+              </div>
+
               <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '0.4rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Printer size={16} style={{ color: 'var(--accent-blue)' }} />
