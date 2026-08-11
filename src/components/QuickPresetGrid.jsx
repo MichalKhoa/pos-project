@@ -515,14 +515,14 @@ export default function QuickPresetGrid({
                     alt=""
                     style={{
                       position: 'absolute',
-                      bottom: '8px',
-                      right: '8px',
-                      width: '32px',
-                      height: '32px',
+                      bottom: '6px',
+                      right: '6px',
+                      width: '26px',
+                      height: '26px',
                       objectFit: 'cover',
-                      borderRadius: '6px',
+                      borderRadius: '5px',
                       border: '1px solid rgba(255,255,255,0.25)',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
                       pointerEvents: 'none',
                       zIndex: 1
                     }}
@@ -533,9 +533,9 @@ export default function QuickPresetGrid({
                     <div
                       style={{
                         position: 'absolute',
-                        bottom: '6px',
-                        right: '8px',
-                        opacity: 0.35,
+                        bottom: '5px',
+                        right: '6px',
+                        opacity: 0.32,
                         color: 'var(--text-primary)',
                         pointerEvents: 'none',
                         zIndex: 1,
@@ -544,7 +544,7 @@ export default function QuickPresetGrid({
                         justifyContent: 'center'
                       }}
                     >
-                      <IconComponent size={34} />
+                      <IconComponent size={28} />
                     </div>
                   ) : null;
                 })()}
