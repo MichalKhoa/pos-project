@@ -309,42 +309,64 @@ export default function QuickPresetGrid({
             </div>
           )}
 
-          {/* Admin-Only Category & Catalog Edit Action Buttons */}
-          {isAdminMode && (
-            <>
-              <button
-                type="button"
-                className="nav-tab"
-                style={{
-                  padding: '0.35rem 0.65rem',
-                  fontSize: '0.8rem',
-                  background: 'rgba(255,255,255,0.06)',
-                  color: 'var(--accent-blue)',
-                  fontWeight: '700',
-                  gap: '0.35rem'
-                }}
-                onClick={() => setIsCategoryModalOpen(true)}
-                title={t('presets.manage_categories')}
-              >
-                <FolderPlus size={14} />
-                <span>{t('presets.add_category')}</span>
-              </button>
+          {/* Category & Catalog Edit Action Buttons */}
+          <button
+            type="button"
+            className="nav-tab"
+            style={{
+              padding: '0.35rem 0.65rem',
+              fontSize: '0.8rem',
+              background: 'rgba(255,255,255,0.06)',
+              color: 'var(--accent-blue)',
+              fontWeight: '700',
+              gap: '0.35rem'
+            }}
+            onClick={() => {
+              setEditingPreset(null);
+              setActiveModal('add');
+            }}
+            title={t('presets.add_preset')}
+          >
+            <Plus size={14} />
+            <span>{t('presets.add_preset') || 'Přidat'}</span>
+          </button>
 
-              <button
-                className={`nav-tab ${isEditMode ? 'active' : ''}`}
-                style={{
-                  padding: '0.35rem 0.75rem',
-                  fontSize: '0.8rem',
-                  background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
-                  color: isEditMode ? '#000000' : 'var(--text-secondary)',
-                  fontWeight: '700'
-                }}
-                onClick={() => setIsEditMode(!isEditMode)}
-              >
-                {isEditMode ? <Check size={14} /> : <Settings2 size={14} />}
-                <span>{isEditMode ? 'OK' : t('presets.edit')}</span>
-              </button>
-            </>
+          <button
+            type="button"
+            className={`nav-tab ${isEditMode ? 'active' : ''}`}
+            style={{
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.8rem',
+              background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
+              color: isEditMode ? '#000000' : 'var(--text-primary)',
+              fontWeight: '700',
+              gap: '0.35rem'
+            }}
+            onClick={() => setIsEditMode(!isEditMode)}
+            title="Zapnout/Vypnout režim úprav tlačítek pokladny"
+          >
+            {isEditMode ? <Check size={14} /> : <Edit3 size={14} />}
+            <span>{isEditMode ? 'Hotovo' : t('presets.edit') || 'Upravit'}</span>
+          </button>
+
+          {isAdminMode && (
+            <button
+              type="button"
+              className="nav-tab"
+              style={{
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.8rem',
+                background: 'rgba(255,255,255,0.06)',
+                color: 'var(--accent-purple)',
+                fontWeight: '700',
+                gap: '0.35rem'
+              }}
+              onClick={() => setIsCategoryModalOpen(true)}
+              title={t('presets.manage_categories')}
+            >
+              <FolderPlus size={14} />
+              <span>{t('presets.add_category')}</span>
+            </button>
           )}
         </div>
       </div>
