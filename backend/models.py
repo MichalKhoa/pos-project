@@ -106,6 +106,9 @@ class StoreConfigModel(Base):
     # Automatic Receipt Printing on Finished Transactions
     auto_print_receipt = Column(Boolean, default=False)
 
+    # Preset Grid Columns / Density Setting ('auto', '3', '4', '5', '6')
+    preset_grid_columns = Column(String, default="auto")
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

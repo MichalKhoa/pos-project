@@ -21,13 +21,23 @@ export default function QuickPresetGrid({
   onReorderPresets,
   keypadAmount = '',
   onClearKeypadAmount,
-  isAdminMode = false
+  isAdminMode = false,
+  storeConfig = null
 }) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
+
+  const gridColumnsSetting = storeConfig?.presetGridColumns || 'auto';
+  const getGridStyle = () => {
+    if (gridColumnsSetting === '3') return { gridTemplateColumns: 'repeat(3, 1fr)' };
+    if (gridColumnsSetting === '4') return { gridTemplateColumns: 'repeat(4, 1fr)' };
+    if (gridColumnsSetting === '5') return { gridTemplateColumns: 'repeat(5, 1fr)' };
+    if (gridColumnsSetting === '6') return { gridTemplateColumns: 'repeat(6, 1fr)' };
+    return undefined; // default CSS auto-fill minmax(130px, 1fr)
+  };
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
 
@@ -429,7 +439,7 @@ export default function QuickPresetGrid({
         </div>
       )}
 
-      <div className="preset-grid">
+      <div className="preset-grid" style={getGridStyle()}>
         {filteredPresets.map((preset, index) => {
           const isDraggingThis = draggedIndex === index;
           const isDragOverThis = dragOverIndex === index;

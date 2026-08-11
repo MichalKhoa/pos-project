@@ -49,7 +49,7 @@ class StoreConfigSchema(BaseModel):
     customerDisplayAutoSleep: Optional[bool] = None
     customerDisplayStandbyDelay: Optional[int] = None
     autoPrintReceipt: Optional[bool] = None
-
+    presetGridColumns: Optional[str] = None
 
 
 @router.get("")
@@ -86,6 +86,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "autoLockMinutes": config.auto_lock_minutes if config.auto_lock_minutes is not None else 15,
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
         "autoPrintReceipt": getattr(config, 'auto_print_receipt', False) if getattr(config, 'auto_print_receipt', None) is not None else False,
+        "presetGridColumns": getattr(config, 'preset_grid_columns', "auto") or "auto",
         "defaultLanguage": config.default_language or "cs",
         "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left",
         "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás",
@@ -131,6 +132,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.autoLockMinutes is not None: config.auto_lock_minutes = data.autoLockMinutes
     if data.directHardwarePrint is not None: config.direct_hardware_print = data.directHardwarePrint
     if data.autoPrintReceipt is not None: config.auto_print_receipt = data.autoPrintReceipt
+    if data.presetGridColumns is not None: config.preset_grid_columns = data.presetGridColumns
     if data.defaultLanguage is not None: config.default_language = data.defaultLanguage
     if data.cartPosition is not None: config.cart_position = data.cartPosition
 

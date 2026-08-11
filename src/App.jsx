@@ -943,6 +943,7 @@ export default function App() {
                   keypadAmount={keypadAmount}
                   onClearKeypadAmount={() => setKeypadAmount('')}
                   isAdminMode={isAdminMode}
+                  storeConfig={storeConfig}
                 />
               </div>
 

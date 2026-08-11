@@ -134,6 +134,7 @@ export const DEFAULT_STORE_CONFIG = {
   currencySymbol: 'Kč',
   printerPaperWidth: '80', // '58' or '80' mm thermal receipt printer
   autoPrintReceipt: false, // Auto-print receipt on finished transaction
+  presetGridColumns: 'auto', // Grid density: 'auto', '3', '4', '5', '6' columns
   eetEnabled: true, // EET Ready mode indicator
   defaultLanguage: 'cs'
 };
