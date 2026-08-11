@@ -466,29 +466,7 @@ export default function QuickPresetGrid({
                     <GripVertical size={16} />
                   </div>
                 )}
-                <div className="preset-name" style={{ flex: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
-                  {preset.imageUrl ? (
-                    <img
-                      src={preset.imageUrl}
-                      alt=""
-                      style={{
-                        width: '26px',
-                        height: '26px',
-                        objectFit: 'cover',
-                        borderRadius: '4px',
-                        flexShrink: 0,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                      }}
-                    />
-                  ) : (() => {
-                    const IconComponent = getPresetIconComponent(preset.icon);
-                    return IconComponent ? (
-                      <IconComponent
-                        size={20}
-                        style={{ flexShrink: 0, opacity: 0.95 }}
-                      />
-                    ) : null;
-                  })()}
+                <div className="preset-name" style={{ flex: 1 }}>
                   <span>{preset.name}</span>
                   {preset.isGeneralPreset && (
                     <span style={{
@@ -498,7 +476,7 @@ export default function QuickPresetGrid({
                       color: 'rgba(255, 255, 255, 0.95)',
                       padding: '1px 5px',
                       borderRadius: '4px',
-                      marginLeft: '2px',
+                      marginLeft: '6px',
                       verticalAlign: 'middle',
                       display: 'inline-block',
                       letterSpacing: '0.01em'
@@ -507,6 +485,47 @@ export default function QuickPresetGrid({
                     </span>
                   )}
                 </div>
+
+                {/* Bottom-Right Corner Visual Icon / Photo Badge */}
+                {preset.imageUrl ? (
+                  <img
+                    src={preset.imageUrl}
+                    alt=""
+                    style={{
+                      position: 'absolute',
+                      bottom: '8px',
+                      right: '8px',
+                      width: '32px',
+                      height: '32px',
+                      objectFit: 'cover',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.25)',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                      pointerEvents: 'none',
+                      zIndex: 1
+                    }}
+                  />
+                ) : (() => {
+                  const IconComponent = getPresetIconComponent(preset.icon);
+                  return IconComponent ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '6px',
+                        right: '8px',
+                        opacity: 0.35,
+                        color: 'var(--text-primary)',
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <IconComponent size={34} />
+                    </div>
+                  ) : null;
+                })()}
                 {isEditMode && (
                   <div style={{ display: 'flex', gap: '2px', flexShrink: 0, marginLeft: '4px', alignItems: 'center' }}>
                     <span

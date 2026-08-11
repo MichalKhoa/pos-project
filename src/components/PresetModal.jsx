@@ -521,38 +521,64 @@ export default function PresetModal({
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <div
                 style={{
-                  width: '140px',
-                  height: '80px',
+                  width: '160px',
+                  height: '90px',
                   borderRadius: 'var(--radius-md)',
                   background: formData.color || '#3b82f6',
                   color: '#ffffff',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.5rem',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 0.75rem',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-                  textAlign: 'center',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  textAlign: 'left'
                 }}
               >
+                <div style={{ fontWeight: '800', fontSize: '0.88rem', lineHeight: '1.2', textShadow: '0 1px 3px rgba(0,0,0,0.5)', zIndex: 2 }}>
+                  {formData.name || 'Název položky'}
+                </div>
+
+                <div style={{ fontSize: '0.8rem', fontWeight: '800', opacity: 0.95, zIndex: 2 }}>
+                  {formData.isOpenPrice ? 'Volitelná' : `${formData.price || '0'} Kč`}
+                </div>
+
+                {/* Bottom-Right Icon / Photo Preview */}
                 {formData.imageUrl ? (
                   <img
                     src={formData.imageUrl}
                     alt="Preview"
-                    style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px', marginBottom: '2px' }}
+                    style={{
+                      position: 'absolute',
+                      bottom: '6px',
+                      right: '6px',
+                      width: '30px',
+                      height: '30px',
+                      objectFit: 'cover',
+                      borderRadius: '5px',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                      zIndex: 1
+                    }}
                   />
                 ) : (() => {
                   const PreviewIcon = getPresetIconComponent(formData.icon);
-                  return PreviewIcon ? <PreviewIcon size={24} style={{ marginBottom: '2px' }} /> : null;
+                  return PreviewIcon ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        right: '6px',
+                        opacity: 0.35,
+                        color: '#ffffff',
+                        zIndex: 1
+                      }}
+                    >
+                      <PreviewIcon size={32} />
+                    </div>
+                  ) : null;
                 })()}
-                <div style={{ fontWeight: '800', fontSize: '0.85rem', lineHeight: '1.2', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
-                  {formData.name || 'Název položky'}
-                </div>
-                <div style={{ fontSize: '0.75rem', fontWeight: '700', opacity: 0.9, marginTop: '2px' }}>
-                  {formData.isOpenPrice ? 'Volná cena' : `${formData.price || '0'} Kč`}
-                </div>
               </div>
             </div>
           </div>
