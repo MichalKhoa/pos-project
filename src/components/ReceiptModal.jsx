@@ -294,33 +294,35 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
           <title>Účtenka č. ${receiptNum}</title>
           <style>
             @page { margin: 0; size: auto; }
-            body { font-family: monospace, monospace; font-size: ${fontSize}; line-height: 1.3; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
+            body { font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; line-height: 1.35; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
             .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${is58mm ? '4mm 2mm 12mm 2mm' : '6mm 4mm 16mm 4mm'}; box-sizing: border-box; text-align: left; }
             .center { text-align: center; }
-            .bold { font-weight: bold; }
-            .dashed { border-top: 1px dashed #000; margin: 5px 0; }
+            .bold { font-weight: 900; }
+            .dashed { border-top: 1px dashed #000; margin: 6px 0; }
+            .double-line { border-top: 2px dashed #000; border-bottom: 3px double #000; padding: 6px 0; margin: 6px 0; }
             table { width: 100%; border-collapse: collapse; margin: 5px 0; table-layout: fixed; }
-            .total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 6px 0; font-size: ${is58mm ? '13px' : '18px'}; font-weight: bold; display: flex; justify-content: space-between; margin: 6px 0; }
+            .total-row { display: flex; justify-content: space-between; font-size: ${is58mm ? '13px' : '17px'}; font-weight: 900; }
           </style>
         </head>
         <body>
           <div class="receipt-box">
-            <div class="center bold" style="font-size: ${is58mm ? '13px' : '17px'};">${storeName}</div>
-            <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'};">${street}</div>
-            <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'};">${city}</div>
-            <div class="center" style="margin-top:2px; font-size: ${is58mm ? '9px' : '11.5px'};">IČO: ${ico} | DIČ: ${dic}</div>
+            <div class="center bold" style="font-size: ${is58mm ? '14px' : '18px'}; text-transform: uppercase; letter-spacing: 0.5px;">${storeName}</div>
+            <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'}; color: #333;">${street}</div>
+            <div class="center" style="font-size: ${is58mm ? '9.5px' : '12px'}; color: #333;">${city}</div>
+            <div class="center bold" style="margin-top:2px; font-size: ${is58mm ? '9px' : '11.5px'};">IČO: ${ico} | DIČ: ${dic}</div>
+            
             <div class="dashed"></div>
-            <div class="center bold" style="font-size: ${is58mm ? '11px' : '15px'};">
-              ${isRefund ? `STORNO DOKLAD č. ${receiptNum}` : `ÚČTENKA č. ${receiptNum}`}
+            <div class="center bold" style="font-size: ${is58mm ? '11px' : '14px'}; letter-spacing: 0.8px;">
+              ${isRefund ? `↩️ STORNO DOKLAD č. ${receiptNum}` : `══ DAŇOVÝ DOKLAD č. ${receiptNum} ══`}
             </div>
-            ${isRefund && origNumber ? `<div class="center" style="font-size: ${is58mm ? '9px' : '11px'}; font-weight: bold;">Původní doklad č.: #${origNumber}</div>` : ''}
+            ${isRefund && origNumber ? `<div class="center bold" style="font-size: ${is58mm ? '9px' : '11px'}; color: #dc2626;">Původní doklad č.: #${origNumber}</div>` : ''}
             ${isRefund && reasonText ? `<div class="center" style="font-size: ${is58mm ? '9px' : '11px'}; font-style: italic;">Důvod: ${reasonText}</div>` : ''}
-            <div class="center" style="font-size: ${is58mm ? '9px' : '11px'};">${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</div>
+            <div class="center" style="font-size: ${is58mm ? '9px' : '11px'}; margin-top:2px;">Datum & čas: <b>${new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b></div>
             <div class="dashed"></div>
 
             <table>
               <thead>
-                <tr style="border-bottom: 1px dashed #000; font-size: ${is58mm ? '9.5px' : '12.5px'};">
+                <tr style="border-bottom: 2px dashed #000; font-size: ${is58mm ? '9.5px' : '12px'}; text-transform: uppercase;">
                   <th style="text-align:left; width:54%;">Položka</th>
                   <th style="text-align:center; width:16%;">Ks</th>
                   <th style="text-align:right; width:30%;">Cena</th>
@@ -331,30 +333,32 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               </tbody>
             </table>
 
-            <div class="total-row">
-              <span>CELKEM K ${isRefund ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
-              <span>${saleData.totalAmount.toFixed(0)} Kč</span>
+            <div class="double-line">
+              <div class="total-row">
+                <span>CELKEM K ${isRefund ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
+                <span>${saleData.totalAmount.toFixed(0)} Kč</span>
+              </div>
             </div>
 
-            <div style="font-size: ${is58mm ? '8.5px' : '9.5px'}; margin: 4px 0;">
+            <div style="font-size: ${is58mm ? '8.5px' : '10px'}; margin: 4px 0;">
               <div style="display:flex; justify-content:space-between;">
                 <span>Způsob úhrady:</span>
                 <span class="bold">${payLabel}</span>
               </div>
               ${saleData.paymentMethod === 'split' && saleData.splitDetails ? `
-                <div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; margin-top:2px;">
-                  <div style="display:flex; justify-content:space-between;"><span>- Hotově:</span><span>${(saleData.splitDetails.cash || 0).toFixed(0)} Kč</span></div>
-                  <div style="display:flex; justify-content:space-between;"><span>- Kartou:</span><span>${(saleData.splitDetails.card || 0).toFixed(0)} Kč</span></div>
+                <div style="font-size: ${is58mm ? '7.5px' : '9px'}; margin-top:2px;">
+                  <div style="display:flex; justify-content:space-between;"><span>- U hrazeno Hotově:</span><span class="bold">${(saleData.splitDetails.cash || 0).toFixed(0)} Kč</span></div>
+                  <div style="display:flex; justify-content:space-between;"><span>- U hrazeno Kartou:</span><span class="bold">${(saleData.splitDetails.card || 0).toFixed(0)} Kč</span></div>
                 </div>
               ` : ''}
               ${saleData.paymentMethod === 'cash' ? `
-                <div style="display:flex; justify-content:space-between;"><span>Přijato:</span><span>${(saleData.tenderedAmount || 0).toFixed(0)} Kč</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Vráceno:</span><span>${(saleData.changeDue || 0).toFixed(0)} Kč</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Přijatá hotovost:</span><span class="bold">${(saleData.tenderedAmount || 0).toFixed(0)} Kč</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Vrácená hotovost:</span><span class="bold">${(saleData.changeDue || 0).toFixed(0)} Kč</span></div>
               ` : ''}
             </div>
 
             <div class="dashed"></div>
-            <div style="font-size: ${is58mm ? '8px' : '9px'}; font-weight: bold; margin-bottom: 2px;">Rozpis DPH:</div>
+            <div style="font-size: ${is58mm ? '8.5px' : '10px'}; font-weight: bold; margin-bottom: 2px;">ROZPIS DPH:</div>
             ${taxHtml}
 
             <div class="dashed"></div>
@@ -371,8 +375,10 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             </div>
 
             <div class="dashed"></div>
-            <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; margin-top: 4px; padding-bottom: 6px;">
-              ${receiptFooter}
+            <div class="center" style="font-size: ${is58mm ? '8px' : '9.5px'}; margin-top: 6px; padding-bottom: 6px;">
+              <div style="font-size: 8px; color: #666; margin-bottom: 2px;">★ ★ ★ ★ ★</div>
+              <div style="font-weight: bold; font-style: italic;">${receiptFooter}</div>
+              <div style="font-size: 7.5px; color: #555; margin-top: 3px;">Vystaveno v pokladním systému Himmel POS</div>
             </div>
           </div>
           <script>
