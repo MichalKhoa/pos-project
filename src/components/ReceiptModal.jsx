@@ -449,31 +449,45 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             }}
           >
             <div className="receipt-header">
-              <div className="receipt-store-name" style={{ fontSize: is58mm ? '0.95rem' : '1.15rem' }}>{storeConfig.storeName}</div>
-              <div style={{ fontSize: is58mm ? '0.7rem' : '0.8rem' }}>{storeConfig.street}</div>
-              <div style={{ fontSize: is58mm ? '0.7rem' : '0.8rem' }}>{storeConfig.city}</div>
-              <div style={{ marginTop: '4px', fontSize: is58mm ? '0.65rem' : '0.75rem' }}>IČO: {storeConfig.ico} | DIČ: {storeConfig.dic}</div>
-              <div style={{ marginTop: '6px', fontSize: is58mm ? '0.7rem' : '0.8rem', fontWeight: '800', color: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : 'inherit' }}>
-                {(saleData.isRefund || saleData.is_refund) ? `STORNO DOKLAD č. ${saleData.receiptNumber}` : `ÚČTENKA č. ${saleData.receiptNumber}`}
+              {/* Optional Store Logo Header */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.4rem' }}>
+                <img src={himmelLogo} alt="Himmel Logo" style={{ height: is58mm ? '28px' : '36px', opacity: 0.9 }} />
               </div>
+              <div className="receipt-store-name" style={{ fontSize: is58mm ? '1.05rem' : '1.25rem' }}>{storeConfig.storeName}</div>
+              <div style={{ fontSize: is58mm ? '0.72rem' : '0.82rem', color: '#444' }}>{storeConfig.street}</div>
+              <div style={{ fontSize: is58mm ? '0.72rem' : '0.82rem', color: '#444' }}>{storeConfig.city}</div>
+              <div style={{ marginTop: '3px', fontSize: is58mm ? '0.68rem' : '0.78rem', fontWeight: '700' }}>IČO: {storeConfig.ico} | DIČ: {storeConfig.dic}</div>
+
+              {/* Receipt Title Divider Banner */}
+              <div
+                className="receipt-divider-title"
+                style={{
+                  fontSize: is58mm ? '0.75rem' : '0.88rem',
+                  color: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : '#000000',
+                  borderColor: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : '#222222'
+                }}
+              >
+                {(saleData.isRefund || saleData.is_refund) ? `↩️ STORNO DOKLAD č. ${saleData.receiptNumber}` : `══ DAŇOVÝ DOKLAD č. ${saleData.receiptNumber} ══`}
+              </div>
+
               {(saleData.isRefund || saleData.is_refund) && (saleData.originalReceiptNumber || saleData.original_receipt_number) && (
-                <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#dc2626', marginTop: '2px' }}>
-                  Původní doklad č.: #{saleData.originalReceiptNumber || saleData.original_receipt_number}
+                <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#dc2626', marginTop: '2px' }}>
+                  Původní doklad: #{saleData.originalReceiptNumber || saleData.original_receipt_number}
                 </div>
               )}
               {(saleData.isRefund || saleData.is_refund) && (saleData.refundReason || saleData.refund_reason) && (
-                <div style={{ fontSize: '0.65rem', color: '#555', fontStyle: 'italic', marginTop: '2px' }}>
-                  Důvod: {saleData.refundReason || saleData.refund_reason}
+                <div style={{ fontSize: '0.7rem', color: '#444', fontStyle: 'italic', marginTop: '2px' }}>
+                  Důvod vrácení: <em>{saleData.refundReason || saleData.refund_reason}</em>
                 </div>
               )}
-              <div style={{ fontSize: is58mm ? '0.65rem' : '0.72rem', marginTop: '2px' }}>
-                {new Date(saleData.timestamp).toLocaleString('cs-CZ')}
+              <div style={{ fontSize: is58mm ? '0.68rem' : '0.75rem', marginTop: '3px', color: '#555' }}>
+                Datum & čas: <b>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b>
               </div>
             </div>
 
             <table className="receipt-table" style={{ tableLayout: 'fixed', width: '100%' }}>
               <thead>
-                <tr style={{ fontSize: is58mm ? '0.65rem' : '0.75rem' }}>
+                <tr style={{ fontSize: is58mm ? '0.68rem' : '0.78rem' }}>
                   <th style={{ width: '50%', textAlign: 'left' }}>Položka</th>
                   <th style={{ width: '15%', textAlign: 'center' }}>Ks</th>
                   <th style={{ width: '35%', textAlign: 'right' }}>Cena</th>
@@ -485,40 +499,41 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                   const unitPrice = item.price * (1 - itemDisc / 100);
                   return (
                     <tr key={idx}>
-                      <td style={{ wordBreak: 'break-word' }}>
-                        <div>{item.name} {itemDisc > 0 ? `(-${itemDisc}%)` : ''}</div>
-                        <div style={{ fontSize: is58mm ? '0.6rem' : '0.65rem', color: '#666' }}>DPH {item.vat}%</div>
+                      <td style={{ wordBreak: 'break-word', padding: '0.35rem 0' }}>
+                        <div className="receipt-item-title">{item.name} {itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}</div>
+                        <div className="receipt-item-sub">DPH {item.vat}%</div>
                       </td>
-                      <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>{(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
+                      <td style={{ textAlign: 'center', fontWeight: '700', padding: '0.35rem 0' }}>{item.quantity}</td>
+                      <td style={{ textAlign: 'right', fontWeight: '900', whiteSpace: 'nowrap', fontFamily: 'monospace', padding: '0.35rem 0' }}>{(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
 
-            <div className="receipt-total-row" style={{ color: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : 'inherit', fontSize: is58mm ? '0.9rem' : '1.05rem' }}>
+            {/* High-Contrast Thermal Total Banner */}
+            <div className="receipt-total-row" style={{ color: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : '#000000' }}>
               <span>CELKEM K {(saleData.isRefund || saleData.is_refund) ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
-              <span>{saleData.totalAmount.toFixed(0)} Kč</span>
+              <span className="receipt-total-amount">{saleData.totalAmount.toFixed(0)} Kč</span>
             </div>
 
-            <div style={{ fontSize: is58mm ? '0.68rem' : '0.75rem', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: is58mm ? '0.72rem' : '0.8rem', margin: '0.5rem 0', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Způsob úhrady:</span>
-                <span style={{ fontWeight: '700' }}>
+                <span style={{ fontWeight: '900', letterSpacing: '0.5px' }}>
                   {saleData.paymentMethod === 'cash' ? 'HOTOVOST' : saleData.paymentMethod === 'card' ? 'KARTA' : saleData.paymentMethod === 'split' ? 'KOMBINOVANÁ' : 'QR PLATBA'}
                 </span>
               </div>
 
               {saleData.paymentMethod === 'split' && saleData.splitDetails && (
-                <div style={{ background: '#f5f5f5', padding: '0.3rem 0.5rem', borderRadius: '4px', marginTop: '0.3rem', fontSize: '0.65rem' }}>
+                <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', padding: '0.35rem 0.6rem', borderRadius: '4px', marginTop: '0.2rem', fontSize: '0.72rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>- Hotově:</span>
-                    <span style={{ fontWeight: '700' }}>{saleData.splitDetails.cash.toFixed(0)} Kč</span>
+                    <span>- U hrazeno Hotově:</span>
+                    <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{saleData.splitDetails.cash.toFixed(0)} Kč</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>- Kartou:</span>
-                    <span style={{ fontWeight: '700' }}>{saleData.splitDetails.card.toFixed(0)} Kč</span>
+                    <span>- U hrazeno Kartou:</span>
+                    <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{saleData.splitDetails.card.toFixed(0)} Kč</span>
                   </div>
                 </div>
               )}
@@ -526,24 +541,25 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               {saleData.paymentMethod === 'cash' && (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Přijato:</span>
-                    <span>{saleData.tenderedAmount?.toFixed(0)} Kč</span>
+                    <span>Přijatá hotovost:</span>
+                    <span style={{ fontWeight: '700', fontFamily: 'monospace' }}>{saleData.tenderedAmount?.toFixed(0)} Kč</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Vráceno:</span>
-                    <span>{saleData.changeDue?.toFixed(0)} Kč</span>
+                    <span>Vrácená hotovost:</span>
+                    <span style={{ fontWeight: '800', fontFamily: 'monospace', color: '#059669' }}>{saleData.changeDue?.toFixed(0)} Kč</span>
                   </div>
                 </>
               )}
             </div>
 
-            <div style={{ borderTop: '1px dashed #444', paddingTop: '0.4rem', marginTop: '0.4rem', fontSize: is58mm ? '0.65rem' : '0.72rem' }}>
-              <div style={{ fontWeight: '700', marginBottom: '2px' }}>Rozpis DPH:</div>
+            {/* DPH Tax Matrix */}
+            <div style={{ borderTop: '2px dashed #222', paddingTop: '0.45rem', marginTop: '0.5rem', fontSize: is58mm ? '0.68rem' : '0.75rem' }}>
+              <div style={{ fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.4px' }}>Rekapitulace DPH:</div>
               {saleData.taxSummary && (
                 is58mm ? (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.62rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left' }}>
+                      <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left', fontWeight: '800' }}>
                         <th style={{ textAlign: 'left' }}>Sazba</th>
                         <th style={{ textAlign: 'right' }}>Základ</th>
                         <th style={{ textAlign: 'right' }}>Daň</th>
@@ -552,17 +568,17 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                     <tbody>
                       {Object.values(saleData.taxSummary).map(t => (
                         <tr key={t.rate}>
-                          <td>{t.rate}%</td>
-                          <td style={{ textAlign: 'right' }}>{t.net.toFixed(2)}</td>
-                          <td style={{ textAlign: 'right' }}>{t.tax.toFixed(2)}</td>
+                          <td style={{ fontWeight: '700' }}>{t.rate}%</td>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{t.net.toFixed(2)}</td>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{t.tax.toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.68rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left' }}>
+                      <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left', fontWeight: '800' }}>
                         <th style={{ textAlign: 'left' }}>Sazba</th>
                         <th style={{ textAlign: 'right' }}>Základ (Netto)</th>
                         <th style={{ textAlign: 'right' }}>Daň (DPH)</th>
@@ -572,10 +588,10 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                     <tbody>
                       {Object.values(saleData.taxSummary).map(t => (
                         <tr key={t.rate}>
-                          <td>{t.rate}%</td>
-                          <td style={{ textAlign: 'right' }}>{t.net.toFixed(2)} Kč</td>
-                          <td style={{ textAlign: 'right' }}>{t.tax.toFixed(2)} Kč</td>
-                          <td style={{ textAlign: 'right' }}>{t.gross.toFixed(2)} Kč</td>
+                          <td style={{ fontWeight: '700' }}>{t.rate}%</td>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{t.net.toFixed(2)} Kč</td>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{t.tax.toFixed(2)} Kč</td>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: '800' }}>{t.gross.toFixed(2)} Kč</td>
                         </tr>
                       ))}
                     </tbody>
@@ -584,15 +600,15 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               )}
             </div>
 
-            {/* Fiscal Block */}
-            <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '0.6rem' : '0.65rem' }}>
+            {/* Fiscal EET Block */}
+            <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '0.62rem' : '0.68rem', marginTop: '0.6rem' }}>
               {(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? (
-                <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px', color: 'var(--text-secondary)' }}>
+                <div style={{ fontWeight: '800', textTransform: 'uppercase', color: '#555555' }}>
                   Režim provozu: Běžný prodej bez EET
                 </div>
               ) : (
                 <>
-                  <div style={{ fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>
+                  <div style={{ fontWeight: '900', textTransform: 'uppercase', marginBottom: '3px' }}>
                     EET 2.0 ({(saleData.fik || saleData.pok || saleData.fik_code) ? 'Běžný online režim' : 'Zjednodušený neonline režim'})
                   </div>
                   { (saleData.fik || saleData.pok || saleData.fik_code) && (
@@ -605,7 +621,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                     <div style={{ marginTop: '2px' }}><strong>PKP:</strong> {(saleData.pkp || saleData.pkp_code).slice(0, 32)}...</div>
                   )}
                   { !(saleData.fik || saleData.pok || saleData.fik_code) && ((saleData.pkp || saleData.pkp_code) || saleData.eet_status === 'OFFLINE_PENDING') && (
-                    <div style={{ fontWeight: '700', marginTop: '4px', color: '#b45309' }}>
+                    <div style={{ fontWeight: '800', marginTop: '4px', color: '#b45309' }}>
                       Vystaveno ve zjednodušeném (neonline) režimu EET
                     </div>
                   )}
@@ -613,8 +629,15 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
               )}
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '0.6rem', fontSize: is58mm ? '0.65rem' : '0.7rem', fontWeight: '600' }}>
-              {storeConfig.receiptFooter}
+            {/* Decorative Thermal Footer */}
+            <div style={{ textAlign: 'center', marginTop: '0.8rem', borderTop: '1px dashed #666', paddingTop: '0.6rem' }}>
+              <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.2rem' }}>★ ★ ★ ★ ★</div>
+              <div style={{ fontSize: is58mm ? '0.72rem' : '0.8rem', fontWeight: '700', fontStyle: 'italic' }}>
+                {storeConfig.receiptFooter || 'Děkujeme za Váš nákup a těšíme se na Vaši příští návštěvu!'}
+              </div>
+              <div style={{ fontSize: '0.62rem', color: '#777', marginTop: '0.3rem' }}>
+                Vystaveno v pokladním systému Himmel POS
+              </div>
             </div>
           </div>
         </div>
