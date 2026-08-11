@@ -117,20 +117,41 @@ export async function createSaleBackend(saleData) {
  */
 export function normalizeSale(sale) {
   if (!sale) return sale;
+
+  let rawItems = sale.items || sale.sale_items || sale.cart_items || [];
+  if (typeof rawItems === 'string') {
+    try {
+      rawItems = JSON.parse(rawItems);
+    } catch {
+      rawItems = [];
+    }
+  }
+
+  const normalizedItems = Array.isArray(rawItems) ? rawItems.map((item, idx) => ({
+    ...item,
+    id: item.id || item.item_id || `item-${idx}`,
+    name: item.name || item.title || item.item_name || 'Položka',
+    price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
+    quantity: item.quantity !== undefined ? parseInt(item.quantity, 10) : (item.qty !== undefined ? parseInt(item.qty, 10) : 1),
+    vat: item.vat !== undefined ? parseInt(item.vat, 10) : (item.vat_rate !== undefined ? parseInt(item.vat_rate, 10) : 21),
+    discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0),
+    discount_percent: item.discount_percent !== undefined ? parseFloat(item.discount_percent) : (item.discountPercent !== undefined ? parseFloat(item.discountPercent) : 0)
+  })) : [];
+
   return {
     ...sale,
     id: sale.id,
     receiptNumber: sale.receiptNumber || sale.receipt_number || 'N/A',
     receipt_number: sale.receipt_number || sale.receiptNumber || 'N/A',
     timestamp: sale.timestamp || new Date().toISOString(),
-    totalAmount: sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount !== undefined ? sale.total_amount : 0),
-    total_amount: sale.total_amount !== undefined ? sale.total_amount : (sale.totalAmount !== undefined ? sale.totalAmount : 0),
+    totalAmount: sale.totalAmount !== undefined ? parseFloat(sale.totalAmount) : (sale.total_amount !== undefined ? parseFloat(sale.total_amount) : 0),
+    total_amount: sale.total_amount !== undefined ? parseFloat(sale.total_amount) : (sale.totalAmount !== undefined ? parseFloat(sale.totalAmount) : 0),
     paymentMethod: sale.paymentMethod || sale.payment_method || 'cash',
     payment_method: sale.payment_method || sale.paymentMethod || 'cash',
-    cartDiscountPercent: sale.cartDiscountPercent !== undefined ? sale.cartDiscountPercent : (sale.cart_discount_percent !== undefined ? sale.cart_discount_percent : 0),
+    cartDiscountPercent: sale.cartDiscountPercent !== undefined ? parseFloat(sale.cartDiscountPercent) : (sale.cart_discount_percent !== undefined ? parseFloat(sale.cart_discount_percent) : 0),
     splitDetails: sale.splitDetails || sale.split_details || null,
-    tenderedAmount: sale.tenderedAmount !== undefined ? sale.tenderedAmount : (sale.tendered_amount !== undefined ? sale.tendered_amount : 0),
-    changeDue: sale.changeDue !== undefined ? sale.changeDue : (sale.change_due !== undefined ? sale.change_due : 0),
+    tenderedAmount: sale.tenderedAmount !== undefined ? parseFloat(sale.tenderedAmount) : (sale.tendered_amount !== undefined ? parseFloat(sale.tendered_amount) : 0),
+    changeDue: sale.changeDue !== undefined ? parseFloat(sale.changeDue) : (sale.change_due !== undefined ? parseFloat(sale.change_due) : 0),
     taxSummary: sale.taxSummary || sale.tax_summary || {},
     fikCode: sale.fikCode || sale.fik_code || sale.fik || null,
     bkpCode: sale.bkpCode || sale.bkp_code || sale.bkp || null,
@@ -148,17 +169,9 @@ export function normalizeSale(sale) {
     refund_reason: sale.refund_reason || sale.refundReason || null,
     refundStatus: sale.refundStatus || sale.refund_status || 'NONE',
     refund_status: sale.refund_status || sale.refundStatus || 'NONE',
-    refundedAmount: sale.refundedAmount !== undefined ? sale.refundedAmount : (sale.refunded_amount !== undefined ? sale.refunded_amount : 0),
-    refunded_amount: sale.refunded_amount !== undefined ? sale.refunded_amount : (sale.refundedAmount !== undefined ? sale.refundedAmount : 0),
-    items: Array.isArray(sale.items) ? sale.items.map(item => ({
-      ...item,
-      id: item.id || item.item_id,
-      name: item.name || 'Položka',
-      price: item.price !== undefined ? item.price : 0,
-      quantity: item.quantity !== undefined ? item.quantity : 1,
-      vat: item.vat !== undefined ? item.vat : 21,
-      discountPercent: item.discountPercent !== undefined ? item.discountPercent : (item.discount_percent !== undefined ? item.discount_percent : 0)
-    })) : []
+    refundedAmount: sale.refundedAmount !== undefined ? parseFloat(sale.refundedAmount) : (sale.refunded_amount !== undefined ? parseFloat(sale.refunded_amount) : 0),
+    refunded_amount: sale.refunded_amount !== undefined ? parseFloat(sale.refunded_amount) : (sale.refundedAmount !== undefined ? parseFloat(sale.refundedAmount) : 0),
+    items: normalizedItems
   };
 }
 

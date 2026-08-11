@@ -13,6 +13,27 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function parseSaleItems(saleData) {
+  if (!saleData) return [];
+  let raw = saleData.items || saleData.sale_items || saleData.cart_items || [];
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      raw = [];
+    }
+  }
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, idx) => ({
+    id: item.id || item.item_id || `item-${idx}`,
+    name: item.name || item.title || item.item_name || 'Položka',
+    price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
+    quantity: item.quantity !== undefined ? parseInt(item.quantity, 10) : (item.qty !== undefined ? parseInt(item.qty, 10) : 1),
+    vat: item.vat !== undefined ? parseInt(item.vat, 10) : (item.vat_rate !== undefined ? parseInt(item.vat_rate, 10) : 21),
+    discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0)
+  }));
+}
+
 export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale, disableAutoPrint = false }) {
   const [isPrinting, setIsPrinting] = useState(false);
   const autoPrintTriggeredRef = useRef(false);
@@ -25,6 +46,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
   }, [storeConfig?.autoPrintReceipt, saleData, disableAutoPrint]);
 
   if (!saleData) return null;
+
+  const resolvedItems = parseSaleItems(saleData);
 
   const safeConfig = storeConfig || {};
   const paperWidth = (safeConfig.printerPaperWidth || '80').toString().toUpperCase();
@@ -39,7 +62,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
 
     // 1. Attempt hardware direct print silently if directHardwarePrint is enabled
     if (isDirectPrint) {
-      const res = await printReceiptBackend(saleData, storeConfig);
+      const res = await printReceiptBackend({ ...saleData, items: resolvedItems }, storeConfig);
       // If hardware physical thermal print succeeded, close printing state without popup
       if (res && res.status === 'PRINTED' && res.physical !== false) {
         setTimeout(() => setIsPrinting(false), 600);
@@ -74,7 +97,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     const idProvozovny = escapeHtml(storeConfig.idProvozovny || '11');
     const receiptFooter = escapeHtml(storeConfig.receiptFooter || 'Děkujeme za váš nákup!');
 
-    const itemsHtml = (saleData.items || []).map((item, idx) => {
+    const itemsHtml = resolvedItems.map((item, idx) => {
       const disc = item.discountPercent || 0;
       const effPrice = item.price * (1 - disc / 100);
       const itemName = escapeHtml(item.name);
@@ -500,7 +523,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                 </tr>
               </thead>
               <tbody>
-                {saleData.items.map((item, idx) => {
+                {resolvedItems.map((item, idx) => {
                   const itemDisc = item.discountPercent || 0;
                   const unitPrice = item.price * (1 - itemDisc / 100);
                   return (

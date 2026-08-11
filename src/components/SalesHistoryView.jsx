@@ -5,6 +5,7 @@ import TouchCalendarModal from './TouchCalendarModal.jsx';
 import TouchDateRangeModal from './TouchDateRangeModal.jsx';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { exportSalesToCSV } from '../utils/csvExporter';
+import { normalizeSale } from '../api/posApi';
 
 export default function SalesHistoryView({
   salesHistory,
@@ -1215,7 +1216,7 @@ export default function SalesHistoryView({
                                 whiteSpace: 'nowrap',
                                 fontWeight: '700'
                               }}
-                              onClick={() => setSelectedSale(sale)}
+                              onClick={() => setSelectedSale(normalizeSale(sale))}
                             >
                               <Eye size={14} />
                               <span>Detail / Tisk</span>
