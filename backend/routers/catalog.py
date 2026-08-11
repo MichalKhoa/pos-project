@@ -27,6 +27,8 @@ class PresetSchema(BaseModel):
     trackStock: Optional[bool] = False
     minStockAlert: Optional[int] = 5
     barcode: Optional[str] = ""
+    icon: Optional[str] = None
+    imageUrl: Optional[str] = None
 
 class RestockPresetSchema(BaseModel):
     quantity_add: int
@@ -40,13 +42,13 @@ DEFAULT_CATEGORIES_DATA = [
 ]
 
 DEFAULT_PRESETS_DATA = [
-    {"id": "preset-clothes", "name": "Oblečení", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-shoes", "name": "Boty", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-socks", "name": "Ponožky", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-underwear", "name": "Spodní prádlo", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-home", "name": "Domácí potřeby", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-open-2", "name": "Dárkový Poukaz", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""}
+    {"id": "preset-clothes", "name": "Oblečení", "icon": "Shirt", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-shoes", "name": "Boty", "icon": "Footprints", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-socks", "name": "Ponožky", "icon": "Layers", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-underwear", "name": "Spodní prádlo", "icon": "Heart", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-home", "name": "Domácí potřeby", "icon": "Home", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "icon": "Package", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
+    {"id": "preset-open-2", "name": "Dárkový Poukaz", "icon": "Gift", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""}
 ]
 
 # --- CATEGORIES ENDPOINTS ---
@@ -117,7 +119,9 @@ def get_presets(db: Session = Depends(get_db)):
                     stock_quantity=p.get("stock_quantity", 0),
                     track_stock=p.get("track_stock", False),
                     min_stock_alert=p.get("min_stock_alert", 5),
-                    barcode=p.get("barcode", "")
+                    barcode=p.get("barcode", ""),
+                    icon=p.get("icon", None),
+                    image_url=p.get("imageUrl", None)
                 )
                 db.add(db_preset)
         db.commit()
@@ -137,7 +141,9 @@ def get_presets(db: Session = Depends(get_db)):
             "stockQuantity": p.stock_quantity if p.stock_quantity is not None else 0,
             "trackStock": p.track_stock if p.track_stock is not None else False,
             "minStockAlert": p.min_stock_alert if p.min_stock_alert is not None else 5,
-            "barcode": p.barcode or ""
+            "barcode": p.barcode or "",
+            "icon": getattr(p, 'icon', None),
+            "imageUrl": getattr(p, 'image_url', None)
         }
         for p in presets
     ]
@@ -172,7 +178,9 @@ def get_preset_by_barcode(code: str, db: Session = Depends(get_db)):
         "stockQuantity": preset.stock_quantity or 0,
         "trackStock": preset.track_stock or False,
         "minStockAlert": preset.min_stock_alert or 5,
-        "barcode": preset.barcode or ""
+        "barcode": preset.barcode or "",
+        "icon": getattr(preset, 'icon', None),
+        "imageUrl": getattr(preset, 'image_url', None)
     }
 
 
@@ -193,6 +201,8 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         existing.track_stock = preset.trackStock if preset.trackStock is not None else False
         existing.min_stock_alert = preset.minStockAlert if preset.minStockAlert is not None else 5
         existing.barcode = preset.barcode or ""
+        if hasattr(existing, 'icon'): existing.icon = preset.icon
+        if hasattr(existing, 'image_url'): existing.image_url = preset.imageUrl
     else:
         existing = PresetModel(
             id=preset.id,
@@ -207,7 +217,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
             stock_quantity=preset.stockQuantity if preset.stockQuantity is not None else 0,
             track_stock=preset.trackStock if preset.trackStock is not None else False,
             min_stock_alert=preset.minStockAlert if preset.minStockAlert is not None else 5,
-            barcode=preset.barcode or ""
+            barcode=preset.barcode or "",
+            icon=preset.icon,
+            image_url=preset.imageUrl
         )
         db.add(existing)
     db.commit()
@@ -225,7 +237,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         "stockQuantity": existing.stock_quantity,
         "trackStock": existing.track_stock,
         "minStockAlert": existing.min_stock_alert,
-        "barcode": existing.barcode
+        "barcode": existing.barcode,
+        "icon": getattr(existing, 'icon', None),
+        "imageUrl": getattr(existing, 'image_url', None)
     }
 
 

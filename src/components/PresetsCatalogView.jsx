@@ -4,6 +4,7 @@ import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { getPresetIconComponent } from '../utils/presetIcons';
 
 export default function PresetsCatalogView({
   presets,
@@ -149,7 +150,7 @@ export default function PresetsCatalogView({
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Color</th>
+                  <th>Vzhled / Barva</th>
                   <th>{t('presets.col_name')}</th>
                   <th>{t('presets.col_price')}</th>
                   <th>{t('presets.col_type')}</th>
@@ -159,88 +160,106 @@ export default function PresetsCatalogView({
                 </tr>
               </thead>
               <tbody>
-                {filteredPresets.map((preset) => (
-                  <tr key={preset.id}>
-                    <td>
-                      <span style={{ display: 'inline-block', width: '16px', height: '16px', borderRadius: '50%', background: preset.color || '#3b82f6', border: '1px solid rgba(255,255,255,0.2)' }} />
-                    </td>
-                    <td style={{ fontWeight: '700', fontSize: '0.95rem' }}>
-                      {preset.name}
-                      {preset.isGeneralPreset && (
-                        <span style={{ fontSize: '0.68rem', fontWeight: '600', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
-                          {t('presets.general_badge') || 'Druh zboží'}
+                {filteredPresets.map((preset) => {
+                  const IconComp = getPresetIconComponent(preset.icon);
+                  return (
+                    <tr key={preset.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ display: 'inline-block', width: '16px', height: '16px', borderRadius: '50%', background: preset.color || '#3b82f6', border: '1px solid rgba(255,255,255,0.2)' }} />
+                          {preset.imageUrl ? (
+                            <img src={preset.imageUrl} alt="" style={{ width: '22px', height: '22px', borderRadius: '3px', objectFit: 'cover' }} />
+                          ) : (
+                            IconComp && <IconComp size={16} style={{ color: 'var(--text-secondary)' }} />
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: '700', fontSize: '0.95rem' }}>
+                        {preset.name}
+                        {preset.isGeneralPreset && (
+                          <span style={{ fontSize: '0.68rem', fontWeight: '600', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
+                            {t('presets.general_badge') || 'Druh zboží'}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', color: preset.isOpenPrice ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontWeight: '800', fontSize: '1rem' }}>
+                        {preset.isOpenPrice ? 'Otevřená' : `${preset.price} Kč`}
+                      </td>
+                      <td>
+                        {preset.isOpenPrice ? (
+                          <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.3)', padding: '2px 8px', fontSize: '0.75rem' }}>
+                            <Calculator size={12} /> Zadá se na pokladně
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pevná cena</span>
+                        )}
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{preset.vat}%</span>
+                      </td>
+                      <td>
+                        <span style={{ textTransform: 'capitalize', background: 'var(--bg-input)', padding: '3px 10px', borderRadius: '6px', fontSize: '0.8rem', border: '1px solid var(--border-color)' }}>
+                          {preset.category}
                         </span>
-                      )}
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: preset.isOpenPrice ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontWeight: '800', fontSize: '1rem' }}>
-                      {preset.isOpenPrice ? 'Otevřená' : `${preset.price} Kč`}
-                    </td>
-                    <td>
-                      {preset.isOpenPrice ? (
-                        <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.3)', padding: '2px 8px', fontSize: '0.75rem' }}>
-                          <Calculator size={12} /> Zadá se na pokladně
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pevná cena</span>
-                      )}
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{preset.vat}%</span>
-                    </td>
-                    <td>
-                      <span style={{ textTransform: 'capitalize', background: 'var(--bg-input)', padding: '3px 10px', borderRadius: '6px', fontSize: '0.8rem', border: '1px solid var(--border-color)' }}>
-                        {preset.category}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button
-                        className="nav-tab"
-                        style={{ padding: '0.35rem 0.75rem', display: 'inline-flex', marginRight: '0.5rem' }}
-                        onClick={() => handleOpenEditModal(preset)}
-                      >
-                        <Edit3 size={14} />
-                        <span>{t('presets.edit')}</span>
-                      </button>
-                      <button className="delete-item-btn" onClick={() => handleDelete(preset.id)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          className="nav-tab"
+                          style={{ padding: '0.35rem 0.75rem', display: 'inline-flex', marginRight: '0.5rem' }}
+                          onClick={() => handleOpenEditModal(preset)}
+                        >
+                          <Edit3 size={14} />
+                          <span>{t('presets.edit')}</span>
+                        </button>
+                        <button className="delete-item-btn" onClick={() => handleDelete(preset.id)}>
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
       ) : (
         <div className="preset-grid">
-          {filteredPresets.map(preset => (
-            <div
-              key={preset.id}
-              className="preset-card"
-              style={{ '--card-accent': preset.color || '#3b82f6', cursor: 'pointer' }}
-              onClick={() => handleOpenEditModal(preset)}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div className="preset-name" style={{ flex: 1 }}>
-                  {preset.name}
-                  {preset.isGeneralPreset && (
-                    <span style={{ fontSize: '0.65rem', fontWeight: '600', background: 'rgba(255, 255, 255, 0.18)', color: 'rgba(255, 255, 255, 0.95)', padding: '1px 5px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
-                      {t('presets.general_badge') || 'Druh zboží'}
-                    </span>
-                  )}
+          {filteredPresets.map(preset => {
+            const IconComp = getPresetIconComponent(preset.icon);
+            return (
+              <div
+                key={preset.id}
+                className="preset-card"
+                style={{ '--card-accent': preset.color || '#3b82f6', cursor: 'pointer' }}
+                onClick={() => handleOpenEditModal(preset)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div className="preset-name" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    {preset.imageUrl ? (
+                      <img src={preset.imageUrl} alt="" style={{ width: '22px', height: '22px', borderRadius: '3px', objectFit: 'cover' }} />
+                    ) : (
+                      IconComp && <IconComp size={18} style={{ opacity: 0.95 }} />
+                    )}
+                    <span>{preset.name}</span>
+                    {preset.isGeneralPreset && (
+                      <span style={{ fontSize: '0.65rem', fontWeight: '600', background: 'rgba(255, 255, 255, 0.18)', color: 'rgba(255, 255, 255, 0.95)', padding: '1px 5px', borderRadius: '4px', marginLeft: '2px', verticalAlign: 'middle', display: 'inline-block' }}>
+                        {t('presets.general_badge') || 'Druh zboží'}
+                      </span>
+                    )}
+                  </div>
+                  <Edit3 size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, marginLeft: '4px' }} />
                 </div>
-                <Edit3 size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, marginLeft: '4px' }} />
+                <div className="preset-footer">
+                  {preset.isOpenPrice ? (
+                    <span className="preset-price" style={{ color: 'var(--accent-amber)', fontSize: '0.85rem' }}>Volitelná</span>
+                  ) : (
+                    <span className="preset-price">{preset.price} Kč</span>
+                  )}
+                  <span className="preset-vat">DPH {preset.vat}%</span>
+                </div>
               </div>
-              <div className="preset-footer">
-                {preset.isOpenPrice ? (
-                  <span className="preset-price" style={{ color: 'var(--accent-amber)', fontSize: '0.85rem' }}>Volitelná</span>
-                ) : (
-                  <span className="preset-price">{preset.price} Kč</span>
-                )}
-                <span className="preset-vat">DPH {preset.vat}%</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

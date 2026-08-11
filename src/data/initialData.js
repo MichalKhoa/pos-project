@@ -32,6 +32,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-clothes',
     name: 'Oblečení',
+    icon: 'Shirt',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,
@@ -44,6 +45,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-shoes',
     name: 'Boty',
+    icon: 'Footprints',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,
@@ -56,6 +58,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-socks',
     name: 'Ponožky',
+    icon: 'Layers',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,
@@ -68,6 +71,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-underwear',
     name: 'Spodní prádlo',
+    icon: 'Heart',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,
@@ -80,6 +84,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-home',
     name: 'Domácí potřeby',
+    icon: 'Home',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,
@@ -92,6 +97,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-open-1',
     name: 'Volný Prodej Zboží',
+    icon: 'Package',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,
@@ -104,6 +110,7 @@ export const DEFAULT_PRESETS = [
   {
     id: 'preset-open-2',
     name: 'Dárkový Poukaz',
+    icon: 'Gift',
     price: 0,
     isOpenPrice: true,
     isGeneralPreset: true,

@@ -4,6 +4,7 @@ import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { getPresetIconComponent } from '../utils/presetIcons';
 
 export default function QuickPresetGrid({
   presets,
@@ -465,8 +466,30 @@ export default function QuickPresetGrid({
                     <GripVertical size={16} />
                   </div>
                 )}
-                <div className="preset-name" style={{ flex: 1 }}>
-                  {preset.name}
+                <div className="preset-name" style={{ flex: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+                  {preset.imageUrl ? (
+                    <img
+                      src={preset.imageUrl}
+                      alt=""
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        flexShrink: 0,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                      }}
+                    />
+                  ) : (() => {
+                    const IconComponent = getPresetIconComponent(preset.icon);
+                    return IconComponent ? (
+                      <IconComponent
+                        size={20}
+                        style={{ flexShrink: 0, opacity: 0.95 }}
+                      />
+                    ) : null;
+                  })()}
+                  <span>{preset.name}</span>
                   {preset.isGeneralPreset && (
                     <span style={{
                       fontSize: '0.65rem',
@@ -475,7 +498,7 @@ export default function QuickPresetGrid({
                       color: 'rgba(255, 255, 255, 0.95)',
                       padding: '1px 5px',
                       borderRadius: '4px',
-                      marginLeft: '6px',
+                      marginLeft: '2px',
                       verticalAlign: 'middle',
                       display: 'inline-block',
                       letterSpacing: '0.01em'

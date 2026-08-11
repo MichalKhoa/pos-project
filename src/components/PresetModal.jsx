@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Check, Trash2 } from 'lucide-react';
+import { Tag, Check, Trash2, Image, Sparkles } from 'lucide-react';
 import { COLOR_OPTIONS } from '../data/initialData';
 import { useTranslation } from '../i18n/LanguageContext';
+import { PRESET_ICON_MAP, PRESET_ICON_LABELS, getPresetIconComponent } from '../utils/presetIcons';
 
 export default function PresetModal({
   isOpen,
@@ -23,6 +24,8 @@ export default function PresetModal({
     vat: 21,
     category: 'all',
     color: '#3b82f6',
+    icon: '',
+    imageUrl: '',
     barcode: '',
     trackStock: true,
     stockQuantity: 10,
@@ -41,6 +44,8 @@ export default function PresetModal({
           vat: preset.vat !== undefined ? preset.vat : 21,
           category: preset.category || 'all',
           color: preset.color || '#3b82f6',
+          icon: preset.icon || '',
+          imageUrl: preset.imageUrl || '',
           barcode: preset.barcode || '',
           trackStock: isGen ? false : (preset.trackStock !== undefined ? preset.trackStock : true),
           stockQuantity: isGen ? 0 : (preset.stockQuantity !== undefined ? preset.stockQuantity : 10),
@@ -55,6 +60,8 @@ export default function PresetModal({
           vat: 21,
           category: defaultCategory === 'all' ? (categories[1]?.id || categories[0]?.id || 'all') : defaultCategory,
           color: '#3b82f6',
+          icon: '',
+          imageUrl: '',
           barcode: '',
           trackStock: true,
           stockQuantity: 10,
@@ -65,6 +72,44 @@ export default function PresetModal({
   }, [isOpen, mode, preset, defaultCategory, categories]);
 
   if (!isOpen) return null;
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        setFormData(prev => ({ ...prev, imageUrl: dataUrl }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -88,6 +133,8 @@ export default function PresetModal({
       vat: parseInt(formData.vat, 10),
       category: formData.category,
       color: formData.color,
+      icon: formData.icon || null,
+      imageUrl: formData.imageUrl || null,
       barcode: formData.barcode.trim(),
       trackStock: isGen ? false : formData.trackStock,
       stockQuantity: isGen ? 0 : parseInt(formData.stockQuantity || '0', 10),
@@ -358,6 +405,80 @@ export default function PresetModal({
             </div>
           )}
 
+          {/* Visual Icon Selection Gallery */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Sparkles size={16} style={{ color: 'var(--accent-purple)' }} />
+                <span>Ikona položky (Vektorový symbol)</span>
+              </label>
+              {formData.icon && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, icon: '' })}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Odebrat ikonu
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.6rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', maxHeight: '140px', overflowY: 'auto' }}>
+              {Object.entries(PRESET_ICON_MAP).map(([iconKey, IconComp]) => {
+                const isSelected = formData.icon === iconKey;
+                const labelText = PRESET_ICON_LABELS[iconKey] || iconKey;
+                return (
+                  <button
+                    key={iconKey}
+                    type="button"
+                    title={labelText}
+                    onClick={() => setFormData({ ...formData, icon: isSelected ? '' : iconKey })}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '36px',
+                      borderRadius: 'var(--radius-sm)',
+                      background: isSelected ? 'var(--accent-blue)' : 'var(--bg-card)',
+                      border: isSelected ? '2px solid #fff' : '1px solid var(--border-color)',
+                      color: isSelected ? '#ffffff' : 'var(--text-primary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <IconComp size={18} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Picture / Image File Upload */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Image size={16} style={{ color: 'var(--accent-blue)' }} />
+                <span>Obrázek / Fotka Produktu</span>
+              </label>
+              {formData.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Smazat fotku
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileChange}
+                style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}
+              />
+            </div>
+          </div>
+
           {/* Color Palette Selection */}
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
@@ -389,6 +510,50 @@ export default function PresetModal({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Real-time Preset Tile Preview */}
+          <div style={{ background: 'var(--bg-input)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+              Živý Náhled Tlačítka Pokladny:
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <div
+                style={{
+                  width: '140px',
+                  height: '80px',
+                  borderRadius: 'var(--radius-md)',
+                  background: formData.color || '#3b82f6',
+                  color: '#ffffff',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {formData.imageUrl ? (
+                  <img
+                    src={formData.imageUrl}
+                    alt="Preview"
+                    style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px', marginBottom: '2px' }}
+                  />
+                ) : (() => {
+                  const PreviewIcon = getPresetIconComponent(formData.icon);
+                  return PreviewIcon ? <PreviewIcon size={24} style={{ marginBottom: '2px' }} /> : null;
+                })()}
+                <div style={{ fontWeight: '800', fontSize: '0.85rem', lineHeight: '1.2', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                  {formData.name || 'Název položky'}
+                </div>
+                <div style={{ fontSize: '0.75rem', fontWeight: '700', opacity: 0.9, marginTop: '2px' }}>
+                  {formData.isOpenPrice ? 'Volná cena' : `${formData.price || '0'} Kč`}
+                </div>
+              </div>
             </div>
           </div>
 

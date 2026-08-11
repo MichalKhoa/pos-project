@@ -144,6 +144,8 @@ class PresetModel(Base):
     track_stock = Column(Boolean, default=False, nullable=False)
     min_stock_alert = Column(Integer, default=5, nullable=False)
     barcode = Column(String, index=True, nullable=True)
+    icon = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
 
 
 class ReceiptSequenceModel(Base):
