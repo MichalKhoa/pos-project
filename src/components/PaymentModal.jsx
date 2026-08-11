@@ -57,21 +57,22 @@ export default function PaymentModal({
   // Split payment state
   const [splitCashStr, setSplitCashStr] = useState('0');
 
-  const [splitStep, setSplitStep] = useState(1);
+  const isRefund = totalAmount < 0;
+  const absTotal = Math.abs(totalAmount);
+  const effectiveCashTotal = Math.round(absTotal);
 
   useEffect(() => {
-    setTenderedStr('0');
+    setTenderedStr(isRefund ? Math.round(Math.abs(totalAmount)).toString() : '0');
     setSplitCashStr('0');
     setSplitStep(1);
-  }, [totalAmount]);
+  }, [totalAmount, isRefund]);
 
-  const effectiveCashTotal = Math.round(totalAmount);
   const tenderedVal = parseFloat(tenderedStr) || 0;
-  const changeDue = activeMethod === 'cash' ? (tenderedVal - effectiveCashTotal) : (tenderedVal - totalAmount);
+  const changeDue = isRefund ? 0 : (activeMethod === 'cash' ? (tenderedVal - effectiveCashTotal) : (tenderedVal - totalAmount));
 
   // Split payment amounts
   const splitCashVal = parseFloat(splitCashStr) || 0;
-  const splitCardVal = Math.max(0, totalAmount - splitCashVal);
+  const splitCardVal = Math.max(0, absTotal - splitCashVal);
 
   const handleCashAdd = (val) => {
     if (val === 'exact') {

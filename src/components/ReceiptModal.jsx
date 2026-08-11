@@ -60,7 +60,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     const fontSize = isA4 ? '11px' : (is58mm ? '9px' : '11px');
     const logoSize = isA4 ? '48px' : (is58mm ? '28px' : '36px');
 
-    const isRefund = saleData.isRefund || saleData.is_refund;
+    const isRefund = saleData.isRefund || saleData.is_refund || (saleData.totalAmount !== undefined && saleData.totalAmount < 0) || (saleData.grandTotal !== undefined && saleData.grandTotal < 0);
     const origNumber = escapeHtml(saleData.originalReceiptNumber || saleData.original_receipt_number);
     const reasonText = escapeHtml(saleData.refundReason || saleData.refund_reason);
     const receiptNum = escapeHtml(saleData.receiptNumber);

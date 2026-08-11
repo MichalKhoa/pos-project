@@ -772,8 +772,8 @@ export default function App() {
     }, 0));
 
     const cartDiscountAmount = roundCZK(rawSubtotal * (cartDiscountPercent / 100));
-    const finalGrandTotal = Math.max(0, roundCZK(rawSubtotal - cartDiscountAmount));
-    const cartDiscountFactor = rawSubtotal > 0 ? finalGrandTotal / rawSubtotal : 1;
+    const finalGrandTotal = roundCZK(rawSubtotal - cartDiscountAmount);
+    const cartDiscountFactor = rawSubtotal !== 0 ? finalGrandTotal / rawSubtotal : 1;
 
     // Calculate tax summary
     const taxSummary = cartItems.reduce((acc, item) => {

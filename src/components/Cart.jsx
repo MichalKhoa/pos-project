@@ -74,8 +74,9 @@ export default function Cart({
 
   // Apply Cart-Level Discount
   const cartDiscountAmount = roundCZK(rawSubtotal * (cartDiscountPercent / 100));
-  const finalGrandTotal = Math.max(0, roundCZK(rawSubtotal - cartDiscountAmount));
-  const cartDiscountFactor = rawSubtotal > 0 ? finalGrandTotal / rawSubtotal : 1;
+  const finalGrandTotal = roundCZK(rawSubtotal - cartDiscountAmount);
+  const cartDiscountFactor = rawSubtotal !== 0 ? finalGrandTotal / rawSubtotal : 1;
+  const isRefundTransaction = finalGrandTotal < 0;
 
   // Group tax totals accurately per VAT rate (21%, 12%, 0%) after all discounts
   const taxSummary = cartItems.reduce((acc, item) => {
@@ -112,10 +113,12 @@ export default function Cart({
       {/* Cart Header */}
       <div className="cart-header" style={{ gap: '0.75rem' }}>
         <div className="cart-title" style={{ flexShrink: 1, minWidth: 0, gap: '0.4rem' }}>
-          <ShoppingCart size={18} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('cart.title')}</span>
+          <ShoppingCart size={18} style={{ color: isRefundTransaction ? 'var(--accent-rose)' : 'var(--accent-blue)', flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {isRefundTransaction ? '↩️ Vratka / Vrácení Zboží' : t('cart.title')}
+          </span>
           {cartItems.length > 0 && (
-            <span className="cart-badge-count" style={{ marginLeft: '0.2rem', flexShrink: 0 }}>
+            <span className="cart-badge-count" style={{ marginLeft: '0.2rem', flexShrink: 0, background: isRefundTransaction ? 'var(--accent-rose)' : undefined }}>
               {totalItemCount}
             </span>
           )}
@@ -185,13 +188,21 @@ export default function Cart({
             const itemDisc = item.discountPercent || 0;
             const effectiveUnitPrice = item.price * (1 - itemDisc / 100);
             const lineTotal = effectiveUnitPrice * item.quantity;
+            const isItemReturn = item.price < 0 || lineTotal < 0;
 
             return (
-              <div key={`${item.id}-${index}`} className="cart-item-card">
+              <div key={`${item.id}-${index}`} className="cart-item-card" style={{ borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined, background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined }}>
                 {/* Row 1 Top: Item Name & Action Buttons (%, Qty Stepper, Delete) */}
                 <div className="cart-item-row-top">
                   <div className="cart-item-name-group">
-                    <span className="cart-item-name-text">{item.name}</span>
+                    <span className="cart-item-name-text">
+                      {isItemReturn && (
+                        <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '900', marginRight: '5px' }}>
+                          ↩️ VRATKA
+                        </span>
+                      )}
+                      {item.name}
+                    </span>
                     {itemDisc > 0 && (
                       <span className="cart-item-disc-tag">-{itemDisc}%</span>
                     )}
@@ -232,17 +243,19 @@ export default function Cart({
                         <s style={{ opacity: 0.5, fontSize: '0.72rem' }}>
                           {parseFloat(item.price).toFixed(2)} Kč
                         </s>
-                        <span style={{ color: 'var(--accent-rose)', fontWeight: '800' }}>
+                        <span style={{ color: isItemReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800' }}>
                           {effectiveUnitPrice.toFixed(2)} Kč
                         </span>
                       </span>
                     ) : (
-                      <span>{parseFloat(item.price).toFixed(2)} Kč</span>
+                      <span style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined, fontWeight: isItemReturn ? '800' : 'normal' }}>
+                        {parseFloat(item.price).toFixed(2)} Kč
+                      </span>
                     )}
                     <span style={{ opacity: 0.6 }}> × {item.quantity} ({t('cart.vat')} {itemVat}%)</span>
                   </div>
 
-                  <div className="cart-item-line-total-price">
+                  <div className="cart-item-line-total-price" style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined }}>
                     {lineTotal.toFixed(2)} Kč
                   </div>
                 </div>
@@ -272,9 +285,11 @@ export default function Cart({
             <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)' }}>{totalTax.toFixed(2)} Kč</span>
           </div>
 
-          <div className="summary-row total-row">
-            <span>{t('cart.total')}:</span>
-            <span className="total-amount">{finalGrandTotal.toFixed(2)} Kč</span>
+          <div className="summary-row total-row" style={{ color: isRefundTransaction ? 'var(--accent-rose)' : undefined }}>
+            <span>{isRefundTransaction ? '↩️ K VRÁCENÍ ZÁKAZNÍKOVI:' : `${t('cart.total')}:`}</span>
+            <span className="total-amount" style={{ color: isRefundTransaction ? 'var(--accent-rose)' : undefined }}>
+              {isRefundTransaction ? `${Math.abs(finalGrandTotal).toFixed(2)} Kč` : `${finalGrandTotal.toFixed(2)} Kč`}
+            </span>
           </div>
         </div>
 
@@ -282,21 +297,25 @@ export default function Cart({
           <button
             type="button"
             className="pay-btn pay-btn-cash"
+            style={{ background: isRefundTransaction ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined }}
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('cash')}
           >
             <Banknote size={18} />
-            <span>{t('payment.cash')}</span>
+            <span>{isRefundTransaction ? 'Vrátit Hotovost' : t('payment.cash')}</span>
           </button>
 
           <button
             type="button"
             className="pay-btn pay-btn-card"
+            style={{ background: isRefundTransaction ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : undefined }}
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('card')}
           >
             <CreditCard size={18} style={{ flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t('payment.card_btn')}</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {isRefundTransaction ? 'Vrátit na Kartu' : t('payment.card_btn')}
+            </span>
           </button>
         </div>
 

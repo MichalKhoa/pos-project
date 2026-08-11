@@ -38,6 +38,14 @@ export default function ManualKeypad({
     if (!setAmountStr) return;
     triggerKeyAnimation(val);
 
+    if (val === 'PLUSMINUS' || val === '±') {
+      setAmountStr(prev => {
+        if (!prev) return '-';
+        if (prev.startsWith('-')) return prev.slice(1);
+        return '-' + prev;
+      });
+      return;
+    }
     if (val === 'CLEAR') {
       setAmountStr('');
       if (setItemMultiplier) setItemMultiplier(1);
@@ -70,11 +78,12 @@ export default function ManualKeypad({
 
   const handleAddCustomItem = () => {
     const numericAmount = parseFloat(amountStr);
-    if (isNaN(numericAmount) || numericAmount <= 0) return;
+    if (isNaN(numericAmount) || numericAmount === 0) return;
 
+    const isReturn = numericAmount < 0;
     onAddToCart({
       id: `custom-${Date.now()}`,
-      name: label.trim() || 'Volný prodej',
+      name: label.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
       price: numericAmount,
       vat: selectedVat,
       quantity: itemMultiplier || 1,
@@ -248,19 +257,36 @@ export default function ManualKeypad({
         </button>
       </div>
 
-      {/* ── VAT selector ──────────────────────────────────────── */}
-      <div className="vat-selector" style={{ flexShrink: 0 }}>
+      {/* ── VAT selector & Return Sign Toggle ─────────────────── */}
+      <div className="vat-selector" style={{ flexShrink: 0, display: 'flex', gap: '0.35rem' }}>
         {[21, 12, 0].map(rate => (
           <button
             key={rate}
             type="button"
             className={`vat-btn vat-${rate} ${selectedVat === rate ? 'active' : ''}`}
             onClick={() => setSelectedVat(rate)}
-            style={{ padding: '0.25rem 0', fontSize: '0.8rem' }}
+            style={{ flex: 1, padding: '0.25rem 0', fontSize: '0.8rem' }}
           >
             DPH {rate}%
           </button>
         ))}
+        <button
+          type="button"
+          className={`vat-btn ${amountStr.startsWith('-') ? 'active' : ''}`}
+          onClick={() => handleKeyPress('±')}
+          style={{
+            flex: 1.1,
+            padding: '0.25rem 0',
+            fontSize: '0.8rem',
+            fontWeight: '900',
+            background: amountStr.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.12)',
+            color: amountStr.startsWith('-') ? '#ffffff' : 'var(--accent-rose)',
+            border: '1px solid rgba(239, 68, 68, 0.4)'
+          }}
+          title="Změnit znaménko / Označit jako vratku zboží"
+        >
+          ± Vratka
+        </button>
       </div>
 
       {/* ── Number grid (4 × 4 + enter bar) ─────────────────── */}
