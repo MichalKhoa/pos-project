@@ -224,7 +224,7 @@ export default function ManualKeypad({
             if (setItemMultiplier) {
               setItemMultiplier(prev => {
                 if (prev === 1) return -1; // Switch directly to -1 return multiplier
-                if (prev === -1) return -2;
+                if (prev < 0) return prev - 1; // e.g. -1 -> -2 (increases refund count)
                 return prev - 1;
               });
             }
@@ -239,27 +239,38 @@ export default function ManualKeypad({
             cursor: 'pointer',
             transition: 'all 0.15s ease', boxShadow: itemMultiplier < 0 ? '0 2px 8px rgba(239,68,68,0.35)' : 'none'
           }}
-          title="Snížit množství / Přepnout na Vratku (-1x)"
+          title="Více do vratky (-1ks)"
         >
           <ChevronDown size={16} />
-          <span>{itemMultiplier === 1 ? '↩️ -1ks Vratka' : '-1ks'}</span>
+          <span>{itemMultiplier === 1 ? '↩️ -1ks Vratka' : '-1ks Vratka'}</span>
         </button>
 
         <button
           type="button"
-          onClick={() => { triggerKeyAnimation('INC_QTY'); if (setItemMultiplier) setItemMultiplier(prev => (prev || 1) + 1); }}
+          onClick={() => {
+            triggerKeyAnimation('INC_QTY');
+            if (setItemMultiplier) {
+              setItemMultiplier(prev => {
+                if (prev === -1) return 1; // Exit refund mode back to +1
+                if (prev < -1) return prev + 1; // e.g. -3 -> -2 (decreases refund count)
+                return (prev || 1) + 1;
+              });
+            }
+          }}
           style={{
             flex: 1, height: '34px', display: 'flex', alignItems: 'center',
             justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            border: 'none', fontWeight: '900', fontSize: '0.82rem', color: '#fff',
-            cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
+            background: itemMultiplier < 0 ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            border: itemMultiplier < 0 ? '1.5px solid rgba(16, 185, 129, 0.4)' : 'none',
+            fontWeight: '900', fontSize: '0.82rem',
+            color: itemMultiplier < 0 ? 'var(--accent-emerald)' : '#fff',
+            cursor: 'pointer', boxShadow: itemMultiplier < 0 ? 'none' : '0 2px 8px rgba(16,185,129,0.35)',
             transition: 'all 0.15s ease'
           }}
-          title="Zvýšit množství"
+          title={itemMultiplier < 0 ? 'Méně z vratky (+1ks)' : 'Zvýšit množství (+1ks)'}
         >
           <ChevronUp size={16} />
-          <span>+1</span>
+          <span>{itemMultiplier < 0 ? 'Ubrat vratku (+1ks)' : '+1ks'}</span>
         </button>
       </div>
 

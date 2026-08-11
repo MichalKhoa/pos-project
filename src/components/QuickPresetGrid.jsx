@@ -697,7 +697,7 @@ export default function QuickPresetGrid({
                   type="button"
                   onClick={() => setOpenPriceQty(prev => {
                     if (prev === 1) return -1;
-                    if (prev === -1) return -2;
+                    if (prev < 0) return prev - 1; // e.g. -1 -> -2
                     return prev - 1;
                   })}
                   style={{
@@ -710,24 +710,30 @@ export default function QuickPresetGrid({
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
-                  title="Snížit množství / Přepnout na Vratku (-1x)"
+                  title="Více do vratky (-1ks)"
                 >
-                  <ChevronDown size={16} /><span>{openPriceQty === 1 ? '↩️ -1ks Vratka' : '-1ks'}</span>
+                  <ChevronDown size={16} /><span>{openPriceQty === 1 ? '↩️ -1ks Vratka' : '-1ks Vratka'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setOpenPriceQty(prev => (prev < 0 ? 1 : prev + 1))}
+                  onClick={() => setOpenPriceQty(prev => {
+                    if (prev === -1) return 1; // Exit refund mode back to +1
+                    if (prev < -1) return prev + 1; // e.g. -3 -> -2
+                    return prev + 1;
+                  })}
                   style={{
                     flex: 1, height: '36px', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    border: 'none', fontWeight: '900', fontSize: '0.85rem', color: '#fff',
-                    cursor: 'pointer', boxShadow: '0 2px 6px rgba(16,185,129,0.35)',
+                    background: openPriceQty < 0 ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: openPriceQty < 0 ? '1.5px solid rgba(16, 185, 129, 0.4)' : 'none',
+                    fontWeight: '900', fontSize: '0.85rem',
+                    color: openPriceQty < 0 ? 'var(--accent-emerald)' : '#fff',
+                    cursor: 'pointer', boxShadow: openPriceQty < 0 ? 'none' : '0 2px 6px rgba(16,185,129,0.35)',
                     transition: 'all 0.15s ease'
                   }}
-                  title="Zvýšit množství"
+                  title={openPriceQty < 0 ? 'Méně z vratky (+1ks)' : 'Zvýšit množství (+1ks)'}
                 >
-                  <ChevronUp size={16} /><span>+1</span>
+                  <ChevronUp size={16} /><span>{openPriceQty < 0 ? 'Ubrat vratku (+1ks)' : '+1ks'}</span>
                 </button>
               </div>
 

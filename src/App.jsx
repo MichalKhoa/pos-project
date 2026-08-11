@@ -622,17 +622,21 @@ export default function App() {
           return '-' + prev;
         });
       }
-      // Arrow Up -> Increase multiplier
+      // Arrow Up -> Decrease refund count if in refund mode, or increase sale quantity if positive
       else if (key === 'ArrowUp') {
         e.preventDefault();
-        setItemMultiplier(prev => (prev < 0 ? 1 : prev + 1));
+        setItemMultiplier(prev => {
+          if (prev === -1) return 1; // Exit refund mode back to +1
+          if (prev < -1) return prev + 1; // e.g. -3 -> -2 (decreases refund count)
+          return prev + 1;
+        });
       }
-      // Arrow Down -> Decrease multiplier / Switch to Return (-1x)
+      // Arrow Down -> Increase refund count if in refund mode, or switch to refund mode (-1x) if 1
       else if (key === 'ArrowDown') {
         e.preventDefault();
         setItemMultiplier(prev => {
-          if (prev === 1) return -1;
-          if (prev === -1) return -2;
+          if (prev === 1) return -1; // Switch directly to -1 return multiplier
+          if (prev < 0) return prev - 1; // e.g. -1 -> -2 (increases refund count)
           return prev - 1;
         });
       }
