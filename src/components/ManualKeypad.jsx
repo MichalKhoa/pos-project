@@ -191,23 +191,22 @@ export default function ManualKeypad({
 
         {/* Big price / equation */}
         <div style={{
-          fontSize: itemMultiplier > 1 ? '1.5rem' : '1.7rem',
-          fontWeight: '900', fontFamily: 'var(--font-mono)',
-          textAlign: 'right', lineHeight: '1.25',
-          color: itemMultiplier > 1
-            ? 'var(--accent-amber)'
-            : (hasValidAmount ? 'var(--accent-emerald)' : 'var(--text-muted)')
+          fontSize: itemMultiplier !== 1 ? '1.2rem' : '1.4rem',
+          fontWeight: '900',
+          fontFamily: 'var(--font-mono)',
+          color: itemMultiplier < 0 ? 'var(--accent-rose)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : (amountStr ? 'var(--text-primary)' : 'var(--text-muted)')),
+          wordBreak: 'break-all'
         }}>
-          {itemMultiplier > 1
-            ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'}`
+          {itemMultiplier !== 1
+            ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'} ${itemMultiplier < 0 ? '(VRATKA)' : ''}`
             : (amountStr ? `${amountStr} Kč` : '0 Kč')}
         </div>
 
         {/* Subtotal line */}
-        {itemMultiplier > 1 && hasValidAmount && (
+        {itemMultiplier !== 1 && hasValidAmount && (
           <div style={{
             fontSize: '0.82rem', fontWeight: '800', fontFamily: 'var(--font-mono)',
-            color: 'var(--accent-emerald)', textAlign: 'right',
+            color: itemMultiplier < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)', textAlign: 'right',
             borderTop: '1px dashed rgba(245,158,11,0.35)',
             paddingTop: '2px', marginTop: '2px'
           }}>
@@ -220,23 +219,30 @@ export default function ManualKeypad({
       <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
         <button
           type="button"
-          onClick={() => setItemMultiplier && setItemMultiplier(prev => Math.max(1, prev - 1))}
-          disabled={itemMultiplier <= 1}
+          onClick={() => {
+            triggerKeyAnimation('DEC_QTY');
+            if (setItemMultiplier) {
+              setItemMultiplier(prev => {
+                if (prev === 1) return -1; // Switch directly to -1 return multiplier
+                if (prev === -1) return -2;
+                return prev - 1;
+              });
+            }
+          }}
           style={{
             flex: 1, height: '34px', display: 'flex', alignItems: 'center',
             justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-            background: itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--bg-input)',
-            border: '1.5px solid var(--border-color)',
+            background: itemMultiplier < 0 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
+            border: itemMultiplier < 0 ? 'none' : '1.5px solid var(--border-color)',
             fontWeight: '900', fontSize: '0.82rem',
-            color: itemMultiplier > 1 ? '#000' : 'var(--text-muted)',
-            opacity: itemMultiplier <= 1 ? 0.38 : 1,
-            cursor: itemMultiplier > 1 ? 'pointer' : 'default',
-            transition: 'all 0.15s ease', boxShadow: 'none'
+            color: (itemMultiplier < 0 || itemMultiplier > 1) ? '#fff' : 'var(--text-primary)',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease', boxShadow: itemMultiplier < 0 ? '0 2px 8px rgba(239,68,68,0.35)' : 'none'
           }}
-          title="Snížit množství"
+          title="Snížit množství / Přepnout na Vratku (-1x)"
         >
           <ChevronDown size={16} />
-          <span>-1</span>
+          <span>{itemMultiplier === 1 ? '↩️ -1ks Vratka' : '-1ks'}</span>
         </button>
 
         <button

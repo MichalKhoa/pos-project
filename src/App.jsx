@@ -560,15 +560,26 @@ export default function App() {
   const handleAddToCart = useCallback((item, customQty = null) => {
     soundFx.playScanChime();
     const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
-    const itemPrice = parseFloat(item.price);
-    const qtyToAdd = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
+    const rawPrice = parseFloat(item.price);
+    const rawQty = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
+
+    // If multiplier or qty is negative, convert price to negative (Return / Vratka)
+    const isNegativeMultiplier = rawQty < 0;
+    const effectivePrice = isNegativeMultiplier ? -Math.abs(rawPrice) : rawPrice;
+    const effectiveQty = isNegativeMultiplier ? Math.abs(rawQty) : (rawQty === 0 ? 1 : rawQty);
+
+    const isReturnItem = effectivePrice < 0;
+    const itemName = isReturnItem && !item.name.includes('VRATKA') && !item.name.includes('Vratka') && !item.name.includes('↩️')
+      ? `↩️ ${item.name}`
+      : item.name;
 
     addToCart({
       ...item,
-      price: itemPrice,
+      name: itemName,
+      price: effectivePrice,
       vat: itemVat,
       discountPercent: item.discountPercent || 0
-    }, qtyToAdd);
+    }, effectiveQty);
 
     if (itemMultiplier !== 1) {
       setItemMultiplier(1);
@@ -602,6 +613,29 @@ export default function App() {
           return prev.length < 8 ? prev + key : prev;
         });
       }
+      // Minus key (-) -> Toggle negative sign on keypad amount
+      else if (key === '-') {
+        e.preventDefault();
+        setKeypadAmount(prev => {
+          if (!prev) return '-';
+          if (prev.startsWith('-')) return prev.slice(1);
+          return '-' + prev;
+        });
+      }
+      // Arrow Up -> Increase multiplier
+      else if (key === 'ArrowUp') {
+        e.preventDefault();
+        setItemMultiplier(prev => (prev < 0 ? 1 : prev + 1));
+      }
+      // Arrow Down -> Decrease multiplier / Switch to Return (-1x)
+      else if (key === 'ArrowDown') {
+        e.preventDefault();
+        setItemMultiplier(prev => {
+          if (prev === 1) return -1;
+          if (prev === -1) return -2;
+          return prev - 1;
+        });
+      }
       // Decimal point or comma
       else if (key === '.' || key === ',') {
         e.preventDefault();
@@ -627,12 +661,12 @@ export default function App() {
         setKeypadAmount(prev => {
           if (prev && !prev.includes('.')) {
             const parsedQty = parseInt(prev, 10);
-            if (!isNaN(parsedQty) && parsedQty >= 1 && parsedQty <= 99) {
+            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -99 && parsedQty <= 99) {
               setItemMultiplier(parsedQty);
               return '';
             }
           }
-          if (itemMultiplier > 1) {
+          if (itemMultiplier !== 1) {
             setItemMultiplier(1);
           }
           return prev;
@@ -641,11 +675,13 @@ export default function App() {
       // Enter or Numpad Enter -> Add typed amount or open cash payment
       else if (key === 'Enter') {
         e.preventDefault();
-        if (keypadAmount && parseFloat(keypadAmount) > 0) {
+        const amtVal = parseFloat(keypadAmount);
+        if (keypadAmount && !isNaN(amtVal) && amtVal !== 0) {
+          const isReturn = amtVal < 0;
           handleAddToCart({
             id: `custom-${Date.now()}`,
-            name: 'Volný prodej',
-            price: parseFloat(keypadAmount),
+            name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
+            price: amtVal,
             vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
             isCustom: true
           });
