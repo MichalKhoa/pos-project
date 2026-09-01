@@ -4,7 +4,8 @@ Operational execution scripts, test suites, and environment setup.
 
 ## Launchers & Production Serving
 - **Single-Process Production Mode**: FastAPI mounts compiled `dist/` static files on port 8000, eliminating Node/Vite dev server overhead in production (~150MB RAM savings).
-- `Himmel_POS.bat`: Silent startup for backend and frontend, opens Microsoft Edge app window.
+- `Himmel_POS.bat`: Silent startup for backend and frontend with active port readiness polling, opens Microsoft Edge app window.
+- `Himmel_POS_Debug.bat`: Debug launcher starting FastAPI and Vite dev server with active HTTP readiness polling before launching Edge.
 - `Himmel_POS_Kiosk.bat`: Starts services and launches Microsoft Edge in `--kiosk` full-screen register mode.
 
 ## Manual Commands
@@ -25,11 +26,16 @@ Operational execution scripts, test suites, and environment setup.
   Compiles React bundle into `dist/` with code-split chunks.
 
 ## Automated Testing & Quality Gates
-- **Frontend Financial Unit Tests**:
+- **Frontend Test Suite (Vitest + jsdom + React Testing Library)**:
   ```bash
   npm run test
   ```
-  Runs `vitest` unit tests covering VAT multi-tier splits, cart discount distribution, and `roundCZK` invariants.
+  Runs 30+ automated tests across 5 suites:
+  - `taxCalculations.test.js`: Czech multi-tier VAT (21%, 12%, 0%), base + VAT invariants.
+  - `currency.test.js`: Financial `roundCZK`, string formatting, change due.
+  - `App.test.jsx`: Full App shell mounting, view routing (Register, Catalog, Inventory, History, Settings), customer display mode.
+  - `modals.test.jsx`: Payment modal (Cash, Card, QR, Split), thermal receipt paper, preset editor, discount modal, admin PIN keypad.
+  - `keypad_cart_presets.test.jsx`: 4x4 numeric keypad, ± Vratka sign toggle, Czech VAT chips, product grid category filtering, cart quantity steppers.
 - **Frontend Code Linter**:
   ```bash
   npm run lint

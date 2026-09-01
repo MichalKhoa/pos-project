@@ -129,7 +129,7 @@ export default function ManualKeypad({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountStr, label, selectedVat]);
 
-  const hasValidAmount = parseFloat(amountStr) > 0;
+  const hasValidAmount = !isNaN(parseFloat(amountStr)) && parseFloat(amountStr) !== 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%', overflowY: 'auto' }}>
