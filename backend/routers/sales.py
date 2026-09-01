@@ -79,11 +79,89 @@ class UpdateRefundStatusSchema(BaseModel):
     refunded_amount: float
 
 
+from collections import OrderedDict
+import threading
+import time
+
+class BoundedTTLIdempotencyCache:
+    """Thread-safe bounded LRU cache with TTL eviction for idempotency keys."""
+    def __init__(self, max_size: int = 1000, ttl_seconds: float = 300.0):
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self._cache = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key: str) -> Optional[dict]:
+        with self._lock:
+            if key not in self._cache:
+                return None
+            res, expire_time = self._cache[key]
+            if time.time() > expire_time:
+                del self._cache[key]
+                return None
+            self._cache.move_to_end(key)
+            return res
+
+    def set(self, key: str, value: dict):
+        with self._lock:
+            now = time.time()
+            if len(self._cache) >= self.max_size:
+                expired_keys = [k for k, (_, exp) in self._cache.items() if now > exp]
+                for k in expired_keys:
+                    del self._cache[k]
+                while len(self._cache) >= self.max_size:
+                    self._cache.popitem(last=False)
+            self._cache[key] = (value, now + self.ttl_seconds)
+
+    def clear(self):
+        with self._lock:
+            self._cache.clear()
+
+idempotency_cache = BoundedTTLIdempotencyCache(max_size=1000, ttl_seconds=300.0)
+
+
+from fastapi import Response
+
 @router.get("/")
-def get_sales_history(db: Session = Depends(get_db)):
-    """Fetch complete sales ledger history."""
-    sales = db.query(SaleModel).order_by(SaleModel.timestamp.desc()).all()
-    return sales
+def get_sales_history(
+    response: Response,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch sales ledger history with optional pagination and date/payment-method filtering.
+    Backward-compatible: if limit is None, returns all records.
+    Sets X-Total-Count response header with total matched sales count.
+    """
+    query = db.query(SaleModel)
+
+    if from_date:
+        dt_from = parse_iso_timestamp(from_date)
+        query = query.filter(SaleModel.timestamp >= dt_from)
+
+    if to_date:
+        dt_to = parse_iso_timestamp(to_date)
+        query = query.filter(SaleModel.timestamp <= dt_to)
+
+    if payment_method:
+        query = query.filter(SaleModel.payment_method == payment_method.lower())
+
+    total_count = query.count()
+    response.headers["X-Total-Count"] = str(total_count)
+
+    query = query.order_by(SaleModel.timestamp.desc())
+
+    if offset > 0:
+        query = query.offset(offset)
+
+    if limit is not None and limit > 0:
+        query = query.limit(limit)
+
+    return query.all()
 
 
 @router.get("/next-receipt-number")
@@ -109,15 +187,13 @@ def get_next_receipt_number_preview(db: Session = Depends(get_db)):
     return {"next_receipt_number": f"{year}-{next_num:06d}"}
 
 
-IDEMPOTENCY_CACHE = {}
-
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(get_db)):
     """Save a completed sale, run EET fiscal signing, and persist line items."""
     idempotency_key = request.headers.get("X-Idempotency-Key") or request.headers.get("x-idempotency-key")
-    if idempotency_key and idempotency_key in IDEMPOTENCY_CACHE:
-        cached_res, ts = IDEMPOTENCY_CACHE[idempotency_key]
-        if datetime.now().timestamp() - ts < 300:
+    if idempotency_key:
+        cached_res = idempotency_cache.get(idempotency_key)
+        if cached_res:
             return cached_res
 
     # Check if sale ID already exists
@@ -125,7 +201,7 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     if existing:
         res = {"status": "ALREADY_EXISTS", "sale_id": existing.id, "receipt_number": existing.receipt_number}
         if idempotency_key:
-            IDEMPOTENCY_CACHE[idempotency_key] = (res, datetime.now().timestamp())
+            idempotency_cache.set(idempotency_key, res)
         return res
 
     # Ensure atomic receipt number assignment
@@ -225,7 +301,7 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
         "eet_status": db_sale.eet_status
     }
     if idempotency_key:
-        IDEMPOTENCY_CACHE[idempotency_key] = (res, datetime.now().timestamp())
+        idempotency_cache.set(idempotency_key, res)
     return res
 
 
