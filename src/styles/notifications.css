@@ -184,7 +184,8 @@
 .undo-toast-wrapper {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9998;
   animation: toastSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -192,11 +193,11 @@
 @keyframes toastSlideUp {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translate(-50%, 16px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
 }
 
