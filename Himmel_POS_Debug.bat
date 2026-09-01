@@ -45,7 +45,8 @@ if %errorlevel% equ 0 (
 )
 
 REM 3. Stop any existing instances to avoid port conflicts
-echo Stopping existing processes...
+echo Stopping existing processes and freeing ports...
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 5173,8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Web Dev*" >nul 2>&1
 
@@ -66,7 +67,7 @@ if exist "%~dp0backend\litestream.exe" (
 REM 7. Wait for servers to spin up (active readiness polling)
 echo.
 echo Waiting for servers to initialize...
-powershell -NoProfile -Command "$ready = $false; for ($i = 0; $i -lt 15; $i++) { try { $r = (Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 1).StatusCode; if ($r -eq 200) { $ready = $true; break } } catch {}; Start-Sleep -Seconds 1 }; if (-not $ready) { Start-Sleep -Seconds 2 }"
+powershell -NoProfile -Command "$ready = $false; for ($i = 0; $i -lt 15; $i++) { try { $r1 = (Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 1).StatusCode; $r2 = (Invoke-WebRequest -Uri 'http://localhost:8000/api/v1/status' -UseBasicParsing -TimeoutSec 1).StatusCode; if ($r1 -eq 200 -and $r2 -eq 200) { $ready = $true; break } } catch {}; Start-Sleep -Seconds 1 }; if (-not $ready) { Start-Sleep -Seconds 2 }"
 
 REM 8. Launch Browser
 echo Opening browser at http://localhost:5173 ...
