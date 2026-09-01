@@ -35,5 +35,6 @@
 - **Test Suites**: `npm run test` (`vitest` financial math suite) & `python -m unittest discover -s backend/tests -p "test_*.py"`.
 
 ## Mandatory Agent Discipline
+- **Implementation Planning First**: Always start tasks by creating a phased, multi-step implementation plan (`implementation_plan.md`) and get approval before executing code changes.
 - **Serena Memory Sync**: Always update `.serena/memories/` when models, routers, utilities, or architectural patterns change.
 - **Codegraph Sync**: Check `codegraph_explore` before modifying symbols and ensure index stays healthy.
