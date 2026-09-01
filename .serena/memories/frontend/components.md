@@ -31,16 +31,25 @@ Directory: `/src/components`
   - `PresetTileCard.jsx`: Product tile card with visual icon/photo badge, quick multiplier, and edit handles.
   - `OpenPriceModal.jsx`: Numeric touch popover for open-price items and return items.
   - `src/hooks/usePresetDragDrop.js`: Drag-and-drop tile reordering and keyboard arrow shifting.
-- `ManualKeypad.jsx`: Touch numeric pad with decimal entry, quick quantity multiplier (+1x / -1x return mode), and touch ergonomics.
+- `ManualKeypad.jsx`: Touch numeric pad coordinator. Decomposed into `/src/components/keypad/`:
+  - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid, quick multiplier (`×N`), and custom product insertion.
+  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) and refund sign toggle (`± Vratka`).
+  - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
 - `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation.
 
 ## Modals & Popovers
+- `PresetModal.jsx`: Product preset add/edit dialog coordinator. Decomposed into `/src/components/preset-modal/`:
+  - `PresetColorPicker.jsx`: Color palette swatch selector with active indicators.
+  - `PresetIconPicker.jsx`: Vector Lucide icon selector gallery and photo upload / canvas downscaler.
+  - `PresetStockFields.jsx`: Skladová zásoba / stock tracking toggles, initial qty, min stock alert.
 - `PaymentModal.jsx`: Multi-tender payment coordinator. Decomposed into `/src/components/payment/`:
   - `CashPaymentPanel.jsx`: Touch numpad, quick coin/banknote denomination buttons, exact amount shortcut, and change calculation.
   - `CardPaymentPanel.jsx`: ČSOB Move 3500 terminal TCP API status, sending prompt, and manual override.
   - `QrPaymentPanel.jsx`: Czech SPAYD instant QR code display with 2s IMAP bank listener polling.
   - `SplitPaymentPanel.jsx`: Two-step split cash + card payment workflow with auto remainder computation.
-- `ReceiptModal.jsx`: Vector receipt preview with live thermal print trigger.
+- `ReceiptModal.jsx`: Vector receipt preview with live thermal print trigger. Decomposed into `/src/components/receipt/`:
+  - `ReceiptPreviewPaper.jsx`: Visual receipt paper preview (80mm/58mm/A4) with header, item rows, VAT table, and EET fiscal badges.
+  - `ReceiptActionButtons.jsx`: Thermal direct print, new sale navigation, and debug preview window.
 - `AdminPinModal.jsx`: 4–8 digit PIN authentication pad for protected actions.
 - `TouchCalendarModal.jsx` & `TouchDateRangeModal.jsx`: Touch-friendly date and range pickers for POS screens.
 - `ItemDiscountModal.jsx`: Line-item discount percentage and fixed amount modal.

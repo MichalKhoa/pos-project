@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Check, Trash2, Image, Sparkles } from 'lucide-react';
-import { COLOR_OPTIONS } from '../data/initialData';
+import { Tag, Check, Trash2 } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext';
-import { PRESET_ICON_MAP, PRESET_ICON_LABELS, getPresetIconComponent } from '../utils/presetIcons';
+import { getPresetIconComponent } from '../utils/presetIcons';
+import PresetColorPicker from './preset-modal/PresetColorPicker';
+import PresetIconPicker from './preset-modal/PresetIconPicker';
+import PresetStockFields from './preset-modal/PresetStockFields';
 
 export default function PresetModal({
   isOpen,
@@ -72,44 +74,6 @@ export default function PresetModal({
   }, [isOpen, mode, preset, defaultCategory, categories]);
 
   if (!isOpen) return null;
-
-  const handleImageFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDim = 200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxDim) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          }
-        } else {
-          if (height > maxDim) {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        setFormData(prev => ({ ...prev, imageUrl: dataUrl }));
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -360,158 +324,29 @@ export default function PresetModal({
             </select>
           </div>
 
-          {/* Stock Quantities (when tracking is enabled) */}
-          {!formData.isGeneralPreset && formData.trackStock && (
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                  Počáteční stav skladu (ks)
-                </label>
-                <input
-                  type="number"
-                  placeholder="10"
-                  value={formData.stockQuantity}
-                  onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)'
-                  }}
-                />
-              </div>
+          {/* Stock Fields (Subcomponent) */}
+          <PresetStockFields
+            isGeneralPreset={formData.isGeneralPreset}
+            trackStock={formData.trackStock}
+            stockQuantity={formData.stockQuantity}
+            onChangeStockQuantity={val => setFormData(prev => ({ ...prev, stockQuantity: val }))}
+            minStockAlert={formData.minStockAlert}
+            onChangeMinStockAlert={val => setFormData(prev => ({ ...prev, minStockAlert: val }))}
+          />
 
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-                  Min. limit varování (ks)
-                </label>
-                <input
-                  type="number"
-                  placeholder="5"
-                  value={formData.minStockAlert}
-                  onChange={e => setFormData({ ...formData, minStockAlert: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)'
-                  }}
-                />
-              </div>
-            </div>
-          )}
+          {/* Icon & Photo Pickers (Subcomponent) */}
+          <PresetIconPicker
+            icon={formData.icon}
+            onSelectIcon={iconKey => setFormData(prev => ({ ...prev, icon: iconKey }))}
+            imageUrl={formData.imageUrl}
+            onSelectImageUrl={url => setFormData(prev => ({ ...prev, imageUrl: url }))}
+          />
 
-          {/* Visual Icon Selection Gallery */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <Sparkles size={16} style={{ color: 'var(--accent-purple)' }} />
-                <span>Ikona položky (Vektorový symbol)</span>
-              </label>
-              {formData.icon && (
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, icon: '' })}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                >
-                  Odebrat ikonu
-                </button>
-              )}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.6rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', maxHeight: '140px', overflowY: 'auto' }}>
-              {Object.entries(PRESET_ICON_MAP).map(([iconKey, IconComp]) => {
-                const isSelected = formData.icon === iconKey;
-                const labelText = PRESET_ICON_LABELS[iconKey] || iconKey;
-                return (
-                  <button
-                    key={iconKey}
-                    type="button"
-                    title={labelText}
-                    onClick={() => setFormData({ ...formData, icon: isSelected ? '' : iconKey })}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '36px',
-                      borderRadius: 'var(--radius-sm)',
-                      background: isSelected ? 'var(--accent-blue)' : 'var(--bg-card)',
-                      border: isSelected ? '2px solid #fff' : '1px solid var(--border-color)',
-                      color: isSelected ? '#ffffff' : 'var(--text-primary)',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <IconComp size={18} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Custom Picture / Image File Upload */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <Image size={16} style={{ color: 'var(--accent-blue)' }} />
-                <span>Obrázek / Fotka Produktu</span>
-              </label>
-              {formData.imageUrl && (
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, imageUrl: '' })}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-                >
-                  Smazat fotku
-                </button>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageFileChange}
-                style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}
-              />
-            </div>
-          </div>
-
-          {/* Color Palette Selection */}
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600', marginBottom: '0.4rem' }}>
-              {t('presets.color')}
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {COLOR_OPTIONS.map(c => {
-                const isSelected = formData.color === c;
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, color: c })}
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: c,
-                      border: isSelected ? '3px solid #ffffff' : '1px solid rgba(0,0,0,0.2)',
-                      boxShadow: isSelected ? '0 0 0 2px var(--accent-blue)' : 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 0
-                    }}
-                  >
-                    {isSelected && <Check size={16} style={{ color: '#ffffff' }} />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* Color Palette (Subcomponent) */}
+          <PresetColorPicker
+            selectedColor={formData.color}
+            onSelectColor={c => setFormData(prev => ({ ...prev, color: c }))}
+          />
 
           {/* Real-time Preset Tile Preview */}
           <div style={{ background: 'var(--bg-input)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', marginTop: '0.2rem' }}>
