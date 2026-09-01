@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -31,13 +31,11 @@ import {
   purgeAllSalesBackend,
   openCashDrawerBackend
 } from './api/posApi';
-
-// Lazy-loaded heavy views for code-splitting and faster cashier initialization
-const SalesHistoryView = React.lazy(() => import('./components/SalesHistoryView'));
-const PresetsCatalogView = React.lazy(() => import('./components/PresetsCatalogView'));
-const InventoryView = React.lazy(() => import('./components/InventoryView'));
-const SettingsView = React.lazy(() => import('./components/SettingsView'));
-const CustomerDisplayView = React.lazy(() => import('./components/CustomerDisplayView'));
+import SalesHistoryView from './components/SalesHistoryView';
+import PresetsCatalogView from './components/PresetsCatalogView';
+import InventoryView from './components/InventoryView';
+import SettingsView from './components/SettingsView';
+import CustomerDisplayView from './components/CustomerDisplayView';
 
 const sanitizePresets = (list) => {
   if (!Array.isArray(list)) return list;
@@ -775,11 +773,7 @@ export default function App() {
   };
 
   if (isCustomerDisplayMode) {
-    return (
-      <Suspense fallback={<div className="tab-loading-spinner" style={{ color: '#fff', padding: '2rem', textAlign: 'center' }}>Načítání displeje...</div>}>
-        <CustomerDisplayView storeConfig={storeConfig} />
-      </Suspense>
-    );
+    return <CustomerDisplayView storeConfig={storeConfig} />;
   }
 
   return (
@@ -900,59 +894,51 @@ export default function App() {
         )}
 
         {activeTab === 'inventory' && (
-          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání skladu...</div>}>
-            <InventoryView
-              presets={presets}
-              categories={categories}
-              onUpdatePresets={setPresets}
-              onAddPreset={handleAddPreset}
-            />
-          </Suspense>
+          <InventoryView
+            presets={presets}
+            categories={categories}
+            onUpdatePresets={setPresets}
+            onAddPreset={handleAddPreset}
+          />
         )}
 
         {activeTab === 'presets' && (
-          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání katalogu...</div>}>
-            <PresetsCatalogView
-              presets={presets}
-              categories={categories}
-              onAddCategory={handleAddCategory}
-              onEditCategory={handleEditCategory}
-              onDeleteCategory={handleDeleteCategory}
-              onAddPreset={handleAddPreset}
-              onUpdatePreset={handleUpdatePreset}
-              onDeletePreset={handleDeletePreset}
-              onReorderPresets={handleReorderPresets}
-            />
-          </Suspense>
+          <PresetsCatalogView
+            presets={presets}
+            categories={categories}
+            onAddCategory={handleAddCategory}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
+            onAddPreset={handleAddPreset}
+            onUpdatePreset={handleUpdatePreset}
+            onDeletePreset={handleDeletePreset}
+            onReorderPresets={handleReorderPresets}
+          />
         )}
 
         {activeTab === 'history' && (
-          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání historie...</div>}>
-            <SalesHistoryView
-              salesHistory={salesHistory}
-              storeConfig={storeConfig}
-              isAdminMode={isAdminMode}
-              onToggleAdminMode={handleToggleAdminMode}
-              onDeleteSale={handleDeleteSale}
-              onClearAllTestSales={handleClearAllTestSales}
-              onInitiateRefund={setRefundTargetSale}
-              initialDateFilter={historyDateFilter}
-            />
-          </Suspense>
+          <SalesHistoryView
+            salesHistory={salesHistory}
+            storeConfig={storeConfig}
+            isAdminMode={isAdminMode}
+            onToggleAdminMode={handleToggleAdminMode}
+            onDeleteSale={handleDeleteSale}
+            onClearAllTestSales={handleClearAllTestSales}
+            onInitiateRefund={setRefundTargetSale}
+            initialDateFilter={historyDateFilter}
+          />
         )}
 
         {activeTab === 'settings' && (
-          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání nastavení...</div>}>
-            <SettingsView
-              storeConfig={storeConfig}
-              onSaveStoreConfig={handleSaveStoreConfig}
-              presets={presets}
-              onResetData={handleResetData}
-              onNavigateToPresets={() => setActiveTab('presets')}
-              isAdminMode={isAdminMode}
-              onToggleAdminMode={handleToggleAdminMode}
-            />
-          </Suspense>
+          <SettingsView
+            storeConfig={storeConfig}
+            onSaveStoreConfig={handleSaveStoreConfig}
+            presets={presets}
+            onResetData={handleResetData}
+            onNavigateToPresets={() => setActiveTab('presets')}
+            isAdminMode={isAdminMode}
+            onToggleAdminMode={handleToggleAdminMode}
+          />
         )}
       </main>
 

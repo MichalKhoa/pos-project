@@ -9,6 +9,7 @@ import SalesMetricsCards from './history/SalesMetricsCards.jsx';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesAnalyticsCharts from './history/SalesAnalyticsCharts.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
+import { formatLocalDate, getPeriodDateRange } from '../utils/dateUtils';
 
 export default function SalesHistoryView({
   salesHistory,
@@ -30,15 +31,14 @@ export default function SalesHistoryView({
   const [isRangeModalOpen, setIsRangeModalOpen] = useState(false);
 
   const now = new Date();
-  const currentYear = now.getFullYear();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // Custom date range states (default to first of current month & today)
-  const todayStr = now.toISOString().slice(0, 10);
-  const firstOfMonthStr = new Date(currentYear, now.getMonth(), 1).toISOString().slice(0, 10);
+  const todayStr = formatLocalDate(now);
+  const firstOfMonthStr = formatLocalDate(new Date(now.getFullYear(), now.getMonth(), 1));
 
   const [fromDate, setFromDate] = useState(firstOfMonthStr);
   const [toDate, setToDate] = useState(todayStr);
@@ -84,38 +84,7 @@ export default function SalesHistoryView({
 
   // Compute exact start and end Date objects
   const computedDateRange = useMemo(() => {
-    const ref = new Date(referenceDate);
-    const start = new Date(ref);
-    const end = new Date(ref);
-
-    if (periodFilter === 'today' || periodFilter === 'yesterday') {
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-    } else if (periodFilter === 'week') {
-      const day = ref.getDay();
-      const diffToMon = (day === 0 ? -6 : 1 - day);
-      start.setDate(ref.getDate() + diffToMon);
-      start.setHours(0, 0, 0, 0);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23, 59, 59, 999);
-    } else if (periodFilter === 'month') {
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      end.setMonth(start.getMonth() + 1, 0);
-      end.setHours(23, 59, 59, 999);
-    } else if (periodFilter === 'year') {
-      start.setMonth(0, 1);
-      start.setHours(0, 0, 0, 0);
-      end.setMonth(11, 31);
-      end.setHours(23, 59, 59, 999);
-    } else if (periodFilter === 'custom') {
-      const from = fromDate ? new Date(fromDate + 'T00:00:00') : new Date(0);
-      const to = toDate ? new Date(toDate + 'T23:59:59') : new Date();
-      return { start: from, end: to };
-    } else {
-      return { start: new Date(0), end: new Date('2099-12-31') };
-    }
-    return { start, end };
+    return getPeriodDateRange(periodFilter, referenceDate, fromDate, toDate);
   }, [periodFilter, referenceDate, fromDate, toDate]);
 
   // Formatted date badge label

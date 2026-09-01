@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { ShoppingBag, PauseCircle, PlayCircle, Clock, Trash2, X } from 'lucide-react';
-import CashDrawerIcon from '../CashDrawerIcon';
 
 export default function ParkedCartsDrawer({
   hasCartItems,
   parkedCarts = [],
   onParkCart,
   onRestoreParkedCart,
-  onDeleteParkedCart,
-  onOpenCashDrawer
+  onDeleteParkedCart
 }) {
   const [showHoldModal, setShowHoldModal] = useState(false);
 
@@ -103,34 +101,6 @@ export default function ParkedCartsDrawer({
             <span>Obnovit ({parkedCarts.length})</span>
           </button>
         </div>
-
-        {onOpenCashDrawer && (
-          <button
-            type="button"
-            className="key-btn"
-            onClick={onOpenCashDrawer}
-            style={{
-              height: '42px',
-              fontSize: '0.84rem',
-              fontWeight: '900',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)',
-              color: '#f59e0b',
-              border: '1.5px solid rgba(245, 158, 11, 0.5)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              width: '100%',
-              boxShadow: '0 3px 10px rgba(245, 158, 11, 0.15)',
-              cursor: 'pointer'
-            }}
-            title="Otevřít Pokladní Zásuvku"
-          >
-            <CashDrawerIcon size={18} color="#f59e0b" />
-            <span>Otevřít pokladní zásuvku</span>
-          </button>
-        )}
       </div>
 
       {/* ── Modal Dialog for Parked / Held Carts ────────────────── */}

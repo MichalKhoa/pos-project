@@ -200,10 +200,15 @@ export const translations = {
       date_to: "Datum DO (Do konce dne)",
       found_count: "Nalezeno {count} transakcí",
       today: "Dnes",
+      period_today: "Dnes",
       yesterday: "Včera",
+      period_yesterday: "Včera",
       this_week: "Tento týden",
+      period_week: "Tento týden",
       month: "Tento měsíc",
+      period_month: "Tento měsíc",
       year: "Tento rok",
+      period_year: "Tento rok",
       all_period: "Vše",
       custom_date: "Vlastní rozsah",
       prev_period: "Předchozí období",
@@ -358,7 +363,8 @@ export const translations = {
       close: "Zavřít",
       saved: "Uloženo!",
       success: "Úspěch",
-      error: "Chyba"
+      error: "Chyba",
+      add: "Přidat"
     }
   },
   vi: {
@@ -539,10 +545,15 @@ export const translations = {
       date_to: "Đến ngày (Cuối ngày)",
       found_count: "Tìm thấy {count} giao dịch",
       today: "Hôm nay",
+      period_today: "Hôm nay",
       yesterday: "Hôm qua",
+      period_yesterday: "Hôm qua",
       this_week: "Tuần này",
+      period_week: "Tuần này",
       month: "Tháng này",
+      period_month: "Tháng này",
       year: "Năm nay",
+      period_year: "Năm nay",
       all_period: "Tất cả",
       custom_date: "Tùy chọn",
       prev_period: "Kỳ trước",
@@ -721,7 +732,8 @@ export const translations = {
       close: "Đóng",
       saved: "Đã lưu!",
       success: "Thành công",
-      error: "Lỗi"
+      error: "Lỗi",
+      add: "Thêm"
     }
   },
   en: {
@@ -902,10 +914,15 @@ export const translations = {
       date_to: "Date TO (End of day)",
       found_count: "Found {count} transactions",
       today: "Today",
+      period_today: "Today",
       yesterday: "Yesterday",
+      period_yesterday: "Yesterday",
       this_week: "This Week",
+      period_week: "This Week",
       month: "This Month",
+      period_month: "This Month",
       year: "This Year",
+      period_year: "This Year",
       all_period: "All",
       custom_date: "Custom Range",
       prev_period: "Previous Period",
@@ -1084,7 +1101,8 @@ export const translations = {
       close: "Close",
       saved: "Saved!",
       success: "Success",
-      error: "Error"
+      error: "Error",
+      add: "Add"
     }
   }
 };

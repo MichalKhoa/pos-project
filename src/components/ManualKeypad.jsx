@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, ChevronUp, ChevronDown } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
 import KeypadVatSelector from './keypad/KeypadVatSelector';
@@ -12,7 +12,6 @@ export default function ManualKeypad({
   itemMultiplier = 1,
   setItemMultiplier,
   defaultVat = 21,
-  onOpenCashDrawer,
   parkedCarts = [],
   onParkCart,
   onRestoreParkedCart,
@@ -215,71 +214,6 @@ export default function ManualKeypad({
           )}
         </div>
 
-        {/* ── Qty arrow row ───── */}
-        <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-          <button
-            type="button"
-            onClick={() => {
-              triggerKeyAnimation('DEC_QTY');
-              if (amountStr && !amountStr.startsWith('-') && itemMultiplier === 1) {
-                setAmountStr('-' + amountStr);
-                return;
-              }
-              if (setItemMultiplier) {
-                setItemMultiplier(prev => {
-                  if (prev === 1) return -1;
-                  if (prev < 0) return prev - 1;
-                  return prev - 1;
-                });
-              }
-            }}
-            style={{
-              flex: 1, height: '34px', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-              background: (itemMultiplier < 0 || (amountStr && amountStr.startsWith('-'))) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--bg-input)'),
-              border: (itemMultiplier < 0 || (amountStr && amountStr.startsWith('-'))) ? 'none' : '1.5px solid var(--border-color)',
-              fontWeight: '900', fontSize: '0.85rem',
-              color: (itemMultiplier < 0 || itemMultiplier > 1 || (amountStr && amountStr.startsWith('-'))) ? '#fff' : 'var(--text-primary)',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease', boxShadow: (itemMultiplier < 0 || (amountStr && amountStr.startsWith('-'))) ? '0 2px 8px rgba(239,68,68,0.35)' : 'none'
-            }}
-            title="Snížit množství / Vratka (-1)"
-          >
-            <ChevronDown size={16} />
-            <span>-1</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              triggerKeyAnimation('INC_QTY');
-              if (amountStr && amountStr.startsWith('-') && itemMultiplier === 1) {
-                setAmountStr(amountStr.slice(1));
-                return;
-              }
-              if (setItemMultiplier) {
-                setItemMultiplier(prev => {
-                  if (prev === -1) return 1;
-                  if (prev < -1) return prev + 1;
-                  return (prev || 1) + 1;
-                });
-              }
-            }}
-            style={{
-              flex: 1, height: '34px', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: '0.3rem', borderRadius: '8px',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              border: 'none', fontWeight: '900', fontSize: '0.85rem', color: '#fff',
-              cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
-              transition: 'all 0.15s ease'
-            }}
-            title="Zvýšit množství (+1)"
-          >
-            <ChevronUp size={16} />
-            <span>+1</span>
-          </button>
-        </div>
-
         {/* ── VAT selector & Return Sign Toggle (Subcomponent) ── */}
         <KeypadVatSelector
           selectedVat={selectedVat}
@@ -309,7 +243,6 @@ export default function ManualKeypad({
         onParkCart={onParkCart}
         onRestoreParkedCart={onRestoreParkedCart}
         onDeleteParkedCart={onDeleteParkedCart}
-        onOpenCashDrawer={onOpenCashDrawer}
       />
     </div>
   );

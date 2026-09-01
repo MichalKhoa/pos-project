@@ -214,7 +214,12 @@ async def serve_spa(full_path: str):
 
     index_file = os.path.join(dist_dir, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file, media_type="text/html")
+        headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+        return FileResponse(index_file, media_type="text/html", headers=headers)
 
     return {
         "status": "ONLINE",

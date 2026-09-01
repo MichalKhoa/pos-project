@@ -1,157 +1,107 @@
 @echo off
 setlocal enabledelayedexpansion
-title Himmel POS - 1-Click Installer
+title Himmel POS - 1-Click Complete Setup
 echo ========================================================
-echo   Himmel POS Automated 1-Click Installation Script
+echo   Himmel POS Automated 1-Click Setup & Installer
 echo ========================================================
 echo.
 
 cd /d "%~dp0"
 
-REM 1. Verify / Auto-Install / Bypass Python and Node.js
-echo [1/5] Checking system prerequisites (Python and Node.js)...
-
-set "SKIP_PYTHON=0"
-set "SKIP_NODE=0"
-
+REM 1. Verify / Auto-Install Python
+echo [1/6] Checking Python 3...
 where python >nul 2>&1
 if %errorlevel% neq 0 (
     if exist "%~dp0backend\venv\Scripts\python.exe" (
-        echo [OK] Existing Python virtual environment found in backend\venv.
+        echo [OK] Existing virtual environment found in backend\venv.
     ) else (
-        echo [WARNING] Python 3 was not found in system PATH.
-        echo.
-        echo Options:
-        echo   [1] Attempt automatic installation via Winget (Recommended)
-        echo   [2] Bypass / Skip Python check (Assume pre-configured environment)
-        echo   [3] Exit installation
-        echo.
-        set "PY_CHOICE="
-        set /p "PY_CHOICE=Select an option [1/2/3] (default 1): "
-        if "!PY_CHOICE!"=="2" (
-            echo [INFO] Bypassing Python check...
-            set "SKIP_PYTHON=1"
-        ) else if "!PY_CHOICE!"=="3" (
-            echo Installation canceled by user.
-            pause
-            exit /b 1
-        ) else (
-            echo [INFO] Installing Python 3.11 via Winget...
-            winget install --id Python.Python.3.11 --exact --accept-package-agreements --accept-source-agreements
-            if !errorlevel! neq 0 (
-                echo [WARNING] Winget installation failed or Winget is unavailable.
-                set "BYPASS_PY="
-                set /p "BYPASS_PY=Do you want to bypass Python check and continue? (Y/N): "
-                if /i "!BYPASS_PY!" neq "Y" (
-                    echo Please install Python 3.10+ manually from https://python.org and check "Add to PATH".
-                    pause
-                    exit /b 1
-                )
-                set "SKIP_PYTHON=1"
-            )
+        echo [INFO] Installing Python 3.11 via Winget...
+        winget install --id Python.Python.3.11 --exact --accept-package-agreements --accept-source-agreements
+        if !errorlevel! neq 0 (
+            echo [WARNING] Automatic Python install failed. Please install Python 3.10+ manually.
         )
     )
 ) else (
     echo [OK] Python is installed.
 )
 
+REM 2. Verify / Auto-Install Node.js
+echo.
+echo [2/6] Checking Node.js...
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-    echo.
-    echo [WARNING] Node.js was not found in system PATH.
-    echo.
-    echo Options:
-    echo   [1] Attempt automatic installation via Winget (Recommended)
-    echo   [2] Bypass / Skip Node.js check
-    echo   [3] Exit installation
-    echo.
-    set "NODE_CHOICE="
-    set /p "NODE_CHOICE=Select an option [1/2/3] (default 1): "
-    if "!NODE_CHOICE!"=="2" (
-        echo [INFO] Bypassing Node.js check...
-        set "SKIP_NODE=1"
-    ) else if "!NODE_CHOICE!"=="3" (
-        echo Installation canceled by user.
-        pause
-        exit /b 1
-    ) else (
-        echo [INFO] Installing Node.js LTS via Winget...
-        winget install --id OpenJS.NodeJS.LTS --exact --accept-package-agreements --accept-source-agreements
-        if !errorlevel! neq 0 (
-            echo [WARNING] Winget installation failed or Winget is unavailable.
-            set "BYPASS_NODE="
-            set /p "BYPASS_NODE=Do you want to bypass Node.js check and continue? (Y/N): "
-            if /i "!BYPASS_NODE!" neq "Y" (
-                echo Please install Node.js LTS manually from https://nodejs.org.
-                pause
-                exit /b 1
-            )
-            set "SKIP_NODE=1"
-        )
+    echo [INFO] Installing Node.js LTS via Winget...
+    winget install --id OpenJS.NodeJS.LTS --exact --accept-package-agreements --accept-source-agreements
+    if !errorlevel! neq 0 (
+        echo [WARNING] Automatic Node.js install failed. Please install Node.js LTS manually.
     )
 ) else (
     echo [OK] Node.js is installed.
 )
 
-REM 2. Setup Python Virtual Environment
+REM 3. Setup Python Virtual Environment and Backend Dependencies
 echo.
-echo [2/5] Setting up Python virtual environment and backend packages...
+echo [3/6] Setting up Python virtual environment and dependencies...
 if not exist "%~dp0backend\venv" (
     python -m venv "%~dp0backend\venv" 2>nul || py -m venv "%~dp0backend\venv" 2>nul
 )
 
+set "PYTHON_EXE=python"
 if exist "%~dp0backend\venv\Scripts\python.exe" (
-    "%~dp0backend\venv\Scripts\python.exe" -m pip install --upgrade pip >nul 2>&1
-    "%~dp0backend\venv\Scripts\python.exe" -m pip install -r "%~dp0backend\requirements.txt"
-) else (
-    echo [WARNING] backend\venv not created. Skipping Python package installation.
+    set "PYTHON_EXE=%~dp0backend\venv\Scripts\python.exe"
 )
 
-REM 3. Setup Frontend Dependencies and Run Build
-echo.
-echo [3/5] Installing Node.js dependencies and building frontend bundle...
-cd /d "%~dp0"
-where npm >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [NPM] Installing frontend dependencies...
-    call npm install
-    echo [NPM] Building React frontend UI (npm run build)...
-    call npm run build
-) else (
-    echo [WARNING] npm command not found. Skipping frontend build.
+if exist "%~dp0backend\requirements.txt" (
+    "%PYTHON_EXE%" -m pip install --upgrade pip --quiet
+    "%PYTHON_EXE%" -m pip install -r "%~dp0backend\requirements.txt" --quiet
+    echo [OK] Backend Python packages installed.
 )
 
-REM 4. Streamlined Environment Configuration
+REM 4. Ensure backend/.env Configuration
 echo.
-echo [4/5] Checking environment configuration...
+echo [4/6] Creating backend environment configuration (.env)...
 if not exist "%~dp0backend\.env" (
     (
         echo HOST=0.0.0.0
         echo PORT=8000
         echo ALLOWED_ORIGINS=*
     ) > "%~dp0backend\.env"
-    echo [OK] backend\.env configuration created automatically.
+    echo [OK] Created backend\.env with LAN binding (HOST=0.0.0.0).
 ) else (
-    echo [OK] backend\.env configuration already exists.
+    echo [OK] backend\.env already exists.
 )
 
-REM 5. Register and Boot Windows Background Service Automatically
+REM 5. Install Node modules and Compile React UI
 echo.
-echo [5/6] Registering and booting Himmel POS Background Service...
-call "%~dp0Himmel_POS_Service_Install.bat" --silent
+echo [5/6] Installing frontend packages and compiling production UI bundle...
+where npm >nul 2>&1
+if %errorlevel% equ 0 (
+    call npm install --no-audit --no-fund
+    call npm run build
+    echo [OK] Frontend UI compiled to dist/.
+) else (
+    echo [WARNING] npm command not available.
+)
 
-REM 6. Create Desktop Shortcut Automatically
+REM 6. Configure Windows Firewall for LAN & Phone Display (if Administrator)
 echo.
-echo [6/6] Creating Desktop Shortcut...
-powershell -Command "$s=(New-Object -COM WScript.Shell).CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Himmel POS.lnk')); $s.TargetPath='%~dp0Himmel_POS.bat'; $s.WorkingDirectory='%~dp0'; $s.IconLocation='C:\Windows\System32\shell32.dll,13'; $s.Save()" >nul 2>&1
+echo [6/6] Configuring Windows Defender Firewall for LAN & Mobile Display...
+net session >nul 2>&1
+if %errorlevel% equ 0 (
+    netsh advfirewall firewall delete rule name="Himmel POS Backend (Port 8000)" >nul 2>&1
+    netsh advfirewall firewall add rule name="Himmel POS Backend (Port 8000)" dir=in action=allow protocol=TCP localport=8000 >nul 2>&1
+    echo [OK] Firewall rule for port 8000 configured.
+) else (
+    echo [INFO] Running without administrator privileges (Firewall rules skipped).
+)
 
 echo.
 echo ========================================================
 echo   INSTALLATION COMPLETED SUCCESSFULLY!
-echo   - Background Service active on port 8000.
-echo   - Auto-boots silently in background on Windows startup.
-echo   - Desktop shortcut "Himmel POS" has been created.
+echo.
+echo   To start the POS:         Run Himmel_POS.bat
+echo   To enable auto-boot:      Run Himmel_POS_Service_Install.bat
+echo   To develop / debug:       Run Himmel_POS_Debug.bat
 echo ========================================================
 echo.
 pause
-

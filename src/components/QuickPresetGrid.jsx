@@ -238,7 +238,7 @@ export default function QuickPresetGrid({
             title={t('presets.add_preset')}
           >
             <Plus size={14} />
-            <span>{t('presets.add_preset') || 'Přidat'}</span>
+            <span>{t('common.add') || 'Přidat'}</span>
           </button>
 
           <button

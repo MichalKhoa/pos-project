@@ -21,6 +21,10 @@ export default class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error?.message?.includes('dynamically imported module') ||
+                           this.state.error?.message?.includes('Loading chunk') ||
+                           this.state.error?.name === 'ChunkLoadError';
+
       return (
         <div style={{
           height: '100vh',
@@ -42,11 +46,13 @@ export default class ErrorBoundary extends React.Component {
             maxWidth: '500px',
             width: '100%'
           }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1rem', color: '#f87171' }}>
-              ⚠️ Chyba aplikace Himmel POS
+            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1rem', color: isChunkError ? '#38bdf8' : '#f87171' }}>
+              {isChunkError ? '🚀 Nová verze pokladny' : '⚠️ Chyba aplikace Himmel POS'}
             </h1>
             <p style={{ color: '#94a3b8', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              Došlo k neočekávané chybě při vykreslování rozhraní. Stiskněte tlačítko níže pro obnovení pokladny.
+              {isChunkError
+                ? 'Byla nasazena nová aktualizace komponent pokladního systému. Stiskněte tlačítko pro načtení nejnovější verze.'
+                : 'Došlo k neočekávané chybě při vykreslování rozhraní. Stiskněte tlačítko níže pro obnovení pokladny.'}
             </p>
             <button
               onClick={this.handleReload}

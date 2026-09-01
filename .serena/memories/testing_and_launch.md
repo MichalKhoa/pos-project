@@ -4,9 +4,14 @@ Operational execution scripts, test suites, and environment setup.
 
 ## Launchers & Production Serving
 - **Single-Process Production Mode**: FastAPI mounts compiled `dist/` static files on port 8000, eliminating Node/Vite dev server overhead in production (~150MB RAM savings).
-- `Himmel_POS.bat`: Silent startup for backend and frontend with active port readiness polling, opens Microsoft Edge app window.
-- `Himmel_POS_Debug.bat`: Debug launcher starting FastAPI and Vite dev server with active HTTP readiness polling before launching Edge.
-- `Himmel_POS_Kiosk.bat`: Starts services and launches Microsoft Edge in `--kiosk` full-screen register mode.
+- `Himmel_POS_Install.bat`: 1-Click complete installer for Python venv, dependencies, npm build, and Windows Firewall.
+- `Himmel_POS.bat`: Fast production launcher with native port detection and Phone Customer Display QR/URL display.
+- `Himmel_POS_Debug.bat`: Developer debug mode launching FastAPI (`:8000`) and Vite dev server (`:5173`) in visible windows with hot reloading.
+- `Himmel_POS_Kiosk.bat`: Full-screen touch kiosk mode using Microsoft Edge `--kiosk`.
+- `Himmel_POS_Customer_Display.bat`: Dedicated customer display launcher (`:8000/#/customer-display`).
+- `Himmel_POS_Service_Install.bat`: Native Windows Task auto-boot service manager (install/uninstall menu).
+- `Himmel_POS_Stop.bat`: Gracefully stops all POS processes and frees ports 8000 and 5173.
+- `Himmel_POS_Update.bat`: 1-Click Git pull, package update, and UI re-compiler.
 
 ## Manual Commands
 - Backend:

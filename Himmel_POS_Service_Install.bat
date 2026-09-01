@@ -1,69 +1,161 @@
 @echo off
 setlocal enabledelayedexpansion
-
-set "IS_SILENT=0"
-if "%1"=="--silent" set "IS_SILENT=1"
-
-REM Check for Admin rights (optional for ONSTART SYSTEM task, fallback to ONLOGON user task if not admin)
-net session >nul 2>&1
-set "IS_ADMIN=0"
-if %errorlevel% equ 0 set "IS_ADMIN=1"
-
-if %IS_ADMIN% neq 1 if %IS_SILENT% neq 1 (
-    echo [INFO] Running without full Administrator privileges.
-    echo Service will be installed for current logged-in user (ONLOGON).
-)
-
-title Himmel POS - Service Installer
+title Himmel POS - Windows Background Service Manager
 echo ========================================================
-echo   Installing Himmel POS Backend as Windows Background Service
+echo   Himmel POS - Windows Background Service Manager
 echo ========================================================
 echo.
 
-set "REPO_DIR=%~dp0"
+cd /d "%~dp0"
+
 set "BACKEND_DIR=%~dp0backend"
-set "RUN_SCRIPT=%BACKEND_DIR%\run_backend.bat"
+set "LOGS_DIR=%BACKEND_DIR%\logs"
+set "NSSM_EXE=%~dp0nssm.exe"
 
-if not exist "%RUN_SCRIPT%" (
-    (
-        echo @echo off
-        echo cd /d "%%~dp0"
-        echo set ENV=production
-        echo set "PYTHON_EXE=python"
-        echo if exist "%%~dp0venv\Scripts\python.exe" set "PYTHON_EXE=%%~dp0venv\Scripts\python.exe"
-        echo "%%PYTHON_EXE%%" main.py
-    ) > "%RUN_SCRIPT%"
+REM Create logs directory if missing
+if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%"
+
+REM Resolve Python executable
+set "PYTHON_EXE=python"
+if exist "%BACKEND_DIR%\venv\Scripts\python.exe" (
+    set "PYTHON_EXE=%BACKEND_DIR%\venv\Scripts\python.exe"
 )
 
-REM 1. Create Windows Scheduled Task for Auto-Boot on Startup/Logon
-echo [1/2] Creating Windows Scheduled Task 'HimmelPOSBackend'...
-if %IS_ADMIN% equ 1 (
-    schtasks /create /tn "HimmelPOSBackend" /tr "cmd.exe /c \"\"%RUN_SCRIPT%\"\"" /sc ONSTART /ru "SYSTEM" /rl HIGHEST /f >nul 2>&1
-)
-
-if %errorlevel% neq 0 (
-    schtasks /create /tn "HimmelPOSBackend" /tr "cmd.exe /c \"\"%RUN_SCRIPT%\"\"" /sc ONLOGON /rl HIGHEST /f >nul 2>&1
-)
-
-REM 2. Boot the background service immediately
-echo [2/2] Booting Himmel POS Backend Service...
-schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
-
-REM Ensure backend is active on port 8000; if task didn't spin up immediately, launch fallback
-timeout /t 2 /nobreak >nul 2>&1
-netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
-if %errorlevel% neq 0 (
-    start "Himmel POS Backend" /min cmd /c "%RUN_SCRIPT%"
-)
-
+echo Choose service setup mode:
+echo   [1] Install as NSSM Windows Service (Recommended - Auto-restart on crash)
+echo   [2] Install as Native Windows Scheduled Task (No Admin required)
+echo   [3] Remove / Uninstall Service
 echo.
-echo ========================================================
-echo   SUCCESS! Himmel POS Backend registered as Windows Service.
-echo   - Runs silently in background on Windows boot.
-echo   - To stop service: Run Himmel_POS_Service_Stop.bat
-echo ========================================================
-echo.
+set "CHOICE="
+set /p "CHOICE=Select an option [1, 2 or 3] (default 1): "
 
-if %IS_SILENT% neq 1 (
+if "%CHOICE%"=="3" (
+    echo.
+    echo [1/2] Removing NSSM Windows Service...
+    sc query HimmelPOSBackend >nul 2>&1
+    if !errorlevel! equ 0 (
+        if exist "%NSSM_EXE%" (
+            "%NSSM_EXE%" stop HimmelPOSBackend >nul 2>&1
+            "%NSSM_EXE%" remove HimmelPOSBackend confirm >nul 2>&1
+        ) else (
+            net stop HimmelPOSBackend >nul 2>&1
+            sc delete HimmelPOSBackend >nul 2>&1
+        )
+    )
+    echo [2/2] Removing Windows Scheduled Task...
+    schtasks /delete /tn "HimmelPOSBackend" /f >nul 2>&1
+    echo.
+    echo [SUCCESS] All Himmel POS background services uninstalled.
+    echo.
     pause
+    exit /b 0
 )
+
+if "%CHOICE%"=="2" (
+    REM ==========================================
+    REM OPTION 2: Windows Scheduled Task
+    REM ==========================================
+    echo.
+    echo Installing as Windows Scheduled Task...
+    set "RUN_SCRIPT=%BACKEND_DIR%\run_backend.bat"
+    if not exist "%RUN_SCRIPT%" (
+        (
+            echo @echo off
+            echo cd /d "%%~dp0"
+            echo set ENV=production
+            echo set "PYTHON_EXE=python"
+            echo if exist "%%~dp0venv\Scripts\python.exe" set "PYTHON_EXE=%%~dp0venv\Scripts\python.exe"
+            echo "%%PYTHON_EXE%%" main.py
+        ) > "%RUN_SCRIPT%"
+    )
+
+    net session >nul 2>&1
+    if !errorlevel! equ 0 (
+        schtasks /create /tn "HimmelPOSBackend" /tr "cmd.exe /c \"\"%RUN_SCRIPT%\"\"" /sc ONSTART /ru "SYSTEM" /rl HIGHEST /f >nul 2>&1
+    ) else (
+        schtasks /create /tn "HimmelPOSBackend" /tr "cmd.exe /c \"\"%RUN_SCRIPT%\"\"" /sc ONLOGON /rl HIGHEST /f >nul 2>&1
+    )
+    schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
+
+    echo.
+    echo ========================================================
+    echo   SUCCESS! Registered as Windows Scheduled Task.
+    echo   - Auto-starts on boot/logon.
+    echo   - Silent execution on port 8000.
+    echo ========================================================
+    echo.
+    pause
+    exit /b 0
+)
+
+REM ==========================================
+REM OPTION 1: NSSM Windows Service (Default)
+REM ==========================================
+echo.
+echo Installing as true NSSM Windows Service...
+
+REM Check Administrator privileges
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] NSSM Windows Service requires Administrator privileges.
+    echo Please right-click 'Himmel_POS_Service_Install.bat' and select 'Run as administrator'.
+    echo.
+    echo (Or choose Option 2 for Scheduled Task which requires no admin).
+    echo.
+    pause
+    exit /b 1
+)
+
+if not exist "%NSSM_EXE%" (
+    echo [ERROR] nssm.exe was not found in %~dp0.
+    echo Falling back to Windows Scheduled Task...
+    goto :FALLBACK_TASK
+)
+
+REM Stop and remove existing service if present
+sc query HimmelPOSBackend >nul 2>&1
+if %errorlevel% equ 0 (
+    echo [1/3] Removing existing service instance...
+    "%NSSM_EXE%" stop HimmelPOSBackend >nul 2>&1
+    "%NSSM_EXE%" remove HimmelPOSBackend confirm >nul 2>&1
+)
+
+echo [2/3] Registering and configuring NSSM service...
+"%NSSM_EXE%" install HimmelPOSBackend "%PYTHON_EXE%" "-m uvicorn main:app --host 0.0.0.0 --port 8000" >nul
+if %errorlevel% neq 0 (
+    echo [ERROR] NSSM install command failed.
+    pause
+    exit /b 1
+)
+
+"%NSSM_EXE%" set HimmelPOSBackend AppDirectory "%BACKEND_DIR%" >nul
+"%NSSM_EXE%" set HimmelPOSBackend Start SERVICE_AUTO_START >nul
+"%NSSM_EXE%" set HimmelPOSBackend AppStdout "%LOGS_DIR%\nssm_out.log" >nul
+"%NSSM_EXE%" set HimmelPOSBackend AppStderr "%LOGS_DIR%\nssm_err.log" >nul
+"%NSSM_EXE%" set HimmelPOSBackend AppRotateFiles 1 >nul
+"%NSSM_EXE%" set HimmelPOSBackend AppRotateOnline 1 >nul
+"%NSSM_EXE%" set HimmelPOSBackend AppRotateBytes 1048576 >nul
+"%NSSM_EXE%" set HimmelPOSBackend AppThrottle 1500 >nul
+
+echo [3/3] Starting HimmelPOSBackend Service...
+"%NSSM_EXE%" start HimmelPOSBackend >nul 2>&1
+
+echo.
+echo ========================================================
+echo   SUCCESS! NSSM Windows Service installed & running!
+echo   - Status: Active in services.msc as 'HimmelPOSBackend'
+echo   - Auto-starts on Windows boot
+echo   - Automatic immediate restart if Python crashes
+echo   - Logs saved to: backend\logs\nssm_err.log
+echo   - To stop anytime: Run Himmel_POS_Stop.bat
+echo ========================================================
+echo.
+pause
+exit /b 0
+
+:FALLBACK_TASK
+set "RUN_SCRIPT=%BACKEND_DIR%\run_backend.bat"
+schtasks /create /tn "HimmelPOSBackend" /tr "cmd.exe /c \"\"%RUN_SCRIPT%\"\"" /sc ONSTART /ru "SYSTEM" /rl HIGHEST /f >nul 2>&1
+schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
+echo [OK] Registered as Windows Scheduled Task.
+pause

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { formatLocalDate } from '../../utils/dateUtils';
 
 export default function SalesPeriodBar({
   periodFilter,
@@ -219,10 +220,9 @@ export default function SalesPeriodBar({
               style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
               onClick={() => {
                 const today = new Date();
-                const d = new Date();
-                d.setDate(d.getDate() - 6);
-                setFromDate(d.toISOString().slice(0, 10));
-                setToDate(today.toISOString().slice(0, 10));
+                const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+                setFromDate(formatLocalDate(d));
+                setToDate(formatLocalDate(today));
               }}
             >
               Posledních 7 dní
@@ -233,10 +233,9 @@ export default function SalesPeriodBar({
               style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
               onClick={() => {
                 const today = new Date();
-                const d = new Date();
-                d.setDate(d.getDate() - 29);
-                setFromDate(d.toISOString().slice(0, 10));
-                setToDate(today.toISOString().slice(0, 10));
+                const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29);
+                setFromDate(formatLocalDate(d));
+                setToDate(formatLocalDate(today));
               }}
             >
               Posledních 30 dní
@@ -249,8 +248,8 @@ export default function SalesPeriodBar({
                 const today = new Date();
                 const firstOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                 const lastOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-                setFromDate(firstOfLastMonth.toISOString().slice(0, 10));
-                setToDate(lastOfLastMonth.toISOString().slice(0, 10));
+                setFromDate(formatLocalDate(firstOfLastMonth));
+                setToDate(formatLocalDate(lastOfLastMonth));
               }}
             >
               Minulý měsíc

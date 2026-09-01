@@ -66,3 +66,24 @@ if (typeof window !== 'undefined') {
 if (typeof window !== 'undefined' && !window.scrollTo) {
   window.scrollTo = () => {};
 }
+
+// Mock WebSocket for tests
+class MockWebSocket {
+  constructor(url) {
+    this.url = url;
+    this.readyState = 1;
+    this.onopen = null;
+    this.onclose = null;
+    this.onmessage = null;
+    this.onerror = null;
+  }
+  send() {}
+  close() {}
+  addEventListener() {}
+  removeEventListener() {}
+}
+if (typeof window !== 'undefined') {
+  window.WebSocket = MockWebSocket;
+}
+global.WebSocket = MockWebSocket;
+
