@@ -15,14 +15,14 @@ export default function ParkedCartsDrawer({
       <div
         className="hold-cart-card-standalone pos-standalone-card"
         style={{
-          background: 'var(--bg-card)',
+          background: 'var(--bg-main)',
           border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '1rem',
-          boxShadow: 'var(--shadow-sm)',
+          borderRadius: 'var(--radius-md)',
+          padding: '0.75rem 0.85rem',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.65rem',
+          gap: '0.5rem',
           flexShrink: 0
         }}
       >

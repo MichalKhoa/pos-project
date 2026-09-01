@@ -138,29 +138,25 @@ export default function ManualKeypad({
   const hasValidAmount = !isNaN(parseFloat(amountStr)) && parseFloat(amountStr) !== 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%', overflowY: 'auto' }}>
-      {/* ── CARD 1: STANDALONE NUMERIC KEYPAD CARD ───────────────── */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', overflowY: 'auto' }}>
+      {/* ── CARD 1: NUMERIC KEYPAD SECTION ───────────────── */}
       <div
-        className="keypad-section touch-large-keypad pos-standalone-card"
+        className="keypad-section touch-large-keypad"
         style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '1rem',
-          boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.65rem'
+          gap: '0.5rem',
+          flexShrink: 0
         }}
       >
-        {/* ── Item name (ultra-slim 1-line bar) ─────────────────── */}
+        {/* ── Item name input ─────────────────── */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.4rem',
-          height: '28px', padding: '0 0.5rem', flexShrink: 0,
-          background: 'var(--bg-input)', borderRadius: '8px',
+          display: 'flex', alignItems: 'center', gap: '0.45rem',
+          height: '36px', padding: '0 0.65rem', flexShrink: 0,
+          background: 'var(--bg-main)', borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)'
         }}>
-          <Calculator size={13} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
+          <Calculator size={15} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
           <input
             type="text"
             className="keypad-label-input"
@@ -168,7 +164,7 @@ export default function ManualKeypad({
             value={label}
             onChange={e => setLabel(e.target.value)}
             style={{
-              fontSize: '0.8rem', border: 'none', outline: 'none',
+              fontSize: '0.85rem', border: 'none', outline: 'none',
               background: 'transparent', width: '100%', height: '100%',
               color: 'var(--text-primary)'
             }}

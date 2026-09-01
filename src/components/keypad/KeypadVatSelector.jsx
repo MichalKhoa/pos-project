@@ -31,7 +31,8 @@ export default function KeypadVatSelector({
           fontWeight: '900',
           background: amountStr.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.1)',
           color: amountStr.startsWith('-') ? '#ffffff' : 'var(--accent-rose)',
-          border: '1.5px solid rgba(239, 68, 68, 0.4)'
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: 'var(--radius-md)'
         }}
         title="Změnit znaménko (±)"
       >
