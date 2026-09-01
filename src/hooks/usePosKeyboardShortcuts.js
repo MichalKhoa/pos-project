@@ -1,0 +1,108 @@
+import { useEffect } from 'react';
+
+export function usePosKeyboardShortcuts({
+  isAppLocked,
+  activeTab,
+  keypadAmount,
+  setKeypadAmount,
+  setItemMultiplier,
+  itemMultiplier,
+  cartItems,
+  paymentModalMethod,
+  setPaymentModalMethod,
+  handleAddToCart,
+  storeConfig
+}) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (isAppLocked) return;
+      if (activeTab !== 'register') return;
+
+      const targetTag = e.target?.tagName?.toLowerCase();
+      if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') {
+        return;
+      }
+
+      const key = e.key;
+
+      if (/^[0-9]$/.test(key)) {
+        e.preventDefault();
+        setKeypadAmount(prev => {
+          if (prev.includes('.')) {
+            const parts = prev.split('.');
+            if (parts[1] && parts[1].length >= 2) return prev;
+          }
+          return prev.length < 8 ? prev + key : prev;
+        });
+      } else if (key === '-') {
+        e.preventDefault();
+        setKeypadAmount(prev => {
+          if (!prev) return '-';
+          if (prev.startsWith('-')) return prev.slice(1);
+          return '-' + prev;
+        });
+      } else if (key === 'ArrowUp') {
+        e.preventDefault();
+        setItemMultiplier(prev => {
+          if (prev === -1) return 1;
+          if (prev < -1) return prev + 1;
+          return prev + 1;
+        });
+      } else if (key === 'ArrowDown') {
+        e.preventDefault();
+        setItemMultiplier(prev => {
+          if (prev === 1) return -1;
+          if (prev < 0) return prev - 1;
+          return prev - 1;
+        });
+      } else if (key === '.' || key === ',') {
+        e.preventDefault();
+        setKeypadAmount(prev => {
+          if (prev.includes('.')) return prev;
+          return prev ? prev + '.' : '0.';
+        });
+      } else if (key === 'Backspace') {
+        e.preventDefault();
+        setKeypadAmount(prev => prev.slice(0, -1));
+      } else if (key === 'Escape' || key === 'Delete') {
+        e.preventDefault();
+        setKeypadAmount('');
+        setItemMultiplier(1);
+      } else if (key === '*' || key.toLowerCase() === 'x') {
+        e.preventDefault();
+        setKeypadAmount(prev => {
+          if (prev && !prev.includes('.')) {
+            const parsedQty = parseInt(prev, 10);
+            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -99 && parsedQty <= 99) {
+              setItemMultiplier(parsedQty);
+              return '';
+            }
+          }
+          if (itemMultiplier !== 1) {
+            setItemMultiplier(1);
+          }
+          return prev;
+        });
+      } else if (key === 'Enter') {
+        e.preventDefault();
+        const amtVal = parseFloat(keypadAmount);
+        if (keypadAmount && !isNaN(amtVal) && amtVal !== 0) {
+          const isReturn = amtVal < 0;
+          handleAddToCart({
+            id: `custom-${Date.now()}`,
+            name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
+            price: amtVal,
+            vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
+            isCustom: true
+          });
+          setKeypadAmount('');
+        } else if (cartItems.length > 0 && !paymentModalMethod) {
+          setPaymentModalMethod('cash');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier]);
+}

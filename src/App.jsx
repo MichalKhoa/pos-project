@@ -3,22 +3,34 @@ import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
 import Cart from './components/Cart';
-import ToastUndo from './components/ToastUndo';
-import { useCart } from './hooks/useCart';
-import PaymentModal from './components/PaymentModal';
-import ReceiptModal from './components/ReceiptModal';
-import PendingSyncModal from './components/PendingSyncModal';
+import AppModals from './components/app/AppModals';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
-import CheckoutFlashBanner from './components/CheckoutFlashBanner';
-import ShutdownModal from './components/ShutdownModal';
-import RefundModal from './components/RefundModal';
-import CalendarModal from './components/CalendarModal';
-import DiscountModal from './components/DiscountModal';
-import LockScreenModal from './components/LockScreenModal';
+import { useCart } from './hooks/useCart';
+import { usePosKeyboardShortcuts } from './hooks/usePosKeyboardShortcuts';
 import { soundFx } from './utils/audio';
 import { calculateCartTotals } from './utils/tax';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
-import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay, deleteSaleBackend, purgeAllSalesBackend, openCashDrawerBackend } from './api/posApi';
+import {
+  createSaleBackend,
+  fetchEetStatus,
+  processEetQueue,
+  fetchSalesHistoryBackend,
+  normalizeSale,
+  updateSaleRefundStatusBackend,
+  fetchCategoriesBackend,
+  saveCategoryBackend,
+  deleteCategoryBackend,
+  fetchPresetsBackend,
+  savePresetBackend,
+  deletePresetBackend,
+  reorderPresetsBackend,
+  fetchStoreConfigBackend,
+  saveStoreConfigBackend,
+  broadcastCustomerDisplay,
+  deleteSaleBackend,
+  purgeAllSalesBackend,
+  openCashDrawerBackend
+} from './api/posApi';
 
 // Lazy-loaded heavy views for code-splitting and faster cashier initialization
 const SalesHistoryView = React.lazy(() => import('./components/SalesHistoryView'));
@@ -278,7 +290,6 @@ export default function App() {
       refunded_amount: updatedRefundedAmount
     });
 
-    // Send storno transaction to backend
     createSaleBackend(stornoSale).then(backendRes => {
       if (backendRes && backendRes.status === 'SUCCESS') {
         const enrichedStorno = normalizeSale({
@@ -294,7 +305,6 @@ export default function App() {
       }
     });
 
-    // Send refund status update for original sale to backend
     updateSaleRefundStatusBackend(originalSale.id, newRefundStatus, updatedRefundedAmount);
 
     setSalesHistory(prev => [stornoSale, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
@@ -323,7 +333,7 @@ export default function App() {
     localStorage.setItem('himmel_pos_sales', JSON.stringify(salesHistory));
   }, [salesHistory]);
 
-  // Load categories, presets & store config from SQLite backend on mount (overrides localStorage)
+  // Load categories, presets & store config from SQLite backend on mount
   useEffect(() => {
     const reloadBackendData = () => {
       fetchCategoriesBackend().then(data => {
@@ -342,7 +352,6 @@ export default function App() {
           setSalesHistory(prev => {
             const backendIds = new Set(backendSales.map(s => s.id));
             const backendReceipts = new Set(backendSales.map(s => s.receiptNumber).filter(Boolean));
-            // Keep local offline pending sales that aren't yet in backend DB
             const pendingLocalSales = prev.filter(s => 
               (s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false) &&
               !backendIds.has(s.id) &&
@@ -358,7 +367,6 @@ export default function App() {
 
     reloadBackendData();
 
-    // Multi-tab storage sync: listen to changes originating from other browser tabs
     const handleStorageChange = (e) => {
       if (!e.key || !e.newValue) return;
       try {
@@ -377,7 +385,6 @@ export default function App() {
       }
     };
 
-    // Re-fetch backend DB state when window receives focus
     const handleFocus = () => {
       reloadBackendData();
     };
@@ -397,7 +404,6 @@ export default function App() {
     await checkPendingOfflineSales();
   };
 
-  // Check pending offline receipts from backend EET status
   const checkPendingOfflineSales = useCallback(async () => {
     try {
       const eetStatus = await fetchEetStatus();
@@ -419,12 +425,10 @@ export default function App() {
     }
   }, [snoozedUntil]);
 
-  // Check on mount, on window 'online' event (internet regained), and periodically every 30s
   useEffect(() => {
     checkPendingOfflineSales(true);
 
     const handleOnline = () => {
-      console.log('Internet connectivity restored! Checking pending EET queue...');
       checkPendingOfflineSales(true);
     };
 
@@ -464,7 +468,7 @@ export default function App() {
     };
   }, [storeConfig?.autoLockMinutes, isAppLocked]);
 
-  // Intercept window close button (X) -> prompt user on close & trigger backend shutdown on exit
+  // Intercept window close button (X)
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -490,25 +494,20 @@ export default function App() {
     };
   }, []);
 
-
   const handleSnoozeSync = () => {
-    // Snooze modal for 5 minutes
     setSnoozedUntil(Date.now() + 5 * 60 * 1000);
     setShowSyncModal(false);
   };
 
   const handleSyncQueueNow = async () => {
-    // Instantly close modal for zero UI delay
     setShowSyncModal(false);
     setIsSyncingQueue(true);
     setSnoozedUntil(Date.now() + 5 * 60 * 1000);
 
     try {
-      // 1. Process backend SQLite queue
       const res = await processEetQueue();
       let processed = res?.processed_count || 0;
 
-      // 2. Process any local offline sales stored in localStorage
       const offlineLocalSales = salesHistory.filter(s => s.eet_status === 'OFFLINE_PENDING' || s.is_sent_to_eet === false);
       for (const localSale of offlineLocalSales) {
         const backendRes = await createSaleBackend(localSale);
@@ -539,7 +538,6 @@ export default function App() {
         });
       }
 
-      // 3. Refresh sales history from backend
       const updatedHistory = await fetchSalesHistoryBackend();
       if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
         setSalesHistory(updatedHistory);
@@ -565,7 +563,6 @@ export default function App() {
     const rawPrice = parseFloat(item.price);
     const rawQty = customQty !== null ? customQty : (item.quantity || itemMultiplier || 1);
 
-    // If multiplier or qty is negative, convert price to negative (Return / Vratka)
     const isNegativeMultiplier = rawQty < 0;
     const effectivePrice = isNegativeMultiplier ? -Math.abs(rawPrice) : rawPrice;
     const effectiveQty = isNegativeMultiplier ? Math.abs(rawQty) : (rawQty === 0 ? 1 : rawQty);
@@ -588,119 +585,20 @@ export default function App() {
     }
   }, [addToCart, itemMultiplier, setItemMultiplier]);
 
-  // Global Numpad & Physical Keyboard Listener for POS Register
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Don't process keypad input while lock screen is active
-      if (isAppLocked) return;
-      // Only process when in POS register tab and no payment modal is open
-      if (activeTab !== 'register') return;
-
-      // Ignore if user is currently typing in an input or select field
-      const targetTag = e.target?.tagName?.toLowerCase();
-      if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') {
-        return;
-      }
-
-      const key = e.key;
-
-      // Digits 0-9 from main keyboard or Numpad
-      if (/^[0-9]$/.test(key)) {
-        e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev.includes('.')) {
-            const parts = prev.split('.');
-            if (parts[1] && parts[1].length >= 2) return prev;
-          }
-          return prev.length < 8 ? prev + key : prev;
-        });
-      }
-      // Minus key (-) -> Toggle negative sign on keypad amount
-      else if (key === '-') {
-        e.preventDefault();
-        setKeypadAmount(prev => {
-          if (!prev) return '-';
-          if (prev.startsWith('-')) return prev.slice(1);
-          return '-' + prev;
-        });
-      }
-      // Arrow Up -> Decrease refund count if in refund mode, or increase sale quantity if positive
-      else if (key === 'ArrowUp') {
-        e.preventDefault();
-        setItemMultiplier(prev => {
-          if (prev === -1) return 1; // Exit refund mode back to +1
-          if (prev < -1) return prev + 1; // e.g. -3 -> -2 (decreases refund count)
-          return prev + 1;
-        });
-      }
-      // Arrow Down -> Increase refund count if in refund mode, or switch to refund mode (-1x) if 1
-      else if (key === 'ArrowDown') {
-        e.preventDefault();
-        setItemMultiplier(prev => {
-          if (prev === 1) return -1; // Switch directly to -1 return multiplier
-          if (prev < 0) return prev - 1; // e.g. -1 -> -2 (increases refund count)
-          return prev - 1;
-        });
-      }
-      // Decimal point or comma
-      else if (key === '.' || key === ',') {
-        e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev.includes('.')) return prev;
-          return prev ? prev + '.' : '0.';
-        });
-      }
-      // Backspace -> delete last digit
-      else if (key === 'Backspace') {
-        e.preventDefault();
-        setKeypadAmount(prev => prev.slice(0, -1));
-      }
-      // Escape or Delete -> Clear keypad amount & reset multiplier
-      else if (key === 'Escape' || key === 'Delete') {
-        e.preventDefault();
-        setKeypadAmount('');
-        setItemMultiplier(1);
-      }
-      // Multiplicator key (*, x, X)
-      else if (key === '*' || key.toLowerCase() === 'x') {
-        e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev && !prev.includes('.')) {
-            const parsedQty = parseInt(prev, 10);
-            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -99 && parsedQty <= 99) {
-              setItemMultiplier(parsedQty);
-              return '';
-            }
-          }
-          if (itemMultiplier !== 1) {
-            setItemMultiplier(1);
-          }
-          return prev;
-        });
-      }
-      // Enter or Numpad Enter -> Add typed amount or open cash payment
-      else if (key === 'Enter') {
-        e.preventDefault();
-        const amtVal = parseFloat(keypadAmount);
-        if (keypadAmount && !isNaN(amtVal) && amtVal !== 0) {
-          const isReturn = amtVal < 0;
-          handleAddToCart({
-            id: `custom-${Date.now()}`,
-            name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
-            price: amtVal,
-            vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
-            isCustom: true
-          });
-          setKeypadAmount('');
-        } else if (cartItems.length > 0 && !paymentModalMethod) {
-          setPaymentModalMethod('cash');
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, setItemMultiplier]);
+  // Hook for hardware keyboard and numpad listeners
+  usePosKeyboardShortcuts({
+    isAppLocked,
+    activeTab,
+    keypadAmount,
+    setKeypadAmount,
+    setItemMultiplier,
+    itemMultiplier,
+    cartItems,
+    paymentModalMethod,
+    setPaymentModalMethod,
+    handleAddToCart,
+    storeConfig
+  });
 
   // Category handlers
   const handleAddCategory = (name) => {
@@ -729,7 +627,6 @@ export default function App() {
     if (catId === 'all') return;
     setCategories(prev => prev.filter(c => c.id !== catId));
     deleteCategoryBackend(catId);
-    // Reassign items from deleted category so no presets are orphaned
     const fallbackCategory = categories.find(c => c.id !== 'all' && c.id !== catId)?.id || 'all';
     setPresets(prev => prev.map(p => {
       if (p.category !== catId) return p;
@@ -738,8 +635,6 @@ export default function App() {
       return updated;
     }));
   };
-
-
 
   const handleOpenCustomDiscountModal = (item = null) => {
     setDiscountModalSelectedItem(item);
@@ -803,7 +698,6 @@ export default function App() {
       taxSummary
     } = calculateCartTotals(cartItems, cartDiscountPercent);
 
-    // Robust receipt numbering: YYYY-XXXXXX (dynamic year, 6-digit counter up to 999,999/yr, duplicate-safe)
     const currentYear = new Date().getFullYear().toString();
     const yearPrefix = `${currentYear}-`;
     let maxSeq = 0;
@@ -837,7 +731,6 @@ export default function App() {
       taxSummary
     });
 
-    // Asynchronously send to Python FastAPI backend for EET fiscalization and atomic receipt numbering
     createSaleBackend(newSale).then(backendRes => {
       if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
         const enrichedSale = normalizeSale({
@@ -1061,104 +954,48 @@ export default function App() {
         )}
       </main>
 
-      {/* Custom Discount Modal */}
-      <DiscountModal
-        isOpen={isDiscountModalOpen}
-        onClose={() => setIsDiscountModalOpen(false)}
-        totalAmount={cartItems.reduce((sum, item) => {
-          const disc = item.discountPercent || 0;
-          return sum + (item.price * (1 - disc / 100) * item.quantity);
-        }, 0)}
+      {/* Centralized Modals Coordinator */}
+      <AppModals
+        isDiscountModalOpen={isDiscountModalOpen}
+        setIsDiscountModalOpen={setIsDiscountModalOpen}
         cartItems={cartItems}
-        selectedItem={discountModalSelectedItem}
-        onApplyDiscount={handleApplyCustomDiscount}
-      />
-
-      {/* Payment Modal */}
-      {paymentModalMethod && (
-        <PaymentModal
-          method={paymentModalMethod}
-          storeConfig={storeConfig}
-          totalAmount={Math.round((cartItems.reduce((sum, item) => {
-            const disc = item.discountPercent || 0;
-            return sum + (item.price * (1 - disc / 100) * item.quantity);
-          }, 0) * (1 - cartDiscountPercent / 100) + Number.EPSILON) * 100) / 100}
-          onClose={() => setPaymentModalMethod(null)}
-          onCompleteSale={handleCompleteSale}
-          onOpenCashDrawer={handleOpenCashDrawer}
-        />
-      )}
-
-      {/* Refund / Storno Modal */}
-      {refundTargetSale && (
-        <RefundModal
-          sale={refundTargetSale}
-          onClose={() => setRefundTargetSale(null)}
-          onConfirmRefund={handleProcessRefund}
-        />
-      )}
-
-      {/* Calendar & Shift Overview Modal */}
-      {isCalendarModalOpen && (
-        <CalendarModal
-          salesHistory={salesHistory}
-          onClose={() => setIsCalendarModalOpen(false)}
-          onNavigateToHistory={(dateStr) => {
-            setHistoryDateFilter(dateStr);
-            setActiveTab('history');
-          }}
-        />
-      )}
-
-      {/* Printable Receipt Modal */}
-      {currentReceiptData && (
-        <ReceiptModal
-          saleData={currentReceiptData}
-          storeConfig={storeConfig}
-          onClose={() => setCurrentReceiptData(null)}
-          onNewSale={() => setCurrentReceiptData(null)}
-        />
-      )}
-
-      {/* Pending Offline Sales Sync Modal */}
-      {showSyncModal && pendingSyncCount > 0 && (
-        <PendingSyncModal
-          pendingCount={pendingSyncCount}
-          isLoading={isSyncingQueue}
-          onSync={handleSyncQueueNow}
-          onSnooze={handleSnoozeSync}
-        />
-      )}
-
-      {/* End-of-Shift Shutdown Modal */}
-      {showShutdownModal && (
-        <ShutdownModal
-          pendingCount={pendingSyncCount}
-          onClose={() => setShowShutdownModal(false)}
-        />
-      )}
-
-      {/* Cashier Lock Screen Modal Overlay */}
-      {isAppLocked && (
-        <LockScreenModal
-          storeConfig={storeConfig}
-          onUnlock={() => {
-            setIsAppLocked(false);
-            lastActivityRef.current = Date.now();
-          }}
-        />
-      )}
-      {/* Toast Undo Notification Overlay */}
-      <ToastUndo
+        cartDiscountPercent={cartDiscountPercent}
+        discountModalSelectedItem={discountModalSelectedItem}
+        onApplyCustomDiscount={handleApplyCustomDiscount}
+        paymentModalMethod={paymentModalMethod}
+        setPaymentModalMethod={setPaymentModalMethod}
+        storeConfig={storeConfig}
+        onCompleteSale={handleCompleteSale}
+        onOpenCashDrawer={handleOpenCashDrawer}
+        refundTargetSale={refundTargetSale}
+        setRefundTargetSale={setRefundTargetSale}
+        onProcessRefund={handleProcessRefund}
+        isCalendarModalOpen={isCalendarModalOpen}
+        setIsCalendarModalOpen={setIsCalendarModalOpen}
+        salesHistory={salesHistory}
+        onNavigateToHistory={(dateStr) => {
+          setHistoryDateFilter(dateStr);
+          setActiveTab('history');
+        }}
+        currentReceiptData={currentReceiptData}
+        setCurrentReceiptData={setCurrentReceiptData}
+        showSyncModal={showSyncModal}
+        pendingSyncCount={pendingSyncCount}
+        isSyncingQueue={isSyncingQueue}
+        onSyncQueueNow={handleSyncQueueNow}
+        onSnoozeSync={handleSnoozeSync}
+        showShutdownModal={showShutdownModal}
+        setShowShutdownModal={setShowShutdownModal}
+        isAppLocked={isAppLocked}
+        onUnlockApp={() => {
+          setIsAppLocked(false);
+          lastActivityRef.current = Date.now();
+        }}
         undoToast={undoToast}
-        onUndo={undoLastAction}
-        onDismiss={dismissUndoToast}
-      />
-
-      {/* Visual Scan & Checkout Flash Banner */}
-      <CheckoutFlashBanner
+        onUndoLastAction={undoLastAction}
+        onDismissUndoToast={dismissUndoToast}
         flashBanner={flashBanner}
-        onDismiss={() => setFlashBanner(null)}
+        onDismissFlashBanner={() => setFlashBanner(null)}
       />
     </div>
   );
