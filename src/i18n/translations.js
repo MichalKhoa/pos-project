@@ -12,7 +12,8 @@ export const translations = {
       offline: "Offline",
       not_sent: "Neodesláno",
       eet_off: "EET Vypnuto",
-      open_drawer: "Otevřít zásuvku"
+      open_drawer: "Otevřít zásuvku",
+      section_title: "Navigace"
     },
     cart: {
       title: "Nákupní košík",
@@ -141,6 +142,7 @@ export const translations = {
       price: "Cena s DPH",
       vat_rate: "Sazba DPH",
       open_price: "Volná částka při markování",
+      open_price_badge: "Volná cena",
       col_name: "Název položky",
       col_category: "Kategorie",
       col_price: "Cena s DPH",
@@ -372,7 +374,8 @@ export const translations = {
       offline: "Ngoại tuyến",
       not_sent: "Chưa gửi",
       eet_off: "Tắt EET",
-      open_drawer: "Mở ngăn kéo"
+      open_drawer: "Mở ngăn kéo",
+      section_title: "Điều hướng"
     },
     cart: {
       title: "Giỏ hàng",
@@ -501,6 +504,7 @@ export const translations = {
       price: "Giá gồm DPH",
       vat_rate: "Mức DPH",
       open_price: "Giá tùy chỉnh khi chọn",
+      open_price_badge: "Giá tự do",
       col_name: "Tên sản phẩm",
       col_category: "Danh mục",
       col_price: "Giá gồm DPH",
@@ -733,7 +737,8 @@ export const translations = {
       offline: "Offline",
       not_sent: "Unsent",
       eet_off: "EET Disabled",
-      open_drawer: "Open Drawer"
+      open_drawer: "Open Drawer",
+      section_title: "Navigation"
     },
     cart: {
       title: "Shopping Cart",
@@ -862,6 +867,7 @@ export const translations = {
       price: "Price incl. VAT",
       vat_rate: "VAT rate",
       open_price: "Open price entry",
+      open_price_badge: "Open price",
       col_name: "Item Name",
       col_category: "Category",
       col_price: "Price incl. VAT",
