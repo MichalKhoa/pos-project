@@ -1,40 +1,33 @@
-# Frontend Components
+# Frontend Components & Architecture
 
-UI components located in `/src/components`.
+Directory: `/src/components`
 
-## Views & Layout
-- `Navbar.jsx`: Header navigation bar with tabs (`Pokladna`, `Sklad`, `Katalog`, `Historie`, `Nastavení`), responsive hamburger slide-down drawer (< 900px) with 1-tap auto-close, backend latency/EET status indicator, language dropdown selector (`CS`, `VI`, `EN`), volume mute toggle (`Volume2` / `VolumeX`), Quick Lock button, theme toggle, and clock.
-- `CustomerDisplayView.jsx`: Standalone customer-facing dual screen view (`/#/customer-display`) over local Wi-Fi. Features 3 dynamic states (Active Cart, Czech SPD QR Payment, Payment Success 5s auto-reset countdown), prominent top docked eye-level total bar (`4.2rem` bold font), 60px quantity & 120px price columns, ~70% item title width allocation, senior-accessible font scaling, customizable store greeting/title (`customerDisplayTitle`), relative QR code image URLs (`/api/v1/qr/spd?...`), 4-block formatted IBANs (`CZ65 0800 0000 0012 3456 7890`) with `word-break: break-word`, Fully Kiosk JS API (`window.fully.turnScreenOff()` / `turnScreenOn()`), configurable disconnect auto-sleep & standby delay (`customerDisplayAutoSleep`, `customerDisplayStandbyDelay`), and POS-matched slate/white theme.
-- `InventoryView.jsx`: Dedicated top-level `Sklad` view with EAN barcode search, low-stock filter (`Nízká zásoba`), quick stock increment (+5, +10, +50, custom set), min stock alert level, and inline EAN code editor.
-- `QuickPresetGrid.jsx`: Category filter buttons, internationalized search bar, edit mode, quantity multiplier (`⚡ 5×`), stock pills (`📦 X ks`), 48px touch color selector, quick item grid, and Admin Mode visibility gating for category & catalog edit actions.
-- `PresetsCatalogView.jsx`: Full-screen product catalog and category management.
-- `SalesHistoryView.jsx`: Sales ledger & analytics with subtabs (`Seznam Účtenek` vs `Analýza a Statistiky`), segmented time range filter (`Dnes`, `Včera`, `Tento týden`, `Tento měsíc`, `Tento rok`, `Vše`, `Vlastní`), stepper controls, QR code payment tracking, CSV export, EET re-send, and Admin Mode gating for test sale deletion.
-- `SettingsView.jsx`: Store config, layout position selector (`cartPosition`: `middle` = Presets Left | Keypad Middle | Cart Right, `left`, `right`), customer display title/greeting input (`customerDisplayTitle`), customer display auto-sleep toggle & standby delay selector (`customerDisplayAutoSleep`, `customerDisplayStandbyDelay`), printer auto-scanner, paper format selector (58mm/80mm/A4), PIN lock, EET cert, ČSOB terminal setup, High-Legibility Mode toggle, 2-step Admin PIN management, backup/restore, and system update.
+## Views (Top-Level Code-Split Tabs)
+- `RegisterView.jsx` (within `App.jsx`): Touch register screen.
+- `PresetsCatalogView.jsx`: Tile and category manager with color pickers and icon mappings.
+- `InventoryView.jsx`: Real-time stock list, batch stock-in, low-stock threshold triggers, and stock adjustment logs.
+- `CustomerDisplayView.jsx`: Real-time LCD customer-facing display.
+- `SalesHistoryView.jsx`: Sales ledger and statistical analytics view. Decomposed into modular domain subcomponents in `/src/components/history/`:
+  - `SalesMetricsCards.jsx`: KPI metric cards (Total, Cash, Card, Txn Count, AOV).
+  - `SalesPeriodBar.jsx`: Preset chips (Today/Yesterday/Week/Month/Year/Custom), `< >` stepper navigation, and calendar triggers.
+  - `SalesAnalyticsCharts.jsx`: Tax rate breakdown, category sales share, and weekday sales distribution.
+  - `SalesLedgerTable.jsx`: Paginated receipt ledger table with search, document type filter, refund triggers, and pagination.
+- `SettingsView.jsx`: POS system configuration coordinator. Decomposed into modular domain subcomponents in `/src/components/settings/`:
+  - `StoreProfileSection.jsx`: Store identification, address, IČO/DIČ, default VAT, IBAN, and high-legibility toggle.
+  - `PrinterSection.jsx`: Thermal ESC/POS receipt printing (58mm vs 80mm), margin ruler test, auto-print toggles.
+  - `TerminalSection.jsx`: ČSOB Move 3500 terminal TCP IP/port/TID setup, ping connectivity test, and daily reconciliation.
+  - `SecuritySection.jsx`: Admin mode toggle, Admin PIN verification and update, cashier PIN, and inactivity auto-lock.
+  - `BackupSection.jsx`: JSON backup export/import, Litestream SQLite WAL replication monitor, and EET toggle.
 
-## Cart, Touch Keypads & Safety Components
-- `Cart.jsx`: Itemized shopping cart, per-item discount trigger, quantity controls, single-line high-legibility row layout with 44px+ touch steppers, delete targets, `ClearedCartBanner` 8s countdown restore banner inside empty cart view, tax breakdown, pay button.
-- `ToastUndo.jsx`: Floating 4s toast notification overlay (`Přidáno: [Název] — ZPĚT` / `Smazáno: [Název] — ZPĚT`) with animated timer progress bar for 1-tap mistake recovery.
-- `CheckoutFlashBanner.jsx`: Full-width fixed top flash banner (`Zaplaceno! [Částka] Kč`) for visual checkout success chimes and error alerts with slide-down CSS animation.
-- `ManualKeypad.jsx`: Touchscreen numeric keypad with `QTY × PRICE` multiplier key (`×` / `*` / `X`), active multiplier badge, and a **dedicated standalone Odložené Nákupy (Hold / Park Cart) card box** with 1-tap `Odložit nákup` (Hold active customer cart) and `Obnovit (N)` (Restore held cart with popup modal list and time/item details).
-- `TouchDateRangeModal.jsx`: Dual side-by-side touch calendar modal (`24px` rounded corners) allowing 1-continuous-flow range picking (`OD` to `DO`), glowing start/end highlights, shaded range, and quick preset pills.
-- `TouchCalendarModal.jsx`: Touch-screen pop-up calendar modal (`24px` rounded corners) with 50px day touch targets, Monday-Sunday grid, 1-tap Month Grid Picker, 1-tap Year Grid Picker, and `Dnes` shortcut.
-- `DateKeypadModal.jsx`: Touch numeric date keypad with instant overwrite mode and real-time live calendar date validation.
+## Core Register Components
+- `Cart.jsx`: Active shopping basket with swipe-to-delete, item discount popover, line quantity modifier, and parking slots.
+- `QuickPresetGrid.jsx`: Fast product tile touch grid with category horizontal scroll.
+- `ManualKeypad.jsx`: Touch numeric pad with decimal entry, quick quantity multiplier (+1x / -1x return mode), and touch ergonomics.
+- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation.
 
-## Security & Other Modals
-- `AdminPinModal.jsx`: Touch-optimized Admin PIN modal with VERIFY mode (gating Settings modification and destructive actions) and 2-step CHANGE_PIN mode (Current PIN -> New PIN -> Confirm).
-- `LockScreenModal.jsx`: Touchscreen 4-digit PIN security lock overlay with physical keyboard support (`0-9`, `Backspace`, `Escape`, `C`), rate limiter, and shake animation.
-- `ShutdownModal.jsx`: Shift exit & system shutdown confirmation modal with pending EET sales warning count and non-blocking backend shutdown call.
-- `PaymentModal.jsx`: Multi-payment workflow (Cash change calculator, Card terminal, Czech SPD QR code tracking with `bankAccountIban` lookup, Split payment, real-time Customer Display broadcasting).
-- `RefundModal.jsx`: Receipt refund modal with itemized selection, partial refund, and "Poškozeno / Likvidace (Ne-naskladňovat)" checkbox.
-- `ReceiptModal.jsx`: Receipt & A4 Tax Invoice preview with direct silent thermal hardware printing.
-- `audio.js` (`src/utils/audio.js`): Zero-dependency Web Audio API sound manager (barcode scan chime, cash register checkout chime, low-frequency error buzz) with navbar volume toggle.
-
-## Component Invariants & Legibility Modes
-- High-Legibility Mode: DOM `data-density="high"` attribute scales catalog tiles 25% larger (min-height 84px), 18pt+ bold prices, 60px keypad keys, and 44px cart steppers.
-- Parent Shield / Admin Mode: Destructive operations (delete test sales, clear all sales, category management, setting modifications) require Admin PIN authentication when `isAdminMode` is false.
-- Modal Styling: Containers use `borderRadius: 24px` (`var(--radius-xl)` equivalent) with high-contrast glassmorphism dark theme.
-- Touch UI Targets: Interactive buttons and cards MUST specify `touch-action: manipulation` and `-webkit-touch-callout: none`.
-- PWA Support: Service Worker `public/sw.js` and manifest `public/manifest.json` enable `CacheFirst` offline launch.
-
-## Related Memories
-- Frontend architecture: `mem:frontend/core`
+## Modals & Popovers
+- `PaymentModal.jsx`: Multi-tender payment orchestrator (Cash, Card terminal TCP, QR code 2s polling, Split payment).
+- `ReceiptModal.jsx`: Vector receipt preview with live thermal print trigger.
+- `AdminPinModal.jsx`: 4–8 digit PIN authentication pad for protected actions.
+- `TouchCalendarModal.jsx` & `TouchDateRangeModal.jsx`: Touch-friendly date and range pickers for POS screens.
+- `ItemDiscountModal.jsx`: Line-item discount percentage and fixed amount modal.
