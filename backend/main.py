@@ -94,10 +94,77 @@ with engine.connect() as conn:
         except Exception:
             pass
 
+from contextlib import asynccontextmanager
+import threading
+import time
+
+_shutdown_event = threading.Event()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 1. Startup SQLite integrity quick check
+    from database import check_db_integrity, run_wal_checkpoint
+    if check_db_integrity():
+        logger.info("SQLite database PRAGMA quick_check: OK")
+    else:
+        logger.critical("SQLite database PRAGMA quick_check FAILED!")
+
+    # 2. Periodic WAL Checkpoint daemon (every 15 minutes, checks shutdown event)
+    def _wal_checkpoint_loop():
+        while not _shutdown_event.is_set():
+            if _shutdown_event.wait(timeout=900):
+                break
+            try:
+                run_wal_checkpoint()
+            except Exception as e:
+                logger.warning(f"Error in WAL checkpoint loop: {e}")
+
+    wal_thread = threading.Thread(target=_wal_checkpoint_loop, daemon=True)
+    wal_thread.start()
+
+    # 3. Hourly Automated Database Backup daemon (every 60 minutes)
+    def _hourly_backup_loop():
+        from services.backup_service import create_database_backup
+        while not _shutdown_event.is_set():
+            if _shutdown_event.wait(timeout=3600):
+                break
+            try:
+                create_database_backup()
+            except Exception as e:
+                logger.warning(f"Error in hourly database backup daemon: {e}")
+
+    backup_thread = threading.Thread(target=_hourly_backup_loop, daemon=True)
+    backup_thread.start()
+
+    try:
+        from services.email_payment_listener import start_email_listener_from_env
+        start_email_listener_from_env()
+    except Exception as e:
+        logger.warning(f"Failed to start bank email listener: {e}")
+
+    try:
+        from services.eet_resend_daemon import start_eet_resend_daemon
+        start_eet_resend_daemon()
+    except Exception as e:
+        logger.warning(f"Failed to start EET resend daemon: {e}")
+
+    yield
+
+    # Graceful shutdown sequence
+    logger.info("Himmel POS Backend shutting down gracefully...")
+    _shutdown_event.set()
+    try:
+        run_wal_checkpoint()
+    except Exception:
+        pass
+    logger.info("Shutdown WAL checkpoint and cleanup completed.")
+
+
 app = FastAPI(
     title="Himmel POS Backend API",
     description="Python FastAPI backend for POS register sales database, ESC/POS hardware printing, customer LCD display, and Czech EET 2.0 / QR payment verification.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Enable CORS for React frontend (Vite & LAN network clients)
@@ -126,54 +193,6 @@ app.include_router(display.router)
 app.include_router(payments.router)
 app.include_router(updater.router)
 app.include_router(qr.router)
-
-
-@app.on_event("startup")
-def startup_event():
-    # 1. Startup SQLite integrity quick check
-    from database import check_db_integrity, run_wal_checkpoint
-    if check_db_integrity():
-        logger.info("SQLite database PRAGMA quick_check: OK")
-    else:
-        logger.critical("SQLite database PRAGMA quick_check FAILED!")
-
-    # 2. Periodic WAL Checkpoint daemon (every 15 minutes)
-    import threading, time
-    def _wal_checkpoint_loop():
-        while True:
-            time.sleep(900)
-            try:
-                run_wal_checkpoint()
-            except Exception as e:
-                logger.warning(f"Error in WAL checkpoint loop: {e}")
-
-    wal_thread = threading.Thread(target=_wal_checkpoint_loop, daemon=True)
-    wal_thread.start()
-
-    # 3. Hourly Automated Database Backup daemon (every 60 minutes)
-    def _hourly_backup_loop():
-        from services.backup_service import create_database_backup
-        while True:
-            time.sleep(3600)
-            try:
-                create_database_backup()
-            except Exception as e:
-                logger.warning(f"Error in hourly database backup daemon: {e}")
-
-    backup_thread = threading.Thread(target=_hourly_backup_loop, daemon=True)
-    backup_thread.start()
-
-    try:
-        from services.email_payment_listener import start_email_listener_from_env
-        start_email_listener_from_env()
-    except Exception as e:
-        logger.warning(f"Failed to start bank email listener: {e}")
-
-    try:
-        from services.eet_resend_daemon import start_eet_resend_daemon
-        start_eet_resend_daemon()
-    except Exception as e:
-        logger.warning(f"Failed to start EET resend daemon: {e}")
 
 
 # Single-Process Production Serving: Serve compiled React dist/ static assets dynamically
