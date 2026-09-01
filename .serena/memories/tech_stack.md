@@ -1,19 +1,11 @@
-# Tech Stack & Environment
+# Tech Stack & Dependencies
 
-## Frontend
-- React 19, Vite, Lucide Icons, Vanilla CSS design tokens (`index.css`).
-- API client: Custom `fetch` wrapper in `src/api/posApi.js`.
-
-## Backend
-- Python 3.10+, FastAPI, Uvicorn, SQLAlchemy 2.0+.
-- Database: SQLite (`backend/pos_store.db`).
-- Cryptography: `pycryptodome`, `cryptography` (PKCS#12 certificate parsing & RSA signing).
-- Fiscal & Networking: `requests` (SOAP HTTP POST), `python-escpos` (thermal printers).
-
-## Ignore Policies & Quality Assurance
-- `.gitignore`: Excludes `node_modules/`, `backend/venv/`, `dist/`, `pos_store.db`, `backend/certs/*.p12`, `.serena/cache/`, `.serena/project.local.yml`, `.antigravity/`, `.gemini/`.
-- `.geminiignore`: Excludes heavy builds/deps, database files, and `.serena/cache/` while leaving `.serena/memories/` indexed for AI context.
-- Code quality: `oxlint` (`npm run lint`), `vite build` (`npm run build`).
-
-## Related Memories
-- Execution and launch configurations: `mem:testing_and_launch`
+- **Language**: Python 3.12+ / 3.14
+- **Core Libraries**:
+  - `discord.py` 2.3+: Discord bot framework, slash commands (`app_commands`), UI buttons/modals/views.
+  - `curl_cffi` (optional/fallback `requests`): TLS fingerprint impersonation for Century Games API.
+  - `aiohttp`: Async HTTP webhook delivery and fallback operations.
+  - `aiosqlite` / `sqlite3`: Local SQLite database engine with WAL mode and schema auto-migration.
+  - `PyNaCl`: Discord voice channel support.
+- **Testing**: `unittest` with `unittest.IsolatedAsyncioTestCase` and `unittest.mock`.
+- **Indexing**: `codegraph` for AST indexing and blast-radius exploration.
