@@ -2,6 +2,9 @@
 
 ## Frontend
 - React 19, Vite, Lucide Icons, Vanilla CSS design tokens (`index.css`).
+- Modular views: Code-split via `React.lazy()` + `<Suspense>` (`SettingsView`, `SalesHistoryView`, `InventoryView`, `CustomerDisplayView`, `PresetsCatalogView`).
+- Custom hooks: `useCart`, `useRegisterKeypad`, `usePosAudio`, `usePosConfig`.
+- Financial utilities: `src/utils/tax.js` (`roundCZK`, `calculateCartTotals`, `calculateCashChange`).
 - API client: Custom `fetch` wrapper in `src/api/posApi.js`.
 
 ## Backend
@@ -10,10 +13,14 @@
 - Cryptography: `pycryptodome`, `cryptography` (PKCS#12 certificate parsing & RSA signing).
 - Fiscal & Networking: `requests` (SOAP HTTP POST), `python-escpos` (thermal printers).
 
-## Ignore Policies & Quality Assurance
-- `.gitignore`: Excludes `node_modules/`, `backend/venv/`, `dist/`, `pos_store.db`, `backend/certs/*.p12`, `.serena/cache/`, `.serena/project.local.yml`, `.antigravity/`, `.gemini/`.
-- `.geminiignore`: Excludes heavy builds/deps, database files, and `.serena/cache/` while leaving `.serena/memories/` indexed for AI context.
-- Code quality: `oxlint` (`npm run lint`), `vite build` (`npm run build`).
+## Quality Assurance & Testing
+- Unit testing: `vitest` (`npm run test`) for financial calculations and invariants.
+- Linter: `oxlint` (`npm run lint`) enforcing 0-warning policy.
+- Build: `vite build` (`npm run build`) targeting `dist/`.
+- Backend testing: `python -m unittest discover -s backend/tests -p "test_*.py"`.
+- Agent rules & discipline: `AGENTS.md` and `.serena/memories/` synchronization.
 
 ## Related Memories
 - Execution and launch configurations: `mem:testing_and_launch`
+- Frontend components: `mem:frontend/components`
+- Frontend state orchestration: `mem:frontend/core`

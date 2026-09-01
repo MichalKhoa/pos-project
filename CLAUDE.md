@@ -27,3 +27,13 @@
 - **Regex Parsing**: Extracts Variable Symbol (VS) and Amount from ČSOB / Czech bank incoming transaction alert emails and caches them in thread-safe `PaymentCache`.
 - **POS Integration**: Frontend polls `POST /api/v1/payments/verify-qr` every 2s → auto-verifies payment and completes sale.
 - **Setup Guide**: `docs/NUDAVANI_EMAIL_PLATBY_MANUAL.md`.
+
+### 4. Modular Architecture & Testing
+- **Code-Splitting**: Admin views (`SettingsView`, `SalesHistoryView`, `InventoryView`, `CustomerDisplayView`, `PresetsCatalogView`) lazy-loaded via `React.lazy()` + `<Suspense>`.
+- **Custom Domain Hooks**: `useCart`, `useRegisterKeypad`, `usePosAudio`.
+- **Financial Utilities**: `src/utils/tax.js` (`roundCZK`, `calculateCartTotals`, `calculateCashChange`).
+- **Test Suites**: `npm run test` (`vitest` financial math suite) & `python -m unittest discover -s backend/tests -p "test_*.py"`.
+
+## Mandatory Agent Discipline
+- **Serena Memory Sync**: Always update `.serena/memories/` when models, routers, utilities, or architectural patterns change.
+- **Codegraph Sync**: Check `codegraph_explore` before modifying symbols and ensure index stays healthy.

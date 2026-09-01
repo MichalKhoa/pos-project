@@ -1,6 +1,6 @@
 # Launch & Environment Guide
 
-Operational execution scripts and environment setup.
+Operational execution scripts, test suites, and environment setup.
 
 ## Launchers & Production Serving
 - **Single-Process Production Mode**: FastAPI mounts compiled `dist/` static files on port 8000, eliminating Node/Vite dev server overhead in production (~150MB RAM savings).
@@ -22,23 +22,26 @@ Operational execution scripts and environment setup.
   ```bash
   npm run build
   ```
-  Compiles React bundle into `dist/`.
+  Compiles React bundle into `dist/` with code-split chunks.
 
-## Environment Dependencies
-- Python 3.10+ & Node.js 18+.
-- PKCS#12 certificates placed in `backend/certs/`.
-
-## Automated Testing & Quality
-- **Automated Test Suite**:
+## Automated Testing & Quality Gates
+- **Frontend Financial Unit Tests**:
   ```bash
-  python scripts/run_tests.py
+  npm run test
   ```
-  Executes all 24 unit & integration tests (`test_sales.py`, `test_eet_crypto.py`, `test_api_endpoints.py`, `test_business_logic.py`).
-- **Code Linter**:
+  Runs `vitest` unit tests covering VAT multi-tier splits, cart discount distribution, and `roundCZK` invariants.
+- **Frontend Code Linter**:
   ```bash
   npm run lint
   ```
-  Enforces zero-error and zero-warning standard.
+  Runs `oxlint` enforcing zero-error and zero-warning standard.
+- **Backend Unit Tests**:
+  ```bash
+  python -m unittest discover -s backend/tests -p "test_*.py"
+  ```
+  Executes all 25 unit & integration tests (`test_sales.py`, `test_eet_crypto.py`, `test_api_endpoints.py`, `test_business_logic.py`).
 
 ## Related Memories
 - Core overview: `mem:core`
+- Tech stack: `mem:tech_stack`
+- Project instructions: `AGENTS.md`

@@ -33,6 +33,10 @@ Himmel POS (`pos-eet-himmel`) is a production touchscreen Point of Sale system.
   - `vi` (Vietnamese)
   - `en` (English)
 
+### Knowledge Base & Index Discipline (Serena & Codegraph)
+- **Always Update Serena Memories**: After completing architectural changes, adding new hooks/utilities, modifying database models, or updating API contracts, you MUST update the corresponding memory in `.serena/memories/` using Serena tools (`edit_memory` / `write_memory`). Never allow memories to drift or become obsolete.
+- **Codegraph AST Index Sync**: Use `codegraph_explore` as the primary search and blast-radius tool before making code modifications. Ensure new files and symbols remain clean and discoverable within the AST index.
+
 ---
 
 ## 3. Directory Structure & Conventions
@@ -47,12 +51,12 @@ pos-project-himmel/
 │   ├── services/            # Business logic (eet, escpos, email_payment_listener, etc.)
 │   └── tests/               # Python unittest suite
 ├── src/
-│   ├── App.jsx              # Main POS register shell
+│   ├── App.jsx              # Main POS register shell (code-split views)
 │   ├── api/                 # REST API client wrapper (posApi.js)
 │   ├── components/          # UI components and modals
-│   ├── hooks/               # Custom React hooks (useCart, usePosConfig, etc.)
+│   ├── hooks/               # Custom React hooks (useCart, useRegisterKeypad, usePosAudio, etc.)
 │   ├── i18n/                # Localization dictionary (translations.js)
-│   ├── utils/               # Formatting, currency, and calculation helpers
+│   ├── utils/               # Tax, currency, audio, and formatting utilities
 │   └── index.css            # Design tokens and styles
 ├── .agents/rules/           # Antigravity rule definitions
 └── .serena/memories/        # Serena domain memory index
@@ -64,23 +68,32 @@ pos-project-himmel/
 
 Run these verification commands before completing any task:
 
-1. **Frontend Lint**:
+1. **Frontend Unit Tests**:
+   ```bash
+   npm run test
+   ```
+   *All financial and utility tests must pass.*
+
+2. **Frontend Lint**:
    ```bash
    npm run lint
    ```
    *Must pass with 0 errors and 0 warnings.*
 
-2. **Frontend Build**:
+3. **Frontend Build**:
    ```bash
    npm run build
    ```
    *Must build cleanly to `dist/`.*
 
-3. **Backend Unit Tests**:
+4. **Backend Unit Tests**:
    ```bash
    python -m unittest discover -s backend/tests -p "test_*.py"
    ```
    *All test cases must pass.*
 
-4. **Git Hygiene**:
+5. **Serena & Memory Sync**:
+   *Ensure domain memories in `.serena/memories/` match the latest state of the codebase.*
+
+6. **Git Hygiene**:
    *Ensure no unrelated or foreign files are staged or committed.*
