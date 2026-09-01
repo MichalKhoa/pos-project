@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
 import { savePresetBackend } from '../api/posApi';
 import PresetModal from './PresetModal';
@@ -95,31 +95,56 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
     }
   };
 
-  const individualPresets = presets.filter(p => !p.isGeneralPreset);
+  const individualPresets = useMemo(() => {
+    return presets.filter(p => !p.isGeneralPreset);
+  }, [presets]);
 
-  const filteredPresets = individualPresets.filter(p => {
-    const nameMatch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const barcodeMatch = (p.barcode || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const catMatch = selectedCategory === 'all' || p.category === selectedCategory;
-    const isTracked = p.trackStock;
-    const isLowStock = isTracked && ((p.stockQuantity || 0) <= (p.minStockAlert || 5));
+  const filteredPresets = useMemo(() => {
+    return individualPresets.filter(p => {
+      const nameMatch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const barcodeMatch = (p.barcode || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const catMatch = selectedCategory === 'all' || p.category === selectedCategory;
+      const isTracked = p.trackStock;
+      const isLowStock = isTracked && ((p.stockQuantity || 0) <= (p.minStockAlert || 5));
 
-    if (showLowStockOnly && !isLowStock) return false;
-    return (nameMatch || barcodeMatch) && catMatch;
-  });
+      if (showLowStockOnly && !isLowStock) return false;
+      return (nameMatch || barcodeMatch) && catMatch;
+    });
+  }, [individualPresets, searchTerm, selectedCategory, showLowStockOnly]);
 
-  const trackedPresets = individualPresets.filter(p => p.trackStock);
-  const totalTrackedCount = trackedPresets.length;
-  const lowStockItems = trackedPresets.filter(p => (p.stockQuantity || 0) <= (p.minStockAlert || 5));
-  const lowStockCount = lowStockItems.length;
-  const outOfStockCount = trackedPresets.filter(p => (p.stockQuantity || 0) <= 0).length;
-  const healthyStockCount = trackedPresets.filter(p => (p.stockQuantity || 0) > (p.minStockAlert || 5)).length;
+  const {
+    totalTrackedCount,
+    lowStockCount,
+    outOfStockCount,
+    healthyStockCount,
+    totalValuation,
+    healthyPct,
+    lowPct,
+    outPct
+  } = useMemo(() => {
+    const tracked = individualPresets.filter(p => p.trackStock);
+    const totalTracked = tracked.length;
+    const lowStock = tracked.filter(p => (p.stockQuantity || 0) <= (p.minStockAlert || 5));
+    const lowCount = lowStock.length;
+    const outCount = tracked.filter(p => (p.stockQuantity || 0) <= 0).length;
+    const healthyCount = tracked.filter(p => (p.stockQuantity || 0) > (p.minStockAlert || 5)).length;
+    const valuation = tracked.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
 
-  const totalValuation = trackedPresets.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
+    const hPct = totalTracked > 0 ? (healthyCount / totalTracked) * 100 : 100;
+    const lPct = totalTracked > 0 ? ((lowCount - outCount) / totalTracked) * 100 : 0;
+    const oPct = totalTracked > 0 ? (outCount / totalTracked) * 100 : 0;
 
-  const healthyPct = totalTrackedCount > 0 ? (healthyStockCount / totalTrackedCount) * 100 : 100;
-  const lowPct = totalTrackedCount > 0 ? ((lowStockCount - outOfStockCount) / totalTrackedCount) * 100 : 0;
-  const outPct = totalTrackedCount > 0 ? (outOfStockCount / totalTrackedCount) * 100 : 0;
+    return {
+      totalTrackedCount: totalTracked,
+      lowStockCount: lowCount,
+      outOfStockCount: outCount,
+      healthyStockCount: healthyCount,
+      totalValuation: valuation,
+      healthyPct: hPct,
+      lowPct: lPct,
+      outPct: oPct
+    };
+  }, [individualPresets]);
 
   const handleStockChange = (id, field, value) => {
     setEditingStock(prev => ({

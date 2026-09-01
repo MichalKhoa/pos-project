@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -161,11 +161,13 @@ export default function App() {
     dismissClearedCartSnapshot
   } = useCart();
 
-  const computedTotalAmount = cartItems.reduce((sum, item) => {
-    const disc = item.discountPercent || 0;
-    const effectivePrice = item.price * (1 - disc / 100);
-    return sum + (effectivePrice * item.quantity);
-  }, 0) * (1 - cartDiscountPercent / 100);
+  const computedTotalAmount = useMemo(() => {
+    return cartItems.reduce((sum, item) => {
+      const disc = item.discountPercent || 0;
+      const effectivePrice = item.price * (1 - disc / 100);
+      return sum + (effectivePrice * item.quantity);
+    }, 0) * (1 - cartDiscountPercent / 100);
+  }, [cartItems, cartDiscountPercent]);
 
   // Broadcast live cart changes to customer display
   useEffect(() => {

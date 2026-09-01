@@ -3,6 +3,13 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .app-container.pos-mode {
@@ -101,6 +108,9 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
   height: 36px;
   box-sizing: border-box;
 }

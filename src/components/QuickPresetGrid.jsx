@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Layers, Check, Edit3, Search, X, FolderPlus } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -49,14 +49,16 @@ export default function QuickPresetGrid({
     return undefined;
   };
 
-  const filteredPresets = presets.filter(p => {
-    const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
-    const matchesSearch = !searchTerm.trim() ||
-      (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.price && p.price.toString().includes(searchTerm)) ||
-      (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  const filteredPresets = useMemo(() => {
+    return presets.filter(p => {
+      const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+      const matchesSearch = !searchTerm.trim() ||
+        (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.price && p.price.toString().includes(searchTerm)) ||
+        (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    });
+  }, [presets, activeCategory, searchTerm]);
 
   const {
     draggedIndex,

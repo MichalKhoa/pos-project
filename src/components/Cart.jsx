@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals } from '../utils/tax';
@@ -71,9 +71,14 @@ export default function Cart({
     finalGrandTotal,
     totalNet,
     totalTax
-  } = calculateCartTotals(cartItems, cartDiscountPercent);
+  } = useMemo(() => {
+    return calculateCartTotals(cartItems, cartDiscountPercent);
+  }, [cartItems, cartDiscountPercent]);
+
   const isRefundTransaction = finalGrandTotal < 0;
-  const totalItemCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+  const totalItemCount = useMemo(() => {
+    return cartItems.reduce((sum, i) => sum + i.quantity, 0);
+  }, [cartItems]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

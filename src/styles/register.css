@@ -59,6 +59,7 @@
   flex-shrink: 0;
   user-select: none;
   box-sizing: border-box;
+  touch-action: manipulation;
 }
 
 .category-chip:hover {
@@ -89,6 +90,7 @@
   position: absolute;
   z-index: 10;
   transition: all 0.15s ease;
+  touch-action: manipulation;
 }
 
 .category-scroll-btn:hover {
@@ -128,6 +130,8 @@
   overflow: hidden;
   transition: all 0.15s ease;
   box-shadow: var(--shadow-sm);
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .preset-card::before {
@@ -387,6 +391,7 @@ select.input-field:focus {
   justify-content: center;
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation;
   transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
@@ -646,6 +651,9 @@ select.input-field:focus {
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
   transition: all 0.2s ease;
+  touch-action: manipulation;
+  user-select: none;
+  cursor: pointer;
 }
 
 .pay-btn:hover {
