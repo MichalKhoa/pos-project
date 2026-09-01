@@ -63,10 +63,10 @@ if exist "%~dp0backend\litestream.exe" (
     start "Himmel POS Litestream (Debug)" cmd /k "cd /d "%~dp0backend" && litestream.exe replicate -config litestream.yml"
 )
 
-REM 7. Wait for servers to spin up
+REM 7. Wait for servers to spin up (active readiness polling)
 echo.
 echo Waiting for servers to initialize...
-timeout /t 3 /nobreak >nul 2>&1
+powershell -NoProfile -Command "$ready = $false; for ($i = 0; $i -lt 15; $i++) { try { $r = (Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 1).StatusCode; if ($r -eq 200) { $ready = $true; break } } catch {}; Start-Sleep -Seconds 1 }; if (-not $ready) { Start-Sleep -Seconds 2 }"
 
 REM 8. Launch Browser
 echo Opening browser at http://localhost:5173 ...

@@ -2,11 +2,19 @@
 class SoundEffectsManager {
   constructor() {
     this.audioCtx = null;
-    this.enabled = localStorage.getItem('pos_sound_enabled') !== 'false';
+    let enabled = true;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        enabled = window.localStorage.getItem('pos_sound_enabled') !== 'false';
+      }
+    } catch {
+      enabled = true;
+    }
+    this.enabled = enabled;
   }
 
   getAudioContext() {
-    if (!this.audioCtx) {
+    if (!this.audioCtx && typeof window !== 'undefined') {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
         this.audioCtx = new AudioCtx();
@@ -20,7 +28,13 @@ class SoundEffectsManager {
 
   setSoundEnabled(enabled) {
     this.enabled = enabled;
-    localStorage.setItem('pos_sound_enabled', enabled ? 'true' : 'false');
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('pos_sound_enabled', enabled ? 'true' : 'false');
+      }
+    } catch {
+      // ignore
+    }
   }
 
   isSoundEnabled() {

@@ -71,7 +71,7 @@ if %errorlevel% equ 0 (
         echo [INFO] Starting Backend Service - LAN and Customer Display Ready...
         start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
         echo Waiting for backend server initialization...
-        timeout /t 3 /nobreak >nul
+        powershell -NoProfile -Command "$ready = $false; for ($i = 0; $i -lt 15; $i++) { try { $r = (Invoke-WebRequest -Uri 'http://localhost:8000/api/v1/status' -UseBasicParsing -TimeoutSec 1).StatusCode; if ($r -eq 200) { $ready = $true; break } } catch {}; Start-Sleep -Seconds 1 }; if (-not $ready) { Start-Sleep -Seconds 2 }"
     )
 )
 
