@@ -273,6 +273,9 @@ export const translations = {
       col_eet: "Stav EET",
       col_refund: "Storno / Vráceno",
       col_actions: "Akce",
+      no_receipt_selected: "Není vybrána žádná účtenka",
+      select_receipt_prompt: "Kliknutím na řádek v seznamu vpravo zobrazíte detail dokladu a možnosti tisku.",
+      refund_short: "Storno",
       export_csv: "Export CSV",
       export_csv_title: "Exportovat vyfiltrované prodeje do CSV pro účetní",
       subtab_receipts: "Seznam Účtenek",
@@ -312,6 +315,13 @@ export const translations = {
       refunds_total: "Vratky a storna",
       share_of_sales: "Podíl z tržeb",
       sold_units: "Prodáno"
+    },
+    receipt: {
+      print: "Tisk",
+      printing: "Probíhá tisk...",
+      reprint: "Vytisknout účtenku",
+      detail: "Rozšířený náhled",
+      title: "Daňový Doklad"
     },
     refund: {
       title: "Vratka / Storno Účtenky",
@@ -657,6 +667,9 @@ export const translations = {
       col_eet: "Trạng thái EET",
       col_refund: "Trạng thái hoàn tiền",
       col_actions: "Thao tác",
+      no_receipt_selected: "Chưa chọn hóa đơn nào",
+      select_receipt_prompt: "Nhấp vào một dòng trong danh sách bên phải để xem chi tiết hóa đơn và in lại.",
+      refund_short: "Hủy/Trả",
       export_csv: "Xuất CSV",
       export_csv_title: "Xuất danh sách bán hàng đã lọc sang file CSV",
       subtab_receipts: "Danh Sách Hóa Đơn",
@@ -696,6 +709,13 @@ export const translations = {
       refunds_total: "Hoàn tiền & Hủy đơn",
       share_of_sales: "Tỷ trọng doanh thu",
       sold_units: "Đã bán"
+    },
+    receipt: {
+      print: "In hóa đơn",
+      printing: "Đang in...",
+      reprint: "In lại hóa đơn",
+      detail: "Xem chi tiết",
+      title: "Hóa Đơn Bán Hàng"
     },
     refund: {
       title: "Trả Hàng / Hủy Hóa Đơn",
@@ -1071,6 +1091,9 @@ export const translations = {
       col_eet: "EET Status",
       col_refund: "Refund Status",
       col_actions: "Actions",
+      no_receipt_selected: "No receipt selected",
+      select_receipt_prompt: "Click on a row in the list on the right to view receipt details and print options.",
+      refund_short: "Refund",
       export_csv: "Export CSV",
       export_csv_title: "Export filtered sales to CSV for accounting",
       subtab_receipts: "Receipt Ledger",
@@ -1110,6 +1133,13 @@ export const translations = {
       refunds_total: "Refunds & Voids",
       share_of_sales: "Revenue Share",
       sold_units: "Units Sold"
+    },
+    receipt: {
+      print: "Print",
+      printing: "Printing...",
+      reprint: "Reprint Receipt",
+      detail: "Full Preview",
+      title: "Tax Receipt"
     },
     refund: {
       title: "Receipt Refund / Cancellation",

@@ -17,6 +17,7 @@ export default function SalesLedgerTable({
   onSelectSale,
   isAdminMode,
   onDeleteSale,
+  selectedSaleId = null,
   startIndex,
   endIndex,
   validCurrentPage,
@@ -26,7 +27,7 @@ export default function SalesLedgerTable({
   const { t } = useTranslation();
 
   return (
-    <div className="table-card" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+    <div className="table-card" style={{ display: 'flex', flexDirection: 'column', gap: '0', height: '100%' }}>
       <div style={{ padding: '0.45rem 0.75rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <Receipt size={17} style={{ color: 'var(--accent-blue)' }} />
@@ -102,16 +103,16 @@ export default function SalesLedgerTable({
         </div>
       ) : (
         <>
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto', flex: 1 }}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: '150px', whiteSpace: 'nowrap' }}>{t('history.col_receipt')}</th>
-                  <th style={{ width: '140px', whiteSpace: 'nowrap' }}>{t('history.col_date')}</th>
+                  <th style={{ width: '130px', whiteSpace: 'nowrap' }}>{t('history.col_receipt')}</th>
+                  <th style={{ width: '130px', whiteSpace: 'nowrap' }}>{t('history.col_date')}</th>
                   <th>Položky</th>
-                  <th style={{ width: '160px' }}>{t('history.col_method')}</th>
-                  <th style={{ width: '120px', textAlign: 'right', whiteSpace: 'nowrap' }}>{t('history.col_total')}</th>
-                  <th style={{ width: '220px', textAlign: 'right' }}>{t('history.col_actions')}</th>
+                  <th style={{ width: '150px' }}>{t('history.col_method')}</th>
+                  <th style={{ width: '110px', textAlign: 'right', whiteSpace: 'nowrap' }}>{t('history.col_total')}</th>
+                  <th style={{ width: '190px', textAlign: 'right' }}>{t('history.col_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -119,9 +120,24 @@ export default function SalesLedgerTable({
                   const isRefund = sale.isRefund || sale.is_refund;
                   const isFullyRefunded = sale.refundStatus === 'FULL' || sale.refund_status === 'FULL';
                   const isPartiallyRefunded = sale.refundStatus === 'PARTIAL' || sale.refund_status === 'PARTIAL';
+                  const isSelected = selectedSaleId && (sale.id === selectedSaleId || sale.receiptNumber === selectedSaleId);
 
                   return (
-                    <tr key={sale.id} style={{ background: isRefund ? 'rgba(239, 68, 68, 0.04)' : 'transparent' }}>
+                    <tr
+                      key={sale.id}
+                      onClick={() => onSelectSale(normalizeSale(sale))}
+                      style={{
+                        cursor: 'pointer',
+                        background: isSelected
+                          ? 'rgba(59, 130, 246, 0.12)'
+                          : isRefund
+                          ? 'rgba(239, 68, 68, 0.04)'
+                          : 'transparent',
+                        boxShadow: isSelected ? 'inset 3px 0 0 var(--accent-blue)' : 'none',
+                        transition: 'background 0.15s ease'
+                      }}
+                      title="Kliknutím zobrazíte náhled vlevo"
+                    >
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', whiteSpace: 'nowrap' }}>
                         <div>#{sale.receiptNumber}</div>
                         {isRefund && sale.originalReceiptNumber && (
@@ -131,33 +147,33 @@ export default function SalesLedgerTable({
                         )}
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontSize: '0.82rem' }}>
                           {new Date(sale.timestamp).toLocaleString('cs-CZ')}
                         </span>
                       </td>
                       <td>
-                        <span style={{ fontSize: '0.85rem', color: isRefund ? '#ef4444' : 'var(--text-secondary)' }}>
+                        <span style={{ fontSize: '0.82rem', color: isRefund ? '#ef4444' : 'var(--text-secondary)' }}>
                           {sale.items.map(i => `${i.name} (${i.quantity}x)`).join(', ')}
                         </span>
                         {isRefund && sale.refundReason && (
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '2px' }}>
                             Důvod: {sale.refundReason}
                           </div>
                         )}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
                           {isRefund ? (
                             <span className="status-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
-                              STORNO DOKLAD
+                              STORNO
                             </span>
                           ) : isFullyRefunded ? (
                             <span className="status-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
-                              VRÁCENO KOMPLETNĚ
+                              VRÁCENO
                             </span>
                           ) : isPartiallyRefunded ? (
                             <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.4)' }}>
-                              ČÁSTEČNĚ VRÁCENO (-{(sale.refundedAmount || 0).toFixed(0)} Kč)
+                              ČÁSTEČNĚ (-{(sale.refundedAmount || 0).toFixed(0)} Kč)
                             </span>
                           ) : null}
 
@@ -198,11 +214,14 @@ export default function SalesLedgerTable({
                                 whiteSpace: 'nowrap',
                                 fontWeight: '700'
                               }}
-                              onClick={() => onInitiateRefund(sale)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onInitiateRefund(sale);
+                              }}
                               title="Vystavit vratku / storno účtenky"
                             >
                               <RotateCcw size={13} />
-                              <span>Storno / Vratka</span>
+                              <span>Storno</span>
                             </button>
                           )}
 
@@ -214,16 +233,22 @@ export default function SalesLedgerTable({
                               whiteSpace: 'nowrap',
                               fontWeight: '700'
                             }}
-                            onClick={() => onSelectSale(normalizeSale(sale))}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectSale(normalizeSale(sale));
+                            }}
                           >
                             <Eye size={13} />
-                            <span>Detail / Tisk</span>
+                            <span>Detail</span>
                           </button>
 
                           {isAdminMode && (
                             <button
                               className="delete-item-btn"
-                              onClick={() => onDeleteSale(sale.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteSale(sale.id);
+                              }}
                               title="Smazat testovací prodej"
                               style={{ padding: '0.22rem 0.4rem', whiteSpace: 'nowrap' }}
                             >

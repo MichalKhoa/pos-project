@@ -10,6 +10,22 @@
   max-width: 100%;
 }
 
+/* History Master-Detail 2-Pane Split */
+.history-master-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(310px, 340px) 1fr;
+  gap: 0.75rem;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .history-master-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 2-Column Inventory Split Layout */
 .inventory-split-container {
   display: flex;

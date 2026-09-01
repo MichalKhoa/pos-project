@@ -7,6 +7,7 @@ import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { exportSalesToCSV } from '../utils/csvExporter';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
+import ReceiptInspectorPanel from './history/ReceiptInspectorPanel.jsx';
 import { formatLocalDate, getPeriodDateRange } from '../utils/dateUtils';
 
 export default function SalesHistoryView({
@@ -21,7 +22,8 @@ export default function SalesHistoryView({
 }) {
   const { t, language } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSale, setSelectedSale] = useState(null);
+  const [activeSale, setActiveSale] = useState(null);
+  const [fullModalSale, setFullModalSale] = useState(null);
   const [periodFilter, setPeriodFilter] = useState('month'); // 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'all' | 'custom'
   const [referenceDate, setReferenceDate] = useState(new Date());
   const [calendarModal, setCalendarModal] = useState({ isOpen: false, field: 'from', initialDate: '', title: '' });
@@ -179,6 +181,17 @@ export default function SalesHistoryView({
     return searchFilteredSales.slice(startIndex, endIndex);
   }, [searchFilteredSales, startIndex, endIndex]);
 
+  // Keep activeSale in sync with searchFilteredSales
+  useEffect(() => {
+    if (searchFilteredSales.length > 0) {
+      if (!activeSale || !searchFilteredSales.some(s => (s.id && s.id === activeSale.id) || (s.receiptNumber && s.receiptNumber === activeSale.receiptNumber))) {
+        setActiveSale(searchFilteredSales[0]);
+      }
+    } else {
+      setActiveSale(null);
+    }
+  }, [searchFilteredSales, activeSale]);
+
   const getPeriodLabel = () => {
     return periodBadgeLabel || t('history.all_period');
   };
@@ -319,34 +332,46 @@ export default function SalesHistoryView({
         </div>
       </div>
 
-      {/* Full-Height Dedicated Receipt Ledger Table */}
-      <SalesLedgerTable
-        totalItems={totalItems}
-        docTypeFilter={docTypeFilter}
-        setDocTypeFilter={setDocTypeFilter}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        pageSize={pageSize}
-        setPageSize={setPageSize}
-        searchFilteredSales={searchFilteredSales}
-        paginatedSales={paginatedSales}
-        onInitiateRefund={onInitiateRefund}
-        onSelectSale={setSelectedSale}
-        isAdminMode={isAdminMode}
-        onDeleteSale={onDeleteSale}
-        startIndex={startIndex}
-        endIndex={endIndex}
-        validCurrentPage={validCurrentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
-
-      {selectedSale && (
-        <ReceiptModal
-          saleData={selectedSale}
+      {/* 2-Pane Master-Detail Layout: Left live thermal preview + Right ledger table */}
+      <div className="history-master-detail-grid">
+        <ReceiptInspectorPanel
+          saleData={activeSale}
           storeConfig={storeConfig}
-          onClose={() => setSelectedSale(null)}
-          onNewSale={() => setSelectedSale(null)}
+          onInitiateRefund={onInitiateRefund}
+          onOpenFullModal={(sale) => setFullModalSale(sale)}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <SalesLedgerTable
+            totalItems={totalItems}
+            docTypeFilter={docTypeFilter}
+            setDocTypeFilter={setDocTypeFilter}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            searchFilteredSales={searchFilteredSales}
+            paginatedSales={paginatedSales}
+            onInitiateRefund={onInitiateRefund}
+            onSelectSale={(sale) => setActiveSale(sale)}
+            selectedSaleId={activeSale?.id || activeSale?.receiptNumber}
+            isAdminMode={isAdminMode}
+            onDeleteSale={onDeleteSale}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            validCurrentPage={validCurrentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+          />
+        </div>
+      </div>
+
+      {fullModalSale && (
+        <ReceiptModal
+          saleData={fullModalSale}
+          storeConfig={storeConfig}
+          onClose={() => setFullModalSale(null)}
+          onNewSale={() => setFullModalSale(null)}
           disableAutoPrint={true}
         />
       )}

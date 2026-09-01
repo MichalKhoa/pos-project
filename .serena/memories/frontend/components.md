@@ -12,9 +12,10 @@ Directory: `/src/components`
   - `InventoryStockTable.jsx`: Filterable data table with quick `+5`/`+10` adjustment buttons and barcode input.
   - `StockKeypadModal.jsx`: Touch numeric pad for fast inventory quantity adjustment.
 - `CustomerDisplayView.jsx`: Real-time LCD customer-facing display.
-- `SalesHistoryView.jsx`: Streamlined sales ledger view dedicated 100% to receipt lookup, search, reprint, and refunds with full viewport height fitting 15–20 receipts on a single screen without vertical clutter. Decomposed into `/src/components/history/`:
+- `SalesHistoryView.jsx`: Streamlined sales ledger view dedicated 100% to receipt lookup, search, reprint, and refunds with a 2-pane Master-Detail layout. Decomposed into `/src/components/history/`:
+  - `ReceiptInspectorPanel.jsx`: Left pane displaying live thermal receipt paper preview with instant reprint and refund action triggers.
   - `SalesPeriodBar.jsx`: Preset chips (Today/Yesterday/Week/Month/Year/Custom), `< >` stepper navigation, and calendar triggers.
-  - `SalesLedgerTable.jsx`: Paginated receipt ledger table with search, document type filter, refund triggers, and pagination (default 15 rows/page).
+  - `SalesLedgerTable.jsx`: Paginated receipt ledger table with search, document type filter, refund triggers, active row highlight, and pagination (default 15 rows/page).
 - `AnalyticsView.jsx`: Dedicated top-level analytics dashboard tab with financial KPI cards, time period selector, CSV export, and visual chart breakdowns. Decomposed into `/src/components/history/`:
   - `SalesPeriodBar.jsx`: Period filters (Today, Yesterday, Week, Month, Year, Custom) with stepper navigation and calendar triggers.
   - `SalesAnalyticsCharts.jsx`: Visual POS dashboard featuring top 4 KPI cards (Gross, Netto/VAT, Receipts/AOV, Payments), Top 8 Best-Selling Products ranking (#1–#8 with volume bars), Hourly Rush-Hour chart (07:00–22:00 with peak rush highlight), visual multi-segment payment split bar (Cash vs Card vs QR), category sales volume bars, and official Czech VAT tax table (21%, 12%, 0%).
