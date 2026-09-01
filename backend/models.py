@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -10,7 +10,7 @@ class SaleModel(Base):
 
     id = Column(String, primary_key=True, index=True)
     receipt_number = Column(String, index=True, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     total_amount = Column(Float, nullable=False)
     cart_discount_percent = Column(Float, default=0.0)
     payment_method = Column(String, nullable=False)  # 'cash', 'card', 'qr', 'split'
@@ -30,8 +30,12 @@ class SaleModel(Base):
     is_refund = Column(Boolean, default=False)
     original_receipt_number = Column(String, nullable=True)
     refund_reason = Column(String, nullable=True)
-    refund_status = Column(String, default="NONE")    # 'NONE', 'PARTIAL', 'FULL'
+    refund_status = Column(String, default="NONE", index=True)    # 'NONE', 'PARTIAL', 'FULL'
     refunded_amount = Column(Float, default=0.0)
+
+    __table_args__ = (
+        Index("ix_sales_timestamp_payment_method", "timestamp", "payment_method"),
+    )
 
     items = relationship("SaleItemModel", back_populates="sale", cascade="all, delete-orphan")
 

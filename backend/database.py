@@ -94,6 +94,19 @@ def init_db_schema():
                                 logger.info(f"Auto-migrated missing column: {table_name}.{col.name} ({col_type})")
                             except Exception as e:
                                 logger.warning(f"Could not auto-migrate column {table_name}.{col.name}: {e}")
+
+            # Auto-create performance compound indexes if not present
+            indexes = [
+                "CREATE INDEX IF NOT EXISTS ix_sales_timestamp ON sales (timestamp)",
+                "CREATE INDEX IF NOT EXISTS ix_sales_timestamp_payment_method ON sales (timestamp, payment_method)",
+                "CREATE INDEX IF NOT EXISTS ix_sales_refund_status ON sales (refund_status)"
+            ]
+            for idx_stmt in indexes:
+                try:
+                    conn.execute(text(idx_stmt))
+                    conn.commit()
+                except Exception as e:
+                    logger.debug(f"Index creation note ({idx_stmt}): {e}")
     except Exception as e:
         logger.error(f"Error during dynamic DB schema migration: {e}")
 
