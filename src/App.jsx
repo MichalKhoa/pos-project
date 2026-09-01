@@ -32,6 +32,7 @@ import {
   openCashDrawerBackend
 } from './api/posApi';
 import SalesHistoryView from './components/SalesHistoryView';
+import AnalyticsView from './components/AnalyticsView';
 import PresetsCatalogView from './components/PresetsCatalogView';
 import InventoryView from './components/InventoryView';
 import SettingsView from './components/SettingsView';
@@ -933,6 +934,12 @@ export default function App() {
             onClearAllTestSales={handleClearAllTestSales}
             onInitiateRefund={setRefundTargetSale}
             initialDateFilter={historyDateFilter}
+          />
+        )}
+
+        {activeTab === 'analytics' && (
+          <AnalyticsView
+            salesHistory={salesHistory}
           />
         )}
 

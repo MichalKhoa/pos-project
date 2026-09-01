@@ -12,11 +12,12 @@ Directory: `/src/components`
   - `InventoryStockTable.jsx`: Filterable data table with quick `+5`/`+10` adjustment buttons and barcode input.
   - `StockKeypadModal.jsx`: Touch numeric pad for fast inventory quantity adjustment.
 - `CustomerDisplayView.jsx`: Real-time LCD customer-facing display.
-- `SalesHistoryView.jsx`: Sales ledger and statistical analytics view. Decomposed into modular domain subcomponents in `/src/components/history/`:
-  - `SalesMetricsCards.jsx`: KPI metric cards (Total, Cash, Card, Txn Count, AOV).
+- `SalesHistoryView.jsx`: Streamlined sales ledger view dedicated 100% to receipt lookup, search, reprint, and refunds with full viewport height fitting 15–20 receipts on a single screen without vertical clutter. Decomposed into `/src/components/history/`:
   - `SalesPeriodBar.jsx`: Preset chips (Today/Yesterday/Week/Month/Year/Custom), `< >` stepper navigation, and calendar triggers.
-  - `SalesAnalyticsCharts.jsx`: Tax rate breakdown, category sales share, and weekday sales distribution.
-  - `SalesLedgerTable.jsx`: Paginated receipt ledger table with search, document type filter, refund triggers, and pagination.
+  - `SalesLedgerTable.jsx`: Paginated receipt ledger table with search, document type filter, refund triggers, and pagination (default 15 rows/page).
+- `AnalyticsView.jsx`: Dedicated top-level analytics dashboard tab with financial KPI cards, time period selector, CSV export, and chart breakdowns. Decomposed into `/src/components/history/`:
+  - `SalesMetricsCards.jsx`: KPI metric cards (Total, Cash, Card, Txn Count, AOV).
+  - `SalesAnalyticsCharts.jsx`: Tax rate breakdown, payment method shares (cash/card/qr/other), category sales distribution, and weekday sales charts.
 - `SettingsView.jsx`: POS system configuration coordinator. Decomposed into modular domain subcomponents in `/src/components/settings/`:
   - `StoreProfileSection.jsx`: Store identification, address, IČO/DIČ, default VAT, IBAN, and high-legibility toggle.
   - `PrinterSection.jsx`: Thermal ESC/POS receipt printing (58mm vs 80mm), margin ruler test, auto-print toggles.
@@ -38,7 +39,7 @@ Directory: `/src/components`
   - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) and quick `±` sign toggle.
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
   - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
-- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation.
+- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
 
 ## Active Custom Hooks in `/src/hooks/`
 - `useCart.js`: Active shopping cart state, discounts, `updateItemDetails`, and item modifiers.

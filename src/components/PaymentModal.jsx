@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Banknote, CreditCard, QrCode, Split, Vault } from 'lucide-react';
+import { Banknote, CreditCard, QrCode, Split } from 'lucide-react';
+import CashDrawerIcon from './CashDrawerIcon';
 import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import CashPaymentPanel from './payment/CashPaymentPanel.jsx';
@@ -307,7 +308,7 @@ export default function PaymentModal({
                 onClick={onOpenCashDrawer}
                 title={t('cart.open_drawer') || 'Otevřít zásuvku'}
               >
-                <Vault size={16} style={{ flexShrink: 0 }} />
+                <CashDrawerIcon size={16} />
                 <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
               </button>
             )}

@@ -26,51 +26,52 @@ export default function SalesLedgerTable({
   const { t } = useTranslation();
 
   return (
-    <div className="table-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Receipt size={20} style={{ color: 'var(--accent-blue)' }} />
+    <div className="table-card" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+      <div style={{ padding: '0.45rem 0.75rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Receipt size={17} style={{ color: 'var(--accent-blue)' }} />
           <span>Seznam Vystavených Účtenek ({totalItems})</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Filter by document type */}
-          <div style={{ display: 'flex', gap: '0.3rem', background: 'var(--bg-input)', padding: '0.2rem', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ display: 'flex', gap: '0.2rem', background: 'var(--bg-input)', padding: '0.15rem', borderRadius: 'var(--radius-sm)' }}>
             <button
               className={`nav-tab ${docTypeFilter === 'all' ? 'active' : ''}`}
-              style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}
               onClick={() => setDocTypeFilter('all')}
             >
               {t('history.all_docs')}
             </button>
             <button
               className={`nav-tab ${docTypeFilter === 'sales' ? 'active' : ''}`}
-              style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}
               onClick={() => setDocTypeFilter('sales')}
             >
               {t('history.sales_only')}
             </button>
             <button
               className={`nav-tab ${docTypeFilter === 'refunds' ? 'active' : ''}`}
-              style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
               onClick={() => setDocTypeFilter('refunds')}
             >
               {t('history.refunds_only')}
             </button>
           </div>
 
-          <div className="keypad-input-container" style={{ width: '260px' }}>
-            <Search size={16} style={{ color: 'var(--text-muted)', marginRight: '8px' }} />
+          <div className="keypad-input-container" style={{ width: '200px', height: '32px', padding: '0 0.5rem' }}>
+            <Search size={14} style={{ color: 'var(--text-muted)', marginRight: '6px' }} />
             <input
               type="text"
               className="keypad-label-input"
+              style={{ fontSize: '0.82rem' }}
               placeholder={t('history.search_placeholder')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: '600' }}>
             <span>{t('history.per_page')}:</span>
             <select
               value={pageSize}
@@ -81,11 +82,12 @@ export default function SalesLedgerTable({
                 borderRadius: 'var(--radius-sm)',
                 color: 'var(--text-primary)',
                 fontWeight: '700',
-                padding: '0.35rem 0.6rem',
+                padding: '0.2rem 0.45rem',
+                fontSize: '0.8rem',
                 cursor: 'pointer'
               }}
             >
-              <option value={10} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>10 účtenek</option>
+              <option value={15} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>15 účtenek</option>
               <option value={25} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>25 účtenek</option>
               <option value={50} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>50 účtenek</option>
               <option value={100} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>100 účtenek</option>
@@ -183,13 +185,13 @@ export default function SalesLedgerTable({
                         {sale.totalAmount.toFixed(0)} Kč
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
                           {!isRefund && !isFullyRefunded && onInitiateRefund && (
                             <button
                               className="nav-tab"
                               style={{
-                                padding: '0.35rem 0.65rem',
-                                fontSize: '0.8rem',
+                                padding: '0.22rem 0.5rem',
+                                fontSize: '0.76rem',
                                 background: 'rgba(239, 68, 68, 0.1)',
                                 color: '#ef4444',
                                 borderColor: 'rgba(239, 68, 68, 0.3)',
@@ -199,7 +201,7 @@ export default function SalesLedgerTable({
                               onClick={() => onInitiateRefund(sale)}
                               title="Vystavit vratku / storno účtenky"
                             >
-                              <RotateCcw size={14} />
+                              <RotateCcw size={13} />
                               <span>Storno / Vratka</span>
                             </button>
                           )}
@@ -207,14 +209,14 @@ export default function SalesLedgerTable({
                           <button
                             className="nav-tab"
                             style={{
-                              padding: '0.35rem 0.65rem',
-                              fontSize: '0.8rem',
+                              padding: '0.22rem 0.5rem',
+                              fontSize: '0.76rem',
                               whiteSpace: 'nowrap',
                               fontWeight: '700'
                             }}
                             onClick={() => onSelectSale(normalizeSale(sale))}
                           >
-                            <Eye size={14} />
+                            <Eye size={13} />
                             <span>Detail / Tisk</span>
                           </button>
 
@@ -223,9 +225,9 @@ export default function SalesLedgerTable({
                               className="delete-item-btn"
                               onClick={() => onDeleteSale(sale.id)}
                               title="Smazat testovací prodej"
-                              style={{ padding: '0.35rem 0.5rem', whiteSpace: 'nowrap' }}
+                              style={{ padding: '0.22rem 0.4rem', whiteSpace: 'nowrap' }}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={14} />
                             </button>
                           )}
                         </div>
@@ -239,62 +241,62 @@ export default function SalesLedgerTable({
 
           {/* Full Pagination Controls Footer */}
           <div style={{
-            padding: '1rem 1.25rem',
+            padding: '0.4rem 0.85rem',
             borderTop: '1px solid var(--border-color)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: '1rem',
+            gap: '0.5rem',
             background: 'var(--bg-main)'
           }}>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Zobrazeno <strong>{startIndex + 1}–{endIndex}</strong> z <strong>{totalItems}</strong> účtenek
             </div>
 
-            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
               <button
                 className="nav-tab"
-                style={{ padding: '0.35rem 0.6rem' }}
+                style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === 1}
                 onClick={() => setCurrentPage(1)}
                 title="První stránka"
               >
-                <ChevronsLeft size={16} />
+                <ChevronsLeft size={14} />
               </button>
 
               <button
                 className="nav-tab"
-                style={{ padding: '0.35rem 0.6rem' }}
+                style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 title="Předchozí stránka"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={14} />
               </button>
 
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', padding: '0 0.5rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700', padding: '0 0.4rem' }}>
                 Stránka {validCurrentPage} z {totalPages}
               </span>
 
               <button
                 className="nav-tab"
-                style={{ padding: '0.35rem 0.6rem' }}
+                style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 title="Následující stránka"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={14} />
               </button>
 
               <button
                 className="nav-tab"
-                style={{ padding: '0.35rem 0.6rem' }}
+                style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === totalPages}
                 onClick={() => setCurrentPage(totalPages)}
                 title="Poslední stránka"
               >
-                <ChevronsRight size={16} />
+                <ChevronsRight size={14} />
               </button>
             </div>
           </div>

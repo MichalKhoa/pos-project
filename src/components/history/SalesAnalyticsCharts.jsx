@@ -94,23 +94,23 @@ export default function SalesAnalyticsCharts({
                 </tr>
               </thead>
               <tbody>
-                {Object.values(periodTaxSummary).map(tItem => (
+                {(periodTaxSummary ? Object.values(periodTaxSummary) : []).map(tItem => (
                   <tr key={tItem.rate}>
                     <td style={{ fontWeight: '700', textAlign: 'left' }}>{tItem.rate}%</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{tItem.net.toFixed(2)} Kč</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(tItem.net || 0).toFixed(2)} Kč</td>
                     <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', fontWeight: '700', textAlign: 'right' }}>
-                      {tItem.tax.toFixed(2)} Kč
+                      {(tItem.tax || 0).toFixed(2)} Kč
                     </td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', color: 'var(--accent-emerald)', textAlign: 'right' }}>
-                      {tItem.gross.toFixed(2)} Kč
+                      {(tItem.gross || 0).toFixed(2)} Kč
                     </td>
                   </tr>
                 ))}
                 <tr style={{ borderTop: '2px solid var(--border-color)', fontWeight: '800' }}>
                   <td style={{ textAlign: 'left' }}>CELKEM</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{totalNetto.toFixed(2)} Kč</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', textAlign: 'right' }}>{totalVat.toFixed(2)} Kč</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', textAlign: 'right' }}>{totalRevenue.toFixed(2)} Kč</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(totalNetto || 0).toFixed(2)} Kč</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', textAlign: 'right' }}>{(totalVat || 0).toFixed(2)} Kč</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', textAlign: 'right' }}>{(totalRevenue || 0).toFixed(2)} Kč</td>
                 </tr>
               </tbody>
             </table>
@@ -182,48 +182,48 @@ export default function SalesAnalyticsCharts({
                   <td style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', textAlign: 'left' }}>
                     <Banknote size={15} style={{ color: 'var(--accent-blue)' }} /> {t('payment.cash')}
                   </td>
-                  <td style={{ textAlign: 'right' }}>{paymentMethodSummary.cash.count} ks</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{paymentMethodSummary.cash.aov.toFixed(0)} Kč</td>
+                  <td style={{ textAlign: 'right' }}>{paymentMethodSummary?.cash?.count || 0} ks</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(paymentMethodSummary?.cash?.aov || 0).toFixed(0)} Kč</td>
                   <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right' }}>
-                    {paymentMethodSummary.cash.total.toFixed(0)} Kč
+                    {(paymentMethodSummary?.cash?.total || 0).toFixed(0)} Kč
                   </td>
                   <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>
-                    {totalRevenue > 0 ? ((paymentMethodSummary.cash.total / totalRevenue) * 100).toFixed(1) : '0.0'}%
+                    {totalRevenue > 0 ? (((paymentMethodSummary?.cash?.total || 0) / totalRevenue) * 100).toFixed(1) : '0.0'}%
                   </td>
                 </tr>
                 <tr>
                   <td style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', textAlign: 'left' }}>
                     <CreditCard size={15} style={{ color: 'var(--accent-purple)' }} /> {t('payment.card')}
                   </td>
-                  <td style={{ textAlign: 'right' }}>{paymentMethodSummary.card.count} ks</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{paymentMethodSummary.card.aov.toFixed(0)} Kč</td>
+                  <td style={{ textAlign: 'right' }}>{paymentMethodSummary?.card?.count || 0} ks</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(paymentMethodSummary?.card?.aov || 0).toFixed(0)} Kč</td>
                   <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right' }}>
-                    {paymentMethodSummary.card.total.toFixed(0)} Kč
+                    {(paymentMethodSummary?.card?.total || 0).toFixed(0)} Kč
                   </td>
                   <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>
-                    {totalRevenue > 0 ? ((paymentMethodSummary.card.total / totalRevenue) * 100).toFixed(1) : '0.0'}%
+                    {totalRevenue > 0 ? (((paymentMethodSummary?.card?.total || 0) / totalRevenue) * 100).toFixed(1) : '0.0'}%
                   </td>
                 </tr>
                 <tr>
                   <td style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', textAlign: 'left' }}>
                     <Receipt size={15} style={{ color: 'var(--accent-amber)' }} /> {t('payment.qr')}
                   </td>
-                  <td style={{ textAlign: 'right' }}>{paymentMethodSummary.qr.count} ks</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{paymentMethodSummary.qr.aov.toFixed(0)} Kč</td>
+                  <td style={{ textAlign: 'right' }}>{paymentMethodSummary?.qr?.count || 0} ks</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(paymentMethodSummary?.qr?.aov || 0).toFixed(0)} Kč</td>
                   <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right' }}>
-                    {paymentMethodSummary.qr.total.toFixed(0)} Kč
+                    {(paymentMethodSummary?.qr?.total || 0).toFixed(0)} Kč
                   </td>
                   <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>
-                    {totalRevenue > 0 ? ((paymentMethodSummary.qr.total / totalRevenue) * 100).toFixed(1) : '0.0'}%
+                    {totalRevenue > 0 ? (((paymentMethodSummary?.qr?.total || 0) / totalRevenue) * 100).toFixed(1) : '0.0'}%
                   </td>
                 </tr>
-                {paymentMethodSummary.other?.count > 0 && (
+                {paymentMethodSummary?.other?.count > 0 && (
                   <tr>
                     <td style={{ fontWeight: '700', textAlign: 'left' }}>{t('history.payment_other')}</td>
                     <td style={{ textAlign: 'right' }}>{paymentMethodSummary.other.count} ks</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{paymentMethodSummary.other.aov.toFixed(0)} Kč</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(paymentMethodSummary.other.aov || 0).toFixed(0)} Kč</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right' }}>
-                      {paymentMethodSummary.other.total.toFixed(0)} Kč
+                      {(paymentMethodSummary.other.total || 0).toFixed(0)} Kč
                     </td>
                     <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>
                       {totalRevenue > 0 ? ((paymentMethodSummary.other.total / totalRevenue) * 100).toFixed(1) : '0.0'}%

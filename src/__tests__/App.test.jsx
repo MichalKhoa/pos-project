@@ -67,6 +67,7 @@ describe('App Shell & Navigation Regression Tests', () => {
     expect(screen.getAllByRole('button', { name: /Katalog/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole('button', { name: /Sklad/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole('button', { name: /Historie/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('button', { name: /Analytika/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole('button', { name: /Nastavení/i }).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -93,6 +94,13 @@ describe('App Shell & Navigation Regression Tests', () => {
 
     // Verify history view elements render
     expect(await screen.findByPlaceholderText(/Hledat č\. účtenky/i)).toBeInTheDocument();
+
+    // Click Analytika tab
+    const analyticsTabs = screen.getAllByRole('button', { name: /Analytika/i });
+    fireEvent.click(analyticsTabs[0]);
+
+    // Verify analytics view elements render
+    expect(await screen.findByText(/Rozpis DPH/i)).toBeInTheDocument();
 
     // Click Nastavení tab
     const settingsTabs = screen.getAllByRole('button', { name: /Nastavení/i });

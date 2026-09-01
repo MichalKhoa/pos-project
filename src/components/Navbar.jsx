@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X, Vault } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3 } from 'lucide-react';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
+import CashDrawerIcon from './CashDrawerIcon';
 import { soundFx } from '../utils/audio';
 
 export default function Navbar({
@@ -117,6 +118,14 @@ export default function Navbar({
         </button>
 
         <button
+          className={`nav-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <BarChart3 size={18} />
+          <span>{t('nav.analytics') || 'Analytika'}</span>
+        </button>
+
+        <button
           className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
         >
@@ -176,6 +185,15 @@ export default function Navbar({
               >
                 <History size={18} />
                 <span>{t('nav.history')}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('analytics')}
+              >
+                <BarChart3 size={18} />
+                <span>{t('nav.analytics') || 'Analytika'}</span>
               </button>
 
               <button
@@ -256,7 +274,7 @@ export default function Navbar({
               color: 'var(--accent-emerald)'
             }}
           >
-            <Vault size={16} style={{ color: 'var(--accent-emerald)' }} />
+            <CashDrawerIcon size={16} color="var(--accent-emerald)" />
           </button>
 
           {/* Streamlined Quick Lock Icon Button */}

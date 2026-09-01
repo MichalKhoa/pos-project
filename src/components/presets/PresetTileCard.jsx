@@ -197,13 +197,7 @@ export default function PresetTileCard({
 
       <div className="preset-price-tag">
         <span className="preset-price">
-          {preset.price === 0 || !preset.price ? (
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber)', fontWeight: '800' }}>
-              {t('presets.open_price_badge') || 'Volná cena'}
-            </span>
-          ) : (
-            `${preset.price} Kč`
-          )}
+          {preset.price > 0 ? `${preset.price} Kč` : ''}
         </span>
         {preset.vat !== undefined && (
           <span className="preset-vat-badge">{preset.vat}%</span>

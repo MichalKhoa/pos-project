@@ -19,24 +19,24 @@ export default function SalesPeriodBar({
   const { t } = useTranslation();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
       {/* Preset Filter Chips & Stepper */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '0.75rem',
+        gap: '0.45rem',
         background: 'var(--bg-card)',
-        padding: '0.65rem 1rem',
-        borderRadius: 'var(--radius-lg)',
+        padding: '0.35rem 0.65rem',
+        borderRadius: 'var(--radius-md)',
         border: '1px solid var(--border-color)'
       }}>
         {/* Chips row */}
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             className={`nav-tab ${periodFilter === 'today' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('today')}
           >
             {t('history.period_today')}
@@ -44,7 +44,7 @@ export default function SalesPeriodBar({
 
           <button
             className={`nav-tab ${periodFilter === 'yesterday' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('yesterday')}
           >
             {t('history.period_yesterday')}
@@ -52,7 +52,7 @@ export default function SalesPeriodBar({
 
           <button
             className={`nav-tab ${periodFilter === 'week' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('week')}
           >
             {t('history.period_week')}
@@ -60,7 +60,7 @@ export default function SalesPeriodBar({
 
           <button
             className={`nav-tab ${periodFilter === 'month' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('month')}
           >
             {t('history.period_month')}
@@ -68,7 +68,7 @@ export default function SalesPeriodBar({
 
           <button
             className={`nav-tab ${periodFilter === 'year' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('year')}
           >
             {t('history.period_year')}
@@ -76,7 +76,7 @@ export default function SalesPeriodBar({
 
           <button
             className={`nav-tab ${periodFilter === 'all' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('all')}
           >
             {t('history.all_period')}
@@ -84,44 +84,44 @@ export default function SalesPeriodBar({
 
           <button
             className={`nav-tab ${periodFilter === 'custom' ? 'active' : ''}`}
-            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
             onClick={() => onSelectPreset('custom')}
           >
-            <Filter size={14} />
+            <Filter size={13} />
             <span>{t('history.custom_date')}</span>
           </button>
         </div>
 
         {/* Stepper Controls (‹ Date Badge ›) */}
         {periodFilter !== 'all' && periodFilter !== 'custom' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-input)', padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'var(--bg-input)', padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
             <button
               className="nav-tab"
-              style={{ padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-sm)' }}
+              style={{ padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-sm)' }}
               onClick={() => onStepPeriod('prev')}
               title={t('history.prev_period')}
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
 
             <div
-              style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0 0.5rem', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0 0.35rem', cursor: 'pointer' }}
               onClick={() => onOpenCalendar('reference')}
               title="Přejít na přesné datum v kalendáři"
             >
-              <Calendar size={16} style={{ color: 'var(--accent-emerald)' }} />
-              <span style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+              <Calendar size={14} style={{ color: 'var(--accent-emerald)' }} />
+              <span style={{ fontWeight: '800', fontSize: '0.82rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                 {periodBadgeLabel}
               </span>
             </div>
 
             <button
               className="nav-tab"
-              style={{ padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-sm)' }}
+              style={{ padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-sm)' }}
               onClick={() => onStepPeriod('next')}
               title={t('history.next_period')}
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
           </div>
         )}
@@ -131,17 +131,16 @@ export default function SalesPeriodBar({
       {periodFilter === 'custom' && (
         <div style={{
           background: 'var(--bg-card)',
-          padding: '0.85rem 1.25rem',
-          borderRadius: 'var(--radius-lg)',
+          padding: '0.45rem 0.75rem',
+          borderRadius: 'var(--radius-md)',
           border: '1px solid var(--accent-blue)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '1rem',
-          boxShadow: 'var(--shadow-md)'
+          gap: '0.5rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button
               type="button"
               className="primary-btn"

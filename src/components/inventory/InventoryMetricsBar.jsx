@@ -22,8 +22,8 @@ export default function InventoryMetricsBar({
             <Package size={22} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">{t('inventory.total_items')}</span>
-            <span className="metric-value">{totalTrackedCount} položek</span>
+            <span className="metric-label">{t('inventory.total_items') || 'Sledované položky'}</span>
+            <span className="metric-value">{totalTrackedCount} {t('inventory.items_unit') || 'položek'}</span>
           </div>
         </div>
 
@@ -32,7 +32,7 @@ export default function InventoryMetricsBar({
             <TrendingUp size={22} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">Hodnota Skladu (v prodejních cenách)</span>
+            <span className="metric-label">{t('inventory.valuation') || 'Hodnota Skladu (v prodejních cenách)'}</span>
             <span className="metric-value" style={{ color: 'var(--accent-emerald)' }}>
               {totalValuation.toLocaleString('cs-CZ')} Kč
             </span>
@@ -44,9 +44,9 @@ export default function InventoryMetricsBar({
             <AlertTriangle size={22} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">{t('inventory.low_stock')}</span>
+            <span className="metric-label">{t('inventory.low_stock') || 'Nízké zásoby (Min)'}</span>
             <span className="metric-value" style={{ color: lowStockCount > 0 ? 'var(--accent-amber)' : 'inherit' }}>
-              {lowStockCount} položek
+              {lowStockCount} {t('inventory.items_unit') || 'položek'}
             </span>
           </div>
         </div>
@@ -56,9 +56,9 @@ export default function InventoryMetricsBar({
             <ShieldAlert size={22} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">{t('inventory.out_of_stock')}</span>
+            <span className="metric-label">{t('inventory.out_of_stock') || 'Vyprodáno (≤ 0)'}</span>
             <span className="metric-value" style={{ color: outOfStockCount > 0 ? 'var(--accent-rose)' : 'inherit' }}>
-              {outOfStockCount} položek
+              {outOfStockCount} {t('inventory.items_unit') || 'položek'}
             </span>
           </div>
         </div>
@@ -67,8 +67,8 @@ export default function InventoryMetricsBar({
       {/* Visual Stock Health Multi-Color Progress Bar */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)' }}>
-          <span>Zdraví skladu</span>
-          <span>{healthyStockCount} v pořádku • {lowStockCount - outOfStockCount} dochází • {outOfStockCount} vyprodáno</span>
+          <span>{t('inventory.stock_health') || 'Zdraví skladu'}</span>
+          <span>{healthyStockCount} {t('inventory.in_stock') || 'v pořádku'} • {lowStockCount - outOfStockCount} {t('inventory.running_low') || 'dochází'} • {outOfStockCount} {t('inventory.sold_out') || 'vyprodáno'}</span>
         </div>
         <div style={{ display: 'flex', height: '8px', borderRadius: '4px', overflow: 'hidden', background: 'var(--bg-input)' }}>
           <div style={{ width: `${healthyPct}%`, background: 'var(--accent-emerald)', transition: 'width 0.3s' }} title={`V pořádku: ${healthyPct.toFixed(0)}%`} />
