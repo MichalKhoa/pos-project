@@ -33,9 +33,11 @@ Directory: `/src/components`
   - `OpenPriceModal.jsx`: Numeric touch popover for open-price items and return items.
   - `src/hooks/usePresetDragDrop.js`: Drag-and-drop tile reordering and keyboard arrow shifting.
 - `ManualKeypad.jsx`: Touch numeric pad coordinator with `touch-action: manipulation` zero-delay keys. Decomposed into `/src/components/keypad/`:
-  - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid, quick multiplier (`×N`), and custom product insertion.
-  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) and refund sign toggle (`± Vratka`).
+  - `KeypadStepperBar.jsx`: Touch quantity stepper (`[-1 ks]`, Multiplier Display / Reset, `[+1 ks]`). Decreasing below 1 activates return mode (`-1×`, `-2×`).
+  - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), and custom product/return insertion button.
+  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) and quick `±` sign toggle.
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
+  - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
 - `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation.
 
 ## Active Custom Hooks in `/src/hooks/`

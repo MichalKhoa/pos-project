@@ -48,12 +48,21 @@ export const translations = {
       no_discount: "Bez slevy",
       close: "Zavřít"
     },
+    shift_stats: {
+      title: "Dnešní směna (Přehled)",
+      receipts: "účtenek",
+      today_revenue: "Dnešní tržba celkem",
+      cash: "Hotovost",
+      card: "Kartou",
+      view_history: "Zobrazit dnešní účtenky"
+    },
     keypad: {
       manual_title: "Ruční Zadání Částky",
       item_placeholder: "Název / popis položky (volitelné)...",
       amount_label: "Částka k úhradě",
       ready: "Připraveno",
       add_to_cart: "Přidat do Košíku",
+      add_return_item: "↩️ Vložit Vratku Zboží",
       enter_amount: "Zadejte Částku",
       cancel_multiplier: "Zrušit",
       quick_count: "Rychlé množství",
@@ -428,12 +437,21 @@ export const translations = {
       no_discount: "Không giảm",
       close: "Đóng"
     },
+    shift_stats: {
+      title: "Ca hôm nay (Tổng quan)",
+      receipts: "hóa đơn",
+      today_revenue: "Doanh thu hôm nay",
+      cash: "Tiền mặt",
+      card: "Thẻ",
+      view_history: "Xem hóa đơn hôm nay"
+    },
     keypad: {
       manual_title: "Nhập Số Tiền Thủ Công",
       item_placeholder: "Tên / mô tả sản phẩm (tùy chọn)...",
       amount_label: "Số tiền cần thanh toán",
       ready: "Sẵn sàng",
       add_to_cart: "Thêm Vào Giỏ Hàng",
+      add_return_item: "↩️ Thêm Hàng Trả Lại",
       enter_amount: "Nhập Số Tiền",
       cancel_multiplier: "Hủy",
       quick_count: "Số lượng nhanh",
@@ -809,12 +827,21 @@ export const translations = {
       no_discount: "No disc.",
       close: "Close"
     },
+    shift_stats: {
+      title: "Today's Shift (Summary)",
+      receipts: "receipts",
+      today_revenue: "Today's Total Revenue",
+      cash: "Cash",
+      card: "Card",
+      view_history: "View today's receipts"
+    },
     keypad: {
       manual_title: "Manual Amount Entry",
       item_placeholder: "Item name / description (optional)...",
       amount_label: "Amount Due",
       ready: "Ready",
       add_to_cart: "Add to Cart",
+      add_return_item: "↩️ Insert Item Return",
       enter_amount: "Enter Amount",
       cancel_multiplier: "Cancel",
       quick_count: "Quick Quantity",

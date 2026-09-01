@@ -14,7 +14,7 @@ export default function KeypadVatSelector({
           type="button"
           className={`vat-btn vat-${rate} ${selectedVat === rate ? 'active' : ''}`}
           onClick={() => setSelectedVat(rate)}
-          style={{ flex: 1, padding: '0.25rem 0', fontSize: '0.8rem' }}
+          style={{ flex: 1, padding: '0.35rem 0', fontSize: '0.82rem', height: '36px' }}
         >
           DPH {rate}%
         </button>
@@ -24,17 +24,18 @@ export default function KeypadVatSelector({
         className={`vat-btn ${amountStr.startsWith('-') ? 'active' : ''}`}
         onClick={() => onKeyPress('±')}
         style={{
-          flex: 1.1,
-          padding: '0.25rem 0',
-          fontSize: '0.8rem',
+          flex: 0.8,
+          height: '36px',
+          padding: '0.35rem 0',
+          fontSize: '1rem',
           fontWeight: '900',
-          background: amountStr.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.12)',
+          background: amountStr.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.1)',
           color: amountStr.startsWith('-') ? '#ffffff' : 'var(--accent-rose)',
-          border: '1px solid rgba(239, 68, 68, 0.4)'
+          border: '1.5px solid rgba(239, 68, 68, 0.4)'
         }}
-        title="Změnit znaménko / Označit jako vratku zboží"
+        title="Změnit znaménko (±)"
       >
-        ± Vratka
+        ±
       </button>
     </div>
   );

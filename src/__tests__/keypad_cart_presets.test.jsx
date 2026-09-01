@@ -67,7 +67,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       }));
     });
 
-    it('toggles ± Vratka for negative return sale', () => {
+    it('toggles ± for negative return sale', () => {
       const onAddToCart = vi.fn();
       wrapWithLanguage(
         <ManualKeypadHarness
@@ -81,16 +81,44 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(screen.getByRole('button', { name: '0' }));
       fireEvent.click(screen.getByRole('button', { name: '0' }));
 
-      // Click ± Vratka button
-      const vratkaBtn = screen.getByRole('button', { name: /± Vratka/i });
-      fireEvent.click(vratkaBtn);
+      // Click ± button
+      const plusMinusBtn = screen.getAllByRole('button', { name: '±' })[0];
+      fireEvent.click(plusMinusBtn);
 
-      // Click Add to Cart
-      const addBtn = screen.getByRole('button', { name: /Přidat do Košíku/i });
+      // Click Add to Cart / Return button
+      const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });
       fireEvent.click(addBtn);
 
       expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
         price: -200
+      }));
+    });
+
+    it('steps multiplier down to negative for return item', () => {
+      const onAddToCart = vi.fn();
+      wrapWithLanguage(
+        <ManualKeypadHarness
+          onAddToCart={onAddToCart}
+          defaultVat={21}
+        />
+      );
+
+      // Type 100
+      fireEvent.click(screen.getByRole('button', { name: '1' }));
+      fireEvent.click(screen.getByRole('button', { name: '0' }));
+      fireEvent.click(screen.getByRole('button', { name: '0' }));
+
+      // Step down multiplier from 1 to -1
+      const stepDownBtn = screen.getByRole('button', { name: /-1 ks/i });
+      fireEvent.click(stepDownBtn);
+
+      // Click Add button
+      const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });
+      fireEvent.click(addBtn);
+
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
+        price: -100,
+        quantity: 1
       }));
     });
   });

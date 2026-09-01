@@ -820,6 +820,11 @@ export default function App() {
                   onRestoreParkedCart={restoreParkedCart}
                   onDeleteParkedCart={deleteParkedCart}
                   hasCartItems={cartItems.length > 0}
+                  salesHistory={salesHistory}
+                  onNavigateToHistory={(dateStr) => {
+                    setHistoryDateFilter(dateStr);
+                    setActiveTab('history');
+                  }}
                 />
               </div>
 

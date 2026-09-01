@@ -3,7 +3,9 @@ import { Calculator } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
 import KeypadVatSelector from './keypad/KeypadVatSelector';
+import KeypadStepperBar from './keypad/KeypadStepperBar';
 import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
+import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -16,7 +18,9 @@ export default function ManualKeypad({
   onParkCart,
   onRestoreParkedCart,
   onDeleteParkedCart,
-  hasCartItems = false
+  hasCartItems = false,
+  salesHistory = [],
+  onNavigateToHistory
 }) {
   const { t } = useTranslation();
   const [label, setLabel] = useState('');
@@ -79,13 +83,16 @@ export default function ManualKeypad({
     const numericAmount = parseFloat(amountStr);
     if (isNaN(numericAmount) || numericAmount === 0) return;
 
-    const isReturn = numericAmount < 0;
+    const isReturn = numericAmount < 0 || (itemMultiplier && itemMultiplier < 0);
+    const qty = Math.abs(itemMultiplier || 1);
+    const unitPrice = (itemMultiplier < 0 ? -Math.abs(numericAmount) : numericAmount);
+
     onAddToCart({
       id: `custom-${Date.now()}`,
       name: label.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
-      price: numericAmount,
+      price: unitPrice,
       vat: selectedVat,
-      quantity: itemMultiplier || 1,
+      quantity: qty,
       isCustom: true
     });
 
@@ -126,7 +133,7 @@ export default function ManualKeypad({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amountStr, label, selectedVat]);
+  }, [amountStr, label, selectedVat, itemMultiplier]);
 
   const hasValidAmount = !isNaN(parseFloat(amountStr)) && parseFloat(amountStr) !== 0;
 
@@ -174,16 +181,24 @@ export default function ManualKeypad({
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'stretch',
             padding: '0.4rem 0.75rem', flexShrink: 0, borderRadius: '10px',
-            border: itemMultiplier > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)',
-            background: itemMultiplier > 1 ? 'rgba(245,158,11,0.04)' : 'var(--bg-input)',
-            boxShadow: itemMultiplier > 1 ? '0 0 14px rgba(245,158,11,0.2)' : 'none',
+            border: itemMultiplier < 0
+              ? '2px solid var(--accent-rose)'
+              : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)'),
+            background: itemMultiplier < 0
+              ? 'rgba(239,68,68,0.06)'
+              : (itemMultiplier > 1 ? 'rgba(245,158,11,0.04)' : 'var(--bg-input)'),
+            boxShadow: itemMultiplier < 0
+              ? '0 0 14px rgba(239,68,68,0.2)'
+              : (itemMultiplier > 1 ? '0 0 14px rgba(245,158,11,0.2)' : 'none'),
             transition: 'all 0.2s ease'
           }}
         >
           <span style={{
             fontSize: '0.63rem', fontWeight: '800', textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            color: itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)'
+            color: itemMultiplier < 0
+              ? 'var(--accent-rose)'
+              : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
           }}>
             {t('keypad.amount_label')}
           </span>
@@ -214,12 +229,20 @@ export default function ManualKeypad({
           )}
         </div>
 
-        {/* ── VAT selector & Return Sign Toggle (Subcomponent) ── */}
+        {/* ── VAT selector & Sign Toggle (Subcomponent) ── */}
         <KeypadVatSelector
           selectedVat={selectedVat}
           setSelectedVat={setSelectedVat}
           amountStr={amountStr}
           onKeyPress={handleKeyPress}
+        />
+
+        {/* ── Quantity Stepper Bar (New Subcomponent) ── */}
+        <KeypadStepperBar
+          itemMultiplier={itemMultiplier}
+          setItemMultiplier={setItemMultiplier}
+          triggerKeyAnimation={triggerKeyAnimation}
+          activeKey={activeKey}
         />
 
         {/* ── Number grid (Subcomponent) ── */}
@@ -236,13 +259,19 @@ export default function ManualKeypad({
         />
       </div>
 
-      {/* ── CARD 2: STANDALONE HOLD / PARK CART STORAGE CARD (Subcomponent) ── */}
+      {/* ── CARD 2: STANDALONE HOLD / PARK CART STORAGE CARD ─────── */}
       <ParkedCartsDrawer
         hasCartItems={hasCartItems}
         parkedCarts={parkedCarts}
         onParkCart={onParkCart}
         onRestoreParkedCart={onRestoreParkedCart}
         onDeleteParkedCart={onDeleteParkedCart}
+      />
+
+      {/* ── CARD 3: SHIFT QUICK STATS MINI-WIDGET (Option D) ─────── */}
+      <ShiftStatsWidget
+        salesHistory={salesHistory}
+        onNavigateToHistory={onNavigateToHistory}
       />
     </div>
   );

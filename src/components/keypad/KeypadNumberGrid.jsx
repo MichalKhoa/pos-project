@@ -76,7 +76,7 @@ export default function KeypadNumberGrid({
         ,
       </button>
 
-      {/* Row 4: 0  00  +1ks  × */}
+      {/* Row 4: 0  00  ±  × */}
       <button
         type="button"
         className={`key-btn ${activeKey === '0' ? 'active-press' : ''}`}
@@ -92,24 +92,19 @@ export default function KeypadNumberGrid({
         00
       </button>
 
-      {/* +1 ks — green quick-add */}
+      {/* ± quick sign toggle */}
       <button
         type="button"
-        className={`key-btn ${activeKey === 'INC_QTY' ? 'active-press' : ''}`}
-        onClick={() => {
-          triggerKeyAnimation('INC_QTY');
-          if (setItemMultiplier) setItemMultiplier(prev => (prev || 1) + 1);
-        }}
+        className={`key-btn ${activeKey === 'PLUSMINUS' || activeKey === '±' ? 'active-press' : ''}`}
+        onClick={() => onKeyPress('±')}
         style={{
-          background: 'linear-gradient(135deg,#10b981 0%,#059669 100%)',
-          color: '#fff',
+          color: amountStr.startsWith('-') || itemMultiplier < 0 ? 'var(--accent-rose)' : 'var(--text-primary)',
           fontWeight: '900',
-          fontSize: '0.9rem',
-          border: 'none'
+          fontSize: '1.25rem'
         }}
-        title="+1 ks"
+        title="Změnit znaménko (±)"
       >
-        +1 ks
+        ±
       </button>
 
       {/* × multiplier */}
@@ -146,12 +141,30 @@ export default function KeypadNumberGrid({
       <button
         type="button"
         className={`key-btn key-enter ${hasValidAmount ? 'key-enter-active' : ''} ${activeKey === 'ENTER' ? 'active-press' : ''}`}
-        style={{ gridColumn: 'span 4', minHeight: '46px' }}
+        style={{
+          gridColumn: 'span 4',
+          minHeight: '48px',
+          background: (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)) && hasValidAmount
+            ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+            : undefined,
+          borderColor: (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)) && hasValidAmount
+            ? '#ef4444'
+            : undefined,
+          boxShadow: (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)) && hasValidAmount
+            ? '0 4px 14px rgba(239, 68, 68, 0.35)'
+            : undefined
+        }}
         onClick={onAddCustomItem}
         disabled={!hasValidAmount}
       >
         <PlusCircle size={20} />
-        <span>{hasValidAmount ? t('keypad.add_to_cart') : t('keypad.enter_amount')}</span>
+        <span>
+          {!hasValidAmount
+            ? t('keypad.enter_amount')
+            : (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)
+                ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
+                : t('keypad.add_to_cart'))}
+        </span>
       </button>
     </div>
   );
