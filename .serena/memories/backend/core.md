@@ -3,12 +3,12 @@
 Python FastAPI backend structure located in `/backend`.
 
 ## Core Files
-- [main.py](file:///home/misko/Documents/pos-eet-himmel/backend/main.py): Application entry point, CORS middleware, router registration, database table auto-creation.
-- [database.py](file:///home/misko/Documents/pos-eet-himmel/backend/database.py): SQLAlchemy engine, session maker (`SessionLocal`), and `get_db()` dependency.
-- [models.py](file:///home/misko/Documents/pos-eet-himmel/backend/models.py): Database tables (`SaleModel`, `SaleItemModel`, `StoreConfigModel`, `CatalogPresetModel`).
+- `main.py`: Application entry point with modern `lifespan` context manager, CORS middleware, router registration, database table auto-creation, and graceful shutdown signal handling for WAL checkpoints and automated backups.
+- `database.py`: SQLAlchemy engine (SQLite WAL mode, `PRAGMA busy_timeout=15000`, `foreign_keys=ON`), session maker (`SessionLocal`), dynamic column and index auto-migrations (`init_db_schema()`), and `get_db()` dependency.
+- `models.py`: Database tables (`SaleModel` with compound indexes on `timestamp` and `payment_method`, `SaleItemModel`, `StoreConfigModel`, `PresetModel`, `ReceiptSequenceModel`).
 
 ## Routers (`/backend/routers`)
-- `sales.py`: Transaction creation, retrieval with date filters, admin deletion, EET resend, refund status updates.
+- `sales.py`: Transaction creation with thread-safe `BoundedTTLIdempotencyCache`, paginated sales history retrieval with date and payment method filtering (`X-Total-Count` header), admin deletion, EET signing, and refund status updates.
 - `config.py`: Store configuration GET/POST API endpoints (`/api/v1/config`) for full SQLite database persistence.
 - `printer.py`: Hardware device discovery (`/api/v1/printer/devices`) and ESC/POS thermal print triggers.
 - `eet.py`: Certificate validation, status check, manual payload test, PKCS#12 upload.
@@ -20,4 +20,5 @@ Python FastAPI backend structure located in `/backend`.
 ## Services (`/backend/services`)
 - Security & Cryptography: `security_utils.py` (Fernet password encryption, timezone-aware ISO parser, `Decimal` currency rounding).
 - Czech EET 2.0 signing and SOAP transmission: `mem:backend/eet`
-- ESC/POS printing, hardware discovery, QR payment generation, WS customer display: `mem:backend/hardware`
+- ESC/POS printing: `escpos_service.py` with `_hardware_printer_lock` (`threading.RLock`) for thread-safe serialized printing and cash drawer kicks.
+- Hardware discovery, QR payment generation, WS customer display: `mem:backend/hardware`
