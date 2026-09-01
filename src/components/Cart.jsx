@@ -3,6 +3,7 @@ import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
+import CartItemInspector from './cart/CartItemInspector';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
   const [progress, setProgress] = useState(100);
@@ -54,6 +55,7 @@ function ClearedCartBanner({ snapshot, onRestore }) {
 export default function Cart({
   cartItems,
   onUpdateQty,
+  onUpdateItemDetails,
   onRemoveItem,
   onClearCart,
   onOpenPayment,
@@ -65,6 +67,7 @@ export default function Cart({
   onOpenCashDrawer = null
 }) {
   const { t } = useTranslation();
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   const {
     cartDiscountAmount,
@@ -80,8 +83,25 @@ export default function Cart({
     return cartItems.reduce((sum, i) => sum + i.quantity, 0);
   }, [cartItems]);
 
+  const activeItem = useMemo(() => {
+    return cartItems.find(i => i.id === selectedItemId) || null;
+  }, [cartItems, selectedItemId]);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+      {/* Active Cart Item Overlap Inspector */}
+      {activeItem && (
+        <CartItemInspector
+          item={activeItem}
+          onClose={() => setSelectedItemId(null)}
+          onUpdateDetails={onUpdateItemDetails || onUpdateQty}
+          onRemoveItem={(id) => {
+            onRemoveItem(id);
+            setSelectedItemId(null);
+          }}
+        />
+      )}
+
       {/* Cart Header */}
       <div className="cart-header" style={{ gap: '0.75rem' }}>
         <div className="cart-title" style={{ flexShrink: 1, minWidth: 0, gap: '0.4rem' }}>
@@ -123,7 +143,10 @@ export default function Cart({
                 type="button"
                 className="clear-cart-btn"
                 style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
-                onClick={onClearCart}
+                onClick={() => {
+                  setSelectedItemId(null);
+                  onClearCart();
+                }}
                 title={t('cart.clear')}
               >
                 <Trash2 size={13} />
@@ -161,12 +184,22 @@ export default function Cart({
             const effectiveUnitPrice = item.price * (1 - itemDisc / 100);
             const lineTotal = effectiveUnitPrice * item.quantity;
             const isItemReturn = item.price < 0 || lineTotal < 0;
+            const isSelected = selectedItemId === item.id;
 
             return (
-              <div key={`${item.id}-${index}`} className="cart-item-card" style={{ borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined, background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined }}>
-                {/* Row 1 Top: Item Name & Action Buttons (%, Qty Stepper, Delete) */}
+              <div
+                key={`${item.id}-${index}`}
+                className={`cart-item-card ${isSelected ? 'is-active' : ''}`}
+                style={{
+                  borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined,
+                  background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined
+                }}
+                onClick={() => setSelectedItemId(prev => prev === item.id ? null : item.id)}
+                title="Kliknutím upravíte množství, slevu nebo poznámku"
+              >
+                {/* Row 1 Top: Item Name & Action Buttons (Qty Stepper, Delete) */}
                 <div className="cart-item-row-top">
-                  <div className="cart-item-name-group">
+                  <div className="cart-item-name-group" style={{ flexWrap: 'wrap' }}>
                     <span className="cart-item-name-text">
                       {isItemReturn && (
                         <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '900', marginRight: '5px' }}>
@@ -178,31 +211,51 @@ export default function Cart({
                     {itemDisc > 0 && (
                       <span className="cart-item-disc-tag">-{itemDisc}%</span>
                     )}
+                    {item.note && (
+                      <span className="cart-item-note-badge" title={item.note}>
+                        📝 {item.note}
+                      </span>
+                    )}
                   </div>
 
                   <div className="cart-item-controls-group">
-                    {/* Open Custom Discount Modal directly for Item */}
-                    <button
-                      type="button"
-                      className={`cart-disc-btn ${itemDisc > 0 ? 'active' : ''}`}
-                      onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(item)}
-                      title="Sleva na položku (% / Kč)"
-                    >
-                      <Percent size={12} />
-                    </button>
-
                     <div className="cart-stepper-box">
-                      <button type="button" className="cart-stepper-btn" onClick={() => onUpdateQty(item.id, item.quantity - 1)}>
-                        <Minus size={12} />
+                      <button
+                        type="button"
+                        className="cart-stepper-btn cart-stepper-btn-minus"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUpdateQty(item.id, item.quantity - 1);
+                        }}
+                        title="-1 ks"
+                      >
+                        <Minus size={15} strokeWidth={2.5} />
                       </button>
                       <span className="cart-stepper-num">{item.quantity}</span>
-                      <button type="button" className="cart-stepper-btn" onClick={() => onUpdateQty(item.id, item.quantity + 1)}>
-                        <Plus size={12} />
+                      <button
+                        type="button"
+                        className="cart-stepper-btn cart-stepper-btn-plus"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUpdateQty(item.id, item.quantity + 1);
+                        }}
+                        title="+1 ks"
+                      >
+                        <Plus size={15} strokeWidth={2.5} />
                       </button>
                     </div>
 
-                    <button type="button" className="cart-del-btn touch-target-lg" onClick={() => onRemoveItem(item.id)} title="Smazat položku">
-                      <Trash2 size={16} />
+                    <button
+                      type="button"
+                      className="cart-del-btn touch-target-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveItem(item.id);
+                        if (selectedItemId === item.id) setSelectedItemId(null);
+                      }}
+                      title="Smazat položku"
+                    >
+                      <Trash2 size={17} />
                     </button>
                   </div>
                 </div>

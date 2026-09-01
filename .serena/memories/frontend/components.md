@@ -25,8 +25,9 @@ Directory: `/src/components`
   - `BackupSection.jsx`: JSON backup export/import, Litestream SQLite WAL replication monitor, and EET toggle.
 
 ## Core Register Components
-- `Cart.jsx`: Active shopping basket with memoized totals (`calculateCartTotals`), swipe-to-delete, item discount popover, line quantity modifier, and parking slots.
-- `QuickPresetGrid.jsx`: Fast product tile touch grid coordinator with `useMemo` memoized search & category filtering. Decomposed into `/src/components/presets/`:
+- `Cart.jsx`: Active shopping basket (420px width) with memoized totals (`calculateCartTotals`), active item selection, note badges, line quantity modifier, and parking slots. Decomposed into `/src/components/cart/`:
+  - `CartItemInspector.jsx`: Floating side-docked inspector drawer overlapping the Presets column adjacent to Cart. Allows instant quantity modification (+1, +2, +5, +10, stepper), quick discounts (-5%, -10%, -20%, -50%), price override, item notes/modifiers, and item deletion without blocking modals.
+- `QuickPresetGrid.jsx`: Fast product tile touch grid coordinator with `useMemo` memoized search & category filtering. Includes Density Switcher (Compact `S`, Standard `M`, Large `L`). Decomposed into `/src/components/presets/`:
   - `CategoryFilterBar.jsx`: Touch-scrollable category filter pills with arrow controls.
   - `PresetTileCard.jsx`: Product tile card with visual icon/photo badge, quick multiplier, and edit handles.
   - `OpenPriceModal.jsx`: Numeric touch popover for open-price items and return items.
@@ -38,6 +39,6 @@ Directory: `/src/components`
 - `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation.
 
 ## Active Custom Hooks in `/src/hooks/`
-- `useCart.js`: Active shopping cart state, discounts, and item modifiers.
+- `useCart.js`: Active shopping cart state, discounts, `updateItemDetails`, and item modifiers.
 - `usePresetDragDrop.js`: Drag-and-drop preset ordering.
 - `usePosKeyboardShortcuts.js`: Hardware keyboard listener for fast numeric keypad checkout.

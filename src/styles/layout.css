@@ -345,12 +345,13 @@ input, textarea, [contenteditable="true"] {
 
 /* Right Column: Live Cart */
 .pos-col-right {
-  width: 360px;
-  min-width: 320px;
+  width: 420px;
+  min-width: 380px;
   background: var(--bg-card);
   border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* Re-order Columns when Cart is configured to the Left side */
@@ -399,8 +400,8 @@ input, textarea, [contenteditable="true"] {
     min-width: 290px;
   }
   .pos-col-right {
-    width: 320px;
-    min-width: 280px;
+    width: 380px;
+    min-width: 340px;
   }
 }
 
@@ -411,8 +412,8 @@ input, textarea, [contenteditable="true"] {
     padding: 0.65rem;
   }
   .pos-col-right {
-    width: 290px;
-    min-width: 250px;
+    width: 340px;
+    min-width: 300px;
   }
   .pos-col-center {
     padding: 0.65rem;

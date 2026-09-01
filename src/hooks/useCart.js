@@ -122,6 +122,37 @@ export function useCart() {
     });
   }, []);
 
+  const updateItemDetails = useCallback((identifier, updates) => {
+    setCartItems(prev => {
+      const index = typeof identifier === 'number' && identifier < prev.length && prev[identifier]?.id !== identifier
+        ? identifier
+        : prev.findIndex(i => i.id === identifier);
+
+      if (index === -1) return prev;
+      const existingItem = prev[index];
+      const newQty = updates.quantity !== undefined ? updates.quantity : existingItem.quantity;
+
+      const currentSnapshot = {
+        cartItems: prev,
+        cartDiscountPercent,
+        itemMultiplier
+      };
+
+      if (newQty <= 0) {
+        triggerUndoToast('REMOVE', existingItem.name || 'Položka', currentSnapshot);
+        return prev.filter((_, idx) => idx !== index);
+      }
+
+      const updated = [...prev];
+      updated[index] = {
+        ...existingItem,
+        ...updates,
+        quantity: Math.min(9999, newQty)
+      };
+      return updated;
+    });
+  }, [cartDiscountPercent, itemMultiplier, triggerUndoToast]);
+
   const removeItem = useCallback((identifier) => {
     setCartItems(prev => {
       const index = typeof identifier === 'number' && identifier < prev.length && prev[identifier]?.id !== identifier
@@ -254,6 +285,7 @@ export function useCart() {
     addToCart,
     updateQuantity,
     updateItemDiscount,
+    updateItemDetails,
     removeItem,
     clearCart,
     undoToast,

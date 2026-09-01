@@ -40,6 +40,23 @@ export default function QuickPresetGrid({
   const [enteredOpenPrice, setEnteredOpenPrice] = useState('');
   const [openPriceQty, setOpenPriceQty] = useState(1);
 
+  const [density, setDensity] = useState(() => {
+    try {
+      return localStorage.getItem('himmel_pos_preset_density') || storeConfig?.presetDensity || 'standard';
+    } catch {
+      return 'standard';
+    }
+  });
+
+  const handleToggleDensity = (newDensity) => {
+    setDensity(newDensity);
+    try {
+      localStorage.setItem('himmel_pos_preset_density', newDensity);
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
   const gridColumnsSetting = storeConfig?.presetGridColumns || 'auto';
   const getGridStyle = () => {
     if (gridColumnsSetting === '3') return { gridTemplateColumns: 'repeat(3, 1fr)' };
@@ -219,6 +236,64 @@ export default function QuickPresetGrid({
             </div>
           )}
 
+          {/* Density Toggle (Compact / Standard / Large) */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '2px', gap: '2px' }} title="Hustota a velikost dlaždic katalogu">
+            <button
+              type="button"
+              onClick={() => handleToggleDensity('compact')}
+              style={{
+                background: density === 'compact' ? 'var(--accent-blue)' : 'transparent',
+                color: density === 'compact' ? '#fff' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.72rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Kompaktní dlaždice (malé)"
+            >
+              S
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleDensity('standard')}
+              style={{
+                background: density === 'standard' ? 'var(--accent-blue)' : 'transparent',
+                color: density === 'standard' ? '#fff' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.72rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Standardní dlaždice (střední)"
+            >
+              M
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleDensity('large')}
+              style={{
+                background: density === 'large' ? 'var(--accent-blue)' : 'transparent',
+                color: density === 'large' ? '#fff' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.72rem',
+                fontWeight: '800',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Velké dlaždice (snadný dotyk)"
+            >
+              L
+            </button>
+          </div>
+
           {/* Action Buttons */}
           <button
             type="button"
@@ -306,7 +381,7 @@ export default function QuickPresetGrid({
       )}
 
       {/* Grid of Preset Cards */}
-      <div className="preset-grid" style={getGridStyle()}>
+      <div className={`preset-grid density-${density}`} style={getGridStyle()}>
         {filteredPresets.map((preset, index) => (
           <PresetTileCard
             key={preset.id}

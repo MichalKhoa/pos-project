@@ -148,6 +148,7 @@ export default function App() {
     addToCart,
     updateQuantity: handleUpdateQty,
     updateItemDiscount: handleUpdateItemDiscount,
+    updateItemDetails: handleUpdateItemDetails,
     applyCartDiscount: handleApplyCartDiscount,
     removeItem: handleRemoveItem,
     clearCart: handleClearCart,
@@ -847,6 +848,7 @@ export default function App() {
                 <Cart
                   cartItems={cartItems}
                   onUpdateQty={handleUpdateQty}
+                  onUpdateItemDetails={handleUpdateItemDetails}
                   onRemoveItem={handleRemoveItem}
                   onClearCart={handleClearCart}
                   onOpenPayment={handleOpenPayment}

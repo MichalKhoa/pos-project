@@ -36,6 +36,18 @@ export const translations = {
       refund_cash: "Vrátit Hotovost",
       refund_card: "Vrátit na Kartu"
     },
+    inspector: {
+      title: "Úprava položky",
+      quantity: "Množství (ks)",
+      discount: "Sleva na položku",
+      custom_discount: "Vlastní %",
+      unit_price: "Jednotková cena (Kč)",
+      note: "Poznámka / Modifikátor",
+      note_placeholder: "např. Bez ledu, S sebou...",
+      delete_item: "Odstranit položku",
+      no_discount: "Bez slevy",
+      close: "Zavřít"
+    },
     keypad: {
       manual_title: "Ruční Zadání Částky",
       item_placeholder: "Název / popis položky (volitelné)...",
@@ -403,6 +415,18 @@ export const translations = {
       refund_customer: "↩️ HOÀN TIỀN CHO KHÁCH:",
       refund_cash: "Hoàn Tiền Mặt",
       refund_card: "Hoàn Vào Thẻ"
+    },
+    inspector: {
+      title: "Chỉnh sửa món",
+      quantity: "Số lượng",
+      discount: "Giảm giá món",
+      custom_discount: "Tùy chỉnh %",
+      unit_price: "Đơn giá (Kč)",
+      note: "Ghi chú món",
+      note_placeholder: "vd: Không đá, Mang về...",
+      delete_item: "Xóa món",
+      no_discount: "Không giảm",
+      close: "Đóng"
     },
     keypad: {
       manual_title: "Nhập Số Tiền Thủ Công",
@@ -772,6 +796,18 @@ export const translations = {
       refund_customer: "↩️ REFUND TO CUSTOMER:",
       refund_cash: "Refund Cash",
       refund_card: "Refund to Card"
+    },
+    inspector: {
+      title: "Edit item",
+      quantity: "Quantity",
+      discount: "Item discount",
+      custom_discount: "Custom %",
+      unit_price: "Unit price (CZK)",
+      note: "Item note / modifier",
+      note_placeholder: "e.g. No ice, Takeaway...",
+      delete_item: "Remove item",
+      no_discount: "No disc.",
+      close: "Close"
     },
     keypad: {
       manual_title: "Manual Amount Entry",
