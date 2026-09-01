@@ -1,0 +1,170 @@
+/* Fullscreen Fluid Views Container */
+.full-view-container {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* 2-Column Inventory Split Layout */
+.inventory-split-container {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.inventory-main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inventory-sidebar {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stock-health-bar-container {
+  height: 8px;
+  width: 100%;
+  background: var(--bg-input);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+}
+
+.stock-health-bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 1100px) {
+  .inventory-split-container {
+    flex-direction: column;
+  }
+  .inventory-sidebar {
+    width: 100%;
+  }
+}
+
+/* Sales Metrics & Statistics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* Data Tables & Ledger */
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+  padding: 0.9rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background: var(--bg-input);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.data-table tr:hover td {
+  background: var(--bg-card-hover);
+}
+
+/* Sales Filter Chips & Periods */
+.filter-period-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.period-chip {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.period-chip:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.period-chip.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-blue-glow);
+}

@@ -1,0 +1,103 @@
+/* Settings View Cards & Sections */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.25rem;
+}
+
+.settings-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.85rem;
+}
+
+.settings-card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.settings-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.settings-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.settings-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* Grid Density Selector */
+.grid-density-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.grid-density-btn {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.grid-density-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.grid-density-btn.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-blue-glow);
+}
+
+/* Save Settings Button */
+.settings-save-btn {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-hover));
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-blue-glow);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}

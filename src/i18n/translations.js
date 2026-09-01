@@ -370,7 +370,9 @@ export const translations = {
       admin_active: "Admin",
       shutdown: "Tắt máy",
       offline: "Ngoại tuyến",
-      not_sent: "Chưa gửi"
+      not_sent: "Chưa gửi",
+      eet_off: "Tắt EET",
+      open_drawer: "Mở ngăn kéo"
     },
     cart: {
       title: "Giỏ hàng",
@@ -401,6 +403,10 @@ export const translations = {
       add_to_cart: "Thêm Vào Giỏ Hàng",
       enter_amount: "Nhập Số Tiền",
       cancel_multiplier: "Hủy",
+      quick_count: "Số lượng nhanh",
+      inc_qty: "Thêm 1",
+      dec_qty: "Bớt 1",
+      multiplier: "Số nhân",
       sign_toggle: "± Trả hàng",
       return_item_default: "↩️ Hàng trả lại"
     },
@@ -624,6 +630,10 @@ export const translations = {
       default_vat: "Mức DPH mặc định",
       bank_account_iban: "Tài khoản ngân hàng / IBAN (cho thanh toán QR)",
       environment: "Môi trường EET",
+      eet_toggle_label: "Hệ thống ghi nhận doanh thu (EET 2.0)",
+      eet_toggle_desc: "EET tại Séc đã bãi bỏ. Hãy để tắt cho hoạt động bán lẻ thông thường không gửi dữ liệu tới cơ quan thuế.",
+      eet_disabled_banner: "💡 EET đã tắt. Máy bán hàng hoạt động bình thường không tạo chữ ký điện tử EET.",
+      eet_disabled_badge: "Tắt EET",
       printer_settings: "Loại & Khổ Giấy Máy In Hóa Đơn (ESC/POS)",
       printer_80mm: "🖨️ Cuộn 80 mm (vùng in 72 mm - tối đa 48 ký tự/dòng)",
       printer_58mm: "🧾 Cuộn 58 mm (vùng in 48 mm - tối đa 32 ký tự/dòng)",
@@ -721,7 +731,9 @@ export const translations = {
       admin_active: "Admin",
       shutdown: "Shutdown",
       offline: "Offline",
-      not_sent: "Unsent"
+      not_sent: "Unsent",
+      eet_off: "EET Disabled",
+      open_drawer: "Open Drawer"
     },
     cart: {
       title: "Shopping Cart",
@@ -752,6 +764,10 @@ export const translations = {
       add_to_cart: "Add to Cart",
       enter_amount: "Enter Amount",
       cancel_multiplier: "Cancel",
+      quick_count: "Quick Quantity",
+      inc_qty: "Add 1",
+      dec_qty: "Remove 1",
+      multiplier: "Multiplier",
       sign_toggle: "± Refund",
       return_item_default: "↩️ Returned Item"
     },
@@ -975,6 +991,10 @@ export const translations = {
       default_vat: "Default VAT Rate",
       bank_account_iban: "Bank Account / IBAN (for QR payments)",
       environment: "EET Target Environment",
+      eet_toggle_label: "Electronic Sales Records (EET 2.0)",
+      eet_toggle_desc: "EET is abolished in Czechia. Keep disabled for standard store operations without sending sales to the Tax Authority.",
+      eet_disabled_banner: "💡 EET is disabled. POS register operates in standard offline/local mode without EET signatures.",
+      eet_disabled_badge: "EET Off",
       printer_settings: "POS Receipt Printer Type & Paper Width (ESC/POS)",
       printer_80mm: "🖨️ 80 mm roll (72 mm print area - max 48 chars/line)",
       printer_58mm: "🧾 58 mm roll (48 mm print area - max 32 chars/line)",

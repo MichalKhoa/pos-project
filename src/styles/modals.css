@@ -1,0 +1,331 @@
+/* Modal Overlays & Cards */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 520px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+
+.modal-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.close-modal-btn {
+  background: rgba(225, 29, 72, 0.15);
+  color: var(--accent-rose);
+  border: 1.5px solid rgba(225, 29, 72, 0.35);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.15);
+  flex-shrink: 0;
+}
+
+.close-modal-btn:hover {
+  color: #ffffff;
+  background: var(--accent-rose);
+  border-color: var(--accent-rose);
+  transform: scale(1.08) rotate(90deg);
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);
+}
+
+.close-modal-btn:active {
+  transform: scale(0.95);
+}
+
+.modal-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-split {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Widescreen Payment Modal */
+.payment-widescreen-body {
+  display: flex;
+  width: 100%;
+  min-height: 480px;
+}
+
+.payment-sidebar {
+  width: 240px;
+  min-width: 220px;
+  background: var(--bg-main);
+  border-right: 1px solid var(--border-color);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.payment-vertical-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payment-vtab {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.payment-vtab:hover {
+  background: var(--bg-input);
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+.payment-vtab.active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0.25) 100%);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.sidebar-total-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sidebar-total-amount {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent-emerald);
+}
+
+.payment-main-content {
+  flex: 1;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Side-by-Side 2-Column Cash Payment Layout */
+.cash-payment-container {
+  display: flex;
+  gap: 1.15rem;
+  width: 100%;
+}
+
+.cash-col-left {
+  flex: 1.25;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cash-col-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--bg-input);
+  padding: 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.coins-grid-lg, .banknotes-grid-lg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+}
+
+.coin-btn-lg, .banknote-btn-lg {
+  height: 48px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.coin-btn-lg {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.25) 100%);
+  color: var(--accent-amber);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+}
+
+.banknote-btn-lg {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%);
+  color: var(--accent-emerald);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Side Touch Numpad Grid */
+.side-numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.side-num-btn {
+  height: 54px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.side-num-btn:hover {
+  background: var(--border-color);
+}
+
+/* Thermal Receipt Preview */
+.receipt-paper {
+  background: #fffefc;
+  color: #111111;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+  width: 320px;
+  margin: 0 auto;
+}
+
+.receipt-header {
+  text-align: center;
+  border-bottom: 2px dashed #222222;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.receipt-store-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6rem 0;
+}
+
+.receipt-table th {
+  text-align: left;
+  padding: 0.3rem 0;
+  border-bottom: 2px dashed #222222;
+  font-weight: 900;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.receipt-table td {
+  padding: 0.3rem 0;
+  border-bottom: 1px dotted #cccccc;
+  vertical-align: top;
+}
+
+.receipt-total-row {
+  border-top: 2px dashed #111111;
+  border-bottom: 3px double #111111;
+  padding: 0.65rem 0;
+  margin: 0.65rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.05rem;
+  font-weight: 900;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.receipt-total-amount {
+  font-size: 1.35rem;
+  font-weight: 900;
+  font-family: 'Courier New', Courier, monospace;
+}
