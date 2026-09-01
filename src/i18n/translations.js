@@ -297,6 +297,22 @@ export const translations = {
         sun: "Neděle"
       }
     },
+    analytics: {
+      title: "Analytika & Přehled tržeb",
+      top_products: "Nejprodávanější položky",
+      hourly_rush: "Špičky a tržby po hodinách",
+      peak_hour: "Nejrušnější hodina",
+      payment_split: "Rozdělení plateb",
+      vat_breakdown: "Rozpis DPH",
+      no_hourly_data: "Ve zvoleném období nejsou data pro graf.",
+      no_products_sold: "Ve zvoleném období nebyly prodány žádné položky.",
+      netto_base: "Základ daně (Netto)",
+      vat_collected: "Vybraná DPH",
+      gross_revenue: "Tržba s DPH",
+      refunds_total: "Vratky a storna",
+      share_of_sales: "Podíl z tržeb",
+      sold_units: "Prodáno"
+    },
     refund: {
       title: "Vratka / Storno Účtenky",
       orig_doc: "Původní doklad",
@@ -664,6 +680,22 @@ export const translations = {
         sat: "Thứ Bảy",
         sun: "Chủ Nhật"
       }
+    },
+    analytics: {
+      title: "Phân tích & Doanh thu",
+      top_products: "Sản phẩm bán chạy nhất",
+      hourly_rush: "Doanh thu theo khung giờ & giờ cao điểm",
+      peak_hour: "Giờ cao điểm",
+      payment_split: "Cơ cấu thanh toán",
+      vat_breakdown: "Bảng phân bổ thuế DPH",
+      no_hourly_data: "Không có dữ liệu trong khoảng thời gian đã chọn.",
+      no_products_sold: "Không có sản phẩm nào được bán trong khoảng thời gian này.",
+      netto_base: "Doanh thu trước thuế (Netto)",
+      vat_collected: "Thuế DPH đã thu",
+      gross_revenue: "Tổng doanh thu có thuế",
+      refunds_total: "Hoàn tiền & Hủy đơn",
+      share_of_sales: "Tỷ trọng doanh thu",
+      sold_units: "Đã bán"
     },
     refund: {
       title: "Trả Hàng / Hủy Hóa Đơn",
@@ -1062,6 +1094,22 @@ export const translations = {
         sat: "Saturday",
         sun: "Sunday"
       }
+    },
+    analytics: {
+      title: "Analytics & Sales Dashboard",
+      top_products: "Best-Selling Products",
+      hourly_rush: "Hourly Sales & Peak Rush Hours",
+      peak_hour: "Peak Rush Hour",
+      payment_split: "Payment Method Breakdown",
+      vat_breakdown: "VAT Tax Breakdown",
+      no_hourly_data: "No hourly sales recorded in this period.",
+      no_products_sold: "No items sold in this period.",
+      netto_base: "Net Base (Netto)",
+      vat_collected: "VAT Collected",
+      gross_revenue: "Gross Revenue",
+      refunds_total: "Refunds & Voids",
+      share_of_sales: "Revenue Share",
+      sold_units: "Units Sold"
     },
     refund: {
       title: "Receipt Refund / Cancellation",

@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { BarChart3, Download } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { exportSalesToCSV } from '../utils/csvExporter';
-import SalesMetricsCards from './history/SalesMetricsCards.jsx';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesAnalyticsCharts from './history/SalesAnalyticsCharts.jsx';
 import TouchCalendarModal from './TouchCalendarModal.jsx';
@@ -206,6 +205,93 @@ export default function AnalyticsView({
     };
   }, [periodFilteredSales]);
 
+  // Top Best-Selling Products (Ranked by Revenue & Qty)
+  const topProducts = useMemo(() => {
+    const prodMap = {};
+    periodFilteredSales.forEach(sale => {
+      const isRefund = sale.isRefund || sale.is_refund;
+      const items = Array.isArray(sale.items) ? sale.items : [];
+      items.forEach(item => {
+        const name = item.name || 'Neznámá položka';
+        const qty = item.quantity !== undefined ? item.quantity : 1;
+        const price = parseFloat(item.price || 0);
+        let gross = price * qty;
+        if (isRefund && gross > 0) gross = -gross;
+        if (!prodMap[name]) {
+          prodMap[name] = { name, category: item.category || 'Ostatní', quantity: 0, totalRevenue: 0 };
+        }
+        prodMap[name].quantity += isRefund ? -qty : qty;
+        prodMap[name].totalRevenue += gross;
+      });
+    });
+
+    const list = Object.values(prodMap).filter(p => p.quantity > 0 || p.totalRevenue > 0);
+    list.sort((a, b) => b.totalRevenue - a.totalRevenue);
+    const topList = list.slice(0, 8);
+    const maxItemRevenue = topList.length > 0 ? Math.max(1, topList[0].totalRevenue) : 1;
+
+    return topList.map((p, idx) => ({
+      ...p,
+      rank: idx + 1,
+      relativeBar: Math.min(100, Math.max(12, Math.round((p.totalRevenue / maxItemRevenue) * 100))),
+      sharePercent: totalRevenue > 0 ? ((p.totalRevenue / totalRevenue) * 100).toFixed(1) : '0.0'
+    }));
+  }, [periodFilteredSales, totalRevenue]);
+
+  // Hourly Sales & Rush Hour Traffic (07:00 – 22:00)
+  const hourlySales = useMemo(() => {
+    const hours = [];
+    for (let h = 7; h <= 22; h++) {
+      hours.push({
+        hour: h,
+        label: `${h.toString().padStart(2, '0')}:00`,
+        count: 0,
+        revenue: 0
+      });
+    }
+
+    periodFilteredSales.forEach(sale => {
+      const isRefund = sale.isRefund || sale.is_refund;
+      const d = new Date(sale.timestamp || sale.created_at || sale.date);
+      const h = d.getHours();
+      const amt = parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0;
+      const target = hours.find(x => x.hour === h);
+      if (target) {
+        target.count += 1;
+        target.revenue += isRefund ? -Math.abs(amt) : amt;
+      }
+    });
+
+    const maxRev = Math.max(1, ...hours.map(h => Math.max(0, h.revenue)));
+    let peak = null;
+    hours.forEach(h => {
+      if (h.revenue > 0 && (!peak || h.revenue > peak.revenue)) {
+        peak = h;
+      }
+    });
+
+    return {
+      hours,
+      maxRevenue: maxRev,
+      peakHour: peak
+    };
+  }, [periodFilteredSales]);
+
+  // Refund and Cancellation Metrics
+  const refundMetrics = useMemo(() => {
+    let count = 0;
+    let amount = 0;
+    periodFilteredSales.forEach(sale => {
+      if (sale.isRefund || sale.is_refund) {
+        count += 1;
+        amount += Math.abs(parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0);
+      } else if (sale.refundedAmount || sale.refunded_amount) {
+        amount += parseFloat(sale.refundedAmount || sale.refunded_amount || 0);
+      }
+    });
+    return { count, amount };
+  }, [periodFilteredSales]);
+
   // Category Breakdown
   const sortedCategories = useMemo(() => {
     const categorySummary = periodFilteredSales.reduce((acc, sale) => {
@@ -224,46 +310,10 @@ export default function AnalyticsView({
       return acc;
     }, {});
 
-    return Object.values(categorySummary).sort((a, b) => b.total - a.total);
+    return Object.values(categorySummary)
+      .filter(c => c.total > 0 || c.quantity > 0)
+      .sort((a, b) => b.total - a.total);
   }, [periodFilteredSales]);
-
-  // Weekday Breakdown
-  const weekdaySummary = useMemo(() => {
-    const daysOrder = [
-      { key: 1, name: t('history.weekdays_full.mon') },
-      { key: 2, name: t('history.weekdays_full.tue') },
-      { key: 3, name: t('history.weekdays_full.wed') },
-      { key: 4, name: t('history.weekdays_full.thu') },
-      { key: 5, name: t('history.weekdays_full.fri') },
-      { key: 6, name: t('history.weekdays_full.sat') },
-      { key: 0, name: t('history.weekdays_full.sun') }
-    ];
-
-    const map = {
-      1: { txCount: 0, total: 0 },
-      2: { txCount: 0, total: 0 },
-      3: { txCount: 0, total: 0 },
-      4: { txCount: 0, total: 0 },
-      5: { txCount: 0, total: 0 },
-      6: { txCount: 0, total: 0 },
-      0: { txCount: 0, total: 0 }
-    };
-
-    periodFilteredSales.forEach(sale => {
-      const dayIdx = new Date(sale.timestamp || sale.created_at || sale.date).getDay();
-      const amt = parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0;
-      if (map[dayIdx]) {
-        map[dayIdx].txCount += 1;
-        map[dayIdx].total += amt;
-      }
-    });
-
-    return daysOrder.map(d => {
-      const data = map[d.key];
-      const aov = data.txCount > 0 ? data.total / data.txCount : 0;
-      return { ...d, txCount: data.txCount, total: data.total, aov };
-    });
-  }, [periodFilteredSales, t]);
 
   const getPeriodLabel = () => {
     return periodBadgeLabel || t('history.all_period');
@@ -272,18 +322,18 @@ export default function AnalyticsView({
   return (
     <div className="full-view-container">
       {/* View Header */}
-      <div className="section-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
-        <div className="section-title" style={{ fontSize: '1.4rem' }}>
-          <BarChart3 size={26} style={{ color: 'var(--accent-blue)' }} />
-          <span>{t('nav.analytics') || 'Analytika & Přehled tržeb'}</span>
+      <div className="section-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div className="section-title" style={{ fontSize: '1.3rem' }}>
+          <BarChart3 size={24} style={{ color: 'var(--accent-blue)' }} />
+          <span>{t('analytics.title') || 'Analytika & Přehled tržeb'}</span>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             className="checkout-btn"
             style={{
-              padding: '0.45rem 0.95rem',
-              fontSize: '0.85rem',
+              padding: '0.4rem 0.85rem',
+              fontSize: '0.82rem',
               background: 'var(--accent-emerald)',
               color: '#ffffff',
               borderRadius: 'var(--radius-md)',
@@ -295,7 +345,7 @@ export default function AnalyticsView({
             onClick={() => exportSalesToCSV(periodFilteredSales, getPeriodLabel())}
             title={t('history.export_csv_title')}
           >
-            <Download size={16} />
+            <Download size={15} />
             <span>{t('history.export_csv')}</span>
           </button>
         </div>
@@ -319,18 +369,7 @@ export default function AnalyticsView({
         totalMatchingSales={periodFilteredSales.length}
       />
 
-      {/* KPI Cards */}
-      <SalesMetricsCards
-        metrics={{
-          totalRevenue,
-          cashRevenue,
-          cardRevenue,
-          txnCount: transactionCount,
-          avgTicket: avgOrderValue
-        }}
-      />
-
-      {/* Charts & Analytical Breakdown */}
+      {/* Visual Analytics Dashboard */}
       <SalesAnalyticsCharts
         periodLabel={getPeriodLabel()}
         totalRevenue={totalRevenue}
@@ -339,12 +378,14 @@ export default function AnalyticsView({
         qrRevenue={qrRevenue}
         transactionCount={transactionCount}
         avgOrderValue={avgOrderValue}
-        periodTaxSummary={periodTaxSummary}
         totalNetto={totalNetto}
         totalVat={totalVat}
-        sortedCategories={sortedCategories}
+        periodTaxSummary={periodTaxSummary}
         paymentMethodSummary={paymentMethodSummary}
-        dayOfWeekSummary={weekdaySummary}
+        sortedCategories={sortedCategories}
+        topProducts={topProducts}
+        hourlySales={hourlySales}
+        refundMetrics={refundMetrics}
       />
 
       {/* Touch Calendar Date Modals */}
