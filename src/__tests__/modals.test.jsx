@@ -52,7 +52,7 @@ describe('Modals & Dialog Component Tests', () => {
       expect(screen.getAllByText(/Kombinovaná/i).length).toBeGreaterThanOrEqual(1);
 
       // Click exact amount button (Přesně)
-      const exactBtn = screen.getByRole('button', { name: /Přesně/i });
+      const exactBtn = screen.getByRole('button', { name: /^Přesně \(/i });
       fireEvent.click(exactBtn);
 
       // Click complete sale button
@@ -63,6 +63,31 @@ describe('Modals & Dialog Component Tests', () => {
       expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
         method: 'cash',
         tendered: 450,
+        change: 0
+      }));
+    });
+
+    it('allows instant 1-click completion as exact amount without entering tendered cash', () => {
+      const onCompleteSale = vi.fn();
+      wrapWithLanguage(
+        <PaymentModal
+          isOpen={true}
+          totalAmount={250}
+          initialMethod="cash"
+          storeConfig={DEFAULT_STORE_CONFIG}
+          onClose={() => {}}
+          onCompleteSale={onCompleteSale}
+        />
+      );
+
+      // Complete button is immediately enabled for fast checkout
+      const completeBtn = screen.getByRole('button', { name: /Dokončit prodej — Přesně/i });
+      expect(completeBtn).toBeEnabled();
+      fireEvent.click(completeBtn);
+
+      expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
+        method: 'cash',
+        tendered: 250,
         change: 0
       }));
     });
@@ -93,6 +118,36 @@ describe('Modals & Dialog Component Tests', () => {
       const splitTabs = screen.getAllByText(/Kombinovaná/i);
       fireEvent.click(splitTabs[0]);
       expect(screen.getAllByText(/Kombinovaná/i).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('renders offline QR code image with data URL and completes QR sale', () => {
+      const onCompleteSale = vi.fn();
+      wrapWithLanguage(
+        <PaymentModal
+          isOpen={true}
+          totalAmount={520}
+          initialMethod="qr"
+          storeConfig={DEFAULT_STORE_CONFIG}
+          onClose={() => {}}
+          onCompleteSale={onCompleteSale}
+        />
+      );
+
+      // Verify QR code image is rendered with a valid SVG data URL
+      const qrImage = screen.getByAltText(/QR Platba SPD/i);
+      expect(qrImage).toBeInTheDocument();
+      expect(qrImage.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+
+      // Click confirm QR payment button
+      const confirmBtn = screen.getByRole('button', { name: /Potvrdit Přijatou QR Platbu/i });
+      expect(confirmBtn).toBeInTheDocument();
+      fireEvent.click(confirmBtn);
+
+      expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
+        method: 'qr',
+        tendered: 520,
+        change: 0
+      }));
     });
   });
 

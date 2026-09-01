@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingBag, CheckCircle2, Wifi, WifiOff, Sparkles } from 'lucide-react';
+import { generateQrDataUrl } from '../utils/qrCode.js';
 
 export default function CustomerDisplayView({ storeConfig }) {
   const [displayState, setDisplayState] = useState({
@@ -261,24 +262,19 @@ export default function CustomerDisplayView({ storeConfig }) {
               Naskenujte tento QR kód ve své mobilní bance pro okamžitý převod:
             </p>
 
-            {/* Robust relative QR code URL resolver */}
+            {/* Robust offline QR code URL resolver */}
             {(() => {
               const currentIban = storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || 'CZ6508000000001234567890';
+              const cleanIban = currentIban.replace(/\s/g, '').toUpperCase();
+              const vs = displayState.payment?.vs || '20260001';
+              const spdPayload = `SPD*1.0*ACC:${cleanIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${vs}*MSG:${encodeURIComponent('Platba ' + storeName)}`;
               const rawUrl = displayState.payment?.qrImageUrl;
-              let finalQrUrl = `/api/v1/qr/spd?iban=${encodeURIComponent(currentIban)}&amount=${totalAmount}&vs=${displayState.payment?.vs || '20260001'}&msg=${encodeURIComponent('Platba ' + storeName)}`;
+              let finalQrUrl = generateQrDataUrl(spdPayload, 260);
 
-              if (rawUrl && typeof rawUrl === 'string') {
-                if (rawUrl.startsWith('data:image/')) {
-                  finalQrUrl = rawUrl;
-                } else {
-                  const apiIndex = rawUrl.indexOf('/api/');
-                  if (apiIndex !== -1) {
-                    finalQrUrl = rawUrl.substring(apiIndex);
-                  }
-                }
+              if (rawUrl && typeof rawUrl === 'string' && rawUrl.startsWith('data:image/')) {
+                finalQrUrl = rawUrl;
               }
 
-              const cleanIban = currentIban.replace(/\s/g, '').toUpperCase();
               const formattedIban = cleanIban.match(/.{1,4}/g)?.join(' ') || cleanIban;
 
               return (

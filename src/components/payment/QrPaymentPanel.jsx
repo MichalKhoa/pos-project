@@ -1,51 +1,136 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { generateQrDataUrl } from '../../utils/qrCode.js';
+import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function QrPaymentPanel({
   totalAmount,
   storeConfig,
   onComplete
 }) {
+  const { t } = useTranslation();
   const rawIban = storeConfig?.bankAccountIban || "CZ6508000000001234567890";
   const merchantIban = rawIban.replace(/\s/g, '').toUpperCase();
-  const varSymbol = Date.now().toString().slice(-8);
-  const spdString = `SPD*1.0*ACC:${merchantIban}*AM:${totalAmount.toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba Himmel POS`;
-  const currentHost = typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : (window.location.hostname || 'localhost');
-  const qrImageUrl = `http://${currentHost}:8000/api/v1/qr/generate?data=${encodeURIComponent(spdString)}`;
+  const varSymbol = useMemo(() => Date.now().toString().slice(-8), []);
+  const spdString = `SPD*1.0*ACC:${merchantIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba Himmel POS`;
+  const formattedIban = merchantIban.match(/.{1,4}/g)?.join(' ') || merchantIban;
+  const qrImageUrl = useMemo(() => generateQrDataUrl(spdString, 280), [spdString]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
       <div style={{
-        textAlign: 'center',
-        padding: '1.25rem 1rem',
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-md)',
+        padding: '1.25rem 1.5rem',
+        background: 'var(--bg-main)',
+        borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--border-color)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.65rem'
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr',
+        gap: '1.5rem',
+        alignItems: 'center'
       }}>
-        <div style={{ background: '#ffffff', padding: '10px', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}>
-          <img src={qrImageUrl} alt="QR Platba SPD" style={{ width: '190px', height: '190px', display: 'block' }} />
+        {/* Large Crisp QR Code Box */}
+        <div style={{
+          background: '#ffffff',
+          padding: '14px',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }}>
+          <img
+            src={qrImageUrl}
+            alt="QR Platba SPD"
+            style={{ width: '240px', height: '240px', display: 'block' }}
+          />
         </div>
-        <div style={{ fontWeight: '800', fontSize: '1.3rem', color: 'var(--text-primary)' }}>
-          {totalAmount.toLocaleString('cs-CZ')} Kč
-        </div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Naskenujte v mobilním bankovnictví (ČS, ČSOB, KB, AirBank, Fio...)
-        </div>
-        <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', background: 'var(--bg-input)', padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)' }}>
-          VS: {varSymbol} • IBAN: {merchantIban.slice(0, 4)}...{merchantIban.slice(-4)}
+
+        {/* Structured Payment & Transfer Details Area */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          {/* Hero Amount Badge */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1.5px solid var(--accent-purple)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.65rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 4px 16px rgba(124, 58, 237, 0.15)'
+          }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {t('payment.total_due')}
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', fontWeight: '900', color: 'var(--accent-purple)', lineHeight: 1.1 }}>
+              {totalAmount.toLocaleString('cs-CZ')} Kč
+            </span>
+          </div>
+
+          {/* VS & IBAN Detail Tiles */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '0.5rem' }}>
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.6rem 0.85rem'
+            }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {t('payment.var_symbol')}
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
+                {varSymbol}
+              </div>
+            </div>
+
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.6rem 0.85rem'
+            }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {t('payment.bank_account_iban')}
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '0.2rem', wordBreak: 'break-all' }}>
+                {formattedIban}
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Message & Scan Hint */}
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.5rem 0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              {t('payment.payment_message')}:
+            </span>
+            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+              Platba Himmel POS
+            </span>
+          </div>
+
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.3', marginTop: '0.2rem' }}>
+            📱 {t('payment.qr_scan_instruction')}
+          </div>
         </div>
       </div>
+
+      {/* Confirmation Action Button */}
       <button
+        type="button"
         className="pay-btn pay-btn-card"
-        style={{ width: '100%', height: '62px', background: 'var(--accent-purple)', fontSize: '1.15rem', fontWeight: '800' }}
+        style={{ width: '100%', height: '56px', background: 'var(--accent-purple)', fontSize: '1.05rem', fontWeight: '800', marginTop: 'auto' }}
         onClick={onComplete}
       >
-        <CheckCircle2 size={24} />
-        <span>Potvrdit Přijatou QR Platbu ({totalAmount.toFixed(2)} Kč)</span>
+        <CheckCircle2 size={22} />
+        <span>{t('payment.qr_confirm_btn', { amount: totalAmount.toFixed(2) }) || `${t('payment.qr_confirm')} (${totalAmount.toFixed(2)} Kč)`}</span>
       </button>
     </div>
   );

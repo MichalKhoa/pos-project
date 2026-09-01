@@ -10,6 +10,7 @@ import SplitPaymentPanel from './payment/SplitPaymentPanel.jsx';
 
 export default function PaymentModal({
   method,
+  initialMethod,
   totalAmount,
   storeConfig,
   onClose,
@@ -18,7 +19,7 @@ export default function PaymentModal({
 }) {
   const { t } = useTranslation();
   const [tenderedStr, setTenderedStr] = useState('0');
-  const [activeMethod, setActiveMethod] = useState(method || 'cash');
+  const [activeMethod, setActiveMethod] = useState(initialMethod || method || 'cash');
 
   // Terminal state
   const [termConfig, setTermConfig] = useState(null);
@@ -134,8 +135,11 @@ export default function PaymentModal({
     const handleKeyDown = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (activeMethod === 'cash' && changeDue >= 0) handleComplete();
-        if (activeMethod === 'split') handleComplete();
+        if (activeMethod === 'cash') {
+          if (tenderedVal === 0 || changeDue >= 0) handleComplete();
+        } else {
+          handleComplete();
+        }
         return;
       }
 
@@ -153,15 +157,25 @@ export default function PaymentModal({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMethod, tenderedStr, splitCashStr, changeDue, totalAmount]);
+  }, [activeMethod, tenderedStr, tenderedVal, splitCashStr, changeDue, totalAmount, effectiveCashTotal]);
 
   const handleComplete = () => {
-    if (activeMethod === 'cash' && changeDue < 0) return;
+    if (activeMethod === 'cash') {
+      if (tenderedVal > 0 && changeDue < 0) return;
+      const finalTendered = tenderedVal === 0 ? effectiveCashTotal : tenderedVal;
+      const finalChange = tenderedVal === 0 ? 0 : (changeDue > 0 ? changeDue : 0);
+      onCompleteSale({
+        method: 'cash',
+        tendered: finalTendered,
+        change: finalChange
+      });
+      return;
+    }
 
     let payDetails = {
       method: activeMethod,
-      tendered: activeMethod === 'cash' ? tenderedVal : totalAmount,
-      change: changeDue > 0 ? changeDue : 0
+      tendered: totalAmount,
+      change: 0
     };
 
     if (activeMethod === 'split') {
@@ -218,103 +232,79 @@ export default function PaymentModal({
       <div
         className="modal-card modal-widescreen"
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '95vw',
-          maxWidth: '1050px',
-          height: '92vh',
-          maxHeight: '780px',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          borderRadius: 'var(--radius-xl)',
-          border: '1.5px solid var(--border-color)',
-          boxShadow: 'var(--shadow-xl)',
-          background: 'var(--bg-card)'
-        }}
       >
         {/* Modal Header */}
-        <div className="modal-header" style={{ padding: '0.9rem 1.4rem' }}>
-          <div className="modal-title" style={{ fontSize: '1.25rem', fontWeight: '800' }}>
-            {isRefund ? '↩️ Vrácení peněz / Storno' : t('payment.title')}
+        <div className="modal-header" style={{ padding: '0.85rem 1.25rem' }}>
+          <div className="modal-title" style={{ fontSize: '1.2rem', fontWeight: '800' }}>
+            {isRefund ? t('payment.refund_title') : t('payment.title')}
           </div>
-          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
-        </div>
-
-        {/* Modal Body: Left Sidebar Tabs + Right Main Work Area */}
-        <div className="modal-body payment-widescreen-body">
-          {/* SIDEBAR TENDER TABS */}
-          <div className="payment-method-sidebar">
-            <div className="payment-vtabs">
-              <button
-                type="button"
-                className={`payment-vtab ${activeMethod === 'cash' ? 'active' : ''}`}
-                onClick={() => setActiveMethod('cash')}
-              >
-                <div className="vtab-icon"><Banknote size={20} /></div>
-                <div className="vtab-text">
-                  <span className="vtab-title">{t('payment.cash')}</span>
-                  <span className="vtab-sub">{effectiveCashTotal.toFixed(0)} Kč</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className={`payment-vtab ${activeMethod === 'card' ? 'active' : ''}`}
-                onClick={() => setActiveMethod('card')}
-              >
-                <div className="vtab-icon"><CreditCard size={20} /></div>
-                <div className="vtab-text">
-                  <span className="vtab-title">{t('payment.card')}</span>
-                  <span className="vtab-sub">ČSOB Move 3500</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className={`payment-vtab ${activeMethod === 'qr' ? 'active' : ''}`}
-                onClick={() => setActiveMethod('qr')}
-              >
-                <div className="vtab-icon"><QrCode size={20} /></div>
-                <div className="vtab-text">
-                  <span className="vtab-title">{t('payment.qr')}</span>
-                  <span className="vtab-sub">SPD Bank Transfer</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className={`payment-vtab ${activeMethod === 'split' ? 'active' : ''}`}
-                onClick={() => setActiveMethod('split')}
-              >
-                <div className="vtab-icon"><Split size={20} /></div>
-                <div className="vtab-text">
-                  <span className="vtab-title">{t('payment.split')}</span>
-                  <span className="vtab-sub">{t('payment.cash')} + {t('payment.card')}</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Grand Total Sidebar Card */}
-            <div className="sidebar-total-card">
-              <span className="sidebar-total-label">{t('payment.total_due')}</span>
-              <span className="sidebar-total-amount">{totalAmount.toFixed(2)} Kč</span>
-            </div>
-
-            {/* Quick Cashier Drawer Release Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {onOpenCashDrawer && (
               <button
                 type="button"
                 className="payment-modal-drawer-btn"
                 onClick={onOpenCashDrawer}
                 title={t('cart.open_drawer') || 'Otevřít zásuvku'}
+                style={{ height: '34px', padding: '0 0.75rem', fontSize: '0.8rem' }}
               >
-                <CashDrawerIcon size={16} />
+                <CashDrawerIcon size={15} />
                 <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
               </button>
             )}
+            <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
+          </div>
+        </div>
+
+        {/* Top Horizontal Segmented Tender Bar */}
+        <div className="payment-top-bar">
+          <div className="payment-method-nav">
+            <button
+              type="button"
+              className={`payment-nav-tab ${activeMethod === 'cash' ? 'active-cash' : ''}`}
+              onClick={() => setActiveMethod('cash')}
+            >
+              <Banknote size={18} />
+              <span>{t('payment.cash')}</span>
+            </button>
+
+            <button
+              type="button"
+              className={`payment-nav-tab ${activeMethod === 'card' ? 'active-card' : ''}`}
+              onClick={() => setActiveMethod('card')}
+            >
+              <CreditCard size={18} />
+              <span>{t('payment.card')}</span>
+            </button>
+
+            <button
+              type="button"
+              className={`payment-nav-tab ${activeMethod === 'qr' ? 'active-qr' : ''}`}
+              onClick={() => setActiveMethod('qr')}
+            >
+              <QrCode size={18} />
+              <span>{t('payment.qr')}</span>
+            </button>
+
+            <button
+              type="button"
+              className={`payment-nav-tab ${activeMethod === 'split' ? 'active-split' : ''}`}
+              onClick={() => setActiveMethod('split')}
+            >
+              <Split size={18} />
+              <span>{t('payment.split')}</span>
+            </button>
           </div>
 
-          {/* MAIN CONTENT AREA */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <span className="payment-hero-label">{t('payment.total_due')}:</span>
+            <span className="payment-hero-amount" style={{ color: activeMethod === 'cash' ? 'var(--accent-emerald)' : 'var(--accent-blue)' }}>
+              {totalAmount.toFixed(2)} Kč
+            </span>
+          </div>
+        </div>
+
+        {/* Modal Main Content Area */}
+        <div className="modal-body payment-widescreen-body">
           <div className="payment-main-content">
             {activeMethod === 'cash' && (
               <CashPaymentPanel

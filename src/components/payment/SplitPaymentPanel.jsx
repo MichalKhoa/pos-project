@@ -1,5 +1,5 @@
 import React from 'react';
-import { Split, Delete, CreditCard, CheckCircle2, Wifi, RefreshCw } from 'lucide-react';
+import { Delete, CreditCard, CheckCircle2, Wifi, RefreshCw } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function SplitPaymentPanel({
@@ -23,99 +23,105 @@ export default function SplitPaymentPanel({
     return (
       <div className="cash-payment-container">
         {/* COLUMN 1: Cash Portion Inputs, Calculation & Shortcuts */}
-        <div className="cash-col-left" style={{ gap: '1rem' }}>
-          <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Split size={18} />
-            <span>{t('payment.split_title')}</span>
-          </div>
-
+        <div className="cash-col-left" style={{ gap: '0.85rem' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('payment.split_cash_portion')}
-            </label>
+            </div>
             <div style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '2rem',
-              fontWeight: '800',
+              fontSize: '1.9rem',
+              fontWeight: '900',
               color: 'var(--accent-emerald)',
-              background: 'var(--bg-input)',
-              border: '1.5px solid var(--border-color)',
+              background: 'var(--bg-main)',
+              border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-md)',
-              padding: '0.65rem 1rem',
-              textAlign: 'center'
+              padding: '0.5rem 0.85rem',
+              textAlign: 'right'
             }}>
               {splitCashStr || '0'} Kč
             </div>
           </div>
 
           {/* Real-time Card Remaining Calculation Box */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1.5px solid var(--border-color)' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'var(--bg-main)',
+            padding: '0.85rem 1rem',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)'
+          }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
               {t('payment.split_card_remaining')}:
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.5rem', fontWeight: '900', color: 'var(--accent-blue)' }}>
               {splitCardVal.toFixed(2)} Kč
             </span>
           </div>
 
           {/* Quick Ratio & Cash Shortcut Buttons */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <button type="button" className="vat-btn" style={{ padding: '0.65rem', fontWeight: '800' }} onClick={() => setSplitCashStr((totalAmount / 2).toFixed(2))}>50% / 50%</button>
-            <button type="button" className="vat-btn" style={{ padding: '0.65rem' }} onClick={() => setSplitCashStr('100')}>100 Kč</button>
-            <button type="button" className="vat-btn" style={{ padding: '0.65rem' }} onClick={() => setSplitCashStr('200')}>200 Kč</button>
-            <button type="button" className="vat-btn" style={{ padding: '0.65rem' }} onClick={() => setSplitCashStr('500')}>500 Kč</button>
-            <button type="button" className="vat-btn" style={{ padding: '0.65rem', color: 'var(--accent-rose)' }} onClick={() => setSplitCashStr('0')}>C ({t('payment.reset')})</button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem' }}>
+            <button
+              type="button"
+              className="vat-btn"
+              style={{ padding: '0.55rem', fontWeight: '900', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--accent-purple)', borderColor: 'rgba(124, 58, 237, 0.3)' }}
+              onClick={() => setSplitCashStr((totalAmount / 2).toFixed(0))}
+            >
+              50% / 50%
+            </button>
+            <button type="button" className="vat-btn" style={{ padding: '0.55rem' }} onClick={() => setSplitCashStr('100')}>100 Kč</button>
+            <button type="button" className="vat-btn" style={{ padding: '0.55rem' }} onClick={() => setSplitCashStr('200')}>200 Kč</button>
+            <button type="button" className="vat-btn" style={{ padding: '0.55rem' }} onClick={() => setSplitCashStr('500')}>500 Kč</button>
+            <button type="button" className="vat-btn" style={{ padding: '0.55rem' }} onClick={() => setSplitCashStr('1000')}>1000 Kč</button>
+            <button type="button" className="vat-btn" style={{ padding: '0.55rem', color: 'var(--accent-rose)' }} onClick={() => setSplitCashStr('0')}>C ({t('payment.reset')})</button>
           </div>
         </div>
 
-        {/* COLUMN 2: Touch Numpad for Split Cash & Proceed/Complete Button */}
+        {/* COLUMN 2: Touch Numpad for Split Cash & Action Button */}
         <div className="cash-col-right">
-          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {t('payment.numpad_cash_portion')}:
-          </div>
-
-          {/* 4-Column Touch Numpad Grid */}
+          {/* 3x4 Touch Numpad Grid */}
           <div className="side-numpad-grid">
             {['7', '8', '9'].map(n => (
               <button key={n} type="button" className="side-num-btn" onClick={() => onSplitNumpadKey(n)}>{n}</button>
             ))}
-            <button type="button" className="side-num-btn key-action" onClick={() => onSplitNumpadKey('BACK')} title="Backspace">
-              <Delete size={22} />
-            </button>
-
             {['4', '5', '6'].map(n => (
+              <button key={n} type="button" className="side-num-btn" onClick={() => onSplitNumpadKey(n)}>{n}</button>
+            ))}
+            {['1', '2', '3'].map(n => (
               <button key={n} type="button" className="side-num-btn" onClick={() => onSplitNumpadKey(n)}>{n}</button>
             ))}
             <button type="button" className="side-num-btn key-action" onClick={() => onSplitNumpadKey('CLEAR')} title={t('payment.reset')}>
               C
             </button>
-
-            {['1', '2', '3'].map(n => (
-              <button key={n} type="button" className="side-num-btn" onClick={() => onSplitNumpadKey(n)}>{n}</button>
-            ))}
-            <button type="button" className="side-num-btn" onClick={() => onSplitNumpadKey('.')}>,</button>
-
-            <button type="button" className="side-num-btn" style={{ gridColumn: 'span 2' }} onClick={() => onSplitNumpadKey('0')}>0</button>
-            <button type="button" className="side-num-btn" style={{ gridColumn: 'span 2' }} onClick={() => onSplitNumpadKey('00')}>00</button>
+            <button type="button" className="side-num-btn" onClick={() => onSplitNumpadKey('0')}>
+              0
+            </button>
+            <button type="button" className="side-num-btn key-action" onClick={() => onSplitNumpadKey('BACK')} title="Backspace">
+              <Delete size={20} />
+            </button>
           </div>
 
           {/* Proceed to Card Step or Finish Cash Sale */}
           {splitCardVal > 0 ? (
             <button
+              type="button"
               className="pay-btn pay-btn-card"
-              style={{ width: '100%', height: '64px', marginTop: 'auto', fontSize: '1.05rem', fontWeight: '800' }}
+              style={{ width: '100%', height: '54px', marginTop: 'auto', fontSize: '1rem', fontWeight: '800' }}
               onClick={() => setSplitStep(2)}
             >
-              <CreditCard size={22} />
+              <CreditCard size={20} />
               <span>{t('payment.proceed_to_card', { amount: splitCardVal.toFixed(2) })}</span>
             </button>
           ) : (
             <button
+              type="button"
               className="pay-btn pay-btn-cash"
-              style={{ width: '100%', height: '64px', marginTop: 'auto', fontSize: '1.05rem', fontWeight: '800' }}
+              style={{ width: '100%', height: '54px', marginTop: 'auto', fontSize: '1rem', fontWeight: '800' }}
               onClick={onComplete}
             >
-              <CheckCircle2 size={24} />
+              <CheckCircle2 size={20} />
               <span>{t('payment.complete_split')} ({totalAmount.toFixed(2)} Kč)</span>
             </button>
           )}
@@ -126,40 +132,90 @@ export default function SplitPaymentPanel({
 
   // Step 2: Card Terminal payment prompt for remaining splitCardVal amount
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button
           type="button"
           className="nav-tab"
           onClick={() => setSplitStep(1)}
-          style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', fontWeight: '700' }}
+          style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', fontWeight: '800', height: '36px' }}
         >
           ← {t('payment.back_to_cash')}
         </button>
-        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '800' }}>
           {t('payment.cash')}: {splitCashVal.toFixed(2)} Kč | {t('payment.card')}: {splitCardVal.toFixed(2)} Kč
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', padding: '2rem 1.5rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-        <CreditCard size={56} style={{ color: 'var(--accent-blue)', marginBottom: '0.8rem' }} />
-        <div style={{ fontWeight: '800', fontSize: '1.3rem', marginBottom: '0.4rem' }}>{t('payment.card_instruction')}</div>
-        <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
-          {t('payment.split_card_remaining')}: <strong>{splitCardVal.toFixed(2)} Kč</strong>
+      <div style={{
+        textAlign: 'center',
+        padding: '2rem 1.5rem',
+        background: 'var(--bg-main)',
+        borderRadius: 'var(--radius-lg)',
+        border: '1px solid var(--border-color)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.65rem'
+      }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '50%',
+          background: 'rgba(59, 130, 246, 0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--accent-blue)',
+          boxShadow: 'var(--shadow-blue-glow)'
+        }}>
+          <CreditCard size={32} />
+        </div>
+        <div style={{ fontWeight: '900', fontSize: '1.3rem', color: 'var(--text-primary)' }}>
+          {t('payment.card_instruction')}
         </div>
 
-        {/* ČSOB Terminal Status Banner for split card portion */}
+        {/* Hero Large Card Amount Display for Fast Terminal Entry */}
         <div style={{
-          marginTop: '1.25rem',
-          padding: '0.85rem',
+          margin: '0.4rem 0',
+          padding: '0.75rem 2.5rem',
+          background: 'var(--bg-card)',
+          border: '1.5px solid var(--accent-blue)',
+          borderRadius: 'var(--radius-lg)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)'
+        }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
+            {t('payment.split_card_remaining')}
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '2.5rem',
+            fontWeight: '900',
+            color: 'var(--accent-blue)',
+            lineHeight: 1.1,
+            letterSpacing: '-0.02em'
+          }}>
+            {splitCardVal.toFixed(2)} Kč
+          </span>
+        </div>
+
+        {/* ČSOB Terminal Status Banner */}
+        <div style={{
+          width: '100%',
+          maxWidth: '560px',
+          marginTop: '0.5rem',
+          padding: '0.75rem 1rem',
           borderRadius: 'var(--radius-md)',
-          background: (termConfig?.enabled && termConfig?.ip) ? 'rgba(5, 150, 105, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+          background: (termConfig?.enabled && termConfig?.ip) ? 'rgba(5, 150, 105, 0.08)' : 'rgba(59, 130, 246, 0.08)',
           border: `1px solid ${(termConfig?.enabled && termConfig?.ip) ? 'rgba(5, 150, 105, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
           textAlign: 'left',
           fontSize: '0.85rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
-            <Wifi size={16} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: '800', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
+            <Wifi size={15} />
             <span>
               {(termConfig?.enabled && termConfig?.ip)
                 ? `${t('payment.card_auto_title')} (${termConfig.ip}:${termConfig.port})`
@@ -178,49 +234,51 @@ export default function SplitPaymentPanel({
 
       {termResult && (
         <div style={{
-          padding: '0.85rem',
+          padding: '0.75rem 1rem',
           borderRadius: 'var(--radius-md)',
-          background: termResult.success ? 'rgba(5, 150, 105, 0.15)' : 'rgba(225, 29, 72, 0.15)',
-          border: `1px solid ${termResult.success ? 'rgba(5, 150, 105, 0.4)' : 'rgba(225, 29, 72, 0.4)'}`,
+          background: termResult.success ? 'rgba(5, 150, 105, 0.12)' : 'rgba(225, 29, 72, 0.12)',
+          border: `1px solid ${termResult.success ? 'rgba(5, 150, 105, 0.35)' : 'rgba(225, 29, 72, 0.35)'}`,
           fontSize: '0.85rem'
         }}>
           <div style={{ fontWeight: '800', color: termResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
             {termResult.success ? `✓ ${t('payment.terminal_approved')}` : `✕ ${termResult.message}`}
           </div>
           {termResult.auth_code && (
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               Autorizační kód: {termResult.auth_code} | Karta: {termResult.card_mask}
             </div>
           )}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto' }}>
         {termConfig?.enabled && termConfig?.ip && (
           <button
+            type="button"
             className="pay-btn pay-btn-card"
             disabled={termLoading}
-            style={{ flex: 1, height: '62px', fontSize: '1.05rem', fontWeight: '800' }}
+            style={{ flex: 1, height: '56px', fontSize: '1rem', fontWeight: '800' }}
             onClick={onTerminalPay}
           >
-            <RefreshCw size={20} className={termLoading ? 'spin' : ''} />
+            <RefreshCw size={18} className={termLoading ? 'spin' : ''} />
             <span>{termLoading ? t('payment.sending_to_terminal') : t('payment.card_send_csob')}</span>
           </button>
         )}
 
         <button
+          type="button"
           className="pay-btn pay-btn-card"
           style={{
             flex: 1,
-            height: '62px',
-            fontSize: '1.05rem',
+            height: '56px',
+            fontSize: '1rem',
             fontWeight: '800',
-            background: (termConfig?.enabled && termConfig?.ip) ? 'var(--bg-card)' : 'var(--accent-blue)',
+            background: (termConfig?.enabled && termConfig?.ip) ? 'var(--bg-main)' : 'var(--accent-blue)',
             border: (termConfig?.enabled && termConfig?.ip) ? '1px solid var(--border-color)' : 'none'
           }}
           onClick={onComplete}
         >
-          <CheckCircle2 size={22} />
+          <CheckCircle2 size={20} />
           <span>{(termConfig?.enabled && termConfig?.ip) ? t('payment.card_manual_override') : `${t('payment.card_confirm_manual')} (${splitCardVal.toFixed(2)} Kč)`}</span>
         </button>
       </div>
