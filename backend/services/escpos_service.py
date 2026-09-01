@@ -2,10 +2,13 @@ import os
 import glob
 import subprocess
 import logging
-
+import threading
 import time
 
 logger = logging.getLogger("pos-escpos")
+
+# Re-entrant thread lock to prevent concurrent print jobs or drawer kicks from clashing on raw device streams
+_hardware_printer_lock = threading.RLock()
 
 
 def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
@@ -152,6 +155,10 @@ class ESCPOSPrinterService:
         If physical printer is not connected, logs receipt output cleanly to console.
         Returns a dict: {"success": True, "physical": True/False, "status": "PRINTED"/"SIMULATED"}
         """
+        with _hardware_printer_lock:
+            return self._do_print_receipt(sale_data, store_config)
+
+    def _do_print_receipt(self, sale_data: dict, store_config: dict) -> dict:
         paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
         is_a4 = paper_width == "A4"
         is_58mm = not is_a4 and paper_width in ["58", "48"]
@@ -414,6 +421,10 @@ class ESCPOSPrinterService:
         """
         Sends pulse signal to thermal printer cash drawer RJ11/RJ12 port to kick the drawer open.
         """
+        with _hardware_printer_lock:
+            return self._do_open_cash_drawer()
+
+    def _do_open_cash_drawer(self) -> dict:
         logger.info(f"Opening cash drawer via printer interface {self.interface_type}")
         try:
             printer = None
