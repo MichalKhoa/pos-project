@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 
-function ClearedCartBanner({ snapshot, onRestore, onDismiss }) {
+function ClearedCartBanner({ snapshot, onRestore }) {
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
@@ -64,49 +65,14 @@ export default function Cart({
   onOpenCashDrawer = null
 }) {
   const { t } = useTranslation();
-  const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
 
-  // Calculate item effective gross totals after item-level discounts
-  const rawSubtotal = roundCZK(cartItems.reduce((sum, item) => {
-    const disc = item.discountPercent || 0;
-    const effectivePrice = item.price * (1 - disc / 100);
-    return sum + (effectivePrice * item.quantity);
-  }, 0));
-
-  // Apply Cart-Level Discount
-  const cartDiscountAmount = roundCZK(rawSubtotal * (cartDiscountPercent / 100));
-  const finalGrandTotal = roundCZK(rawSubtotal - cartDiscountAmount);
-  const cartDiscountFactor = rawSubtotal !== 0 ? finalGrandTotal / rawSubtotal : 1;
+  const {
+    cartDiscountAmount,
+    finalGrandTotal,
+    totalNet,
+    totalTax
+  } = calculateCartTotals(cartItems, cartDiscountPercent);
   const isRefundTransaction = finalGrandTotal < 0;
-
-  // Group tax totals accurately per VAT rate (21%, 12%, 0%) after all discounts
-  const taxSummary = cartItems.reduce((acc, item) => {
-    const rate = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
-    const itemDisc = item.discountPercent || 0;
-    const itemEffectivePrice = item.price * (1 - itemDisc / 100);
-    const itemGrossBeforeCartDisc = itemEffectivePrice * item.quantity;
-    const itemFinalGross = roundCZK(itemGrossBeforeCartDisc * cartDiscountFactor);
-
-    let netPrice = itemFinalGross;
-    let taxAmount = 0;
-
-    if (rate > 0) {
-      netPrice = roundCZK(itemFinalGross / (1 + rate / 100));
-      taxAmount = roundCZK(itemFinalGross - netPrice);
-    }
-
-    if (!acc[rate]) {
-      acc[rate] = { rate, gross: 0, net: 0, tax: 0 };
-    }
-    acc[rate].gross = roundCZK(acc[rate].gross + itemFinalGross);
-    acc[rate].net = roundCZK(acc[rate].net + netPrice);
-    acc[rate].tax = roundCZK(acc[rate].tax + taxAmount);
-    return acc;
-  }, {});
-
-  const sortedRates = Object.values(taxSummary).sort((a, b) => b.rate - a.rate);
-  const totalNet = roundCZK(sortedRates.reduce((sum, t) => sum + t.net, 0));
-  const totalTax = roundCZK(sortedRates.reduce((sum, t) => sum + t.tax, 0));
   const totalItemCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
   return (

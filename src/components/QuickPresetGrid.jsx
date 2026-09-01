@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Tag, Layers, Check, Edit3, Trash2, Settings2, GripVertical, MoveLeft, MoveRight, Search, X, ChevronLeft, ChevronRight, FolderPlus, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Tag, Layers, Check, Edit3, Trash2, GripVertical, MoveLeft, MoveRight, Search, X, ChevronLeft, ChevronRight, FolderPlus, ChevronUp, ChevronDown } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';

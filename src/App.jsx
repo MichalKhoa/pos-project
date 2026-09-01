@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -7,10 +7,6 @@ import ToastUndo from './components/ToastUndo';
 import { useCart } from './hooks/useCart';
 import PaymentModal from './components/PaymentModal';
 import ReceiptModal from './components/ReceiptModal';
-import SalesHistoryView from './components/SalesHistoryView';
-import PresetsCatalogView from './components/PresetsCatalogView';
-import InventoryView from './components/InventoryView';
-import SettingsView from './components/SettingsView';
 import PendingSyncModal from './components/PendingSyncModal';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
 import CheckoutFlashBanner from './components/CheckoutFlashBanner';
@@ -19,10 +15,17 @@ import RefundModal from './components/RefundModal';
 import CalendarModal from './components/CalendarModal';
 import DiscountModal from './components/DiscountModal';
 import LockScreenModal from './components/LockScreenModal';
-import CustomerDisplayView from './components/CustomerDisplayView';
 import { soundFx } from './utils/audio';
+import { calculateCartTotals } from './utils/tax';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
 import { createSaleBackend, fetchEetStatus, processEetQueue, fetchSalesHistoryBackend, normalizeSale, updateSaleRefundStatusBackend, fetchCategoriesBackend, saveCategoryBackend, deleteCategoryBackend, fetchPresetsBackend, savePresetBackend, deletePresetBackend, reorderPresetsBackend, fetchStoreConfigBackend, saveStoreConfigBackend, broadcastCustomerDisplay, deleteSaleBackend, purgeAllSalesBackend, openCashDrawerBackend } from './api/posApi';
+
+// Lazy-loaded heavy views for code-splitting and faster cashier initialization
+const SalesHistoryView = React.lazy(() => import('./components/SalesHistoryView'));
+const PresetsCatalogView = React.lazy(() => import('./components/PresetsCatalogView'));
+const InventoryView = React.lazy(() => import('./components/InventoryView'));
+const SettingsView = React.lazy(() => import('./components/SettingsView'));
+const CustomerDisplayView = React.lazy(() => import('./components/CustomerDisplayView'));
 
 const sanitizePresets = (list) => {
   if (!Array.isArray(list)) return list;
@@ -133,7 +136,6 @@ export default function App() {
     restoreParkedCart,
     deleteParkedCart,
     addToCart,
-    addItem: handleAddItem,
     updateQuantity: handleUpdateQty,
     updateItemDiscount: handleUpdateItemDiscount,
     applyCartDiscount: handleApplyCartDiscount,
@@ -698,7 +700,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier]);
+  }, [activeTab, keypadAmount, cartItems, paymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, setItemMultiplier]);
 
   // Category handlers
   const handleAddCategory = (name) => {
@@ -739,62 +741,53 @@ export default function App() {
 
 
 
-  const roundCZK = (v) => Math.round((v + Number.EPSILON) * 100) / 100;
-
   const handleOpenCustomDiscountModal = (item = null) => {
     setDiscountModalSelectedItem(item);
     setIsDiscountModalOpen(true);
   };
 
-  const handleApplyCustomDiscount = ({ type, value, scope, itemId }) => {
-    if (scope === 'item' && itemId) {
-      setCartItems(prev => prev.map(item => {
-        if (item.id !== itemId) return item;
-        if (type === 'percent') {
-          return { ...item, discountPercent: Math.min(100, value) };
-        } else {
-          const itemGross = item.price * item.quantity;
-          const pct = itemGross > 0 ? (value / itemGross) * 100 : 0;
-          return { ...item, discountPercent: Math.min(100, Math.round(pct * 10) / 10) };
-        }
-      }));
-    } else {
-      // Scope === 'cart'
-      if (type === 'percent') {
-        setCartDiscountPercent(Math.min(100, value));
-      } else {
+  const handleApplyCustomDiscount = ({ type, value, scope, targetItem }) => {
+    if (scope === 'ITEM' && targetItem) {
+      handleUpdateItemDiscount(targetItem.id, value);
+    } else if (scope === 'CART') {
+      if (type === 'PERCENT') {
+        handleApplyCartDiscount(value);
+      } else if (type === 'AMOUNT') {
         const rawSubtotal = cartItems.reduce((sum, item) => {
           const disc = item.discountPercent || 0;
-          const effectivePrice = item.price * (1 - disc / 100);
-          return sum + (effectivePrice * item.quantity);
+          return sum + (item.price * (1 - disc / 100) * item.quantity);
         }, 0);
-
-        const pct = rawSubtotal > 0 ? (value / rawSubtotal) * 100 : 0;
-        setCartDiscountPercent(Math.min(100, Math.round(pct * 10) / 10));
+        if (rawSubtotal > 0) {
+          const equivalentPercent = Math.min(100, Math.max(0, (value / rawSubtotal) * 100));
+          handleApplyCartDiscount(equivalentPercent);
+        }
       }
     }
   };
 
-  // Preset operations
-  const handleAddPreset = (newPreset) => {
-    const withPosition = { ...newPreset, position: 0 };
-    setPresets(prev => [withPosition, ...prev]);
-    savePresetBackend(withPosition);
+  // Preset handlers
+  const handleAddPreset = async (presetData) => {
+    const newPreset = {
+      ...presetData,
+      id: `preset-${Date.now()}`
+    };
+    setPresets(prev => sanitizePresets([...prev, newPreset]));
+    await savePresetBackend(newPreset);
   };
 
-  const handleUpdatePreset = (updatedPreset) => {
-    setPresets(prev => prev.map(p => p.id === updatedPreset.id ? updatedPreset : p));
-    savePresetBackend(updatedPreset);
+  const handleUpdatePreset = async (updated) => {
+    setPresets(prev => sanitizePresets(prev.map(p => p.id === updated.id ? updated : p)));
+    await savePresetBackend(updated);
   };
 
-  const handleDeletePreset = (presetId) => {
+  const handleDeletePreset = async (presetId) => {
     setPresets(prev => prev.filter(p => p.id !== presetId));
-    deletePresetBackend(presetId);
+    await deletePresetBackend(presetId);
   };
 
-  const handleReorderPresets = (reorderedPresets) => {
-    setPresets(reorderedPresets);
-    reorderPresetsBackend(reorderedPresets);
+  const handleReorderPresets = async (reordered) => {
+    setPresets(sanitizePresets(reordered));
+    await reorderPresetsBackend(reordered);
   };
 
   // Checkout flow
@@ -805,40 +798,10 @@ export default function App() {
 
   const handleCompleteSale = ({ paymentMethod, splitDetails, tenderedAmount, changeDue }) => {
     soundFx.playSuccessChime();
-    const rawSubtotal = roundCZK(cartItems.reduce((sum, item) => {
-      const disc = item.discountPercent || 0;
-      const effectivePrice = item.price * (1 - disc / 100);
-      return sum + (effectivePrice * item.quantity);
-    }, 0));
-
-    const cartDiscountAmount = roundCZK(rawSubtotal * (cartDiscountPercent / 100));
-    const finalGrandTotal = roundCZK(rawSubtotal - cartDiscountAmount);
-    const cartDiscountFactor = rawSubtotal !== 0 ? finalGrandTotal / rawSubtotal : 1;
-
-    // Calculate tax summary
-    const taxSummary = cartItems.reduce((acc, item) => {
-      const rate = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
-      const itemDisc = item.discountPercent || 0;
-      const itemEffectivePrice = item.price * (1 - itemDisc / 100);
-      const itemGrossBeforeCartDisc = itemEffectivePrice * item.quantity;
-      const itemFinalGross = roundCZK(itemGrossBeforeCartDisc * cartDiscountFactor);
-
-      let netPrice = itemFinalGross;
-      let taxAmount = 0;
-
-      if (rate > 0) {
-        netPrice = roundCZK(itemFinalGross / (1 + rate / 100));
-        taxAmount = roundCZK(itemFinalGross - netPrice);
-      }
-
-      if (!acc[rate]) {
-        acc[rate] = { rate, gross: 0, net: 0, tax: 0 };
-      }
-      acc[rate].gross = roundCZK(acc[rate].gross + itemFinalGross);
-      acc[rate].net = roundCZK(acc[rate].net + netPrice);
-      acc[rate].tax = roundCZK(acc[rate].tax + taxAmount);
-      return acc;
-    }, {});
+    const {
+      finalGrandTotal,
+      taxSummary
+    } = calculateCartTotals(cartItems, cartDiscountPercent);
 
     // Robust receipt numbering: YYYY-XXXXXX (dynamic year, 6-digit counter up to 999,999/yr, duplicate-safe)
     const currentYear = new Date().getFullYear().toString();
@@ -917,7 +880,11 @@ export default function App() {
   };
 
   if (isCustomerDisplayMode) {
-    return <CustomerDisplayView storeConfig={storeConfig} />;
+    return (
+      <Suspense fallback={<div className="tab-loading-spinner" style={{ color: '#fff', padding: '2rem', textAlign: 'center' }}>Načítání displeje...</div>}>
+        <CustomerDisplayView storeConfig={storeConfig} />
+      </Suspense>
+    );
   }
 
   return (
@@ -1038,51 +1005,59 @@ export default function App() {
         )}
 
         {activeTab === 'inventory' && (
-          <InventoryView
-            presets={presets}
-            categories={categories}
-            onUpdatePresets={setPresets}
-            onAddPreset={handleAddPreset}
-          />
+          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání skladu...</div>}>
+            <InventoryView
+              presets={presets}
+              categories={categories}
+              onUpdatePresets={setPresets}
+              onAddPreset={handleAddPreset}
+            />
+          </Suspense>
         )}
 
         {activeTab === 'presets' && (
-          <PresetsCatalogView
-            presets={presets}
-            categories={categories}
-            onAddCategory={handleAddCategory}
-            onEditCategory={handleEditCategory}
-            onDeleteCategory={handleDeleteCategory}
-            onAddPreset={handleAddPreset}
-            onUpdatePreset={handleUpdatePreset}
-            onDeletePreset={handleDeletePreset}
-            onReorderPresets={handleReorderPresets}
-          />
+          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání katalogu...</div>}>
+            <PresetsCatalogView
+              presets={presets}
+              categories={categories}
+              onAddCategory={handleAddCategory}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
+              onAddPreset={handleAddPreset}
+              onUpdatePreset={handleUpdatePreset}
+              onDeletePreset={handleDeletePreset}
+              onReorderPresets={handleReorderPresets}
+            />
+          </Suspense>
         )}
 
         {activeTab === 'history' && (
-          <SalesHistoryView
-            salesHistory={salesHistory}
-            storeConfig={storeConfig}
-            isAdminMode={isAdminMode}
-            onToggleAdminMode={handleToggleAdminMode}
-            onDeleteSale={handleDeleteSale}
-            onClearAllTestSales={handleClearAllTestSales}
-            onInitiateRefund={setRefundTargetSale}
-            initialDateFilter={historyDateFilter}
-          />
+          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání historie...</div>}>
+            <SalesHistoryView
+              salesHistory={salesHistory}
+              storeConfig={storeConfig}
+              isAdminMode={isAdminMode}
+              onToggleAdminMode={handleToggleAdminMode}
+              onDeleteSale={handleDeleteSale}
+              onClearAllTestSales={handleClearAllTestSales}
+              onInitiateRefund={setRefundTargetSale}
+              initialDateFilter={historyDateFilter}
+            />
+          </Suspense>
         )}
 
         {activeTab === 'settings' && (
-          <SettingsView
-            storeConfig={storeConfig}
-            onSaveStoreConfig={handleSaveStoreConfig}
-            presets={presets}
-            onResetData={handleResetData}
-            onNavigateToPresets={() => setActiveTab('presets')}
-            isAdminMode={isAdminMode}
-            onToggleAdminMode={handleToggleAdminMode}
-          />
+          <Suspense fallback={<div className="tab-loading-spinner" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Načítání nastavení...</div>}>
+            <SettingsView
+              storeConfig={storeConfig}
+              onSaveStoreConfig={handleSaveStoreConfig}
+              presets={presets}
+              onResetData={handleResetData}
+              onNavigateToPresets={() => setActiveTab('presets')}
+              isAdminMode={isAdminMode}
+              onToggleAdminMode={handleToggleAdminMode}
+            />
+          </Suspense>
         )}
       </main>
 

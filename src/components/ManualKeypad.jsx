@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Delete, PlusCircle, ChevronUp, ChevronDown, Percent, PauseCircle, PlayCircle, X, Trash2, Clock, ShoppingBag } from 'lucide-react';
+import { Calculator, Delete, PlusCircle, ChevronUp, ChevronDown, PauseCircle, PlayCircle, X, Trash2, Clock, ShoppingBag } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import CashDrawerIcon from './CashDrawerIcon';
 
@@ -11,7 +11,6 @@ export default function ManualKeypad({
   setItemMultiplier,
   defaultVat = 21,
   onOpenCashDrawer,
-  onApplyDiscount,
   parkedCarts = [],
   onParkCart,
   onRestoreParkedCart,

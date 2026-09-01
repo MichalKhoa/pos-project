@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Lock, ShieldCheck, KeyRound, X, Check } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ShieldCheck, X, Check } from 'lucide-react';
 import { verifyPinBackend } from '../api/posApi';
 import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
 
@@ -20,7 +20,57 @@ export default function AdminPinModal({
 
   const activePin = step === 'CONFIRM_PIN' ? confirmPin : step === 'NEW_PIN' ? newPin : enteredPin;
 
-  const handleNumClick = async (num) => {
+  const triggerShake = () => {
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 500);
+  };
+
+  const verifyEnteredPin = useCallback(async (pinToTest) => {
+    setIsVerifying(true);
+    try {
+      const res = await verifyPinBackend(pinToTest);
+      let isValid = res?.valid === true;
+
+      if (res?.valid === null) {
+        const localPin = storeConfig?.cashierPin || '1234';
+        isValid = pinToTest === localPin;
+      }
+
+      if (isValid) {
+        setErrorMsg('');
+        if (step === 'CURRENT_PIN') {
+          setStep('NEW_PIN');
+        } else {
+          if (onSuccess) onSuccess(pinToTest);
+        }
+      } else {
+        setErrorMsg('Nesprávný Admin PIN kód!');
+        triggerShake();
+        setEnteredPin('');
+      }
+    } catch {
+      setErrorMsg('Chyba při ověřování PIN kódu.');
+      triggerShake();
+      setEnteredPin('');
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [step, storeConfig?.cashierPin, onSuccess]);
+
+  const finalizePinChange = useCallback((confirmed) => {
+    if (confirmed !== newPin) {
+      setErrorMsg('PIN kódy se neshodují!');
+      triggerShake();
+      setConfirmPin('');
+      return;
+    }
+    setSuccessMsg('Admin PIN kód byl úspěšně změněn!');
+    setTimeout(() => {
+      if (onSuccess) onSuccess(newPin);
+    }, 1200);
+  }, [newPin, onSuccess]);
+
+  const handleNumClick = useCallback((num) => {
     if (activePin.length >= 8 || isVerifying) return;
     setErrorMsg('');
 
@@ -40,9 +90,9 @@ export default function AdminPinModal({
         finalizePinChange(next);
       }
     }
-  };
+  }, [activePin.length, isVerifying, step, enteredPin, storeConfig?.cashierPin, verifyEnteredPin, confirmPin, newPin.length, finalizePinChange]);
 
-  const handleBackspace = () => {
+  const handleBackspace = useCallback(() => {
     if (isVerifying) return;
     setErrorMsg('');
     if (step === 'VERIFY_PIN' || step === 'CURRENT_PIN') {
@@ -52,9 +102,9 @@ export default function AdminPinModal({
     } else if (step === 'CONFIRM_PIN') {
       setConfirmPin(prev => prev.slice(0, -1));
     }
-  };
+  }, [isVerifying, step]);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     if (isVerifying) return;
     setErrorMsg('');
     if (step === 'VERIFY_PIN' || step === 'CURRENT_PIN') {
@@ -64,46 +114,9 @@ export default function AdminPinModal({
     } else if (step === 'CONFIRM_PIN') {
       setConfirmPin('');
     }
-  };
+  }, [isVerifying, step]);
 
-  const triggerShake = () => {
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 500);
-  };
-
-  const verifyEnteredPin = async (pinToTest) => {
-    setIsVerifying(true);
-    try {
-      const res = await verifyPinBackend(pinToTest);
-      let isValid = res?.valid === true;
-
-      if (res?.valid === null) {
-        const localPin = storeConfig?.cashierPin || '1234';
-        isValid = pinToTest === localPin;
-      }
-
-      if (isValid) {
-        setErrorMsg('');
-        if (step === 'CURRENT_PIN') {
-          setStep('NEW_PIN');
-        } else {
-          onSuccess && onSuccess(pinToTest);
-        }
-      } else {
-        setErrorMsg('Nesprávný Admin PIN kód!');
-        triggerShake();
-        setEnteredPin('');
-      }
-    } catch {
-      setErrorMsg('Chyba při ověřování PIN kódu.');
-      triggerShake();
-      setEnteredPin('');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleNextStep = () => {
+  const handleNextStep = useCallback(() => {
     if (step === 'NEW_PIN') {
       if (newPin.length < 4 || newPin.length > 8) {
         setErrorMsg('PIN musí mít 4 až 8 číslic.');
@@ -116,20 +129,7 @@ export default function AdminPinModal({
     } else {
       verifyEnteredPin(enteredPin);
     }
-  };
-
-  const finalizePinChange = (confirmed) => {
-    if (confirmed !== newPin) {
-      setErrorMsg('PIN kódy se neshodují!');
-      triggerShake();
-      setConfirmPin('');
-      return;
-    }
-    setSuccessMsg('Admin PIN kód byl úspěšně změněn!');
-    setTimeout(() => {
-      onSuccess && onSuccess(newPin);
-    }, 1200);
-  };
+  }, [step, newPin.length, finalizePinChange, confirmPin, verifyEnteredPin, enteredPin]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -148,7 +148,7 @@ export default function AdminPinModal({
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [step, enteredPin, newPin, confirmPin, isVerifying]);
+  }, [handleNumClick, handleBackspace, handleClear, handleNextStep]);
 
   const getStepTitle = () => {
     if (step === 'VERIFY_PIN') return 'Ověření Admin PIN';

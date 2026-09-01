@@ -13,6 +13,10 @@ class TestApiEndpoints(unittest.TestCase):
     def test_root_endpoint(self):
         res = self.client.get("/")
         self.assertEqual(res.status_code, 200)
+
+    def test_status_endpoint(self):
+        res = self.client.get("/api/v1/status")
+        self.assertEqual(res.status_code, 200)
         json_data = res.json()
         self.assertEqual(json_data["status"], "ONLINE")
 

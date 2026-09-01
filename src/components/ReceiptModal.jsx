@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Printer, CheckCircle, RotateCcw } from 'lucide-react';
 import { printReceiptBackend } from '../api/posApi';
 
@@ -37,24 +37,14 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
   const [isPrinting, setIsPrinting] = useState(false);
   const autoPrintTriggeredRef = useRef(false);
 
-  useEffect(() => {
-    if (!disableAutoPrint && storeConfig?.autoPrintReceipt && saleData && !autoPrintTriggeredRef.current) {
-      autoPrintTriggeredRef.current = true;
-      handlePrint(false);
-    }
-  }, [storeConfig?.autoPrintReceipt, saleData, disableAutoPrint]);
-
-  if (!saleData) return null;
-
   const resolvedItems = parseSaleItems(saleData);
-
   const safeConfig = storeConfig || {};
   const paperWidth = (safeConfig.printerPaperWidth || '80').toString().toUpperCase();
   const isA4 = paperWidth === 'A4';
   const is58mm = !isA4 && (paperWidth === '58' || paperWidth === '48');
 
-  const handlePrint = async (forceDebugWindow = false) => {
-    if (isPrinting) return;
+  const handlePrint = useCallback(async (forceDebugWindow = false) => {
+    if (isPrinting || !saleData) return;
     setIsPrinting(true);
 
     const isDirectPrint = storeConfig?.directHardwarePrint !== false && !forceDebugWindow;
@@ -80,19 +70,18 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
 
     const printWidth = isA4 ? '210mm' : (is58mm ? '48mm' : '72mm');
     const fontSize = isA4 ? '11px' : (is58mm ? '9px' : '11px');
-    const logoSize = isA4 ? '48px' : (is58mm ? '28px' : '36px');
 
     const isRefund = saleData.isRefund || saleData.is_refund || (saleData.totalAmount !== undefined && saleData.totalAmount < 0) || (saleData.grandTotal !== undefined && saleData.grandTotal < 0);
     const origNumber = escapeHtml(saleData.originalReceiptNumber || saleData.original_receipt_number);
     const reasonText = escapeHtml(saleData.refundReason || saleData.refund_reason);
     const receiptNum = escapeHtml(saleData.receiptNumber);
 
-    const storeName = escapeHtml(storeConfig.storeName || '');
-    const street = escapeHtml(storeConfig.street || '');
-    const city = escapeHtml(storeConfig.city || '');
-    const ico = escapeHtml(storeConfig.ico || '');
-    const dic = escapeHtml(storeConfig.dic || '');
-    const registerNo = escapeHtml(storeConfig.registerNo || 'Pokladna #01');
+    const storeName = escapeHtml(storeConfig?.storeName || '');
+    const street = escapeHtml(storeConfig?.street || '');
+    const city = escapeHtml(storeConfig?.city || '');
+    const ico = escapeHtml(storeConfig?.ico || '');
+    const dic = escapeHtml(storeConfig?.dic || '');
+    const registerNo = escapeHtml(storeConfig?.registerNo || 'Pokladna #01');
     const idProvozovny = escapeHtml(storeConfig.idProvozovny || '11');
     const receiptFooter = escapeHtml(storeConfig.receiptFooter || 'Děkujeme za váš nákup!');
 
@@ -395,9 +384,18 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         </body>
       </html>
     `);
-    printWin.document.close();
-    setTimeout(() => setIsPrinting(false), 1500);
-  };
+      printWin.document.close();
+      setTimeout(() => setIsPrinting(false), 1500);
+  }, [isPrinting, saleData, storeConfig, resolvedItems, isA4, is58mm]);
+
+  useEffect(() => {
+    if (!disableAutoPrint && storeConfig?.autoPrintReceipt && saleData && !autoPrintTriggeredRef.current) {
+      autoPrintTriggeredRef.current = true;
+      handlePrint(false);
+    }
+  }, [disableAutoPrint, storeConfig?.autoPrintReceipt, saleData, handlePrint]);
+
+  if (!saleData) return null;
 
   return (
     <div className="modal-overlay">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, QrCode, CheckCircle2, Wifi, WifiOff, Sparkles, Receipt, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, Wifi, WifiOff, Sparkles } from 'lucide-react';
 
 export default function CustomerDisplayView({ storeConfig }) {
   const [displayState, setDisplayState] = useState({
@@ -14,6 +14,11 @@ export default function CustomerDisplayView({ storeConfig }) {
   const wsRef = useRef(null);
   const wakeLockRef = useRef(null);
   const standbyTimerRef = useRef(null);
+  const storeConfigRef = useRef(storeConfig);
+
+  useEffect(() => {
+    storeConfigRef.current = storeConfig;
+  }, [storeConfig]);
 
   // Request Screen WakeLock to keep display awake when connected
   const requestWakeLock = async () => {
@@ -30,7 +35,7 @@ export default function CustomerDisplayView({ storeConfig }) {
       if (window.fully && typeof window.fully.turnScreenOn === 'function') {
         window.fully.turnScreenOn();
       }
-    } catch (e) {
+    } catch {
       // Ignored if not running inside Fully Kiosk
     }
   };
@@ -51,7 +56,7 @@ export default function CustomerDisplayView({ storeConfig }) {
       if (window.fully && typeof window.fully.turnScreenOff === 'function') {
         window.fully.turnScreenOff();
       }
-    } catch (e) {
+    } catch {
       // Ignored if not running inside Fully Kiosk
     }
   };
@@ -114,8 +119,9 @@ export default function CustomerDisplayView({ storeConfig }) {
         ws.onclose = () => {
           setIsConnected(false);
           releaseWakeLock();
-          const autoSleepEnabled = storeConfig?.customerDisplayAutoSleep !== false && storeConfig?.customer_display_auto_sleep !== false;
-          const delayMs = (storeConfig?.customerDisplayStandbyDelay || storeConfig?.customer_display_standby_delay || 10) * 1000;
+          const cfg = storeConfigRef.current;
+          const autoSleepEnabled = cfg?.customerDisplayAutoSleep !== false && cfg?.customer_display_auto_sleep !== false;
+          const delayMs = (cfg?.customerDisplayStandbyDelay || cfg?.customer_display_standby_delay || 10) * 1000;
 
           if (autoSleepEnabled) {
             console.log(`[CustomerDisplay] WebSocket closed. Starting ${delayMs / 1000}s standby blackout timer...`);
@@ -128,7 +134,7 @@ export default function CustomerDisplayView({ storeConfig }) {
 
           reconnectTimer = setTimeout(connectWebSocket, 3000);
         };
-      } catch (err) {
+      } catch {
         setIsConnected(false);
         releaseWakeLock();
         reconnectTimer = setTimeout(connectWebSocket, 3000);

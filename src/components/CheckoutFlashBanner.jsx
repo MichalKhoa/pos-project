@@ -6,7 +6,9 @@ export default function CheckoutFlashBanner({ flashBanner, onDismiss }) {
     if (!flashBanner) return;
     const duration = flashBanner.type === 'SUCCESS' ? 2200 : 3200;
     const timer = setTimeout(() => {
-      onDismiss && onDismiss();
+      if (onDismiss) {
+        onDismiss();
+      }
     }, duration);
     return () => clearTimeout(timer);
   }, [flashBanner, onDismiss]);

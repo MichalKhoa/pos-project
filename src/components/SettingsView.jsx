@@ -8,12 +8,7 @@ import {
   Shield,
   ArrowRight,
   Upload,
-  CheckCircle,
-  AlertCircle,
   RefreshCw,
-  Send,
-  Calendar,
-  FileCheck,
   Printer,
   CreditCard,
   Wifi,
@@ -26,9 +21,6 @@ import {
 import {
   fetchBackendRoot,
   fetchEetStatus,
-  verifyEetConnection,
-  uploadEetCert,
-  processEetQueue,
   fetchUpdateStatus,
   applySystemUpdate,
   fetchTerminalConfig,
@@ -57,7 +49,7 @@ export default function SettingsView({
   isAdminMode,
   onToggleAdminMode
 }) {
-  const { t, language, setLanguage } = useTranslation();
+  const { t, setLanguage } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState('store');
 
   const [config, setConfig] = useState({
@@ -88,7 +80,6 @@ export default function SettingsView({
   // Backend Connection & EET State
   const [backendConnected, setBackendConnected] = useState(false);
   const [backendLoading, setBackendLoading] = useState(true);
-  const [eetStatusData, setEetStatusData] = useState(null);
   const [litestreamData, setLitestreamData] = useState(null);
 
   // System Update State
@@ -96,21 +87,6 @@ export default function SettingsView({
   const [updateData, setUpdateData] = useState(null);
   const [applyLoading, setApplyLoading] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updateResult, setUpdateResult] = useState(null);
-
-  // Upload Form State
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [certPassword, setCertPassword] = useState('');
-  const [uploadLoading, setUploadLoading] = useState(false);
-  const [uploadResult, setUploadResult] = useState(null);
-
-  // Verification State
-  const [verifyLoading, setVerifyLoading] = useState(false);
-  const [verifyResult, setVerifyResult] = useState(null);
-
-  // Queue Processing State
-  const [queueLoading, setQueueLoading] = useState(false);
-  const [queueResult, setQueueResult] = useState(null);
 
   // ČSOB Terminal Ingenico Move 3500 State
   const [termEnabled, setTermEnabled] = useState(false);
@@ -135,12 +111,7 @@ export default function SettingsView({
 
   const handleTriggerApplyUpdate = async () => {
     setApplyLoading(true);
-    const res = await applySystemUpdate();
-    if (res) {
-      setUpdateResult(res);
-    } else {
-      setUpdateResult({ status: 'ERROR', message: 'Nepodařilo se navázat spojení s aktualizační službou.' });
-    }
+    await applySystemUpdate();
     setApplyLoading(false);
     setShowUpdateModal(false);
   };
@@ -154,7 +125,6 @@ export default function SettingsView({
     if (rootRes.online) {
       const eetStatus = await fetchEetStatus();
       if (eetStatus) {
-        setEetStatusData(eetStatus);
         setConfig(prev => ({
           ...prev,
           dic: eetStatus.dic || prev.dic,
@@ -314,43 +284,6 @@ export default function SettingsView({
     };
     reader.readAsText(file);
   };
-
-  const handleCertUpload = async (e) => {
-    e.preventDefault();
-    if (!selectedFile) return;
-
-    setUploadLoading(true);
-    setUploadResult(null);
-
-    const res = await uploadEetCert(selectedFile, certPassword, config.eet_environment || 'playground');
-    setUploadResult(res);
-    setUploadLoading(false);
-
-    if (res.status === 'SUCCESS') {
-      setSelectedFile(null);
-      setCertPassword('');
-      loadBackendInfo();
-    }
-  };
-
-  const handleTestVerify = async () => {
-    setVerifyLoading(true);
-    setVerifyResult(null);
-    const res = await verifyEetConnection();
-    setVerifyResult(res);
-    setVerifyLoading(false);
-  };
-
-  const handleProcessQueue = async () => {
-    setQueueLoading(true);
-    setQueueResult(null);
-    const res = await processEetQueue();
-    setQueueResult(res);
-    setQueueLoading(false);
-    loadBackendInfo();
-  };
-
-  const certInfo = eetStatusData?.certificate;
 
   const handlePrintWidthRulerTest = () => {
     const is58 = (config.printerPaperWidth || '80') === '58';
