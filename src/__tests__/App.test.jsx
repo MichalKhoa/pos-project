@@ -107,7 +107,8 @@ describe('App Shell & Navigation Regression Tests', () => {
     fireEvent.click(settingsTabs[0]);
 
     // Verify settings view elements render
-    expect(await screen.findByText(/Zobrazení a Čitelnost/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Údaje prodejny/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rozvržení & Zobrazení/i)).toBeInTheDocument();
 
     // Click back to Pokladna (Register) tab
     const registerTabs = screen.getAllByRole('button', { name: /Pokladna/i });

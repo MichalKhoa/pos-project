@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Store,
+  Layout,
   RefreshCw,
   Printer,
   CreditCard,
@@ -22,6 +23,7 @@ import {
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import AdminPinModal from './AdminPinModal.jsx';
 import StoreProfileSection from './settings/StoreProfileSection.jsx';
+import LayoutSection from './settings/LayoutSection.jsx';
 import PrinterSection from './settings/PrinterSection.jsx';
 import TerminalSection from './settings/TerminalSection.jsx';
 import SecuritySection from './settings/SecuritySection.jsx';
@@ -304,7 +306,17 @@ export default function SettingsView({
           style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
           <Store size={18} />
-          <span>Prodejna & Rozvržení</span>
+          <span>{t('settings.tab_store') || 'Údaje prodejny'}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`nav-tab ${activeSubTab === 'layout' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('layout')}
+          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Layout size={18} />
+          <span>{t('settings.tab_layout') || 'Rozvržení & Zobrazení'}</span>
         </button>
 
         <button
@@ -353,11 +365,18 @@ export default function SettingsView({
         <StoreProfileSection
           config={config}
           setConfig={setConfig}
+          onSubmit={handleSubmit}
+          saveSuccess={saveSuccess}
+        />
+      )}
+
+      {activeSubTab === 'layout' && (
+        <LayoutSection
+          config={config}
+          setConfig={setConfig}
           presets={presets}
           onNavigateToPresets={onNavigateToPresets}
           onSaveStoreConfig={onSaveStoreConfig}
-          onSubmit={handleSubmit}
-          saveSuccess={saveSuccess}
         />
       )}
 

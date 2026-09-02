@@ -40,39 +40,21 @@ export default function QuickPresetGrid({
   const [enteredOpenPrice, setEnteredOpenPrice] = useState('');
   const [openPriceQty, setOpenPriceQty] = useState(1);
 
-  const [density, setDensity] = useState(() => {
+  const density = storeConfig?.presetDensity || (() => {
     try {
-      return localStorage.getItem('himmel_pos_preset_density') || storeConfig?.presetDensity || 'standard';
+      return localStorage.getItem('himmel_pos_preset_density') || 'standard';
     } catch {
       return 'standard';
     }
-  });
+  })();
 
-  const handleToggleDensity = (newDensity) => {
-    setDensity(newDensity);
+  const buttonStyle = storeConfig?.presetButtonStyle || (() => {
     try {
-      localStorage.setItem('himmel_pos_preset_density', newDensity);
-    } catch (e) {
-      console.warn(e);
-    }
-  };
-
-  const [buttonStyle, setButtonStyle] = useState(() => {
-    try {
-      return localStorage.getItem('pos_preset_button_style') || storeConfig?.presetButtonStyle || 'left-stripe';
+      return localStorage.getItem('pos_preset_button_style') || 'left-stripe';
     } catch {
       return 'left-stripe';
     }
-  });
-
-  const handleSelectButtonStyle = (newStyle) => {
-    setButtonStyle(newStyle);
-    try {
-      localStorage.setItem('pos_preset_button_style', newStyle);
-    } catch (e) {
-      console.warn(e);
-    }
-  };
+  })();
 
   const gridColumnsSetting = storeConfig?.presetGridColumns || 'auto';
   const getGridStyle = () => {
@@ -252,107 +234,6 @@ export default function QuickPresetGrid({
               </button>
             </div>
           )}
-
-          {/* Density Toggle (Compact / Standard / Large) */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '2px', gap: '2px' }} title="Hustota a velikost dlaždic katalogu">
-            <button
-              type="button"
-              onClick={() => handleToggleDensity('compact')}
-              style={{
-                background: density === 'compact' ? 'var(--accent-blue)' : 'transparent',
-                color: density === 'compact' ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '0.25rem 0.5rem',
-                fontSize: '0.72rem',
-                fontWeight: '800',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              title="Kompaktní dlaždice (malé)"
-            >
-              S
-            </button>
-            <button
-              type="button"
-              onClick={() => handleToggleDensity('standard')}
-              style={{
-                background: density === 'standard' ? 'var(--accent-blue)' : 'transparent',
-                color: density === 'standard' ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '0.25rem 0.5rem',
-                fontSize: '0.72rem',
-                fontWeight: '800',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              title="Standardní dlaždice (střední)"
-            >
-              M
-            </button>
-            <button
-              type="button"
-              onClick={() => handleToggleDensity('large')}
-              style={{
-                background: density === 'large' ? 'var(--accent-blue)' : 'transparent',
-                color: density === 'large' ? '#fff' : 'var(--text-secondary)',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '0.25rem 0.5rem',
-                fontSize: '0.72rem',
-                fontWeight: '800',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              title="Velké dlaždice (snadný dotyk)"
-            >
-              L
-            </button>
-          </div>
-
-          {/* Live Button Style Switcher */}
-          <div
-            style={{
-              display: 'flex',
-              background: 'var(--bg-input)',
-              padding: '2px',
-              borderRadius: 'var(--radius-sm)',
-              gap: '2px',
-              border: '1px solid var(--border-color)',
-              alignItems: 'center'
-            }}
-            title="Okamžitý náhled stylu tlačítek"
-          >
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', padding: '0 4px', fontWeight: '800', textTransform: 'uppercase' }}>
-              Styl:
-            </span>
-            {[
-              { id: 'left-stripe', label: 'Levý proužek', title: 'Čistý 4.5px levý rovný proužek na břidlicovém podkladu' },
-              { id: 'color-fill', label: 'Plná barva', title: 'Autentická barevná dlaždice s bílým písmem a bílou ikonou' }
-            ].map(s => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => handleSelectButtonStyle(s.id)}
-                style={{
-                  background: buttonStyle === s.id ? 'var(--accent-blue)' : 'transparent',
-                  color: buttonStyle === s.id ? '#ffffff' : 'var(--text-secondary)',
-                  border: 'none',
-                  borderRadius: '3px',
-                  padding: '0.2rem 0.45rem',
-                  fontSize: '0.72rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.12s ease'
-                }}
-                title={s.title}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
 
           {/* Action Buttons */}
           <button

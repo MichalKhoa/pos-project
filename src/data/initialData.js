@@ -136,6 +136,8 @@ export const DEFAULT_STORE_CONFIG = {
   printerPaperWidth: '80', // '58' or '80' mm thermal receipt printer
   autoPrintReceipt: false, // Auto-print receipt on finished transaction
   presetGridColumns: 'auto', // Grid density: 'auto', '3', '4', '5', '6' columns
+  presetDensity: 'standard', // 'compact', 'standard', 'large'
+  presetButtonStyle: 'left-stripe', // 'left-stripe', 'color-fill'
   showPresetVat: true, // Show VAT percentage badge on preset buttons
   eetEnabled: true, // EET Ready mode indicator
   defaultLanguage: 'cs'

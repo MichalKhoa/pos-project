@@ -50,6 +50,8 @@ class StoreConfigSchema(BaseModel):
     customerDisplayStandbyDelay: Optional[int] = None
     autoPrintReceipt: Optional[bool] = None
     presetGridColumns: Optional[str] = None
+    presetDensity: Optional[str] = None
+    presetButtonStyle: Optional[str] = None
     showPresetVat: Optional[bool] = None
 
 
@@ -88,6 +90,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
         "autoPrintReceipt": getattr(config, 'auto_print_receipt', False) if getattr(config, 'auto_print_receipt', None) is not None else False,
         "presetGridColumns": getattr(config, 'preset_grid_columns', "auto") or "auto",
+        "presetDensity": getattr(config, 'preset_density', "standard") or "standard",
+        "presetButtonStyle": getattr(config, 'preset_button_style', "left-stripe") or "left-stripe",
         "defaultLanguage": config.default_language or "cs",
         "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left",
         "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás",
@@ -135,6 +139,8 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.directHardwarePrint is not None: config.direct_hardware_print = data.directHardwarePrint
     if data.autoPrintReceipt is not None: config.auto_print_receipt = data.autoPrintReceipt
     if data.presetGridColumns is not None: config.preset_grid_columns = data.presetGridColumns
+    if data.presetDensity is not None: config.preset_density = data.presetDensity
+    if data.presetButtonStyle is not None: config.preset_button_style = data.presetButtonStyle
     if data.defaultLanguage is not None: config.default_language = data.defaultLanguage
     if data.cartPosition is not None: config.cart_position = data.cartPosition
     if data.showPresetVat is not None: config.show_preset_vat = data.showPresetVat

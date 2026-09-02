@@ -113,6 +113,12 @@ class StoreConfigModel(Base):
     # Preset Grid Columns / Density Setting ('auto', '3', '4', '5', '6')
     preset_grid_columns = Column(String, default="auto")
 
+    # Preset Tile Density / Button Size ('compact', 'standard', 'large')
+    preset_density = Column(String, default="standard")
+
+    # Preset Button Aesthetic Style ('left-stripe' or 'color-fill')
+    preset_button_style = Column(String, default="left-stripe")
+
     # Show/Hide VAT Rate on Preset Tiles (Useful for non-VAT retailers)
     show_preset_vat = Column(Boolean, default=True)
 

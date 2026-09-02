@@ -7,7 +7,7 @@ SQLite persistence layer located at `backend/data/pos_store.db`.
 - `SaleItemModel`: Individual line items linked to `SaleModel` foreign key (`name`, `quantity`, `unit_price`, `vat_rate`, `discount_percent`).
 - `PresetModel` (`presets` table): Stock quantity (`stock_quantity`), tracking flag (`track_stock`), min stock alert level (`min_stock_alert`), and EAN barcode (`barcode`).
 - `EetAuditLogModel` (`eet_audit_logs` table): Complete audit log of EET retry submissions and response codes.
-- `StoreConfigModel`: Store details (name, IČO, DIČ, address, `bank_account_iban`), customer display greeting/title (`customer_display_title`), auto-sleep settings (`customer_display_auto_sleep`, `customer_display_standby_delay`), `show_preset_vat` (non-VAT merchant tile setting), EET config (certificate path, Fernet AES-256 encrypted password, environment, provozovna, pokladna), printer config, security lock config, ČSOB terminal settings.
+- `StoreConfigModel`: Store details (name, IČO, DIČ, address, `bank_account_iban`), customer display greeting/title (`customer_display_title`), auto-sleep settings (`customer_display_auto_sleep`, `customer_display_standby_delay`), `preset_grid_columns` ('auto', '3', '4', '5', '6'), `preset_density` ('compact', 'standard', 'large'), `preset_button_style` ('left-stripe', 'color-fill'), `show_preset_vat` (non-VAT merchant tile setting), EET config (certificate path, Fernet AES-256 encrypted password, environment, provozovna, pokladna), printer config, security lock config, ČSOB terminal settings.
 - `ReceiptSequenceModel`: Atomic yearly sequence counters (`year`, `last_seq`) ensuring duplicate-safe receipt numbers (`YYYY-XXXXXX`).
 
 ## Dynamic Auto-Migration & Self-Healing (`/backend/database.py`)
