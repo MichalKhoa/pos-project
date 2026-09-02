@@ -3,29 +3,30 @@ export const DEFAULT_CATEGORIES = [
 ];
 
 export const COLOR_OPTIONS = [
-  '#3b82f6', // Ocean Blue
   '#2563eb', // Royal Blue
-  '#0284c7', // Sky Blue
-  '#06b6d4', // Cyan
-  '#0d9488', // Teal
-  '#10b981', // Emerald Green
-  '#16a34a', // Forest Green
-  '#84cc16', // Lime Green
-  '#eab308', // Gold Yellow
-  '#f59e0b', // Vibrant Amber
-  '#f97316', // Bright Orange
+  '#1d4ed8', // Ocean Blue
+  '#0369a1', // Sky Navy
+  '#0891b2', // Deep Cyan
+  '#0f766e', // Dark Teal
+  '#047857', // Emerald Green
+  '#15803d', // Forest Green
+  '#4d7c0f', // Warm Olive
+  '#b45309', // Amber Ochre
+  '#d97706', // Rich Amber
+  '#c2410c', // Rust Orange
   '#ea580c', // Dark Orange
-  '#ef4444', // Crimson Red
-  '#dc2626', // Deep Red
-  '#ec4899', // Hot Pink
-  '#d946ef', // Magenta
-  '#a855f7', // Electric Violet
-  '#8b5cf6', // Deep Purple
-  '#6366f1', // Indigo
-  '#64748b', // Slate Gray
-  '#475569', // Dark Slate
+  '#dc2626', // Crimson Red
+  '#b91c1c', // Deep Red
+  '#be123c', // Ruby Rose
+  '#9f1239', // Deep Wine
+  '#a21caf', // Plum Magenta
+  '#7c3aed', // Royal Violet
+  '#6d28d9', // Deep Purple
+  '#4f46e5', // Indigo
+  '#475569', // Slate Gray
+  '#334155', // Dark Slate
   '#78350f', // Espresso Brown
-  '#0f172a'  // Midnight Black
+  '#1e293b'  // Graphite Black
 ];
 
 export const DEFAULT_PRESETS = [
@@ -38,7 +39,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#3b82f6',
+    color: '#2563eb',
     trackStock: false,
     stockQuantity: 0
   },
@@ -51,7 +52,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#8b5cf6',
+    color: '#6d28d9',
     trackStock: false,
     stockQuantity: 0
   },
@@ -64,7 +65,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#10b981',
+    color: '#047857',
     trackStock: false,
     stockQuantity: 0
   },
@@ -77,7 +78,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#ec4899',
+    color: '#be123c',
     trackStock: false,
     stockQuantity: 0
   },
@@ -90,7 +91,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#06b6d4',
+    color: '#0891b2',
     trackStock: false,
     stockQuantity: 0
   },
@@ -103,7 +104,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 21,
     category: 'all',
-    color: '#f59e0b',
+    color: '#d97706',
     trackStock: false,
     stockQuantity: 0
   },
@@ -116,7 +117,7 @@ export const DEFAULT_PRESETS = [
     isGeneralPreset: true,
     vat: 0,
     category: 'all',
-    color: '#f43f5e',
+    color: '#b91c1c',
     trackStock: false,
     stockQuantity: 0
   }
@@ -135,6 +136,7 @@ export const DEFAULT_STORE_CONFIG = {
   printerPaperWidth: '80', // '58' or '80' mm thermal receipt printer
   autoPrintReceipt: false, // Auto-print receipt on finished transaction
   presetGridColumns: 'auto', // Grid density: 'auto', '3', '4', '5', '6' columns
+  showPresetVat: true, // Show VAT percentage badge on preset buttons
   eetEnabled: true, // EET Ready mode indicator
   defaultLanguage: 'cs'
 };

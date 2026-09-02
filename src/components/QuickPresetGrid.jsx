@@ -57,6 +57,23 @@ export default function QuickPresetGrid({
     }
   };
 
+  const [buttonStyle, setButtonStyle] = useState(() => {
+    try {
+      return localStorage.getItem('pos_preset_button_style') || storeConfig?.presetButtonStyle || 'left-stripe';
+    } catch {
+      return 'left-stripe';
+    }
+  });
+
+  const handleSelectButtonStyle = (newStyle) => {
+    setButtonStyle(newStyle);
+    try {
+      localStorage.setItem('pos_preset_button_style', newStyle);
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
   const gridColumnsSetting = storeConfig?.presetGridColumns || 'auto';
   const getGridStyle = () => {
     if (gridColumnsSetting === '3') return { gridTemplateColumns: 'repeat(3, 1fr)' };
@@ -294,6 +311,49 @@ export default function QuickPresetGrid({
             </button>
           </div>
 
+          {/* Live Button Style Switcher */}
+          <div
+            style={{
+              display: 'flex',
+              background: 'var(--bg-input)',
+              padding: '2px',
+              borderRadius: 'var(--radius-sm)',
+              gap: '2px',
+              border: '1px solid var(--border-color)',
+              alignItems: 'center'
+            }}
+            title="Okamžitý náhled stylu tlačítek"
+          >
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', padding: '0 4px', fontWeight: '800', textTransform: 'uppercase' }}>
+              Styl:
+            </span>
+            {[
+              { id: 'left-stripe', label: 'Levý proužek', title: 'Čistý 4.5px levý rovný proužek na břidlicovém podkladu' },
+              { id: 'color-fill', label: 'Plná barva', title: 'Autentická barevná dlaždice s bílým písmem a bílou ikonou' }
+            ].map(s => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleSelectButtonStyle(s.id)}
+                style={{
+                  background: buttonStyle === s.id ? 'var(--accent-blue)' : 'transparent',
+                  color: buttonStyle === s.id ? '#ffffff' : 'var(--text-secondary)',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '0.2rem 0.45rem',
+                  fontSize: '0.72rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.12s ease'
+                }}
+                title={s.title}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
           {/* Action Buttons */}
           <button
             type="button"
@@ -401,6 +461,8 @@ export default function QuickPresetGrid({
             onMovePosition={handleMovePosition}
             onOpenEditModal={handleOpenEditModal}
             onDelete={handleDelete}
+            storeConfig={storeConfig}
+            buttonStyle={buttonStyle}
           />
         ))}
       </div>
@@ -432,6 +494,8 @@ export default function QuickPresetGrid({
             setEditingPreset(null);
           }
         } : undefined}
+        storeConfig={storeConfig}
+        buttonStyle={buttonStyle}
       />
 
       {/* Category Manager Modal */}

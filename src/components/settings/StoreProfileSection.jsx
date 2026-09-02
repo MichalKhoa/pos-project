@@ -56,6 +56,36 @@ export default function StoreProfileSection({
             </span>
           </label>
         </div>
+
+        <div style={{ height: '1px', background: 'var(--border-color)', margin: '1rem 0' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+              {t('settings.show_preset_vat_label')}
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              {t('settings.show_preset_vat_desc')}
+            </div>
+          </div>
+
+          <label className="switch-toggle" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.65rem' }}>
+            <input
+              type="checkbox"
+              checked={config.showPresetVat !== false}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+                const updated = { ...config, showPresetVat: isChecked };
+                setConfig(updated);
+                onSaveStoreConfig(updated);
+              }}
+              style={{ width: '22px', height: '22px', cursor: 'pointer' }}
+            />
+            <span style={{ fontWeight: '800', fontSize: '0.92rem', color: config.showPresetVat !== false ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
+              {config.showPresetVat !== false ? 'ZAPNUTO' : 'VYPNUTO'}
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Preset Catalog Shortcut Banner */}

@@ -167,6 +167,29 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
         price: 95
       }));
     });
+
+    it('renders VAT badge when showPresetVat is true, and hides it when showPresetVat is false', () => {
+      const { unmount } = wrapWithLanguage(
+        <QuickPresetGrid
+          presets={samplePresets}
+          categories={sampleCategories}
+          storeConfig={{ showPresetVat: true }}
+        />
+      );
+      expect(screen.getAllByText('21%').length).toBeGreaterThan(0);
+      expect(screen.getByText('12%')).toBeInTheDocument();
+      unmount();
+
+      wrapWithLanguage(
+        <QuickPresetGrid
+          presets={samplePresets}
+          categories={sampleCategories}
+          storeConfig={{ showPresetVat: false }}
+        />
+      );
+      expect(screen.queryByText('21%')).not.toBeInTheDocument();
+      expect(screen.queryByText('12%')).not.toBeInTheDocument();
+    });
   });
 
   describe('Cart', () => {

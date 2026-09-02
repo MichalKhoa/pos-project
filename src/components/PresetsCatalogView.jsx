@@ -14,7 +14,8 @@ export default function PresetsCatalogView({
   onDeleteCategory,
   onAddPreset,
   onUpdatePreset,
-  onDeletePreset
+  onDeletePreset,
+  storeConfig = null
 }) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -229,33 +230,34 @@ export default function PresetsCatalogView({
             return (
               <div
                 key={preset.id}
-                className="preset-card"
+                className={`preset-card style-${localStorage.getItem('pos_preset_button_style') || storeConfig?.presetButtonStyle || 'left-stripe'}`}
                 style={{ '--card-accent': preset.color || '#3b82f6', cursor: 'pointer' }}
                 onClick={() => handleOpenEditModal(preset)}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div className="preset-name" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    {preset.imageUrl ? (
-                      <img src={preset.imageUrl} alt="" style={{ width: '22px', height: '22px', borderRadius: '3px', objectFit: 'cover' }} />
-                    ) : (
-                      IconComp && <IconComp size={18} style={{ opacity: 0.95 }} />
-                    )}
+                <div className="preset-card-header">
+                  <div className="preset-name">
                     <span>{preset.name}</span>
-                    {preset.isGeneralPreset && (
-                      <span style={{ fontSize: '0.65rem', fontWeight: '600', background: 'rgba(255, 255, 255, 0.18)', color: 'rgba(255, 255, 255, 0.95)', padding: '1px 5px', borderRadius: '4px', marginLeft: '2px', verticalAlign: 'middle', display: 'inline-block' }}>
-                        {t('presets.general_badge') || 'Druh zboží'}
-                      </span>
-                    )}
                   </div>
-                  <Edit3 size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, marginLeft: '4px' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {(preset.imageUrl || IconComp) && (
+                      <div className="preset-corner-icon">
+                        {preset.imageUrl ? (
+                          <img src={preset.imageUrl} alt="" className="preset-corner-thumb" />
+                        ) : (
+                          IconComp && <IconComp size={16} />
+                        )}
+                      </div>
+                    )}
+                    <Edit3 size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  </div>
                 </div>
-                <div className="preset-footer">
-                  {preset.isOpenPrice ? (
-                    <span className="preset-price" style={{ color: 'var(--accent-amber)', fontSize: '0.85rem' }}>Volitelná</span>
-                  ) : (
-                    <span className="preset-price">{preset.price} Kč</span>
+                <div className="preset-price-tag">
+                  <span className="preset-price">
+                    {preset.isOpenPrice ? '' : preset.price > 0 ? `${preset.price} Kč` : ''}
+                  </span>
+                  {storeConfig?.showPresetVat !== false && preset.vat !== undefined && (
+                    <span className="preset-vat-text">{preset.vat}%</span>
                   )}
-                  <span className="preset-vat">DPH {preset.vat}%</span>
                 </div>
               </div>
             );
@@ -279,6 +281,7 @@ export default function PresetsCatalogView({
             setEditingPreset(null);
           }
         } : undefined}
+        storeConfig={storeConfig}
       />
 
       {/* Category Manager Modal */}

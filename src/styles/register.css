@@ -121,15 +121,22 @@
   gap: 0.4rem;
 }
 .preset-grid.density-compact .preset-card {
-  min-height: 64px;
-  padding: 0.45rem 0.6rem 0.35rem 0.6rem;
+  min-height: 68px;
+  padding: 0.4rem 0.55rem 0.35rem 0.55rem;
 }
 .preset-grid.density-compact .preset-name {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.15;
 }
+.preset-grid.density-compact .preset-corner-icon svg {
+  width: 14px;
+  height: 14px;
+}
 .preset-grid.density-compact .preset-price {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
+}
+.preset-grid.density-compact .preset-vat-text {
+  font-size: 0.65rem;
 }
 
 .preset-grid.density-standard {
@@ -138,6 +145,7 @@
 }
 .preset-grid.density-standard .preset-card {
   min-height: 84px;
+  padding: 0.55rem 0.65rem 0.45rem 0.65rem;
 }
 
 .preset-grid.density-large {
@@ -149,87 +157,221 @@
   padding: 0.75rem 0.85rem;
 }
 .preset-grid.density-large .preset-name {
-  font-size: 1.15rem;
+  font-size: 1.16rem;
+}
+.preset-grid.density-large .preset-corner-icon svg {
+  width: 22px;
+  height: 22px;
 }
 .preset-grid.density-large .preset-price {
-  font-size: 1.12rem;
+  font-size: 1.18rem;
+}
+.preset-grid.density-large .preset-vat-text {
+  font-size: 0.78rem;
 }
 
+/* Simple Matte Preset Cards (No Top Stripe, 4 In-App Switchable Styles) */
 .preset-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 0.6rem 0.7rem 0.5rem 0.7rem;
-  min-height: 88px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  padding: 0.55rem 0.65rem 0.45rem 0.65rem;
+  min-height: 84px;
   border-radius: var(--radius-md);
   text-align: left;
   position: relative;
   overflow: hidden;
-  transition: all 0.15s ease;
-  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
   touch-action: manipulation;
   user-select: none;
 }
 
-.preset-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--card-accent, var(--accent-blue));
+.preset-card:active {
+  transform: scale(0.98);
 }
 
-.preset-card:hover {
-  border-color: var(--card-accent, var(--accent-blue));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+/* Style 1: Solid Left Stripe (Default — Clean straight 4.5px left border on dark slate) */
+.preset-card.style-left-stripe,
+.preset-card:not([class*="style-"]) {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 4.5px solid var(--card-accent, var(--accent-blue));
+  padding-left: 0.75rem;
+}
+.preset-card.style-left-stripe:hover,
+.preset-card:not([class*="style-"]):hover {
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 7%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 40%, var(--border-color));
+  border-left-color: var(--card-accent, var(--accent-blue));
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+.preset-card.style-left-stripe:active,
+.preset-card:not([class*="style-"]):active {
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, var(--bg-card));
+}
+
+/* Style 2: Full Natural Color Fill (Authentic category color tile with white font & icon) */
+.preset-card.style-color-fill {
+  background: var(--card-accent, var(--accent-blue));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+.preset-card.style-color-fill .preset-name {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.preset-card.style-color-fill .preset-corner-icon {
+  color: #ffffff;
+  opacity: 0.95;
+}
+.preset-card.style-color-fill .preset-price {
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.preset-card.style-color-fill .preset-vat-text {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+.preset-card.style-color-fill:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+}
+.preset-card.style-color-fill:active {
+  filter: brightness(0.92);
+  transform: scale(0.98);
+}
+
+.preset-multiplier-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #d97706;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 3;
+}
+
+.preset-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0.4rem;
 }
 
 .preset-name {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: 0.98rem;
+  font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
+  line-height: 1.22;
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   letter-spacing: -0.01em;
+  flex: 1;
+  padding-right: 2px;
+}
+
+/* Seamless Top-Right Corner Icon / Photo (Borderless, Maximizes Card Space) */
+.preset-corner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 80%, #ffffff);
+  opacity: 0.85;
+  flex-shrink: 0;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.preset-corner-thumb {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.preset-edit-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.preset-edit-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.preset-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.preset-edit-btn-amber {
+  background: var(--accent-amber);
+  color: #000;
+  padding: 3px;
+}
+.preset-edit-btn-amber:hover {
+  background: #d97706;
+}
+.preset-edit-btn-rose {
+  background: var(--accent-rose);
+  color: #fff;
+  padding: 3px;
+}
+.preset-edit-btn-rose:hover {
+  background: #be123c;
 }
 
 .preset-price-tag {
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
   width: 100%;
   margin-top: auto;
-  padding-top: 0.25rem;
-  gap: 0.4rem;
+  padding-top: 0.2rem;
+  gap: 0.35rem;
 }
 
 .preset-price {
   font-family: var(--font-mono);
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   font-weight: 800;
   color: var(--accent-emerald);
   line-height: 1.15;
 }
 
-.preset-vat-badge {
-  font-size: 0.68rem;
+/* Seamless Bottom-Right Corner VAT Text (Subtle, No Box/Pill Wrapper) */
+.preset-vat-text {
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
-  background: var(--bg-main);
-  padding: 1px 4px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  opacity: 0.75;
   line-height: 1;
   flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
 
 /* Manual Touch Keypad */

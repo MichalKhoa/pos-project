@@ -50,6 +50,7 @@ class StoreConfigSchema(BaseModel):
     customerDisplayStandbyDelay: Optional[int] = None
     autoPrintReceipt: Optional[bool] = None
     presetGridColumns: Optional[str] = None
+    showPresetVat: Optional[bool] = None
 
 
 @router.get("")
@@ -91,7 +92,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "cartPosition": config.cart_position if getattr(config, 'cart_position', None) else "left",
         "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás",
         "customerDisplayAutoSleep": getattr(config, 'customer_display_auto_sleep', True) if getattr(config, 'customer_display_auto_sleep', None) is not None else True,
-        "customerDisplayStandbyDelay": getattr(config, 'customer_display_standby_delay', 10) or 10
+        "customerDisplayStandbyDelay": getattr(config, 'customer_display_standby_delay', 10) or 10,
+        "showPresetVat": getattr(config, 'show_preset_vat', True) if getattr(config, 'show_preset_vat', None) is not None else True
     }
 
 
@@ -135,6 +137,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.presetGridColumns is not None: config.preset_grid_columns = data.presetGridColumns
     if data.defaultLanguage is not None: config.default_language = data.defaultLanguage
     if data.cartPosition is not None: config.cart_position = data.cartPosition
+    if data.showPresetVat is not None: config.show_preset_vat = data.showPresetVat
 
     db.commit()
     db.refresh(config)

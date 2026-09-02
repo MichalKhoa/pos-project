@@ -113,6 +113,9 @@ class StoreConfigModel(Base):
     # Preset Grid Columns / Density Setting ('auto', '3', '4', '5', '6')
     preset_grid_columns = Column(String, default="auto")
 
+    # Show/Hide VAT Rate on Preset Tiles (Useful for non-VAT retailers)
+    show_preset_vat = Column(Boolean, default=True)
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

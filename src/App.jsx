@@ -921,6 +921,7 @@ export default function App() {
             onUpdatePreset={handleUpdatePreset}
             onDeletePreset={handleDeletePreset}
             onReorderPresets={handleReorderPresets}
+            storeConfig={storeConfig}
           />
         )}
 
