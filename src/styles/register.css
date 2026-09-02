@@ -307,42 +307,117 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.preset-edit-actions {
+/* Edit Mode Action Bar */
+.preset-edit-mode-bar {
   display: flex;
-  gap: 2px;
-  flex-shrink: 0;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.75rem;
+  flex-wrap: wrap;
+  transition: all 0.2s ease;
 }
 
-.preset-edit-btn {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border-radius: 4px;
-  padding: 2px 4px;
-  display: inline-flex;
+.preset-edit-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-amber);
+  white-space: nowrap;
+}
+
+/* Drag-to-Delete Trash Can Dropzone */
+.preset-trash-dropzone {
+  display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: background 0.12s ease;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1.5px dashed rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.06);
+  color: #fda4af;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: default;
+  transition: all 0.18s ease;
+  user-select: none;
 }
-.preset-edit-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+
+.preset-trash-dropzone .trash-icon {
+  color: var(--accent-rose);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
 }
-.preset-edit-btn-amber {
+
+/* When a card is currently being dragged anywhere in the grid */
+.preset-trash-dropzone.drag-active {
+  border-color: var(--accent-rose);
+  background: rgba(244, 63, 94, 0.14);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.25);
+  animation: pulse-trash 1.5s infinite ease-in-out;
+}
+
+.preset-trash-dropzone.drag-active .trash-icon {
+  transform: scale(1.15);
+}
+
+/* When card is hovering directly over the trash dropzone */
+.preset-trash-dropzone.over-trash {
+  border-color: #f43f5e;
+  border-style: solid;
+  background: #e11d48;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
+  transform: scale(1.03);
+}
+
+.preset-trash-dropzone.over-trash .trash-icon {
+  transform: scale(1.3) rotate(-8deg);
+  color: #ffffff;
+}
+
+@keyframes pulse-trash {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(244, 63, 94, 0.2);
+    border-color: rgba(244, 63, 94, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(244, 63, 94, 0.45);
+    border-color: rgba(244, 63, 94, 1);
+  }
+}
+
+/* Done Editing Button */
+.preset-edit-done-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0 1rem;
   background: var(--accent-amber);
-  color: #000;
-  padding: 3px;
+  color: #000000;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
-.preset-edit-btn-amber:hover {
+
+.preset-edit-done-btn:hover {
   background: #d97706;
-}
-.preset-edit-btn-rose {
-  background: var(--accent-rose);
-  color: #fff;
-  padding: 3px;
-}
-.preset-edit-btn-rose:hover {
-  background: #be123c;
+  transform: translateY(-1px);
 }
 
 .preset-price-tag {

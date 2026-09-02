@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Layers, Check, Edit3, Search, X, FolderPlus } from 'lucide-react';
+import { Plus, Layers, Check, Edit3, Search, X, FolderPlus, Trash2 } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
@@ -34,6 +34,7 @@ export default function QuickPresetGrid({
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
+  const [isOverTrash, setIsOverTrash] = useState(false);
 
   // Open Price Prompt Modal State
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
@@ -84,8 +85,7 @@ export default function QuickPresetGrid({
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    handleDragEnd,
-    handleMovePosition
+    handleDragEnd
   } = usePresetDragDrop({
     presets,
     filteredPresets,
@@ -93,6 +93,28 @@ export default function QuickPresetGrid({
     isEditMode,
     onReorderPresets
   });
+
+  const handleTrashDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!isOverTrash) setIsOverTrash(true);
+  };
+
+  const handleTrashDragLeave = () => {
+    setIsOverTrash(false);
+  };
+
+  const handleTrashDrop = (e) => {
+    e.preventDefault();
+    setIsOverTrash(false);
+    if (draggedIndex !== null && filteredPresets[draggedIndex]) {
+      const targetPreset = filteredPresets[draggedIndex];
+      const confirmMsg = t('presets.confirm_delete_named', { name: targetPreset.name }) || `Opravdu chcete smazat ${targetPreset.name}?`;
+      if (window.confirm(confirmMsg)) {
+        onDeletePreset(targetPreset.id);
+      }
+    }
+  };
 
   const handleCardClick = (preset) => {
     if (isDraggingRef.current) return;
@@ -147,12 +169,6 @@ export default function QuickPresetGrid({
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
   };
 
-  const handleOpenEditModal = (preset, e) => {
-    if (e) e.stopPropagation();
-    setEditingPreset(preset);
-    setActiveModal('edit');
-  };
-
   const handleSavePreset = (presetData) => {
     if (activeModal === 'add') {
       onAddPreset(presetData);
@@ -161,17 +177,6 @@ export default function QuickPresetGrid({
     }
     setActiveModal(null);
     setEditingPreset(null);
-  };
-
-  const handleDelete = (presetId, e) => {
-    if (e) e.stopPropagation();
-    if (window.confirm('Opravdu chcete toto tlačítko smazat?')) {
-      onDeletePreset(presetId);
-      if (activeModal === 'edit') {
-        setActiveModal(null);
-        setEditingPreset(null);
-      }
-    }
   };
 
   return (
@@ -304,20 +309,38 @@ export default function QuickPresetGrid({
         onSelectCategory={setActiveCategory}
       />
 
+      {/* Edit Mode Control Bar with Drag-to-Delete Trash Dropzone */}
       {isEditMode && (
-        <div style={{
-          background: 'rgba(245, 158, 11, 0.1)',
-          border: '1px solid rgba(245, 158, 11, 0.3)',
-          borderRadius: 'var(--radius-md)',
-          padding: '0.5rem 0.85rem',
-          fontSize: '0.8rem',
-          color: 'var(--accent-amber)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <Edit3 size={14} />
-          <span>Edit mode: Drag & drop to reorder. Click item to edit price & name.</span>
+        <div className="preset-edit-mode-bar">
+          <div className="preset-edit-hint">
+            <Edit3 size={15} style={{ color: 'var(--accent-amber)', flexShrink: 0 }} />
+            <span>{t('presets.edit_mode_hint')}</span>
+          </div>
+
+          <div
+            className={`preset-trash-dropzone ${draggedIndex !== null ? 'drag-active' : ''} ${isOverTrash ? 'over-trash' : ''}`}
+            onDragOver={handleTrashDragOver}
+            onDragLeave={handleTrashDragLeave}
+            onDrop={handleTrashDrop}
+            title={t('presets.drag_to_delete')}
+          >
+            <Trash2 size={16} className="trash-icon" />
+            <span className="trash-label">
+              {isOverTrash && draggedIndex !== null && filteredPresets[draggedIndex]
+                ? `${t('presets.drop_to_delete')}: "${filteredPresets[draggedIndex].name}"`
+                : t('presets.drag_to_delete')}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="preset-edit-done-btn"
+            onClick={() => setIsEditMode(false)}
+            title={t('presets.done_editing')}
+          >
+            <Check size={15} />
+            <span>{t('presets.done_editing')}</span>
+          </button>
         </div>
       )}
 
@@ -328,7 +351,6 @@ export default function QuickPresetGrid({
             key={preset.id}
             preset={preset}
             index={index}
-            totalCount={filteredPresets.length}
             isEditMode={isEditMode}
             itemMultiplier={itemMultiplier}
             isDraggingThis={draggedIndex === index}
@@ -339,9 +361,6 @@ export default function QuickPresetGrid({
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}
             onClick={handleCardClick}
-            onMovePosition={handleMovePosition}
-            onOpenEditModal={handleOpenEditModal}
-            onDelete={handleDelete}
             storeConfig={storeConfig}
             buttonStyle={buttonStyle}
           />

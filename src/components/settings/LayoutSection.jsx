@@ -208,7 +208,7 @@ export default function LayoutSection({
         <div>
           <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
             <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
-            <span>{t('presets.title') || 'Katalog Položek Pokladny'}</span>
+            <span>{t('presets.title')}</span>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
             {t('settings.catalog_desc', { count: presets.length }) || `Spravovat a upravovat ${presets.length} tlačítek sortimentu`}

@@ -1,12 +1,10 @@
 import React from 'react';
-import { GripVertical, MoveLeft, MoveRight, Edit3, Trash2 } from 'lucide-react';
-import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { Edit3 } from 'lucide-react';
 import { getPresetIconComponent } from '../../utils/presetIcons';
 
 export default function PresetTileCard({
   preset,
   index,
-  totalCount,
   isEditMode,
   itemMultiplier,
   isDraggingThis,
@@ -17,13 +15,9 @@ export default function PresetTileCard({
   onDrop,
   onDragEnd,
   onClick,
-  onMovePosition,
-  onOpenEditModal,
-  onDelete,
   storeConfig = null,
   buttonStyle = null
 }) {
-  const { t } = useTranslation();
   const IconComponent = !preset.imageUrl ? getPresetIconComponent(preset.icon) : null;
   const shouldShowVat = storeConfig?.showPresetVat !== false && preset.vat !== undefined;
   const activeStyle = buttonStyle || storeConfig?.presetButtonStyle || 'left-stripe';
@@ -45,7 +39,7 @@ export default function PresetTileCard({
           ? (isDragOverThis ? '2px solid var(--accent-blue)' : '2px dashed var(--accent-amber)')
           : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : 'none'),
         boxShadow: itemMultiplier > 1 && !isEditMode ? '0 0 12px rgba(245, 158, 11, 0.4)' : undefined,
-        opacity: isDraggingThis ? 0.4 : 1,
+        opacity: isDraggingThis ? 0.35 : 1,
         cursor: isEditMode ? 'grab' : 'pointer'
       }}
       onClick={() => onClick(preset)}
@@ -56,57 +50,20 @@ export default function PresetTileCard({
         </div>
       )}
 
-      {/* Header Row: Name on Left, Edit Controls or Smooth Corner Icon on Right */}
+      {/* Header Row: Name on Left, Edit Indicator (Edit Mode) OR Corner Icon (Normal Mode) */}
       <div className="preset-card-header">
-        {isEditMode && (
-          <div
-            className="drag-handle"
-            title="Chytit a přetáhnout"
-            style={{ marginRight: '4px', display: 'inline-flex', alignItems: 'center', cursor: 'grab' }}
-          >
-            <GripVertical size={16} />
-          </div>
-        )}
-
         <div className="preset-name">
           <span>{preset.name}</span>
         </div>
 
-        {/* Top-Right Corner: Edit Controls (Edit Mode) OR Clean Borderless Corner Icon (Normal Mode) */}
+        {/* Top-Right Corner: Clean Edit Pencil (Edit Mode) OR Corner Icon/Photo (Normal Mode) */}
         {isEditMode ? (
-          <div className="preset-edit-actions">
-            <span
-              type="button"
-              className="preset-edit-btn"
-              style={{ opacity: index === 0 ? 0.35 : 1, cursor: index === 0 ? 'default' : 'pointer' }}
-              onClick={(e) => onMovePosition(index, -1, e)}
-              title="Posunout vlevo"
-            >
-              <MoveLeft size={12} />
-            </span>
-            <span
-              type="button"
-              className="preset-edit-btn"
-              style={{ opacity: index === totalCount - 1 ? 0.35 : 1, cursor: index === totalCount - 1 ? 'default' : 'pointer' }}
-              onClick={(e) => onMovePosition(index, 1, e)}
-              title="Posunout vpravo"
-            >
-              <MoveRight size={12} />
-            </span>
-            <span
-              className="preset-edit-btn preset-edit-btn-amber"
-              onClick={(e) => onOpenEditModal(preset, e)}
-              title={t('presets.edit')}
-            >
-              <Edit3 size={13} />
-            </span>
-            <span
-              className="preset-edit-btn preset-edit-btn-rose"
-              onClick={(e) => onDelete(preset.id, e)}
-              title={t('presets.delete')}
-            >
-              <Trash2 size={13} />
-            </span>
+          <div
+            className="preset-corner-icon"
+            style={{ color: 'var(--accent-amber)', opacity: 1 }}
+            title="Kliknutím upravíte • Přetažením změníte pořadí"
+          >
+            <Edit3 size={15} />
           </div>
         ) : (
           (preset.imageUrl || IconComponent) && (
