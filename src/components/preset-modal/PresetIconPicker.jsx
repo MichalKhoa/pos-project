@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Sparkles, Image, Search, X } from 'lucide-react';
+import { Sparkles, Search, X } from 'lucide-react';
 import {
   PRESET_ICON_MAP,
   PRESET_ICON_LABELS,
@@ -10,9 +10,7 @@ import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function PresetIconPicker({
   icon,
-  onSelectIcon,
-  imageUrl,
-  onSelectImageUrl
+  onSelectIcon
 }) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -36,46 +34,8 @@ export default function PresetIconPicker({
     });
   }, [activeCategory, searchQuery]);
 
-  const handleImageFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDim = 200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxDim) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          }
-        } else {
-          if (height > maxDim) {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        onSelectImageUrl(dataUrl);
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
       {/* Header with Title and Clear Icon */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
@@ -116,7 +76,7 @@ export default function PresetIconPicker({
             style={{
               width: '100%',
               padding: '0.45rem 0.6rem 0.45rem 2rem',
-              background: 'var(--bg-input)',
+              background: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-sm)',
               color: 'var(--text-primary)',
@@ -162,7 +122,7 @@ export default function PresetIconPicker({
                   flexShrink: 0,
                   cursor: 'pointer',
                   border: isActive ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
-                  background: isActive ? 'var(--accent-blue)' : 'var(--bg-input)',
+                  background: isActive ? 'var(--accent-blue)' : 'var(--bg-card)',
                   color: isActive ? '#ffffff' : 'var(--text-secondary)',
                   transition: 'all 0.12s ease'
                 }}
@@ -178,11 +138,11 @@ export default function PresetIconPicker({
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(36px, 1fr))',
           gap: '0.35rem',
-          background: 'var(--bg-input)',
+          background: 'var(--bg-card)',
           padding: '0.5rem',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)',
-          maxHeight: '170px',
+          maxHeight: '160px',
           overflowY: 'auto'
         }}>
           {filteredIcons.length === 0 ? (
@@ -217,33 +177,6 @@ export default function PresetIconPicker({
               );
             })
           )}
-        </div>
-      </div>
-
-      {/* Custom Picture / Image File Upload */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-          <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Image size={16} style={{ color: 'var(--accent-blue)' }} />
-            <span>Obrázek / Fotka Produktu</span>
-          </label>
-          {imageUrl && (
-            <button
-              type="button"
-              onClick={() => onSelectImageUrl('')}
-              style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer' }}
-            >
-              Smazat fotku
-            </button>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageFileChange}
-            style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}
-          />
         </div>
       </div>
     </div>

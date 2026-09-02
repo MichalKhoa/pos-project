@@ -160,6 +160,17 @@ export default function PresetModal({
     onClose();
   };
 
+  const sectionCardStyle = {
+    background: 'var(--bg-card)',
+    padding: '1rem',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--border-color)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
@@ -167,90 +178,140 @@ export default function PresetModal({
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: '1000px', width: '96vw', maxHeight: '92dvh', display: 'flex', flexDirection: 'column' }}
       >
-        <div className="modal-header">
-          <div className="modal-title">
+        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.25rem' }}>
+          <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Tag size={20} style={{ color: 'var(--accent-blue)' }} />
             <span>{mode === 'add' ? t('presets.add_preset_title') : t('presets.edit_preset_title')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose} type="button">✕</button>
+
+          {/* Finishing action buttons on top */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {mode === 'edit' && onDelete && (
+              <button
+                type="button"
+                className="nav-tab"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  color: 'var(--accent-rose)',
+                  borderColor: 'rgba(239, 68, 68, 0.3)',
+                  height: '38px',
+                  padding: '0 0.85rem',
+                  fontSize: '0.82rem',
+                  fontWeight: '700'
+                }}
+                onClick={onDelete}
+                title={t('presets.delete')}
+              >
+                <Trash2 size={16} />
+                <span>{t('presets.delete')}</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="nav-tab"
+              style={{ height: '38px', padding: '0 1rem', fontSize: '0.85rem', fontWeight: '700' }}
+              onClick={onClose}
+            >
+              {t('common.cancel')}
+            </button>
+
+            <button
+              type="submit"
+              form="preset-form"
+              className="pay-btn pay-btn-cash"
+              style={{
+                height: '38px',
+                padding: '0 1.25rem',
+                fontSize: '0.88rem',
+                fontWeight: '800',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+              disabled={!formData.name.trim()}
+            >
+              <Check size={16} />
+              <span>{mode === 'add' ? t('presets.add_preset_title') : t('common.save')}</span>
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <form id="preset-form" onSubmit={handleSubmit} style={{ overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-            gap: '1.5rem',
+            gap: '1.25rem',
             alignItems: 'start'
           }}>
             {/* LEFT COLUMN: Data Fields & Controls */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Item Name */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.35rem' }}>
-                  {t('presets.preset_name')} *
-                </label>
-                <input
-                  type="text"
-                  placeholder="..."
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 0.85rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '700',
-                    fontSize: '1rem'
-                  }}
-                  autoFocus
-                  required
-                />
+              {/* Basic Info Card */}
+              <div style={sectionCardStyle}>
+                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Základní údaje
+                </div>
+
+                {/* Item Name */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.35rem' }}>
+                    {t('presets.preset_name')} *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="..."
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 0.85rem',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontWeight: '700',
+                      fontSize: '1rem'
+                    }}
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.35rem' }}>
+                    {t('presets.category')}
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.8rem',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {categories.filter(c => c.id !== 'all').map(cat => (
+                      <option key={cat.id} value={cat.id} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Category */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', marginBottom: '0.35rem' }}>
-                  {t('presets.category')}
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.8rem',
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '600'
-                  }}
-                >
-                  {categories.filter(c => c.id !== 'all').map(cat => (
-                    <option key={cat.id} value={cat.id} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Price & VAT Box */}
-              <div style={{
-                background: 'rgba(0, 0, 0, 0.2)',
-                padding: '0.85rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem'
-              }}>
+              {/* Price & VAT Card */}
+              <div style={sectionCardStyle}>
                 <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Cena a Sazba DPH
                 </div>
 
                 {/* Segmented Pricing Mode */}
-                <div style={{ display: 'flex', background: 'var(--bg-input)', padding: '3px', borderRadius: 'var(--radius-md)', gap: '4px' }}>
+                <div style={{ display: 'flex', background: 'var(--bg-input)', padding: '3px', borderRadius: 'var(--radius-md)', gap: '4px', border: '1px solid var(--border-color)' }}>
                   <button
                     type="button"
                     className={`nav-tab ${formData.isOpenPrice ? 'active' : ''}`}
@@ -351,18 +412,10 @@ export default function PresetModal({
                 </div>
               </div>
 
-              {/* Behavior & Stock */}
-              <div style={{
-                background: 'rgba(0, 0, 0, 0.2)',
-                padding: '0.85rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.65rem'
-              }}>
+              {/* Behavior, Stock & Barcode Card */}
+              <div style={sectionCardStyle}>
                 <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Chování a Sklad
+                  Sklad a Čárový kód
                 </div>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer' }}>
@@ -408,50 +461,50 @@ export default function PresetModal({
                     onChangeMinStockAlert={val => setFormData(prev => ({ ...prev, minStockAlert: val }))}
                   />
                 )}
-              </div>
 
-              {/* Barcode & EAN with USB Scanner Auto-detection */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <ScanLine size={15} style={{ color: 'var(--accent-blue)' }} />
-                    <span>{t('presets.barcodes_label')}</span>
-                  </label>
-                  {scannedFeedback && (
-                    <span style={{
-                      fontSize: '0.75rem',
-                      fontWeight: '800',
-                      color: 'var(--accent-emerald)',
-                      background: 'rgba(16, 185, 129, 0.15)',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      border: '1px solid var(--accent-emerald)',
-                      animation: 'fadeIn 0.2s ease'
-                    }}>
-                      ✓ {t('presets.barcode_scanned')}
-                    </span>
-                  )}
+                {/* Barcode & EAN with USB Scanner Auto-detection */}
+                <div style={{ marginTop: '0.25rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <ScanLine size={15} style={{ color: 'var(--accent-blue)' }} />
+                      <span>{t('presets.barcodes_label')}</span>
+                    </label>
+                    {scannedFeedback && (
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: '800',
+                        color: 'var(--accent-emerald)',
+                        background: 'rgba(16, 185, 129, 0.15)',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--accent-emerald)',
+                        animation: 'fadeIn 0.2s ease'
+                      }}>
+                        ✓ {t('presets.barcode_scanned')}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={t('presets.barcodes_placeholder')}
+                    value={formData.barcode}
+                    onChange={e => setFormData({ ...formData, barcode: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.8rem',
+                      background: 'var(--bg-input)',
+                      border: scannedFeedback ? '1px solid var(--accent-emerald)' : '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.9rem',
+                      transition: 'border-color 0.2s ease'
+                    }}
+                  />
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+                    {t('presets.scan_barcode_hint')}
+                  </span>
                 </div>
-                <input
-                  type="text"
-                  placeholder={t('presets.barcodes_placeholder')}
-                  value={formData.barcode}
-                  onChange={e => setFormData({ ...formData, barcode: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.8rem',
-                    background: 'var(--bg-input)',
-                    border: scannedFeedback ? '1px solid var(--accent-emerald)' : '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.9rem',
-                    transition: 'border-color 0.2s ease'
-                  }}
-                />
-                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
-                  {t('presets.scan_barcode_hint')}
-                </span>
               </div>
             </div>
 
@@ -459,12 +512,7 @@ export default function PresetModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {/* Authentic Live Preset Tile Preview */}
               <div style={{
-                background: 'var(--bg-input)',
-                padding: '1rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                display: 'flex',
-                flexDirection: 'column',
+                ...sectionCardStyle,
                 alignItems: 'center',
                 gap: '0.75rem'
               }}>
@@ -507,71 +555,21 @@ export default function PresetModal({
               </div>
 
               {/* Color Palette */}
-              <div style={{
-                background: 'rgba(0, 0, 0, 0.2)',
-                padding: '0.85rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)'
-              }}>
+              <div style={sectionCardStyle}>
                 <PresetColorPicker
                   selectedColor={formData.color}
                   onSelectColor={c => setFormData(prev => ({ ...prev, color: c }))}
                 />
               </div>
 
-              {/* Icon & Photo Selection */}
-              <div style={{
-                background: 'rgba(0, 0, 0, 0.2)',
-                padding: '0.85rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)'
-              }}>
+              {/* Icon Selection */}
+              <div style={sectionCardStyle}>
                 <PresetIconPicker
                   icon={formData.icon}
                   onSelectIcon={iconKey => setFormData(prev => ({ ...prev, icon: iconKey }))}
-                  imageUrl={formData.imageUrl}
-                  onSelectImageUrl={url => setFormData(prev => ({ ...prev, imageUrl: url }))}
                 />
               </div>
             </div>
-          </div>
-
-          {/* Modal Action Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '0.75rem',
-            marginTop: '0.5rem',
-            paddingTop: '1rem',
-            borderTop: '1px solid var(--border-color)'
-          }}>
-            <button
-              type="button"
-              className="nav-tab"
-              style={{ flex: 1, justifyContent: 'center', height: '48px', fontSize: '0.92rem', fontWeight: '700' }}
-              onClick={onClose}
-            >
-              {t('common.cancel')}
-            </button>
-            {mode === 'edit' && onDelete && (
-              <button
-                type="button"
-                className="nav-tab"
-                style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--accent-rose)', border: '1px solid var(--accent-rose)', padding: '0 1rem', height: '48px' }}
-                onClick={onDelete}
-                title={t('presets.delete')}
-              >
-                <Trash2 size={18} />
-              </button>
-            )}
-            <button
-              type="submit"
-              className="pay-btn pay-btn-cash"
-              style={{ flex: 1.5, height: '48px', fontSize: '0.95rem', fontWeight: '800' }}
-              disabled={!formData.name}
-            >
-              <Check size={18} />
-              <span>{mode === 'add' ? t('presets.add_preset_title') : t('common.save')}</span>
-            </button>
           </div>
         </form>
       </div>

@@ -92,7 +92,7 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
               height: '32px',
               padding: '0 0.65rem',
               borderRadius: '16px',
-              background: !isPresetColor ? selectedColor : 'var(--bg-input)',
+              background: !isPresetColor ? selectedColor : 'var(--bg-card)',
               color: !isPresetColor ? '#ffffff' : 'var(--text-primary)',
               border: !isPresetColor ? '2px solid #ffffff' : '1px dashed var(--border-color)',
               boxShadow: !isPresetColor ? '0 0 0 2px var(--accent-blue)' : 'none',
