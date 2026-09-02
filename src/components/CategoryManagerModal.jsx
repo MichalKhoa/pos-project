@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tag, Plus, Edit3, Trash2, Check, X, Layers } from 'lucide-react';
+import { Tag, Plus, Edit3, Trash2, Check, X, Layers, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 export default function CategoryManagerModal({
@@ -7,13 +7,82 @@ export default function CategoryManagerModal({
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
+  onReorderCategories,
   onClose,
-  onSelectCategory
+  onSelectCategory,
+  initialEditingCatId = null
 }) {
   const { t } = useTranslation();
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [editingCatId, setEditingCatId] = useState(null);
-  const [editingName, setEditingName] = useState('');
+  const [editingCatId, setEditingCatId] = useState(initialEditingCatId);
+  const [editingName, setEditingName] = useState(() => {
+    if (initialEditingCatId) {
+      const found = categories.find(c => c.id === initialEditingCatId);
+      return found ? found.name : '';
+    }
+    return '';
+  });
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+
+  // Filter out system 'all' category from management list
+  const editableCategories = categories.filter(c => c.id !== 'all');
+
+  const handleMove = (index, delta) => {
+    const targetIdx = index + delta;
+    if (targetIdx < 0 || targetIdx >= editableCategories.length) return;
+    const newEditable = Array.from(editableCategories);
+    const [moved] = newEditable.splice(index, 1);
+    newEditable.splice(targetIdx, 0, moved);
+
+    const allCat = categories.find(c => c.id === 'all');
+    const fullList = allCat ? [allCat, ...newEditable] : newEditable;
+    const reindexed = fullList.map((c, i) => ({ ...c, position: i }));
+    if (onReorderCategories) {
+      onReorderCategories(reindexed);
+    }
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e, index) => {
+    if (draggedIndex === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = (e, targetIdx) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIdx) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    const newEditable = Array.from(editableCategories);
+    const [moved] = newEditable.splice(draggedIndex, 1);
+    newEditable.splice(targetIdx, 0, moved);
+
+    const allCat = categories.find(c => c.id === 'all');
+    const fullList = allCat ? [allCat, ...newEditable] : newEditable;
+    const reindexed = fullList.map((c, i) => ({ ...c, position: i }));
+    if (onReorderCategories) {
+      onReorderCategories(reindexed);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
 
   const handleCreate = (e) => {
     e.preventDefault();
@@ -50,9 +119,6 @@ export default function CategoryManagerModal({
       onDeleteCategory(catId);
     }
   };
-
-  // Filter out system 'all' category from management list if needed, or present cleanly
-  const editableCategories = categories.filter(c => c.id !== 'all');
 
   return (
     <div className="modal-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
@@ -113,20 +179,34 @@ export default function CategoryManagerModal({
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {editableCategories.map((cat) => {
+                  {editableCategories.map((cat, idx) => {
                     const isEditingThis = editingCatId === cat.id;
+                    const isDragging = draggedIndex === idx;
+                    const isDragOver = dragOverIndex === idx;
 
                     return (
                       <div
                         key={cat.id}
+                        draggable={!isEditingThis}
+                        onDragStart={(e) => handleDragStart(e, idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDrop={(e) => handleDrop(e, idx)}
+                        onDragEnd={handleDragEnd}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          justify: 'space-between',
+                          justifyContent: 'space-between',
                           padding: '0.65rem 0.85rem',
                           borderBottom: '1px solid var(--border-color)',
                           gap: '0.5rem',
-                          background: isEditingThis ? 'rgba(59, 130, 246, 0.05)' : 'transparent'
+                          background: isEditingThis
+                            ? 'rgba(59, 130, 246, 0.05)'
+                            : isDragOver
+                            ? 'rgba(59, 130, 246, 0.15)'
+                            : 'transparent',
+                          opacity: isDragging ? 0.35 : 1,
+                          borderLeft: isDragOver ? '3px solid var(--accent-blue)' : undefined,
+                          transition: 'background 0.12s ease'
                         }}
                       >
                         {isEditingThis ? (
@@ -167,12 +247,56 @@ export default function CategoryManagerModal({
                           </div>
                         ) : (
                           <>
-                            <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <Tag size={14} style={{ color: 'var(--accent-blue)' }} />
-                              <span>{cat.name}</span>
+                            <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                                <span
+                                  style={{ cursor: 'grab', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', padding: '2px' }}
+                                  title="Chytit a přetáhnout"
+                                >
+                                  <GripVertical size={16} />
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={() => handleMove(idx, -1)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: idx === 0 ? 'var(--text-muted)' : 'var(--text-primary)',
+                                    opacity: idx === 0 ? 0.25 : 1,
+                                    cursor: idx === 0 ? 'default' : 'pointer',
+                                    padding: '2px 3px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center'
+                                  }}
+                                  title="Posunout nahoru"
+                                >
+                                  <ChevronUp size={16} />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === editableCategories.length - 1}
+                                  onClick={() => handleMove(idx, 1)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: idx === editableCategories.length - 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                                    opacity: idx === editableCategories.length - 1 ? 0.25 : 1,
+                                    cursor: idx === editableCategories.length - 1 ? 'default' : 'pointer',
+                                    padding: '2px 3px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center'
+                                  }}
+                                  title="Posunout dolů"
+                                >
+                                  <ChevronDown size={16} />
+                                </button>
+                              </div>
+                              <Tag size={14} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.name}</span>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
                               <button
                                 type="button"
                                 className="nav-tab"

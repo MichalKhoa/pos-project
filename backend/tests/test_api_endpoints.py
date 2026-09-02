@@ -34,5 +34,18 @@ class TestApiEndpoints(unittest.TestCase):
         json_data = res.json()
         self.assertIn("storeName", json_data)
 
+    def test_categories_reorder(self):
+        # Fetch existing categories
+        res = self.client.get("/api/v1/catalog/categories")
+        self.assertEqual(res.status_code, 200)
+        cats = res.json()
+        self.assertTrue(len(cats) > 0)
+        
+        # Reverse order and call reorder endpoint
+        reversed_cats = list(reversed(cats))
+        reorder_res = self.client.put("/api/v1/catalog/categories/reorder", json={"categories": reversed_cats})
+        self.assertEqual(reorder_res.status_code, 200)
+        self.assertEqual(reorder_res.json()["status"], "SUCCESS")
+
 if __name__ == "__main__":
     unittest.main()

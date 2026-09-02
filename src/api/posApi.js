@@ -367,6 +367,24 @@ export async function deleteCategoryBackend(catId) {
 }
 
 /**
+ * Bulk reorder categories in backend database
+ */
+export async function reorderCategoriesBackend(categories) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/categories/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categories })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to reorder categories in backend:', err);
+    return null;
+  }
+}
+
+/**
  * Fetch presets from backend database
  */
 export async function fetchPresetsBackend() {

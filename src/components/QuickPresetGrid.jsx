@@ -17,6 +17,7 @@ export default function QuickPresetGrid({
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
+  onReorderCategories,
   onAddToCart,
   onAddPreset,
   onUpdatePreset,
@@ -33,8 +34,14 @@ export default function QuickPresetGrid({
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [managingCatId, setManagingCatId] = useState(null);
   const [editingPreset, setEditingPreset] = useState(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
+
+  const handleOpenCategoryManager = (catId = null) => {
+    setManagingCatId(catId);
+    setIsCategoryModalOpen(true);
+  };
 
   // Open Price Prompt Modal State
   const [openPriceTarget, setOpenPriceTarget] = useState(null);
@@ -302,20 +309,33 @@ export default function QuickPresetGrid({
         </div>
       </div>
 
-      {/* Scrollable Category Filter Bar */}
+      {/* Category Filter Bar (Multi-line wrap + drag reorder) */}
       <CategoryFilterBar
         categories={categories}
         activeCategory={activeCategory}
         onSelectCategory={setActiveCategory}
+        isEditMode={isEditMode}
+        onManageCategories={handleOpenCategoryManager}
+        onReorderCategories={onReorderCategories}
       />
 
-      {/* Edit Mode Control Bar with Drag-to-Delete Trash Dropzone */}
+      {/* Edit Mode Control Bar with Category Management & Drag-to-Delete Trash Dropzone */}
       {isEditMode && (
         <div className="preset-edit-mode-bar">
           <div className="preset-edit-hint">
             <Edit3 size={15} style={{ color: 'var(--accent-amber)', flexShrink: 0 }} />
             <span>{t('presets.edit_mode_hint')}</span>
           </div>
+
+          <button
+            type="button"
+            className="preset-edit-cat-btn"
+            onClick={() => handleOpenCategoryManager(null)}
+            title={t('presets.manage_categories')}
+          >
+            <FolderPlus size={15} />
+            <span>{t('presets.manage_categories') || 'Kategorie'}</span>
+          </button>
 
           <div
             className={`preset-trash-dropzone ${draggedIndex !== null ? 'drag-active' : ''} ${isOverTrash ? 'over-trash' : ''}`}
@@ -402,13 +422,18 @@ export default function QuickPresetGrid({
       {isCategoryModalOpen && (
         <CategoryManagerModal
           categories={categories}
+          initialEditingCatId={managingCatId}
           onAddCategory={(name) => {
             const createdId = onAddCategory(name);
             return createdId;
           }}
           onEditCategory={onEditCategory}
           onDeleteCategory={onDeleteCategory}
-          onClose={() => setIsCategoryModalOpen(false)}
+          onReorderCategories={onReorderCategories}
+          onClose={() => {
+            setIsCategoryModalOpen(false);
+            setManagingCatId(null);
+          }}
           onSelectCategory={(id) => setActiveCategory(id)}
         />
       )}

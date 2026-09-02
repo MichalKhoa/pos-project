@@ -20,6 +20,7 @@ import {
   fetchCategoriesBackend,
   saveCategoryBackend,
   deleteCategoryBackend,
+  reorderCategoriesBackend,
   fetchPresetsBackend,
   savePresetBackend,
   deletePresetBackend,
@@ -638,6 +639,16 @@ export default function App() {
     }));
   };
 
+  const handleReorderCategories = async (reordered) => {
+    setCategories(reordered);
+    try {
+      localStorage.setItem('himmel_pos_categories', JSON.stringify(reordered));
+    } catch {
+      // ignore
+    }
+    await reorderCategoriesBackend(reordered);
+  };
+
   const handleOpenCustomDiscountModal = (item = null) => {
     setDiscountModalSelectedItem(item);
     setIsDiscountModalOpen(true);
@@ -838,6 +849,7 @@ export default function App() {
                   onAddCategory={handleAddCategory}
                   onEditCategory={handleEditCategory}
                   onDeleteCategory={handleDeleteCategory}
+                  onReorderCategories={handleReorderCategories}
                   onAddToCart={handleAddToCart}
                   onAddPreset={handleAddPreset}
                   onUpdatePreset={handleUpdatePreset}

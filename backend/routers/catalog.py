@@ -36,6 +36,9 @@ class RestockPresetSchema(BaseModel):
 class ReorderPresetsSchema(BaseModel):
     presets: List[PresetSchema]
 
+class ReorderCategoriesSchema(BaseModel):
+    categories: List[CategorySchema]
+
 # Default Seed Data
 DEFAULT_CATEGORIES_DATA = [
     {"id": "all", "name": "Všechny položky", "position": 0}
@@ -87,6 +90,16 @@ def delete_category(cat_id: str, db: Session = Depends(get_db)):
         db.delete(existing)
         db.commit()
     return {"status": "SUCCESS", "deleted_id": cat_id}
+
+@router.put("/categories/reorder")
+def reorder_categories(payload: ReorderCategoriesSchema, db: Session = Depends(get_db)):
+    """Bulk update categories order positions."""
+    for idx, c in enumerate(payload.categories):
+        existing = db.query(CategoryModel).filter(CategoryModel.id == c.id).first()
+        if existing:
+            existing.position = idx
+    db.commit()
+    return {"status": "SUCCESS", "message": "Categories reordered successfully."}
 
 # --- PRESETS ENDPOINTS ---
 
