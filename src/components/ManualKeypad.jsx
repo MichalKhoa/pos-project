@@ -79,13 +79,15 @@ export default function ManualKeypad({
     setAmountStr(prev => prev + val);
   };
 
+  const isReturn = amountStr.startsWith('-');
+  const hasValidAmount = !isNaN(parseFloat(amountStr)) && parseFloat(amountStr) !== 0;
+
   const handleAddCustomItem = () => {
     const numericAmount = parseFloat(amountStr);
     if (isNaN(numericAmount) || numericAmount === 0) return;
 
-    const isReturn = numericAmount < 0 || (itemMultiplier && itemMultiplier < 0);
-    const qty = Math.abs(itemMultiplier || 1);
-    const unitPrice = (itemMultiplier < 0 ? -Math.abs(numericAmount) : numericAmount);
+    const qty = Math.max(1, Math.abs(itemMultiplier || 1));
+    const unitPrice = isReturn ? -Math.abs(numericAmount) : Math.abs(numericAmount);
 
     onAddToCart({
       id: `custom-${Date.now()}`,
@@ -101,41 +103,6 @@ export default function ManualKeypad({
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
     triggerKeyAnimation('ENTER');
   };
-
-  // Hardware numpad & keyboard hotkey listener
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const activeEl = document.activeElement;
-      const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleAddCustomItem();
-        return;
-      }
-
-      if (isInput && activeEl.className?.includes('keypad-label-input')) return;
-
-      if (/^[0-9]$/.test(e.key)) {
-        handleKeyPress(e.key);
-      } else if (e.key === 'Backspace') {
-        handleKeyPress('BACK');
-      } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
-        handleKeyPress('CLEAR');
-      } else if (e.key === '.' || e.key === ',') {
-        handleKeyPress('.');
-      } else if (e.key === '+' || e.key === 'Add') {
-        e.preventDefault();
-        if (setItemMultiplier) setItemMultiplier(prev => (prev || 1) + 1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amountStr, label, selectedVat, itemMultiplier]);
-
-  const hasValidAmount = !isNaN(parseFloat(amountStr)) && parseFloat(amountStr) !== 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', overflowY: 'auto' }}>
@@ -163,6 +130,12 @@ export default function ManualKeypad({
             placeholder={t('keypad.item_placeholder') || 'Název položky (volitelné)...'}
             value={label}
             onChange={e => setLabel(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddCustomItem();
+              }
+            }}
             style={{
               fontSize: '0.85rem', border: 'none', outline: 'none',
               background: 'transparent', width: '100%', height: '100%',
@@ -177,13 +150,13 @@ export default function ManualKeypad({
           style={{
             display: 'flex', flexDirection: 'column', alignItems: 'stretch',
             padding: '0.4rem 0.75rem', flexShrink: 0, borderRadius: '10px',
-            border: itemMultiplier < 0
+            border: isReturn
               ? '2px solid var(--accent-rose)'
               : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)'),
-            background: itemMultiplier < 0
+            background: isReturn
               ? 'rgba(239,68,68,0.06)'
               : (itemMultiplier > 1 ? 'rgba(245,158,11,0.04)' : 'var(--bg-input)'),
-            boxShadow: itemMultiplier < 0
+            boxShadow: isReturn
               ? '0 0 14px rgba(239,68,68,0.2)'
               : (itemMultiplier > 1 ? '0 0 14px rgba(245,158,11,0.2)' : 'none'),
             transition: 'all 0.2s ease'
@@ -192,11 +165,11 @@ export default function ManualKeypad({
           <span style={{
             fontSize: '0.63rem', fontWeight: '800', textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            color: itemMultiplier < 0
+            color: isReturn
               ? 'var(--accent-rose)'
               : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
           }}>
-            {t('keypad.amount_label')}
+            {isReturn ? `${t('keypad.amount_label')} — ↩️ VRATKA` : t('keypad.amount_label')}
           </span>
 
           {/* Big price / equation */}
@@ -204,33 +177,31 @@ export default function ManualKeypad({
             fontSize: itemMultiplier !== 1 ? '1.2rem' : '1.4rem',
             fontWeight: '900',
             fontFamily: 'var(--font-mono)',
-            color: itemMultiplier < 0 ? 'var(--accent-rose)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : (amountStr ? 'var(--text-primary)' : 'var(--text-muted)')),
+            color: isReturn ? 'var(--accent-rose)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : (amountStr ? 'var(--text-primary)' : 'var(--text-muted)')),
             wordBreak: 'break-all'
           }}>
             {itemMultiplier !== 1
-              ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'} ${itemMultiplier < 0 ? '(VRATKA)' : ''}`
-              : (amountStr ? `${amountStr} Kč` : '0 Kč')}
+              ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : (isReturn ? '-___ Kč' : '___ Kč')}`
+              : (amountStr ? `${amountStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč'))}
           </div>
 
           {/* Subtotal line */}
           {itemMultiplier !== 1 && hasValidAmount && (
             <div style={{
               fontSize: '0.82rem', fontWeight: '800', fontFamily: 'var(--font-mono)',
-              color: itemMultiplier < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)', textAlign: 'right',
+              color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', textAlign: 'right',
               borderTop: '1px dashed rgba(245,158,11,0.35)',
               paddingTop: '2px', marginTop: '2px'
             }}>
-              = Celkem {(itemMultiplier * parseFloat(amountStr)).toLocaleString('cs-CZ')} Kč
+              = Celkem {(itemMultiplier * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1)).toLocaleString('cs-CZ')} Kč
             </div>
           )}
         </div>
 
-        {/* ── VAT selector & Sign Toggle (Subcomponent) ── */}
+        {/* ── VAT selector (Subcomponent) ── */}
         <KeypadVatSelector
           selectedVat={selectedVat}
           setSelectedVat={setSelectedVat}
-          amountStr={amountStr}
-          onKeyPress={handleKeyPress}
         />
 
         {/* ── Quantity Stepper Bar (New Subcomponent) ── */}

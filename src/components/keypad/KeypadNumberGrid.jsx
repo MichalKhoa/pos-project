@@ -95,12 +95,14 @@ export default function KeypadNumberGrid({
       {/* ± quick sign toggle */}
       <button
         type="button"
-        className={`key-btn ${activeKey === 'PLUSMINUS' || activeKey === '±' ? 'active-press' : ''}`}
+        className={`key-btn ${amountStr.startsWith('-') ? 'active-return' : ''} ${activeKey === 'PLUSMINUS' || activeKey === '±' ? 'active-press' : ''}`}
         onClick={() => onKeyPress('±')}
         style={{
-          color: amountStr.startsWith('-') || itemMultiplier < 0 ? 'var(--accent-rose)' : 'var(--text-primary)',
+          color: amountStr.startsWith('-') ? 'var(--accent-rose)' : 'var(--text-primary)',
           fontWeight: '900',
-          fontSize: '1.25rem'
+          fontSize: '1.25rem',
+          background: amountStr.startsWith('-') ? 'rgba(239, 68, 68, 0.15)' : undefined,
+          borderColor: amountStr.startsWith('-') ? 'rgba(239, 68, 68, 0.6)' : undefined
         }}
         title="Změnit znaménko (±)"
       >
@@ -144,13 +146,13 @@ export default function KeypadNumberGrid({
         style={{
           gridColumn: 'span 4',
           minHeight: '48px',
-          background: (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)) && hasValidAmount
+          background: amountStr.startsWith('-') && hasValidAmount
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
             : undefined,
-          borderColor: (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)) && hasValidAmount
+          borderColor: amountStr.startsWith('-') && hasValidAmount
             ? '#ef4444'
             : undefined,
-          boxShadow: (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)) && hasValidAmount
+          boxShadow: amountStr.startsWith('-') && hasValidAmount
             ? '0 4px 14px rgba(239, 68, 68, 0.35)'
             : undefined
         }}
@@ -161,7 +163,7 @@ export default function KeypadNumberGrid({
         <span>
           {!hasValidAmount
             ? t('keypad.enter_amount')
-            : (itemMultiplier < 0 || (amountStr && parseFloat(amountStr) < 0)
+            : (amountStr.startsWith('-')
                 ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
                 : t('keypad.add_to_cart'))}
         </span>

@@ -131,12 +131,16 @@ export default function QuickPresetGrid({
       return;
     }
 
-    if (keypadAmount && parseFloat(keypadAmount) > 0) {
-      const customPrice = parseFloat(keypadAmount);
+    const isReturn = Boolean(keypadAmount && keypadAmount.startsWith('-'));
+    const parsedKeypad = parseFloat(keypadAmount);
+    const hasNumericKeypad = !isNaN(parsedKeypad) && parsedKeypad !== 0;
+
+    if (hasNumericKeypad) {
+      const customPrice = isReturn ? -Math.abs(parsedKeypad) : Math.abs(parsedKeypad);
       onAddToCart({
         ...preset,
         price: customPrice,
-        quantity: itemMultiplier || 1
+        quantity: Math.max(1, Math.abs(itemMultiplier || 1))
       });
       if (onClearKeypadAmount) onClearKeypadAmount();
       if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
@@ -146,15 +150,18 @@ export default function QuickPresetGrid({
     if (preset.isGeneralPreset || preset.price === 0 || preset.price === '0' || !preset.price) {
       setOpenPriceTarget(preset);
       setEnteredOpenPrice('');
-      setOpenPriceQty(itemMultiplier || 1);
+      setOpenPriceQty(Math.max(1, Math.abs(itemMultiplier || 1)));
       return;
     }
 
+    const unitPrice = isReturn ? -Math.abs(parseFloat(preset.price)) : parseFloat(preset.price);
     onAddToCart({
       ...preset,
-      quantity: itemMultiplier || 1
+      price: unitPrice,
+      quantity: Math.max(1, Math.abs(itemMultiplier || 1))
     });
 
+    if (onClearKeypadAmount && isReturn) onClearKeypadAmount();
     if (setItemMultiplier && itemMultiplier !== 1) {
       setItemMultiplier(1);
     }
@@ -165,14 +172,18 @@ export default function QuickPresetGrid({
     const finalPrice = parseFloat(enteredOpenPrice);
     if (isNaN(finalPrice) || finalPrice === 0 || !openPriceTarget) return;
 
+    const isReturn = Boolean(keypadAmount && keypadAmount.startsWith('-'));
+    const effectivePrice = isReturn ? -Math.abs(finalPrice) : Math.abs(finalPrice);
+
     onAddToCart({
       ...openPriceTarget,
-      price: finalPrice,
-      quantity: openPriceQty || 1
+      price: effectivePrice,
+      quantity: Math.max(1, Math.abs(openPriceQty || 1))
     });
 
     setOpenPriceTarget(null);
     setEnteredOpenPrice('');
+    if (onClearKeypadAmount) onClearKeypadAmount();
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
   };
 

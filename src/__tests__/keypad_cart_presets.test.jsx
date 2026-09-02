@@ -67,7 +67,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       }));
     });
 
-    it('toggles ± for negative return sale', () => {
+    it('toggles ± for negative return sale with single ± key', () => {
       const onAddToCart = vi.fn();
       wrapWithLanguage(
         <ManualKeypadHarness
@@ -81,8 +81,8 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(screen.getByRole('button', { name: '0' }));
       fireEvent.click(screen.getByRole('button', { name: '0' }));
 
-      // Click ± button
-      const plusMinusBtn = screen.getAllByRole('button', { name: '±' })[0];
+      // Click ± button (only one exists on numeric grid)
+      const plusMinusBtn = screen.getByRole('button', { name: '±' });
       fireEvent.click(plusMinusBtn);
 
       // Click Add to Cart / Return button
@@ -90,11 +90,12 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(addBtn);
 
       expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
-        price: -200
+        price: -200,
+        quantity: 1
       }));
     });
 
-    it('steps multiplier down to negative for return item', () => {
+    it('clamps stepper down at 1 ks and never goes negative', () => {
       const onAddToCart = vi.fn();
       wrapWithLanguage(
         <ManualKeypadHarness
@@ -108,17 +109,53 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(screen.getByRole('button', { name: '0' }));
       fireEvent.click(screen.getByRole('button', { name: '0' }));
 
-      // Step down multiplier from 1 to -1
+      // Step down multiplier button is disabled at 1 ks
       const stepDownBtn = screen.getByRole('button', { name: /-1 ks/i });
-      fireEvent.click(stepDownBtn);
+      expect(stepDownBtn).toBeDisabled();
 
       // Click Add button
       const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });
       fireEvent.click(addBtn);
 
       expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
-        price: -100,
+        price: 100,
         quantity: 1
+      }));
+    });
+
+    it('combines positive multiplier with ± return mode without positive flip', () => {
+      const onAddToCart = vi.fn();
+      wrapWithLanguage(
+        <ManualKeypadHarness
+          onAddToCart={onAddToCart}
+          defaultVat={21}
+        />
+      );
+
+      // Step up to 2 ks
+      const stepUpBtn = screen.getByRole('button', { name: /\+1 ks/i });
+      fireEvent.click(stepUpBtn);
+
+      // Type 100
+      fireEvent.click(screen.getByRole('button', { name: '1' }));
+      fireEvent.click(screen.getByRole('button', { name: '0' }));
+      fireEvent.click(screen.getByRole('button', { name: '0' }));
+
+      // Toggle ± return
+      const plusMinusBtn = screen.getByRole('button', { name: '±' });
+      fireEvent.click(plusMinusBtn);
+
+      // Verify subtotal preview text shows negative total, not positive
+      expect(screen.getByText(/= Celkem -200 Kč/i)).toBeInTheDocument();
+
+      // Click Add button
+      const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });
+      fireEvent.click(addBtn);
+
+      // Quantity must be 2, price must be -100
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
+        price: -100,
+        quantity: 2
       }));
     });
   });
@@ -189,6 +226,52 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       );
       expect(screen.queryByText('21%')).not.toBeInTheDocument();
       expect(screen.queryByText('12%')).not.toBeInTheDocument();
+    });
+
+    it('adds preset as return with negative price when keypadAmount has return sign', () => {
+      const onAddToCart = vi.fn();
+      const onClearKeypadAmount = vi.fn();
+      wrapWithLanguage(
+        <QuickPresetGrid
+          presets={samplePresets}
+          categories={sampleCategories}
+          onAddToCart={onAddToCart}
+          keypadAmount="-"
+          onClearKeypadAmount={onClearKeypadAmount}
+        />
+      );
+
+      fireEvent.click(screen.getByText('Espresso'));
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'p1',
+        name: 'Espresso',
+        price: -55,
+        quantity: 1
+      }));
+      expect(onClearKeypadAmount).toHaveBeenCalled();
+    });
+
+    it('applies custom negative price to preset when typed on keypad with return sign', () => {
+      const onAddToCart = vi.fn();
+      const onClearKeypadAmount = vi.fn();
+      wrapWithLanguage(
+        <QuickPresetGrid
+          presets={samplePresets}
+          categories={sampleCategories}
+          onAddToCart={onAddToCart}
+          keypadAmount="-60"
+          onClearKeypadAmount={onClearKeypadAmount}
+        />
+      );
+
+      fireEvent.click(screen.getByText('Espresso'));
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'p1',
+        name: 'Espresso',
+        price: -60,
+        quantity: 1
+      }));
+      expect(onClearKeypadAmount).toHaveBeenCalled();
     });
   });
 

@@ -34,27 +34,19 @@ export function usePosKeyboardShortcuts({
           }
           return prev.length < 8 ? prev + key : prev;
         });
-      } else if (key === '-') {
+      } else if (key === '-' || key === 'Subtract') {
         e.preventDefault();
         setKeypadAmount(prev => {
           if (!prev) return '-';
           if (prev.startsWith('-')) return prev.slice(1);
           return '-' + prev;
         });
-      } else if (key === 'ArrowUp') {
+      } else if (key === 'ArrowUp' || key === '+' || key === 'Add') {
         e.preventDefault();
-        setItemMultiplier(prev => {
-          if (prev === -1) return 1;
-          if (prev < -1) return prev + 1;
-          return prev + 1;
-        });
+        setItemMultiplier(prev => Math.min(999, (prev || 1) + 1));
       } else if (key === 'ArrowDown') {
         e.preventDefault();
-        setItemMultiplier(prev => {
-          if (prev === 1) return -1;
-          if (prev < 0) return prev - 1;
-          return prev - 1;
-        });
+        setItemMultiplier(prev => Math.max(1, (prev || 1) - 1));
       } else if (key === '.' || key === ',') {
         e.preventDefault();
         setKeypadAmount(prev => {
@@ -64,7 +56,7 @@ export function usePosKeyboardShortcuts({
       } else if (key === 'Backspace') {
         e.preventDefault();
         setKeypadAmount(prev => prev.slice(0, -1));
-      } else if (key === 'Escape' || key === 'Delete') {
+      } else if (key === 'Escape' || key === 'Delete' || key.toLowerCase() === 'c') {
         e.preventDefault();
         setKeypadAmount('');
         setItemMultiplier(1);
@@ -73,7 +65,7 @@ export function usePosKeyboardShortcuts({
         setKeypadAmount(prev => {
           if (prev && !prev.includes('.')) {
             const parsedQty = parseInt(prev, 10);
-            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -99 && parsedQty <= 99) {
+            if (!isNaN(parsedQty) && parsedQty >= 1 && parsedQty <= 999) {
               setItemMultiplier(parsedQty);
               return '';
             }
@@ -87,15 +79,21 @@ export function usePosKeyboardShortcuts({
         e.preventDefault();
         const amtVal = parseFloat(keypadAmount);
         if (keypadAmount && !isNaN(amtVal) && amtVal !== 0) {
-          const isReturn = amtVal < 0;
+          const isReturn = keypadAmount.startsWith('-');
+          const qty = Math.max(1, Math.abs(itemMultiplier || 1));
+          const unitPrice = isReturn ? -Math.abs(amtVal) : Math.abs(amtVal);
           handleAddToCart({
             id: `custom-${Date.now()}`,
             name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
-            price: amtVal,
+            price: unitPrice,
             vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
+            quantity: qty,
             isCustom: true
           });
           setKeypadAmount('');
+          if (itemMultiplier !== 1) {
+            setItemMultiplier(1);
+          }
         } else if (cartItems.length > 0 && !paymentModalMethod) {
           setPaymentModalMethod('cash');
         }

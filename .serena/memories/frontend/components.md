@@ -36,10 +36,10 @@ Directory: `/src/components`
   - `PresetModal.jsx`: 1000px wide studio layout modal (Left: Item details, Open Price default with segmented toggle, store default VAT auto-selection, stock tracking off by default, USB hardware barcode scanner auto-fill listener with visual scan confirmation; Right: Live `PresetTileCard` preview, expanded 28-color palette with custom HTML5 eyedropper color picker and HEX code display, 100+ categorized Lucide retail icons with category tabs and real-time name search, and photo upload).
   - `OpenPriceModal.jsx`: Numeric touch popover for open-price items and return items.
   - `src/hooks/usePresetDragDrop.js`: Drag-and-drop tile reordering and keyboard arrow shifting.
-- `ManualKeypad.jsx`: Touch numeric pad coordinator with `touch-action: manipulation` zero-delay keys. Decomposed into `/src/components/keypad/`:
-  - `KeypadStepperBar.jsx`: Touch quantity stepper (`[-1 ks]`, Multiplier Display / Reset, `[+1 ks]`). Decreasing below 1 activates return mode (`-1×`, `-2×`).
-  - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), and custom product/return insertion button.
-  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) and quick `±` sign toggle.
+- `ManualKeypad.jsx`: Touch numeric pad coordinator with `touch-action: manipulation` zero-delay keys. Unified sign and return handling (stepper strictly positive `>= 1 ks`, `±` controls return mode, subtotal preview strictly negative in return mode). Decomposed into `/src/components/keypad/`:
+  - `KeypadStepperBar.jsx`: Touch quantity stepper (`[-1 ks]`, Multiplier Display / Reset, `[+1 ks]`). Clamped to positive quantities (min 1 ks; disabled at 1 ks).
+  - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), dedicated `±` return toggle, and custom product/return insertion button.
+  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) expanded evenly across selector bar.
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
   - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
 - `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).

@@ -7,28 +7,19 @@ export default function KeypadStepperBar({
   triggerKeyAnimation,
   activeKey
 }) {
-  const isReturn = itemMultiplier < 0;
+  const isAtMin = itemMultiplier <= 1;
 
   const handleStepDown = () => {
+    if (isAtMin) return;
     if (triggerKeyAnimation) triggerKeyAnimation('STEP_DOWN');
     if (!setItemMultiplier) return;
-    setItemMultiplier(prev => {
-      const current = prev || 1;
-      if (current === 1) return -1; // 1 -> -1 (activate return)
-      if (current > 1) return current - 1; // 3 -> 2 -> 1
-      return current - 1; // -1 -> -2 -> -3
-    });
+    setItemMultiplier(prev => Math.max(1, (prev || 1) - 1));
   };
 
   const handleStepUp = () => {
     if (triggerKeyAnimation) triggerKeyAnimation('STEP_UP');
     if (!setItemMultiplier) return;
-    setItemMultiplier(prev => {
-      const current = prev || 1;
-      if (current === -1) return 1; // -1 -> 1 (exit return)
-      if (current < -1) return current + 1; // -3 -> -2 -> -1
-      return current + 1; // 1 -> 2 -> 3
-    });
+    setItemMultiplier(prev => Math.min(999, (prev || 1) + 1));
   };
 
   const handleReset = () => {
@@ -47,17 +38,18 @@ export default function KeypadStepperBar({
         boxSizing: 'border-box'
       }}
     >
-      {/* Step Down Button (-1 ks / Vratka) */}
+      {/* Step Down Button (-1 ks) */}
       <button
         type="button"
         className={`key-btn ${activeKey === 'STEP_DOWN' ? 'active-press' : ''}`}
         onClick={handleStepDown}
+        disabled={isAtMin}
         style={{
           flex: 1,
           height: '42px',
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          color: '#ffffff',
-          border: 'none',
+          background: isAtMin ? 'var(--bg-card-hover, rgba(255,255,255,0.05))' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: isAtMin ? 'var(--text-muted)' : '#ffffff',
+          border: isAtMin ? '1px solid var(--border-color)' : 'none',
           fontSize: '0.88rem',
           fontWeight: '900',
           display: 'flex',
@@ -65,10 +57,11 @@ export default function KeypadStepperBar({
           justifyContent: 'center',
           gap: '0.3rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 6px rgba(239, 68, 68, 0.35)',
-          cursor: 'pointer'
+          boxShadow: isAtMin ? 'none' : '0 2px 6px rgba(239, 68, 68, 0.35)',
+          cursor: isAtMin ? 'not-allowed' : 'pointer',
+          opacity: isAtMin ? 0.6 : 1
         }}
-        title="Snížit množství (-1 ks / Vratka)"
+        title="Snížit množství (-1 ks)"
       >
         <ChevronDown size={18} strokeWidth={2.5} />
         <span>-1 ks</span>
@@ -82,15 +75,9 @@ export default function KeypadStepperBar({
         style={{
           flex: 1.2,
           height: '42px',
-          background: isReturn
-            ? 'rgba(239, 68, 68, 0.15)'
-            : (itemMultiplier > 1 ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-input)'),
-          border: isReturn
-            ? '1.5px solid rgba(239, 68, 68, 0.5)'
-            : (itemMultiplier > 1 ? '1.5px solid rgba(245, 158, 11, 0.5)' : '1px solid var(--border-color)'),
-          color: isReturn
-            ? 'var(--accent-rose)'
-            : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-primary)'),
+          background: itemMultiplier > 1 ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-input)',
+          border: itemMultiplier > 1 ? '1.5px solid rgba(245, 158, 11, 0.5)' : '1px solid var(--border-color)',
+          color: itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-primary)',
           borderRadius: 'var(--radius-md)',
           display: 'flex',
           alignItems: 'center',
@@ -102,18 +89,9 @@ export default function KeypadStepperBar({
         }}
         title="Kliknutím resetujete na 1 ks"
       >
-        {isReturn ? (
-          <>
-            <span style={{ fontSize: '0.78rem' }}>↩️ VRATKA</span>
-            <span style={{ fontFamily: 'var(--font-mono)' }}>{itemMultiplier}×</span>
-          </>
-        ) : (
-          <>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Množství:</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>{itemMultiplier}×</span>
-            {itemMultiplier !== 1 && <RotateCcw size={12} style={{ opacity: 0.7 }} />}
-          </>
-        )}
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Množství:</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>{itemMultiplier}×</span>
+        {itemMultiplier !== 1 && <RotateCcw size={12} style={{ opacity: 0.7 }} />}
       </button>
 
       {/* Step Up Button (+1 ks) */}
