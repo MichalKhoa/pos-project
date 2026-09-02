@@ -209,6 +209,10 @@ describe('Modals & Dialog Component Tests', () => {
       const nameInput = screen.getByPlaceholderText('...');
       fireEvent.change(nameInput, { target: { value: 'Káva Espresso' } });
 
+      // Switch to fixed price
+      const fixedPriceBtn = screen.getByRole('button', { name: /Pevná cena/i });
+      fireEvent.click(fixedPriceBtn);
+
       // Fill price
       const priceInput = screen.getByPlaceholderText('250');
       fireEvent.change(priceInput, { target: { value: '65' } });
@@ -220,7 +224,36 @@ describe('Modals & Dialog Component Tests', () => {
       expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Káva Espresso',
         price: 65,
-        vat: 21
+        vat: 21,
+        isOpenPrice: false
+      }));
+    });
+
+    it('saves new preset with default open price and store default VAT', () => {
+      const onSave = vi.fn();
+      wrapWithLanguage(
+        <PresetModal
+          isOpen={true}
+          mode="add"
+          categories={[{ id: 'cat-1', name: 'Oblečení' }]}
+          storeConfig={{ defaultVat: 12 }}
+          onClose={() => {}}
+          onSave={onSave}
+        />
+      );
+
+      const nameInput = screen.getByPlaceholderText('...');
+      fireEvent.change(nameInput, { target: { value: 'Bunda dámská' } });
+
+      const saveBtn = screen.getByRole('button', { name: /Přidat Novou Položku/i });
+      fireEvent.click(saveBtn);
+
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'Bunda dámská',
+        price: 0,
+        isOpenPrice: true,
+        vat: 12,
+        trackStock: false
       }));
     });
   });
