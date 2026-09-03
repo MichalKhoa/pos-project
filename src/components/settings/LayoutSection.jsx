@@ -135,10 +135,12 @@ export default function LayoutSection({
             </span>
           </div>
 
-          <div className="settings-segmented-group">
+          <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
             {[
-              { id: 'left-stripe', label: '▍ Levý proužek' },
-              { id: 'color-fill', label: '█ Plná barva' }
+              { id: 'left-stripe', label: '▍ ' + (t('settings.preset_style_left_stripe') || 'Levý proužek') },
+              { id: 'color-fill', label: '█ ' + (t('settings.preset_style_color_fill') || 'Plná barva') },
+              { id: 'modern-card', label: '✦ ' + (t('settings.preset_style_modern_card') || 'Moderní karta') },
+              { id: 'modern-glass', label: '❖ ' + (t('settings.preset_style_modern_glass') || 'Moderní sklo') }
             ].map(st => (
               <button
                 key={st.id}

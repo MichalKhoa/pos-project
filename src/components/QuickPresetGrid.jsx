@@ -209,9 +209,9 @@ export default function QuickPresetGrid({
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
           {/* Quick Product Search Bar */}
-          <div className="keypad-input-container" style={{ minWidth: '160px', flex: '1 1 180px', maxWidth: '240px', padding: '0 0.6rem', height: '36px', boxSizing: 'border-box' }}>
+          <div className="keypad-input-container" style={{ minWidth: '150px', flex: '1 1 180px', maxWidth: '240px', padding: '0 0.6rem', height: '38px', minHeight: '38px', boxSizing: 'border-box' }}>
             <Search size={14} style={{ color: 'var(--text-muted)', marginRight: '6px', flexShrink: 0 }} />
             <input
               type="text"
@@ -219,7 +219,7 @@ export default function QuickPresetGrid({
               placeholder={t('presets.search')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}
+              style={{ fontSize: '0.82rem', color: 'var(--text-primary)' }}
             />
             {searchTerm && (
               <button
@@ -237,14 +237,17 @@ export default function QuickPresetGrid({
               style={{
                 background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                 color: '#ffffff',
-                padding: '0.35rem 0.65rem',
+                height: '38px',
+                padding: '0 0.65rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.8rem',
                 fontWeight: '800',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.35)'
+                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.35)',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
               title="Aktivní násobič množství"
             >
@@ -264,12 +267,17 @@ export default function QuickPresetGrid({
             type="button"
             className="nav-tab"
             style={{
-              padding: '0.35rem 0.65rem',
-              fontSize: '0.8rem',
+              height: '38px',
+              minHeight: '38px',
+              padding: '0 0.75rem',
+              fontSize: '0.82rem',
               background: 'rgba(255,255,255,0.06)',
               color: 'var(--accent-blue)',
               fontWeight: '700',
-              gap: '0.35rem'
+              gap: '0.35rem',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              touchAction: 'manipulation'
             }}
             onClick={() => {
               setEditingPreset(null);
@@ -277,7 +285,7 @@ export default function QuickPresetGrid({
             }}
             title={t('presets.add_preset')}
           >
-            <Plus size={14} />
+            <Plus size={15} />
             <span>{t('common.add') || 'Přidat'}</span>
           </button>
 
@@ -285,17 +293,22 @@ export default function QuickPresetGrid({
             type="button"
             className={`nav-tab ${isEditMode ? 'active' : ''}`}
             style={{
-              padding: '0.35rem 0.75rem',
-              fontSize: '0.8rem',
+              height: '38px',
+              minHeight: '38px',
+              padding: '0 0.85rem',
+              fontSize: '0.82rem',
               background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
               color: isEditMode ? '#000000' : 'var(--text-primary)',
               fontWeight: '700',
-              gap: '0.35rem'
+              gap: '0.35rem',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              touchAction: 'manipulation'
             }}
             onClick={() => setIsEditMode(!isEditMode)}
             title="Zapnout/Vypnout režim úprav tlačítek pokladny"
           >
-            {isEditMode ? <Check size={14} /> : <Edit3 size={14} />}
+            {isEditMode ? <Check size={15} /> : <Edit3 size={15} />}
             <span>{isEditMode ? 'Hotovo' : t('presets.edit') || 'Upravit'}</span>
           </button>
 
@@ -304,17 +317,22 @@ export default function QuickPresetGrid({
               type="button"
               className="nav-tab"
               style={{
-                padding: '0.35rem 0.65rem',
-                fontSize: '0.8rem',
+                height: '38px',
+                minHeight: '38px',
+                padding: '0 0.75rem',
+                fontSize: '0.82rem',
                 background: 'rgba(255,255,255,0.06)',
                 color: 'var(--accent-purple)',
                 fontWeight: '700',
-                gap: '0.35rem'
+                gap: '0.35rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                touchAction: 'manipulation'
               }}
               onClick={() => setIsCategoryModalOpen(true)}
               title={t('presets.manage_categories')}
             >
-              <FolderPlus size={14} />
+              <FolderPlus size={15} />
               <span>{t('presets.add_category')}</span>
             </button>
           )}

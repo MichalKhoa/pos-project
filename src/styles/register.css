@@ -62,6 +62,10 @@
   border-color: var(--accent-blue);
 }
 
+.category-chip:active {
+  transform: scale(0.96);
+}
+
 .category-chip.active {
   background: var(--bg-card);
   color: var(--accent-highlight, var(--accent-indigo));
@@ -284,6 +288,95 @@
 .preset-card.style-color-fill:active {
   filter: brightness(0.92);
   transform: scale(0.98);
+}
+
+/* Style 3: Modern Card (Elevated Soft-Glow & Top Accent Rim) */
+.preset-card.style-modern-card {
+  background: linear-gradient(165deg, color-mix(in srgb, var(--card-accent, var(--accent-blue)) 14%, var(--bg-card)) 0%, var(--bg-card) 100%);
+  border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 32%, var(--border-color));
+  border-top: 3.5px solid var(--card-accent, var(--accent-blue));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 0.65rem 0.75rem 0.55rem 0.75rem;
+}
+.preset-card.style-modern-card .preset-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.22;
+}
+.preset-card.style-modern-card .preset-corner-icon {
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 18%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 3px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--card-accent, var(--accent-blue));
+}
+.preset-card.style-modern-card .preset-price {
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.preset-card.style-modern-card .preset-vat-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, transparent);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.preset-card.style-modern-card:hover {
+  background: linear-gradient(165deg, color-mix(in srgb, var(--card-accent, var(--accent-blue)) 22%, var(--bg-card)) 0%, var(--bg-card) 100%);
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 55%, var(--border-color));
+  border-top-color: var(--card-accent, var(--accent-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.28), 0 0 14px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 25%, transparent);
+}
+.preset-card.style-modern-card:active {
+  transform: scale(0.96);
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 28%, var(--bg-card));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Style 4: Modern Glass (Translucent Frosted Surface with Glowing Accent) */
+.preset-card.style-modern-glass {
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 10%, rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 38%, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  padding: 0.65rem 0.75rem 0.55rem 0.75rem;
+}
+.preset-card.style-modern-glass .preset-corner-icon {
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 20%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 3px 5px;
+  color: var(--card-accent, var(--accent-blue));
+}
+.preset-card.style-modern-glass .preset-price {
+  font-weight: 900;
+  color: var(--text-primary);
+}
+.preset-card.style-modern-glass .preset-vat-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 15%, transparent);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.preset-card.style-modern-glass:hover {
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 18%, rgba(255, 255, 255, 0.08));
+  border-color: var(--card-accent, var(--accent-blue));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 0 16px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 35%, transparent);
+}
+.preset-card.style-modern-glass:active {
+  transform: scale(0.96);
+  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 26%, rgba(255, 255, 255, 0.08));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .preset-multiplier-badge {
