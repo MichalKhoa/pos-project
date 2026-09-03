@@ -132,6 +132,7 @@ export default function App() {
     parkCurrentCart,
     restoreParkedCart,
     deleteParkedCart,
+    updateParkedCartNote,
     addToCart,
     updateQuantity: handleUpdateQty,
     updateItemDiscount: handleUpdateItemDiscount,
@@ -146,6 +147,8 @@ export default function App() {
     restoreClearedCart,
     dismissClearedCartSnapshot
   } = useCart();
+
+  const [isParkedModalOpen, setIsParkedModalOpen] = useState(false);
 
   const computedTotalAmount = useMemo(() => {
     return cartItems.reduce((sum, item) => {
@@ -325,6 +328,7 @@ export default function App() {
       fetchSalesHistoryBackend().then(backendSales => {
         if (Array.isArray(backendSales) && backendSales.length > 0) {
           setSalesHistory(prev => {
+            const prevSaleMap = new Map(prev.map(s => [s.id, s]));
             const backendIds = new Set(backendSales.map(s => s.id));
             const backendReceipts = new Set(backendSales.map(s => s.receiptNumber).filter(Boolean));
             const pendingLocalSales = prev.filter(s => 
@@ -332,7 +336,17 @@ export default function App() {
               !backendIds.has(s.id) &&
               !backendReceipts.has(s.receiptNumber)
             );
-            const merged = [...pendingLocalSales, ...backendSales];
+
+            // Defensive merge: preserve local items if incoming backend sale has empty items but local has items
+            const safelyMergedBackend = backendSales.map(bs => {
+              const localSale = prevSaleMap.get(bs.id);
+              if ((!bs.items || bs.items.length === 0) && localSale && Array.isArray(localSale.items) && localSale.items.length > 0) {
+                return { ...bs, items: localSale.items };
+              }
+              return bs;
+            });
+
+            const merged = [...pendingLocalSales, ...safelyMergedBackend];
             merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             return merged;
           });
@@ -602,6 +616,9 @@ export default function App() {
                   onParkCart={parkCurrentCart}
                   onRestoreParkedCart={restoreParkedCart}
                   onDeleteParkedCart={deleteParkedCart}
+                  onUpdateParkedCartNote={updateParkedCartNote}
+                  isParkedModalOpen={isParkedModalOpen}
+                  onParkedModalOpenChange={setIsParkedModalOpen}
                   hasCartItems={cartItems.length > 0}
                   salesHistory={salesHistory}
                   onNavigateToHistory={(dateStr) => {
@@ -649,6 +666,8 @@ export default function App() {
                   onRestoreClearedCart={restoreClearedCart}
                   onDismissClearedCart={dismissClearedCartSnapshot}
                   onOpenCashDrawer={handleOpenCashDrawer}
+                  parkedCartsCount={parkedCarts.length}
+                  onOpenParkedModal={() => setIsParkedModalOpen(true)}
                 />
               </div>
             </div>

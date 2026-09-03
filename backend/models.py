@@ -37,7 +37,7 @@ class SaleModel(Base):
         Index("ix_sales_timestamp_payment_method", "timestamp", "payment_method"),
     )
 
-    items = relationship("SaleItemModel", back_populates="sale", cascade="all, delete-orphan")
+    items = relationship("SaleItemModel", back_populates="sale", cascade="all, delete-orphan", lazy="selectin")
 
 
 class SaleItemModel(Base):

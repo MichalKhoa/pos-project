@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from typing import List, Optional
 from database import get_db
 from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel
@@ -79,6 +79,47 @@ class UpdateRefundStatusSchema(BaseModel):
     refunded_amount: float
 
 
+class SaleItemResponseSchema(BaseModel):
+    id: int
+    item_id: Optional[str] = None
+    name: str
+    price: float
+    quantity: int = 1
+    vat: int = 21
+    discount_percent: float = 0.0
+
+    model_config = {"from_attributes": True}
+
+
+class SaleResponseSchema(BaseModel):
+    id: str
+    receipt_number: str
+    timestamp: datetime
+    total_amount: float
+    cart_discount_percent: Optional[float] = 0.0
+    payment_method: str
+    split_details: Optional[dict] = None
+    tendered_amount: Optional[float] = 0.0
+    change_due: Optional[float] = 0.0
+    tax_summary: dict
+    fik_code: Optional[str] = None
+    bkp_code: Optional[str] = None
+    pkp_code: Optional[str] = None
+    eet_status: Optional[str] = "EVD_OK"
+    eic_popl: Optional[str] = None
+    id_provozovny: Optional[str] = "11"
+    id_pokl: Optional[str] = "1"
+    is_sent_to_eet: Optional[bool] = True
+    is_refund: Optional[bool] = False
+    original_receipt_number: Optional[str] = None
+    refund_reason: Optional[str] = None
+    refund_status: Optional[str] = "NONE"
+    refunded_amount: Optional[float] = 0.0
+    items: List[SaleItemResponseSchema] = []
+
+    model_config = {"from_attributes": True}
+
+
 from collections import OrderedDict
 import threading
 import time
@@ -122,7 +163,7 @@ idempotency_cache = BoundedTTLIdempotencyCache(max_size=1000, ttl_seconds=300.0)
 
 from fastapi import Response
 
-@router.get("/")
+@router.get("/", response_model=List[SaleResponseSchema])
 def get_sales_history(
     response: Response,
     limit: Optional[int] = None,
@@ -137,7 +178,7 @@ def get_sales_history(
     Backward-compatible: if limit is None, returns all records.
     Sets X-Total-Count response header with total matched sales count.
     """
-    query = db.query(SaleModel)
+    query = db.query(SaleModel).options(selectinload(SaleModel.items))
 
     if from_date:
         dt_from = parse_iso_timestamp(from_date)
@@ -185,6 +226,15 @@ def get_next_receipt_number_preview(db: Session = Depends(get_db)):
         next_num = max_num + 1
 
     return {"next_receipt_number": f"{year}-{next_num:06d}"}
+
+
+@router.get("/{sale_id}", response_model=SaleResponseSchema)
+def get_sale_by_id(sale_id: str, db: Session = Depends(get_db)):
+    """Fetch single sales transaction by ID with full itemized line items."""
+    sale = db.query(SaleModel).options(selectinload(SaleModel.items)).filter(SaleModel.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    return sale
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
