@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function InventoryStockTable({
@@ -25,6 +25,51 @@ export default function InventoryStockTable({
   onTogglePin
 }) {
   const { t } = useTranslation();
+
+  const [sortField, setSortField] = useState('name'); // 'name' | 'pinned' | 'stock' | 'minStock'
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'pinned' ? 'desc' : 'asc');
+    }
+  };
+
+  const sortedPresets = useMemo(() => {
+    return [...filteredPresets].sort((a, b) => {
+      let comparison = 0;
+      if (sortField === 'name') {
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+        comparison = nameA.localeCompare(nameB, 'cs', { sensitivity: 'base' });
+      } else if (sortField === 'pinned') {
+        const pinA = a.showInPresets !== undefined ? !!a.showInPresets : (a.show_in_presets !== undefined ? !!a.show_in_presets : true);
+        const pinB = b.showInPresets !== undefined ? !!b.showInPresets : (b.show_in_presets !== undefined ? !!b.show_in_presets : true);
+        comparison = (pinA === pinB ? 0 : pinA ? 1 : -1);
+      } else if (sortField === 'stock') {
+        const stockA = editingStock[a.id]?.stockQuantity !== undefined ? editingStock[a.id].stockQuantity : (a.stockQuantity || 0);
+        const stockB = editingStock[b.id]?.stockQuantity !== undefined ? editingStock[b.id].stockQuantity : (b.stockQuantity || 0);
+        comparison = stockA - stockB;
+      } else if (sortField === 'minStock') {
+        const minA = editingStock[a.id]?.minStockAlert !== undefined ? editingStock[a.id].minStockAlert : (a.minStockAlert || 5);
+        const minB = editingStock[b.id]?.minStockAlert !== undefined ? editingStock[b.id].minStockAlert : (b.minStockAlert || 5);
+        comparison = minA - minB;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [filteredPresets, sortField, sortDirection, editingStock]);
+
+  const renderSortIcon = (field) => {
+    if (sortField !== field) {
+      return <ArrowUpDown size={13} style={{ opacity: 0.35, flexShrink: 0 }} />;
+    }
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
+      : <ArrowDown size={13} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />;
+  };
 
   return (
     <div className="inventory-main-content">
@@ -114,18 +159,68 @@ export default function InventoryStockTable({
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
           <thead>
             <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', textTransform: 'uppercase', fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
-              <th style={{ padding: '1rem 1.25rem', textAlign: 'left' }}>{t('inventory.col_item')}</th>
-              <th style={{ padding: '1rem 0.65rem', textAlign: 'center' }}>📌 {t('inventory.col_pinned') || 'Na pokladně'}</th>
-              <th style={{ padding: '1rem 0.65rem', textAlign: 'center' }}>{t('inventory.col_track')}</th>
-              <th style={{ padding: '1rem 0.65rem', textAlign: 'center' }}>{t('inventory.col_stock')}</th>
-              <th style={{ padding: '1rem 0.65rem', textAlign: 'center' }}>{t('inventory.col_quick_add')}</th>
-              <th style={{ padding: '1rem 0.65rem', textAlign: 'center' }}>{t('inventory.col_min_alert')}</th>
-              <th style={{ padding: '1rem 1rem', textAlign: 'left' }}>{t('inventory.col_barcode')}</th>
-              <th style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>{t('inventory.col_action')}</th>
+              <th
+                style={{ padding: '0.85rem 1.25rem', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
+                onClick={() => handleSort('name')}
+                title="Seřadit podle názvu položky"
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span style={{ color: sortField === 'name' ? 'var(--text-primary)' : 'inherit', fontWeight: sortField === 'name' ? '800' : 'inherit' }}>
+                    {t('inventory.col_item')}
+                  </span>
+                  {renderSortIcon('name')}
+                </div>
+              </th>
+
+              <th
+                style={{ padding: '0.85rem 0.65rem', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
+                onClick={() => handleSort('pinned')}
+                title="Seřadit podle připnutí na pokladnu"
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                  <span style={{ color: sortField === 'pinned' ? 'var(--text-primary)' : 'inherit', fontWeight: sortField === 'pinned' ? '800' : 'inherit' }}>
+                    📌 {t('inventory.col_pinned') || 'Na pokladně'}
+                  </span>
+                  {renderSortIcon('pinned')}
+                </div>
+              </th>
+
+              <th style={{ padding: '0.85rem 0.65rem', textAlign: 'center' }}>{t('inventory.col_track')}</th>
+
+              <th
+                style={{ padding: '0.85rem 0.65rem', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
+                onClick={() => handleSort('stock')}
+                title="Seřadit podle skladové zásoby"
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                  <span style={{ color: sortField === 'stock' ? 'var(--text-primary)' : 'inherit', fontWeight: sortField === 'stock' ? '800' : 'inherit' }}>
+                    {t('inventory.col_stock')}
+                  </span>
+                  {renderSortIcon('stock')}
+                </div>
+              </th>
+
+              <th style={{ padding: '0.85rem 0.65rem', textAlign: 'center' }}>{t('inventory.col_quick_add')}</th>
+
+              <th
+                style={{ padding: '0.85rem 0.65rem', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}
+                onClick={() => handleSort('minStock')}
+                title="Seřadit podle minimálního stavu"
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                  <span style={{ color: sortField === 'minStock' ? 'var(--text-primary)' : 'inherit', fontWeight: sortField === 'minStock' ? '800' : 'inherit' }}>
+                    {t('inventory.col_min_alert')}
+                  </span>
+                  {renderSortIcon('minStock')}
+                </div>
+              </th>
+
+              <th style={{ padding: '0.85rem 1rem', textAlign: 'left' }}>{t('inventory.col_barcode')}</th>
+              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'right' }}>{t('inventory.col_action')}</th>
             </tr>
           </thead>
           <tbody>
-            {filteredPresets.map(preset => {
+            {sortedPresets.map(preset => {
               const hasEdit = editingStock[preset.id] !== undefined;
               const currentStock = hasEdit && editingStock[preset.id].stockQuantity !== undefined
                 ? editingStock[preset.id].stockQuantity
@@ -303,7 +398,7 @@ export default function InventoryStockTable({
               );
             })}
 
-            {filteredPresets.length === 0 && (
+            {sortedPresets.length === 0 && (
               <tr>
                 <td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
                   {t('inventory.no_items')}

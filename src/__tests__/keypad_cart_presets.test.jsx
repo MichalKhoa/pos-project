@@ -526,6 +526,50 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(unpinnedBtn);
       expect(onTogglePin).toHaveBeenCalledWith('p-2');
     });
+
+    it('sorts rows when clicking sortable column headers', () => {
+      wrapWithLanguage(
+        <InventoryStockTable
+          searchTerm=""
+          setSearchTerm={() => {}}
+          selectedCategory="all"
+          setSelectedCategory={() => {}}
+          categories={[{ id: 'drinks', name: 'Nápoje' }, { id: 'food', name: 'Jídlo' }]}
+          showLowStockOnly={false}
+          setShowLowStockOnly={() => {}}
+          presetFilter="all"
+          setPresetFilter={() => {}}
+          onOpenAddModal={() => {}}
+          filteredPresets={mockPresets}
+          editingStock={{}}
+          handleStockChange={() => {}}
+          handleOpenStockKeypad={() => {}}
+          handleQuickAddStock={() => {}}
+          setEditingPresetTarget={() => {}}
+          handleSaveRow={() => {}}
+          isSaving={false}
+          categoryMap={{ drinks: 'Nápoje', food: 'Jídlo' }}
+          onTogglePin={() => {}}
+        />
+      );
+
+      // Initially sorted by name asc: Croissant (C), Čaj Bylinkový (Č), Káva Espresso (K)
+      const rowsInitial = screen.getAllByRole('row');
+      expect(rowsInitial[1]).toHaveTextContent('Croissant');
+
+      // Click Skladem header to sort by stock asc (lowest first: Čaj (0), Croissant (3), Káva (15))
+      const stockHeader = screen.getByTitle(/Seřadit podle skladové zásoby/i);
+      fireEvent.click(stockHeader);
+
+      const rowsAfterStockAsc = screen.getAllByRole('row');
+      expect(rowsAfterStockAsc[1]).toHaveTextContent('Čaj Bylinkový');
+
+      // Click Skladem header again to toggle desc (highest first: Káva (15), Croissant (3), Čaj (0))
+      fireEvent.click(stockHeader);
+
+      const rowsAfterStockDesc = screen.getAllByRole('row');
+      expect(rowsAfterStockDesc[1]).toHaveTextContent('Káva Espresso');
+    });
   });
 });
 
