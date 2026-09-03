@@ -29,6 +29,8 @@ class PresetSchema(BaseModel):
     barcode: Optional[str] = ""
     icon: Optional[str] = None
     imageUrl: Optional[str] = None
+    showInPresets: Optional[bool] = True
+    costPrice: Optional[float] = 0.0
 
 class RestockPresetSchema(BaseModel):
     quantity_add: int
@@ -156,7 +158,9 @@ def get_presets(db: Session = Depends(get_db)):
             "minStockAlert": p.min_stock_alert if p.min_stock_alert is not None else 5,
             "barcode": p.barcode or "",
             "icon": getattr(p, 'icon', None),
-            "imageUrl": getattr(p, 'image_url', None)
+            "imageUrl": getattr(p, 'image_url', None),
+            "showInPresets": p.show_in_presets if getattr(p, 'show_in_presets', None) is not None else True,
+            "costPrice": getattr(p, 'cost_price', 0.0) or 0.0
         }
         for p in presets
     ]
@@ -193,7 +197,9 @@ def get_preset_by_barcode(code: str, db: Session = Depends(get_db)):
         "minStockAlert": preset.min_stock_alert or 5,
         "barcode": preset.barcode or "",
         "icon": getattr(preset, 'icon', None),
-        "imageUrl": getattr(preset, 'image_url', None)
+        "imageUrl": getattr(preset, 'image_url', None),
+        "showInPresets": preset.show_in_presets if getattr(preset, 'show_in_presets', None) is not None else True,
+        "costPrice": getattr(preset, 'cost_price', 0.0) or 0.0
     }
 
 
@@ -214,6 +220,8 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         existing.track_stock = preset.trackStock if preset.trackStock is not None else False
         existing.min_stock_alert = preset.minStockAlert if preset.minStockAlert is not None else 5
         existing.barcode = preset.barcode or ""
+        existing.show_in_presets = preset.showInPresets if preset.showInPresets is not None else True
+        existing.cost_price = preset.costPrice if preset.costPrice is not None else 0.0
         if hasattr(existing, 'icon'): existing.icon = preset.icon
         if hasattr(existing, 'image_url'): existing.image_url = preset.imageUrl
     else:
@@ -232,7 +240,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
             min_stock_alert=preset.minStockAlert if preset.minStockAlert is not None else 5,
             barcode=preset.barcode or "",
             icon=preset.icon,
-            image_url=preset.imageUrl
+            image_url=preset.imageUrl,
+            show_in_presets=preset.showInPresets if preset.showInPresets is not None else True,
+            cost_price=preset.costPrice if preset.costPrice is not None else 0.0
         )
         db.add(existing)
     db.commit()
@@ -252,7 +262,28 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         "minStockAlert": existing.min_stock_alert,
         "barcode": existing.barcode,
         "icon": getattr(existing, 'icon', None),
-        "imageUrl": getattr(existing, 'image_url', None)
+        "imageUrl": getattr(existing, 'image_url', None),
+        "showInPresets": getattr(existing, 'show_in_presets', True),
+        "costPrice": getattr(existing, 'cost_price', 0.0)
+    }
+
+
+@router.patch("/presets/{preset_id}/toggle-pin")
+def toggle_preset_pin(preset_id: str, db: Session = Depends(get_db)):
+    """1-Tap toggle: Pin or unpin an item to/from register touchscreen presets."""
+    preset = db.query(PresetModel).filter(PresetModel.id == preset_id).first()
+    if not preset:
+        raise HTTPException(status_code=404, detail="Položka nebyla nalezena.")
+
+    current_val = preset.show_in_presets if preset.show_in_presets is not None else True
+    preset.show_in_presets = not current_val
+    db.commit()
+    db.refresh(preset)
+    return {
+        "status": "SUCCESS",
+        "id": preset.id,
+        "name": preset.name,
+        "showInPresets": preset.show_in_presets
     }
 
 

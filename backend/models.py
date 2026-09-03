@@ -162,6 +162,8 @@ class PresetModel(Base):
     barcode = Column(String, index=True, nullable=True)
     icon = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
+    show_in_presets = Column(Boolean, default=True, nullable=False)
+    cost_price = Column(Float, default=0.0, nullable=False)
 
 
 class ReceiptSequenceModel(Base):

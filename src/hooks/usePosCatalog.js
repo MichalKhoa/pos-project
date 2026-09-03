@@ -9,7 +9,8 @@ import {
   fetchPresetsBackend,
   savePresetBackend,
   deletePresetBackend,
-  reorderPresetsBackend
+  reorderPresetsBackend,
+  togglePresetPinBackend
 } from '../api/posApi';
 
 export const sanitizePresets = (list) => {
@@ -160,6 +161,18 @@ export function usePosCatalog() {
     await reorderPresetsBackend(reordered);
   }, []);
 
+  const handleTogglePresetPin = useCallback(async (presetId) => {
+    setPresets(prev => sanitizePresets(prev.map(p => {
+      if (p.id === presetId) {
+        const currentPin = p.showInPresets !== undefined ? !!p.showInPresets : (p.show_in_presets !== undefined ? !!p.show_in_presets : true);
+        const nextPin = !currentPin;
+        return { ...p, showInPresets: nextPin, show_in_presets: nextPin };
+      }
+      return p;
+    })));
+    await togglePresetPinBackend(presetId);
+  }, []);
+
   return {
     categories,
     setCategories,
@@ -173,6 +186,7 @@ export function usePosCatalog() {
     handleUpdatePreset,
     handleDeletePreset,
     handleReorderPresets,
+    handleTogglePresetPin,
     reloadBackendCatalog
   };
 }

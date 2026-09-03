@@ -104,7 +104,8 @@ export default function App() {
     handleAddPreset,
     handleUpdatePreset,
     handleDeletePreset,
-    handleReorderPresets
+    handleReorderPresets,
+    handleTogglePresetPin
   } = usePosCatalog();
 
   const {
@@ -827,6 +828,7 @@ export default function App() {
             categories={categories}
             onUpdatePresets={setPresets}
             onAddPreset={handleAddPreset}
+            onTogglePin={handleTogglePresetPin}
           />
         )}
 

@@ -272,6 +272,7 @@ export default function PresetsCatalogView({
         preset={editingPreset}
         categories={categories}
         defaultCategory={activeCategory}
+        defaultShowInPresets={true}
         onClose={() => { setActiveModal(null); setEditingPreset(null); }}
         onSave={handleSavePreset}
         onDelete={editingPreset ? () => {

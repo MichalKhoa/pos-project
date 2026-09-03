@@ -12,6 +12,7 @@ export default function PresetModal({
   preset = null,
   categories = [],
   defaultCategory = 'all',
+  defaultShowInPresets = true,
   onClose,
   onSave,
   onDelete,
@@ -25,7 +26,8 @@ export default function PresetModal({
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    isOpenPrice: true,
+    costPrice: '',
+    isOpenPrice: defaultShowInPresets,
     isGeneralPreset: false,
     vat: defaultVat,
     category: 'all',
@@ -33,9 +35,10 @@ export default function PresetModal({
     icon: '',
     imageUrl: '',
     barcode: '',
-    trackStock: false,
+    trackStock: !defaultShowInPresets,
     stockQuantity: 0,
-    minStockAlert: 5
+    minStockAlert: 5,
+    showInPresets: defaultShowInPresets
   });
 
   const [scannedFeedback, setScannedFeedback] = useState(false);
@@ -46,9 +49,12 @@ export default function PresetModal({
     if (isOpen) {
       if (mode === 'edit' && preset) {
         const isGen = !!preset.isGeneralPreset;
+        const isPinned = preset.showInPresets !== undefined ? !!preset.showInPresets : (preset.show_in_presets !== undefined ? !!preset.show_in_presets : true);
+        const cost = preset.costPrice !== undefined ? preset.costPrice : (preset.cost_price !== undefined ? preset.cost_price : '');
         setFormData({
           name: preset.name || '',
           price: preset.isOpenPrice ? '' : (preset.price !== undefined ? preset.price.toString() : ''),
+          costPrice: cost !== '' && cost !== null && cost !== undefined ? cost.toString() : '',
           isOpenPrice: !!preset.isOpenPrice,
           isGeneralPreset: isGen,
           vat: preset.vat !== undefined ? preset.vat : defaultVat,
@@ -59,27 +65,30 @@ export default function PresetModal({
           barcode: preset.barcode || '',
           trackStock: isGen ? false : (preset.trackStock !== undefined ? preset.trackStock : false),
           stockQuantity: isGen ? 0 : (preset.stockQuantity !== undefined ? preset.stockQuantity : 0),
-          minStockAlert: preset.minStockAlert !== undefined ? preset.minStockAlert : 5
+          minStockAlert: preset.minStockAlert !== undefined ? preset.minStockAlert : 5,
+          showInPresets: isPinned
         });
       } else {
         setFormData({
           name: '',
           price: '',
-          isOpenPrice: true, // Default open price per user specification!
+          costPrice: '',
+          isOpenPrice: defaultShowInPresets,
           isGeneralPreset: false,
-          vat: defaultVat, // Default VAT from store settings!
+          vat: defaultVat,
           category: defaultCategory === 'all' ? (categories[1]?.id || categories[0]?.id || 'all') : defaultCategory,
           color: '#2563eb',
           icon: '',
           imageUrl: '',
           barcode: '',
-          trackStock: false, // Default off per user specification!
+          trackStock: !defaultShowInPresets,
           stockQuantity: 0,
-          minStockAlert: 5
+          minStockAlert: 5,
+          showInPresets: defaultShowInPresets
         });
       }
     }
-  }, [isOpen, mode, preset, defaultCategory, categories, defaultVat]);
+  }, [isOpen, mode, preset, defaultCategory, categories, defaultVat, defaultShowInPresets]);
 
   // Hardware USB Barcode Scanner listener (captures rapid keystrokes ending in Enter)
   useEffect(() => {
@@ -153,7 +162,9 @@ export default function PresetModal({
       barcode: formData.barcode.trim(),
       trackStock: isGen ? false : formData.trackStock,
       stockQuantity: isGen ? 0 : parseInt(formData.stockQuantity || '0', 10),
-      minStockAlert: parseInt(formData.minStockAlert || '5', 10)
+      minStockAlert: parseInt(formData.minStockAlert || '5', 10),
+      showInPresets: formData.showInPresets,
+      costPrice: parseFloat(formData.costPrice) || 0.0
     };
 
     onSave(result);
@@ -246,6 +257,34 @@ export default function PresetModal({
           }}>
             {/* LEFT COLUMN: Data Fields & Controls */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Preset Pin to Register Switch */}
+              <div style={{
+                ...sectionCardStyle,
+                background: formData.showInPresets ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-card)',
+                border: formData.showInPresets ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid var(--border-color)',
+                padding: '0.85rem 1rem'
+              }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <span style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <span>{formData.showInPresets ? '📌' : '🏷️'}</span>
+                      <span>{t('presets.show_in_presets') || 'Zobrazit jako rychlou dlaždici na pokladně'}</span>
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      {formData.showInPresets
+                        ? (t('presets.show_in_presets_on_desc') || 'Položka bude zobrazena na pokladně jako rychlé dotykové tlačítko.')
+                        : (t('presets.show_in_presets_off_desc') || 'Položka bude evidována ve skladu. Na pokladně ji prodáte naskenováním čárového kódu.')}
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.showInPresets}
+                    onChange={e => setFormData(prev => ({ ...prev, showInPresets: e.target.checked }))}
+                    style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: 'var(--accent-blue)', flexShrink: 0 }}
+                  />
+                </label>
+              </div>
+
               {/* Basic Info Card */}
               <div style={sectionCardStyle}>
                 <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -410,6 +449,36 @@ export default function PresetModal({
                     ))}
                   </div>
                 </div>
+
+                {/* Cost Price (Nákupní cena bez DPH) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
+                    {t('presets.cost_price') || 'Nákupní cena bez DPH'} ({t('common.optional') || 'volitelné'})
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.costPrice}
+                      onChange={e => setFormData({ ...formData, costPrice: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 2.4rem 0.65rem 0.8rem',
+                        background: 'var(--bg-input)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--text-primary)',
+                        fontWeight: '700',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.95rem'
+                      }}
+                    />
+                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '800', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      Kč
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Behavior, Stock & Barcode Card */}
@@ -508,67 +577,137 @@ export default function PresetModal({
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Visual Appearance & Authentic Live Preview */}
+            {/* RIGHT COLUMN: Visual Appearance OR Warehouse Stock Overview */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Authentic Live Preset Tile Preview */}
-              <div style={{
-                ...sectionCardStyle,
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}>
+              {formData.showInPresets ? (
+                <>
+                  {/* Authentic Live Preset Tile Preview */}
+                  <div style={{
+                    ...sectionCardStyle,
+                    alignItems: 'center',
+                    gap: '0.75rem'
+                  }}>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      fontWeight: '800',
+                      color: 'var(--text-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      alignSelf: 'flex-start',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}>
+                      <Layers size={14} style={{ color: 'var(--accent-blue)' }} />
+                      <span>Živý náhled tlačítka na pokladně:</span>
+                    </div>
+                    <div style={{ width: '160px' }}>
+                      <PresetTileCard
+                        preset={{
+                          id: 'preview',
+                          name: formData.name || 'Název položky',
+                          price: formData.isOpenPrice ? 0 : (parseFloat(formData.price) || 0),
+                          isOpenPrice: formData.isOpenPrice,
+                          isGeneralPreset: formData.isGeneralPreset,
+                          vat: formData.vat,
+                          color: formData.color,
+                          icon: formData.icon,
+                          imageUrl: formData.imageUrl
+                        }}
+                        index={0}
+                        totalCount={1}
+                        isEditMode={false}
+                        itemMultiplier={1}
+                        onClick={() => {}}
+                        storeConfig={storeConfig}
+                        buttonStyle={buttonStyle}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Color Palette */}
+                  <div style={sectionCardStyle}>
+                    <PresetColorPicker
+                      selectedColor={formData.color}
+                      onSelectColor={c => setFormData(prev => ({ ...prev, color: c }))}
+                    />
+                  </div>
+
+                  {/* Icon Selection */}
+                  <div style={sectionCardStyle}>
+                    <PresetIconPicker
+                      icon={formData.icon}
+                      onSelectIcon={iconKey => setFormData(prev => ({ ...prev, icon: iconKey }))}
+                    />
+                  </div>
+                </>
+              ) : (
+                /* Warehouse Stock Item Overview Card */
                 <div style={{
-                  fontSize: '0.75rem',
-                  fontWeight: '800',
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  alignSelf: 'flex-start',
+                  ...sectionCardStyle,
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  padding: '1.25rem'
                 }}>
-                  <Layers size={14} style={{ color: 'var(--accent-blue)' }} />
-                  <span>Živý náhled tlačítka na pokladně:</span>
-                </div>
-                <div style={{ width: '160px' }}>
-                  <PresetTileCard
-                    preset={{
-                      id: 'preview',
-                      name: formData.name || 'Název položky',
-                      price: formData.isOpenPrice ? 0 : (parseFloat(formData.price) || 0),
-                      isOpenPrice: formData.isOpenPrice,
-                      isGeneralPreset: formData.isGeneralPreset,
-                      vat: formData.vat,
-                      color: formData.color,
-                      icon: formData.icon,
-                      imageUrl: formData.imageUrl
-                    }}
-                    index={0}
-                    totalCount={1}
-                    isEditMode={false}
-                    itemMultiplier={1}
-                    onClick={() => {}}
-                    storeConfig={storeConfig}
-                    buttonStyle={buttonStyle}
-                  />
-                </div>
-              </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.4rem' }}>🏷️</span>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                        {t('inventory.barcode_only') || 'Skladová položka (Pouze čárový kód)'}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Bez dotykového tlačítka na ploše pokladny
+                      </p>
+                    </div>
+                  </div>
 
-              {/* Color Palette */}
-              <div style={sectionCardStyle}>
-                <PresetColorPicker
-                  selectedColor={formData.color}
-                  onSelectColor={c => setFormData(prev => ({ ...prev, color: c }))}
-                />
-              </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Název:</span>
+                      <strong style={{ color: 'var(--text-primary)' }}>{formData.name || '—'}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Prodejní cena:</span>
+                      <strong style={{ color: 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
+                        {formData.isOpenPrice ? 'Volná cena' : `${parseFloat(formData.price) || 0} Kč`}
+                      </strong>
+                    </div>
+                    {formData.costPrice && parseFloat(formData.costPrice) > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Nákupní cena:</span>
+                        <strong style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                          {parseFloat(formData.costPrice).toFixed(2)} Kč
+                        </strong>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Čárový kód (EAN):</span>
+                      <strong style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                        {formData.barcode || '—'}
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Skladová zásoba:</span>
+                      <strong style={{ color: formData.trackStock ? (parseInt(formData.stockQuantity, 10) > 0 ? 'var(--accent-emerald)' : 'var(--accent-red)') : 'var(--text-muted)' }}>
+                        {formData.trackStock ? `${parseInt(formData.stockQuantity, 10) || 0} ks` : 'Nesledováno'}
+                      </strong>
+                    </div>
+                  </div>
 
-              {/* Icon Selection */}
-              <div style={sectionCardStyle}>
-                <PresetIconPicker
-                  icon={formData.icon}
-                  onSelectIcon={iconKey => setFormData(prev => ({ ...prev, icon: iconKey }))}
-                />
-              </div>
+                  <div style={{
+                    padding: '0.75rem 0.85rem',
+                    background: 'rgba(59, 130, 246, 0.08)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    fontSize: '0.78rem',
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.45
+                  }}>
+                    💡 <strong>Výhoda:</strong> Tato položka nepřekáží v mřížce pokladny. Cashier ji na pokladně prodá naskenováním čárového kódu nebo vyhledáním podle názvu. Kdykoliv ji můžete připnout na pokladnu kliknutím na ikonu 📌 v tabulce skladu.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </form>

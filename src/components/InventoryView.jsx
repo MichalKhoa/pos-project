@@ -6,10 +6,11 @@ import InventoryMetricsBar from './inventory/InventoryMetricsBar.jsx';
 import InventoryStockTable from './inventory/InventoryStockTable.jsx';
 import StockKeypadModal from './inventory/StockKeypadModal.jsx';
 
-export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset }) {
+export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin }) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [presetFilter, setPresetFilter] = useState('all'); // 'all' | 'pinned' | 'unpinned'
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [editingStock, setEditingStock] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -101,6 +102,10 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
 
   const filteredPresets = useMemo(() => {
     return individualPresets.filter(p => {
+      const isPinned = p.showInPresets !== undefined ? !!p.showInPresets : (p.show_in_presets !== undefined ? !!p.show_in_presets : true);
+      if (presetFilter === 'pinned' && !isPinned) return false;
+      if (presetFilter === 'unpinned' && isPinned) return false;
+
       const nameMatch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase());
       const barcodeMatch = (p.barcode || '').toLowerCase().includes(searchTerm.toLowerCase());
       const catMatch = selectedCategory === 'all' || p.category === selectedCategory;
@@ -110,7 +115,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
       if (showLowStockOnly && !isLowStock) return false;
       return (nameMatch || barcodeMatch) && catMatch;
     });
-  }, [individualPresets, searchTerm, selectedCategory, showLowStockOnly]);
+  }, [individualPresets, searchTerm, selectedCategory, showLowStockOnly, presetFilter]);
 
   const {
     totalTrackedCount,
@@ -226,6 +231,8 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         categories={categories}
         showLowStockOnly={showLowStockOnly}
         setShowLowStockOnly={setShowLowStockOnly}
+        presetFilter={presetFilter}
+        setPresetFilter={setPresetFilter}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         filteredPresets={filteredPresets}
         editingStock={editingStock}
@@ -236,14 +243,16 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         handleSaveRow={handleSaveRow}
         isSaving={isSaving}
         categoryMap={categoryMap}
+        onTogglePin={onTogglePin}
       />
 
-      {/* Add Modal */}
+      {/* Add Modal - defaults to unpinned warehouse item when added from Inventory! */}
       <PresetModal
         isOpen={isAddModalOpen}
         mode="add"
         categories={categories}
         defaultCategory={selectedCategory}
+        defaultShowInPresets={false}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewPreset}
       />

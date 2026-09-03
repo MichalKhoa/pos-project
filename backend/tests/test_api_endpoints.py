@@ -70,6 +70,47 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertTrue(data.get("success"))
         self.assertIn(data.get("status"), ["PRINTED", "SIMULATED"])
 
+    def test_preset_show_in_presets_and_toggle_pin(self):
+        # Create a new preset with showInPresets=False (barcode-only item)
+        preset_id = "test-inv-item-01"
+        payload = {
+            "id": preset_id,
+            "name": "Barcode Only Chips",
+            "price": 45.0,
+            "category": "all",
+            "vat": 21,
+            "showInPresets": False,
+            "costPrice": 25.0,
+            "barcode": "8594001234567",
+            "trackStock": True,
+            "stockQuantity": 100
+        }
+        create_res = self.client.post("/api/v1/catalog/presets", json=payload)
+        self.assertEqual(create_res.status_code, 201)
+        created_data = create_res.json()
+        self.assertFalse(created_data["showInPresets"])
+        self.assertEqual(created_data["costPrice"], 25.0)
+
+        # Barcode endpoint finds it
+        bc_res = self.client.get("/api/v1/catalog/barcode/8594001234567")
+        self.assertEqual(bc_res.status_code, 200)
+        self.assertEqual(bc_res.json()["name"], "Barcode Only Chips")
+        self.assertFalse(bc_res.json()["showInPresets"])
+
+        # Toggle pin to register
+        pin_res = self.client.patch(f"/api/v1/catalog/presets/{preset_id}/toggle-pin")
+        self.assertEqual(pin_res.status_code, 200)
+        self.assertTrue(pin_res.json()["showInPresets"])
+
+        # Toggle back to unpinned
+        unpin_res = self.client.patch(f"/api/v1/catalog/presets/{preset_id}/toggle-pin")
+        self.assertEqual(unpin_res.status_code, 200)
+        self.assertFalse(unpin_res.json()["showInPresets"])
+
+        # Cleanup
+        del_res = self.client.delete(f"/api/v1/catalog/presets/{preset_id}")
+        self.assertEqual(del_res.status_code, 200)
+
 if __name__ == "__main__":
     unittest.main()
 

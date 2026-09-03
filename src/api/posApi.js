@@ -532,6 +532,22 @@ export async function deletePresetBackend(presetId) {
 }
 
 /**
+ * 1-Tap toggle: Pin or unpin a preset to/from register touchscreen
+ */
+export async function togglePresetPinBackend(presetId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/presets/${presetId}/toggle-pin`, {
+      method: 'PATCH'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to toggle preset pin in backend:', err);
+    return null;
+  }
+}
+
+/**
  * Fetch Git system update status from backend
  */
 export async function fetchUpdateStatus() {
