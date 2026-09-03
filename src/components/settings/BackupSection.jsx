@@ -1,10 +1,11 @@
 import React from 'react';
-import { HardDrive, Download, Upload, Trash2, Shield, RefreshCw } from 'lucide-react';
+import { HardDrive, Download, Upload, Trash2, Shield, RefreshCw, CheckCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function BackupSection({
   config,
   setConfig,
+  saveConfigBatch,
   onSaveStoreConfig,
   onExportJSON,
   onImportJSON,
@@ -16,24 +17,60 @@ export default function BackupSection({
 }) {
   const { t } = useTranslation();
 
+  const handleUpdate = (updates) => {
+    if (saveConfigBatch) {
+      saveConfigBatch(updates);
+    } else {
+      const updated = { ...config, ...updates };
+      setConfig(updated);
+      onSaveStoreConfig(updated);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Backup Management */}
-      <div className="table-card" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <HardDrive size={18} style={{ color: 'var(--accent-emerald)' }} />
-          <span>Zálohování & Obnova Databází (Local & JSON)</span>
-        </h3>
+      {/* 💾 Card 1: Zálohování a obnova dat */}
+      <div className="settings-section-card">
+        <div className="settings-section-header">
+          <div>
+            <h3 className="settings-section-title">
+              <HardDrive size={19} style={{ color: 'var(--accent-emerald)' }} />
+              <span>Zálohování & Obnova Dat</span>
+            </h3>
+            <p className="settings-section-desc">
+              Uložte si kopii všech produktů, prodejů a nastavení do počítače nebo obnovte data ze zálohy.
+            </p>
+          </div>
+        </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-          <button className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.65rem' }} onClick={onExportJSON}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="pay-btn pay-btn-card"
+            style={{ flex: 1, minWidth: '180px', height: '44px', fontSize: '0.85rem' }}
+            onClick={onExportJSON}
+          >
             <Download size={16} />
-            <span>{t('settings.export_backup')}</span>
+            <span>Stáhnout zálohu (JSON)</span>
           </button>
 
-          <label className="nav-tab" style={{ flex: 1, minWidth: '160px', padding: '0.65rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <label
+            className="nav-tab"
+            style={{
+              flex: 1,
+              minWidth: '180px',
+              height: '44px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              fontSize: '0.85rem',
+              fontWeight: '800'
+            }}
+          >
             <Upload size={16} />
-            <span>{t('settings.import_backup')}</span>
+            <span>Nahrát zálohu ze souboru</span>
             <input
               type="file"
               accept=".json"
@@ -42,101 +79,105 @@ export default function BackupSection({
             />
           </label>
 
-          <button className="nav-tab" style={{ padding: '0.65rem', color: 'var(--accent-rose)' }} onClick={onResetData}>
+          <button
+            type="button"
+            className="clear-cart-btn"
+            style={{ height: '44px', padding: '0 1rem', fontSize: '0.85rem', fontWeight: '800' }}
+            onClick={onResetData}
+          >
             <Trash2 size={16} />
-            <span>Resetovat Data</span>
+            <span>Resetovat data</span>
           </button>
         </div>
 
-        {/* Litestream Status Panel */}
-        <div style={{ background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-            <span style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Shield size={14} style={{ color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
-              <span>Litestream Cloud Replikace (WAL)</span>
+        {/* Automatická ochrana databáze (Litestream) */}
+        <div style={{ background: 'var(--bg-card)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <span style={{ fontWeight: '800', color: 'var(--text-primary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Shield size={15} style={{ color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
+              <span>Automatická ochrana a replikace databáze</span>
             </span>
             <span className="status-badge" style={{
-              padding: '0.2rem 0.5rem',
-              fontSize: '0.7rem',
-              background: litestreamData?.is_running ? 'rgba(5, 150, 105, 0.15)' : litestreamData?.litestream_configured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(100, 116, 139, 0.15)',
-              color: litestreamData?.is_running ? 'var(--accent-emerald)' : litestreamData?.litestream_configured ? 'var(--accent-amber)' : 'var(--text-muted)'
+              padding: '0.2rem 0.55rem',
+              fontSize: '0.72rem',
+              background: litestreamData?.is_running ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+              color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)',
+              border: 'none',
+              fontWeight: '800'
             }}>
-              {litestreamData?.is_running ? '🟢 Aktivní replikace' : litestreamData?.litestream_configured ? '🟡 Konfigurace OK' : '⚪ Neaktivní'}
+              {litestreamData?.is_running ? '🟢 Aktivní ochrana' : '⚪ Lokální SQLite úložiště'}
             </span>
           </div>
-          <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-            {litestreamData?.message || 'Kontrola stavu replikace SQLite databáze...'}
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+            {litestreamData?.message || 'Data se okamžitě a bezpečně ukládají do lokální databáze SQLite v pokladně.'}
           </div>
         </div>
       </div>
 
-      {/* System Updates Management */}
-      <div className="table-card" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <RefreshCw size={18} style={{ color: 'var(--accent-blue)' }} />
-          <span>{t('settings.updates_title')}</span>
-        </h3>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+      {/* 🔄 Card 2: Aktualizace systému */}
+      <div className="settings-section-card">
+        <div className="settings-section-header">
           <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-              Verze: {updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}
+            <h3 className="settings-section-title">
+              <RefreshCw size={19} style={{ color: 'var(--accent-blue)' }} />
+              <span>{t('settings.updates_title') || 'Aktualizace pokladny'}</span>
+            </h3>
+            <p className="settings-section-desc">
+              Zkontrolujte a nainstalujte nejnovější vylepšení a opravy pokladního systému.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              Nainstalovaná verze: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}</span>
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+              Systém se automaticky udržuje v aktuálním stabilním stavu.
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              className="nav-tab"
-              disabled={updateLoading}
-              onClick={onCheckUpdate}
-              style={{ padding: '0.5rem 0.85rem', fontSize: '0.8rem' }}
-            >
-              <RefreshCw size={14} className={updateLoading ? 'spin-icon' : ''} />
-              <span>Zkontrolovat aktualizace</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            className="nav-tab"
+            disabled={updateLoading}
+            onClick={onCheckUpdate}
+            style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '800' }}
+          >
+            <RefreshCw size={15} className={updateLoading ? 'spin-icon' : ''} />
+            <span>{updateLoading ? 'Kontroluji...' : 'Zkontrolovat aktualizace'}</span>
+          </button>
         </div>
       </div>
 
-      {/* Czech EET Fiscalization (Optional) */}
-      <div className="table-card" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
+      {/* 🇨🇿 Card 3: EET 2.0 (Fiskalizace) */}
+      <div className="settings-section-card">
+        <div className="settings-section-header">
           <div>
-            <div style={{ fontWeight: '800', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
-              <Shield size={18} style={{ color: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
-              <span>{t('settings.eet_toggle_label')}</span>
-            </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>
-              {t('settings.eet_toggle_desc')}
-            </div>
+            <h3 className="settings-section-title">
+              <Shield size={19} style={{ color: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
+              <span>{t('settings.eet_toggle_label') || 'Elektronická evidence tržeb (EET 2.0)'}</span>
+            </h3>
+            <p className="settings-section-desc">
+              {t('settings.eet_toggle_desc') || 'EET v ČR není v provozu. Ponechte vypnuté pro běžný provoz bez odesílání tržeb na Finanční správu.'}
+            </p>
           </div>
-          <label style={{ position: 'relative', display: 'inline-block', width: '50px', height: '28px', flexShrink: 0 }}>
+
+          <label className="settings-switch-toggle">
             <input
               type="checkbox"
               checked={!!config.eetEnabled}
-              onChange={e => {
-                const updated = { ...config, eetEnabled: e.target.checked };
-                setConfig(updated);
-                onSaveStoreConfig(updated);
-              }}
-              style={{ opacity: 0, width: 0, height: 0 }}
+              onChange={e => handleUpdate({ eetEnabled: e.target.checked })}
             />
-            <span style={{
-              position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--border-color)',
-              transition: '.3s', borderRadius: '34px'
-            }}>
-              <span style={{
-                position: 'absolute', content: '""', height: '22px', width: '22px', left: config.eetEnabled ? '25px' : '3px', bottom: '3px',
-                backgroundColor: 'white', transition: '.3s', borderRadius: '50%'
-              }} />
-            </span>
+            <span className="settings-switch-slider" />
           </label>
         </div>
 
         {!config.eetEnabled && (
-          <div style={{ padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', fontSize: '0.8rem', color: 'var(--accent-blue)' }}>
-            {t('settings.eet_disabled_banner')}
+          <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.2)', fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle size={16} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
+            <span>EET je vypnuté. Pokladna funguje v plném rychlém offline režimu bez generování EET podpisů.</span>
           </div>
         )}
       </div>

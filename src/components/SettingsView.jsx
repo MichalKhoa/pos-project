@@ -6,7 +6,8 @@ import {
   Printer,
   CreditCard,
   Shield,
-  HardDrive
+  HardDrive,
+  Check
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -49,7 +50,6 @@ export default function SettingsView({
     printerAddress: '/dev/usb/lp0',
     ...storeConfig
   });
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Printer Hardware Scan State
   const [printerDevices, setPrinterDevices] = useState([]);
@@ -204,22 +204,6 @@ export default function SettingsView({
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    requireAdminPin(() => {
-      if (config.cashierPin && (config.cashierPin.length < 4 || config.cashierPin.length > 8)) {
-        alert('PIN kód musí mít 4 až 8 číslic.');
-        return;
-      }
-      onSaveStoreConfig(config);
-      if (config.defaultLanguage) {
-        setLanguage(config.defaultLanguage);
-      }
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    });
-  };
-
   const handleExportJSON = () => {
     const categories = JSON.parse(localStorage.getItem('voltflow_pos_categories') || localStorage.getItem('himmel_pos_categories') || '[]');
     const salesHistory = JSON.parse(localStorage.getItem('voltflow_pos_sales') || localStorage.getItem('himmel_pos_sales') || '[]');
@@ -262,183 +246,215 @@ export default function SettingsView({
     reader.readAsText(file);
   };
 
+  const [autoSaved, setAutoSaved] = useState(false);
+  const autoSaveTimerRef = React.useRef(null);
+
+  const triggerAutoSaveToast = () => {
+    setAutoSaved(true);
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => setAutoSaved(false), 2400);
+  };
+
+  const saveConfigField = (key, value) => {
+    const updated = { ...config, [key]: value };
+    setConfig(updated);
+    onSaveStoreConfig(updated);
+    triggerAutoSaveToast();
+    if (key === 'defaultLanguage') {
+      setLanguage(value);
+    }
+  };
+
+  const saveConfigBatch = (updates) => {
+    const updated = { ...config, ...updates };
+    setConfig(updated);
+    onSaveStoreConfig(updated);
+    triggerAutoSaveToast();
+    if (updates.defaultLanguage) {
+      setLanguage(updates.defaultLanguage);
+    }
+  };
+
+  const SUBTABS = [
+    { id: 'store', icon: Store, title: t('settings.tab_store') || 'Údaje prodejny', heading: 'Nastavení prodejny a provozovny', subtitle: 'Firma, IČO, adresa, DPH a IBAN' },
+    { id: 'layout', icon: Layout, title: t('settings.tab_layout') || 'Rozvržení & Zobrazení', heading: 'Rozvržení a vzhled pokladny', subtitle: 'Tlačítka sortimentu, košík, LCD' },
+    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Účtenka', heading: 'Pokladní tiskárna a periferie', subtitle: 'ESC/POS tiskárna a pokladní zásuvka' },
+    { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: 'Platební terminál', subtitle: 'ČSOB terminál a ruční režim' },
+    { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: 'Zabezpečení a PIN kód', subtitle: 'Správce, PIN kód a zamykání' },
+    { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: 'Zálohování a systémová správa', subtitle: 'Export/import dat, aktualizace a EET' },
+  ];
+
+  const currentTabObj = SUBTABS.find(t => t.id === activeSubTab) || SUBTABS[0];
+
   return (
-    <div className="full-view-container">
-      {/* View Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Store size={24} style={{ color: 'var(--accent-blue)' }} />
-            <span>{t('settings.title')}</span>
-          </h2>
-          <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Konfigurace provozovny, tiskárny, platebního terminálu ČSOB a systémové správy.
-          </p>
+    <div className="settings-view-container">
+      {/* 🧭 LEFT TOUCH-OPTIMIZED SIDEBAR */}
+      <aside className="settings-sidebar">
+        <div className="settings-sidebar-header">
+          <div className="settings-sidebar-title">
+            <Store size={20} style={{ color: 'var(--accent-blue)' }} />
+            <span>{t('settings.title') || 'Nastavení'}</span>
+          </div>
+          <div className="settings-sidebar-desc">
+            Konfigurace prodejny a periferií
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span className="status-badge" style={{
-            background: backendConnected ? 'rgba(5, 150, 105, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-            color: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-            borderColor: backendConnected ? 'rgba(5, 150, 105, 0.3)' : 'rgba(239, 68, 68, 0.3)'
-          }}>
-            <span className="status-dot" style={{ background: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
-            <span>{backendLoading ? t('settings.backend_verifying') : (backendConnected ? t('settings.backend_online') : t('settings.backend_offline'))}</span>
-          </span>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+          {SUBTABS.map(tab => {
+            const IconComponent = tab.icon;
+            const isActive = activeSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                className={`settings-sidebar-btn ${isActive ? 'active' : ''}`}
+                onClick={() => setActiveSubTab(tab.id)}
+              >
+                <div className="settings-sidebar-icon">
+                  <IconComponent size={20} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <span style={{ fontSize: '0.92rem', whiteSpace: 'nowrap' }}>{tab.title}</span>
+                  <span style={{ fontSize: '0.72rem', color: isActive ? 'var(--accent-blue)' : 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {tab.subtitle}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </nav>
 
-          <button
-            className="nav-tab"
-            onClick={loadBackendInfo}
-            title={t('settings.ping_test')}
-            style={{ padding: '0.4rem 0.6rem' }}
-          >
-            <RefreshCw size={16} className={backendLoading ? 'spin-icon' : ''} />
-          </button>
+        <div className="settings-sidebar-footer">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.6rem', background: 'var(--bg-main)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <span className="status-badge" style={{
+              background: backendConnected ? 'rgba(5, 150, 105, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+              border: 'none',
+              padding: '0.2rem 0.5rem',
+              fontSize: '0.75rem'
+            }}>
+              <span className="status-dot" style={{ background: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
+              <span>{backendLoading ? 'Ověřuji...' : (backendConnected ? 'Online' : 'Offline')}</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={loadBackendInfo}
+              title={t('settings.ping_test') || 'Znovu zkontrolovat spojení se serverem'}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+            >
+              <RefreshCw size={15} className={backendLoading ? 'spin-icon' : ''} />
+            </button>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Subtab Selector */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', overflowX: 'auto', paddingBottom: '0.25rem', borderBottom: '1px solid var(--border-color)' }}>
-        <button
-          type="button"
-          className={`nav-tab ${activeSubTab === 'store' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('store')}
-          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <Store size={18} />
-          <span>{t('settings.tab_store') || 'Údaje prodejny'}</span>
-        </button>
+      {/* 📄 RIGHT MAIN CONTENT PANE */}
+      <main className="settings-content-area">
+        {/* Header with Title and Auto-save toast */}
+        <header className="settings-content-header">
+          <div className="settings-content-title-wrap">
+            <h2 className="settings-content-title">
+              {React.createElement(currentTabObj.icon, { size: 22, style: { color: 'var(--accent-blue)' } })}
+              <span>{currentTabObj.heading || currentTabObj.title}</span>
+            </h2>
+            <p className="settings-content-subtitle">
+              {currentTabObj.subtitle}
+            </p>
+          </div>
 
-        <button
-          type="button"
-          className={`nav-tab ${activeSubTab === 'layout' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('layout')}
-          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <Layout size={18} />
-          <span>{t('settings.tab_layout') || 'Rozvržení & Zobrazení'}</span>
-        </button>
+          <div>
+            {autoSaved && (
+              <div className="settings-save-toast">
+                <Check size={15} strokeWidth={3} />
+                <span>{t('settings.saved_toast') || 'Uloženo'}</span>
+              </div>
+            )}
+          </div>
+        </header>
 
-        <button
-          type="button"
-          className={`nav-tab ${activeSubTab === 'hardware' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('hardware')}
-          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <Printer size={18} />
-          <span>Tiskárna & Periferie</span>
-        </button>
+        {/* Scrollable Subtab Content */}
+        <div className="settings-content-scroll">
+          {activeSubTab === 'store' && (
+            <StoreProfileSection
+              config={config}
+              setConfig={setConfig}
+              saveConfigField={saveConfigField}
+            />
+          )}
 
-        <button
-          type="button"
-          className={`nav-tab ${activeSubTab === 'terminal' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('terminal')}
-          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <CreditCard size={18} />
-          <span>Platební Terminál</span>
-        </button>
+          {activeSubTab === 'layout' && (
+            <LayoutSection
+              config={config}
+              setConfig={setConfig}
+              saveConfigBatch={saveConfigBatch}
+              presets={presets}
+              onNavigateToPresets={onNavigateToPresets}
+              onSaveStoreConfig={onSaveStoreConfig}
+            />
+          )}
 
-        <button
-          type="button"
-          className={`nav-tab ${activeSubTab === 'security' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('security')}
-          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <Shield size={18} />
-          <span>Bezpečnost & PIN</span>
-        </button>
+          {activeSubTab === 'hardware' && (
+            <PrinterSection
+              config={config}
+              setConfig={setConfig}
+              saveConfigBatch={saveConfigBatch}
+              printerDevices={printerDevices}
+              scanningPrinters={scanningPrinters}
+              onScanPrinters={handleScanPrinters}
+            />
+          )}
 
-        <button
-          type="button"
-          className={`nav-tab ${activeSubTab === 'system' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('system')}
-          style={{ padding: '0.65rem 1.1rem', fontSize: '0.9rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <HardDrive size={18} />
-          <span>Zálohy & Systém</span>
-        </button>
-      </div>
+          {activeSubTab === 'terminal' && (
+            <TerminalSection
+              termEnabled={termEnabled}
+              setTermEnabled={setTermEnabled}
+              termIp={termIp}
+              setTermIp={setTermIp}
+              termPort={termPort}
+              setTermPort={setTermPort}
+              termId={termId}
+              setTermId={setTermId}
+              onSaveTerminal={handleSaveTerminal}
+              termSaveSuccess={termSaveSuccess}
+              pingLoading={pingLoading}
+              pingResult={pingResult}
+              onPing={handlePingTerminal}
+              reconcileLoading={reconcileLoading}
+              reconcileResult={reconcileResult}
+              onReconcile={handleReconcileTerminal}
+            />
+          )}
 
-      {/* SUBTABS */}
-      {activeSubTab === 'store' && (
-        <StoreProfileSection
-          config={config}
-          setConfig={setConfig}
-          onSubmit={handleSubmit}
-          saveSuccess={saveSuccess}
-        />
-      )}
+          {activeSubTab === 'security' && (
+            <SecuritySection
+              config={config}
+              setConfig={setConfig}
+              saveConfigBatch={saveConfigBatch}
+              isAdminMode={isAdminMode}
+              onToggleAdminMode={onToggleAdminMode}
+              onOpenPinChange={handleOpenPinChange}
+            />
+          )}
 
-      {activeSubTab === 'layout' && (
-        <LayoutSection
-          config={config}
-          setConfig={setConfig}
-          presets={presets}
-          onNavigateToPresets={onNavigateToPresets}
-          onSaveStoreConfig={onSaveStoreConfig}
-        />
-      )}
-
-      {activeSubTab === 'hardware' && (
-        <PrinterSection
-          config={config}
-          setConfig={setConfig}
-          printerDevices={printerDevices}
-          scanningPrinters={scanningPrinters}
-          onScanPrinters={handleScanPrinters}
-          onSubmit={handleSubmit}
-          saveSuccess={saveSuccess}
-        />
-      )}
-
-      {activeSubTab === 'terminal' && (
-        <TerminalSection
-          termEnabled={termEnabled}
-          setTermEnabled={setTermEnabled}
-          termIp={termIp}
-          setTermIp={setTermIp}
-          termPort={termPort}
-          setTermPort={setTermPort}
-          termId={termId}
-          setTermId={setTermId}
-          onSaveTerminal={handleSaveTerminal}
-          termSaveSuccess={termSaveSuccess}
-          pingLoading={pingLoading}
-          pingResult={pingResult}
-          onPing={handlePingTerminal}
-          reconcileLoading={reconcileLoading}
-          reconcileResult={reconcileResult}
-          onReconcile={handleReconcileTerminal}
-        />
-      )}
-
-      {activeSubTab === 'security' && (
-        <SecuritySection
-          config={config}
-          setConfig={setConfig}
-          isAdminMode={isAdminMode}
-          onToggleAdminMode={onToggleAdminMode}
-          onOpenPinChange={handleOpenPinChange}
-          onSubmit={handleSubmit}
-          saveSuccess={saveSuccess}
-        />
-      )}
-
-      {activeSubTab === 'system' && (
-        <BackupSection
-          config={config}
-          setConfig={setConfig}
-          onSaveStoreConfig={onSaveStoreConfig}
-          onExportJSON={handleExportJSON}
-          onImportJSON={handleImportJSON}
-          onResetData={onResetData}
-          litestreamData={litestreamData}
-          updateData={updateData}
-          updateLoading={updateLoading}
-          onCheckUpdate={handleCheckUpdate}
-        />
-      )}
+          {activeSubTab === 'system' && (
+            <BackupSection
+              config={config}
+              setConfig={setConfig}
+              saveConfigBatch={saveConfigBatch}
+              onSaveStoreConfig={onSaveStoreConfig}
+              onExportJSON={handleExportJSON}
+              onImportJSON={handleImportJSON}
+              onResetData={onResetData}
+              litestreamData={litestreamData}
+              updateData={updateData}
+              updateLoading={updateLoading}
+              onCheckUpdate={handleCheckUpdate}
+            />
+          )}
+        </div>
+      </main>
 
       {/* Confirmation Modal for System Update */}
       {showUpdateModal && (

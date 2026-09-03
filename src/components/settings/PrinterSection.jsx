@@ -1,119 +1,234 @@
-import React from 'react';
-import { Printer, RefreshCw, Save } from 'lucide-react';
+import React, { useState } from 'react';
+import { Printer, RefreshCw, Receipt, DollarSign, CheckCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { openCashDrawerBackend } from '../../api/posApi.js';
+import { soundFx } from '../../utils/audio.js';
 
 export default function PrinterSection({
   config,
   setConfig,
-  printerDevices,
-  scanningPrinters,
-  onScanPrinters,
-  onSubmit,
-  saveSuccess
+  saveConfigBatch,
+  printerDevices = [],
+  scanningPrinters = false,
+  onScanPrinters
 }) {
   const { t } = useTranslation();
+  const [drawerTesting, setDrawerTesting] = useState(false);
+  const [drawerMessage, setDrawerMessage] = useState(null);
+
+  const handleUpdate = (updates) => {
+    if (saveConfigBatch) {
+      saveConfigBatch(updates);
+    } else {
+      const updated = { ...config, ...updates };
+      setConfig(updated);
+    }
+  };
+
+  const handleTestDrawer = async () => {
+    setDrawerTesting(true);
+    setDrawerMessage(null);
+    soundFx.playCashChime();
+    try {
+      await openCashDrawerBackend();
+      setDrawerMessage('Signál pro otevření zásuvky byl úspěšně odeslán.');
+      setTimeout(() => setDrawerMessage(null), 3500);
+    } catch {
+      setDrawerMessage('Zásuvku se nepodařilo otevřít přes tiskárnu.');
+    } finally {
+      setDrawerTesting(false);
+    }
+  };
+
+  const currentDev = printerDevices.find(d => d.address === config.printerAddress || d.id === config.printerAddress);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div className="table-card" style={{ padding: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Printer size={20} style={{ color: 'var(--accent-blue)' }} />
-          <span>Nastavení Tiskárny Účtenek (ESC/POS)</span>
-        </h3>
-
-        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Printer size={16} style={{ color: 'var(--accent-blue)' }} />
-                <span>Výběr Připojeného Tiskového Zařízení</span>
-              </label>
-              <button
-                type="button"
-                className="key-btn"
-                onClick={onScanPrinters}
-                disabled={scanningPrinters}
-                style={{ height: '30px', padding: '0 0.6rem', fontSize: '0.75rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              >
-                <RefreshCw size={12} className={scanningPrinters ? 'spin-icon' : ''} />
-                <span>{scanningPrinters ? 'Hledám...' : 'Obnovit'}</span>
-              </button>
-            </div>
-
-            <select
-              value={config.printerAddress || '/dev/usb/lp0'}
-              onChange={e => {
-                const selectedAddr = e.target.value;
-                const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
-                const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
-                setConfig({
-                  ...config,
-                  printerAddress: selectedAddr,
-                  printerInterface: interfaceType
-                });
-              }}
-              style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem' }}
-            >
-              {printerDevices.map(dev => (
-                <option key={dev.id} value={dev.address} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                  {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}{dev.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                Šířka Papíru Účtenky
-              </label>
-              <select
-                value={config.printerPaperWidth || '80'}
-                onChange={e => setConfig({ ...config, printerPaperWidth: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
-              >
-                <option value="80">{t('settings.printer_80mm')}</option>
-                <option value="58">{t('settings.printer_58mm')}</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                Automatický Tisk Účtenky po Dokončení Prodeje
-              </label>
-              <select
-                value={config.autoPrintReceipt !== false ? 'yes' : 'no'}
-                onChange={e => setConfig({ ...config, autoPrintReceipt: e.target.value === 'yes' })}
-                style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '700' }}
-              >
-                <option value="yes">Ano (Automaticky odeslat na tiskárnu)</option>
-                <option value="no">Ne (Pouze zobrazit náhled na obrazovce)</option>
-              </select>
-            </div>
-          </div>
-
+      {/* 🖨️ Card 1: Připojené tiskové zařízení */}
+      <div className="settings-section-card">
+        <div className="settings-section-header">
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-              {t('settings.receipt_footer')}
-            </label>
-            <input
-              type="text"
-              value={config.receiptFooter || ''}
-              onChange={e => setConfig({ ...config, receiptFooter: e.target.value })}
-              placeholder="Děkujeme za nákup!"
-              style={{ width: '100%', padding: '0.65rem', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontWeight: '600' }}
-            />
+            <h3 className="settings-section-title">
+              <Printer size={19} style={{ color: 'var(--accent-blue)' }} />
+              <span>Pokladní tiskárna účtenek (ESC/POS)</span>
+            </h3>
+            <p className="settings-section-desc">
+              Výběr připojené USB nebo síťové termotiskárny pro tisk účtenek a bonů.
+            </p>
           </div>
 
           <button
-            type="submit"
-            className="pay-btn pay-btn-cash"
-            style={{ marginTop: '0.5rem', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            type="button"
+            className="key-btn"
+            onClick={onScanPrinters}
+            disabled={scanningPrinters}
+            style={{ height: '36px', padding: '0 0.85rem', fontSize: '0.82rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            <Save size={18} />
-            <span>{saveSuccess ? 'Uloženo!' : 'Uložit Nastavení Tiskárny'}</span>
+            <RefreshCw size={14} className={scanningPrinters ? 'spin-icon' : ''} />
+            <span>{scanningPrinters ? 'Hledám...' : 'Vyhledat tiskárny'}</span>
           </button>
-        </form>
+        </div>
+
+        <div className="settings-field">
+          <label className="settings-label">
+            Aktivní tiskové zařízení
+          </label>
+          <select
+            className="settings-input"
+            value={config.printerAddress || '/dev/usb/lp0'}
+            onChange={e => {
+              const selectedAddr = e.target.value;
+              const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
+              const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
+              handleUpdate({
+                printerAddress: selectedAddr,
+                printerInterface: interfaceType
+              });
+            }}
+          >
+            {printerDevices.map(dev => (
+              <option key={dev.id} value={dev.address}>
+                {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}
+                {dev.name} ({dev.interface})
+              </option>
+            ))}
+          </select>
+          {currentDev && (
+            <span style={{ fontSize: '0.78rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
+              Stav tiskárny: {currentDev.status === 'CONNECTED' ? 'Připojeno a připraveno k tisku' : 'Virtuální / offline náhled'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 📄 Card 2: Formátování a parametry tisku */}
+      <div className="settings-section-card">
+        <div className="settings-section-header">
+          <div>
+            <h3 className="settings-section-title">
+              <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
+              <span>Parametry účtenky & Tisk</span>
+            </h3>
+            <p className="settings-section-desc">
+              Šířka papírové role a automatický tisk po zaplacení nákupu.
+            </p>
+          </div>
+        </div>
+
+        {/* Paper Width */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              Šířka papírové role tiskárny
+            </span>
+            <span className="settings-toggle-subtitle">
+              Standardní pokladní kotouček má šířku 80 mm (48 znaků na řádek).
+            </span>
+          </div>
+
+          <div className="settings-segmented-group">
+            {[
+              { val: '80', label: '80 mm (Standard)' },
+              { val: '58', label: '58 mm (Úzká)' }
+            ].map(w => (
+              <button
+                key={w.val}
+                type="button"
+                className={`settings-segmented-btn ${(config.printerPaperWidth || '80') === w.val ? 'active' : ''}`}
+                onClick={() => handleUpdate({ printerPaperWidth: w.val })}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Auto Print */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              Automaticky tisknout účtenku po zaplacení
+            </span>
+            <span className="settings-toggle-subtitle">
+              Při dokončení prodeje ihned vytiskne účtenku bez nutnosti klikat na tlačítko Tisk.
+            </span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input
+              type="checkbox"
+              checked={config.autoPrintReceipt !== false}
+              onChange={e => handleUpdate({ autoPrintReceipt: e.target.checked })}
+            />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        {/* Receipt Footer */}
+        <div className="settings-field">
+          <label className="settings-label">
+            {t('settings.receipt_footer') || 'Text v patičce účtenky'}
+          </label>
+          <input
+            type="text"
+            className="settings-input"
+            value={config.receiptFooter || ''}
+            placeholder="Děkujeme za váš nákup a těšíme se na další návštěvu!"
+            onChange={e => setConfig({ ...config, receiptFooter: e.target.value })}
+            onBlur={e => handleUpdate({ receiptFooter: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {/* 💵 Card 3: Pokladní zásuvka (Cash Drawer) */}
+      <div className="settings-section-card">
+        <div className="settings-section-header">
+          <div>
+            <h3 className="settings-section-title">
+              <DollarSign size={19} style={{ color: 'var(--accent-emerald)' }} />
+              <span>Pokladní zásuvka na peníze</span>
+            </h3>
+            <p className="settings-section-desc">
+              Zásuvka připojená kabelem RJ11 do tiskárny se automaticky otevírá při platbě hotovostí.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+              Test elektrického impulsu zásuvky
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Ověřte, zda tiskárna dokáže elektromagneticky uvolnit západku zásuvky.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="pay-btn"
+            style={{
+              height: '42px',
+              padding: '0 1.25rem',
+              fontSize: '0.85rem',
+              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(99, 102, 241, 0.25) 100%)',
+              color: 'var(--accent-indigo, #4f46e5)',
+              border: '1px solid var(--accent-indigo, #4f46e5)'
+            }}
+            onClick={handleTestDrawer}
+            disabled={drawerTesting}
+          >
+            <DollarSign size={16} />
+            <span>{drawerTesting ? 'Otevírám...' : 'Vyzkoušet otevření zásuvky'}</span>
+          </button>
+        </div>
+
+        {drawerMessage && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 0.85rem', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: 'var(--radius-md)', color: 'var(--accent-emerald)', fontSize: '0.82rem', fontWeight: '700' }}>
+            <CheckCircle size={16} />
+            <span>{drawerMessage}</span>
+          </div>
+        )}
       </div>
     </div>
   );

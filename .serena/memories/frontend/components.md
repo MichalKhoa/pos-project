@@ -23,13 +23,13 @@ Directory: `/src/components`
 - `AnalyticsView.jsx`: Dedicated top-level analytics dashboard tab with financial KPI cards, time period selector, CSV export, and visual chart breakdowns. Uses `useSalesPeriodFilter`. Decomposed into `/src/components/history/`:
   - `SalesPeriodBar.jsx`: Period filters (Today, Yesterday, Week, Month, Year, Custom) with stepper navigation and calendar triggers.
   - `SalesAnalyticsCharts.jsx`: Visual POS dashboard featuring top 4 KPI cards (Gross, Netto/VAT, Receipts/AOV, Payments), Top 8 Best-Selling Products ranking (#1–#8 with volume bars), Hourly Rush-Hour chart (07:00–22:00 with peak rush highlight), visual multi-segment payment split bar (Cash vs Card vs QR), category sales volume bars, and official Czech VAT tax table (21%, 12%, 0%).
-- `SettingsView.jsx`: POS system configuration coordinator. Decomposed into modular domain subcomponents in `/src/components/settings/`:
-  - `StoreProfileSection.jsx`: Dedicated store information (corporate identity, street/city address, IČO/DIČ, default VAT, IBAN for QR payments, receipt footer, and register language).
-  - `LayoutSection.jsx`: Dedicated register layout & visual presentation (product grid columns 3-6/Auto, button size S/M/L, button style left-stripe/color-fill, showPresetVat toggle, cart position left/right, high-legibility mode, customer LCD display title & auto-sleep).
-  - `PrinterSection.jsx`: Thermal ESC/POS receipt printing (58mm vs 80mm), margin ruler test, auto-print toggles.
-  - `TerminalSection.jsx`: ČSOB Move 3500 terminal TCP IP/port/TID setup, ping connectivity test, and daily reconciliation.
-  - `SecuritySection.jsx`: Admin mode toggle, Admin PIN verification and update, cashier PIN, and inactivity auto-lock.
-  - `BackupSection.jsx`: JSON backup export/import, Litestream SQLite WAL replication monitor, and EET toggle.
+- `SettingsView.jsx`: POS system configuration coordinator with touchscreen-first Master-Detail sidebar layout (`.settings-view-container`), left 250px vertical touch rail (Store, Layout, Hardware, Terminal, Security, System), right scrollable content pane, and automated background saving (`saveConfigField` onBlur, `saveConfigBatch` onChange) with top-right green auto-save toast (`.settings-save-toast`). Decomposed into modular domain subcomponents in `/src/components/settings/`:
+  - `StoreProfileSection.jsx`: Dedicated store information in clean cards (corporate identity, street/city address, IČO/DIČ, segmented default VAT 21%/12%/0%, IBAN for QR payments, and register language).
+  - `LayoutSection.jsx`: Dedicated register layout & visual presentation in clean cards (segmented preset columns Auto/3/4/5/6, button size S/M/L, button style left-stripe/color-fill, showPresetVat toggle, cart position left/right, high-legibility mode, customer LCD display title & auto-sleep).
+  - `PrinterSection.jsx`: Thermal ESC/POS receipt printing (device selector with live connection badges, 58mm vs 80mm segmented selector, auto-print switch, receipt footer, and test cash drawer release trigger).
+  - `TerminalSection.jsx`: Payment terminal mode with large touch cards (Manual Mode vs Automated ČSOB / Ingenico Move 3500 TCP IP/port/TID setup, ping connectivity test, and daily reconciliation).
+  - `SecuritySection.jsx`: Admin mode toggle card with status pill, Admin PIN change modal trigger, cashier PIN, and inactivity auto-lock selector.
+  - `BackupSection.jsx`: JSON backup export/import, database reset, automated Litestream replication status, system update checker, and EET 2.0 toggle card.
 
 ## Core Register Components
 - `Cart.jsx`: Active shopping basket (420px width) with memoized totals (`calculateCartTotals`), active item selection, note badges, line quantity modifier, and parking slots. Decomposed into `/src/components/cart/`:
