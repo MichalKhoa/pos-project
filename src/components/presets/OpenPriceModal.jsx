@@ -16,6 +16,28 @@ export default function OpenPriceModal({
 
   if (!openPriceTarget) return null;
 
+  const handleStepDown = () => {
+    soundFx.playKeypadClick();
+    setOpenPriceQty(prev => {
+      const current = prev || 1;
+      if (current === 1) return -1; // 1 -> -1 (activate return mode directly)
+      if (current > 1) return current - 1; // 3 -> 2 -> 1
+      return current - 1; // -1 -> -2 -> -3 (more returns)
+    });
+  };
+
+  const handleStepUp = () => {
+    soundFx.playKeypadClick();
+    setOpenPriceQty(prev => {
+      const current = prev || 1;
+      if (current === -1) return 1; // -1 -> 1 (exit return mode)
+      if (current < -1) return current + 1; // -3 -> -2 -> -1
+      return current + 1; // 1 -> 2 -> 3
+    });
+  };
+
+  const isReturn = openPriceQty < 0 || Boolean(enteredOpenPrice && enteredOpenPrice.startsWith('-'));
+
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
       <div
@@ -47,23 +69,24 @@ export default function OpenPriceModal({
             borderRadius: 'var(--radius-lg)',
             padding: '0.85rem 1rem',
             textAlign: 'center',
-            border: '2px solid var(--accent-blue)',
-            boxShadow: '0 0 12px rgba(59, 130, 246, 0.2)'
+            border: isReturn ? '2px solid var(--accent-rose)' : '2px solid var(--accent-blue)',
+            boxShadow: isReturn ? '0 0 12px rgba(244, 63, 94, 0.25)' : '0 0 12px rgba(59, 130, 246, 0.2)'
           }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
-              Zadejte cenu za jednotku (Kč)
+            <div style={{ fontSize: '0.72rem', color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
+              {isReturn ? '↩️ Cena pro vrácení zboží (Vratka)' : 'Zadejte cenu za jednotku (Kč)'}
             </div>
             <div style={{
               fontSize: '2rem',
               fontWeight: '900',
               fontFamily: 'var(--font-mono)',
-              color: enteredOpenPrice ? 'var(--text-primary)' : 'var(--text-muted)'
+              color: enteredOpenPrice ? (isReturn ? 'var(--accent-rose)' : 'var(--text-primary)') : 'var(--text-muted)'
             }}>
               {enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč'}
             </div>
             {openPriceQty !== 1 && enteredOpenPrice && (
-              <div style={{ fontSize: '0.85rem', color: openPriceQty < 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800', marginTop: '0.2rem' }}>
-                = Celkem {(openPriceQty * parseFloat(enteredOpenPrice || 0)).toLocaleString('cs-CZ')} Kč ({openPriceQty} ks)
+              <div style={{ fontSize: '0.85rem', color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800', marginTop: '0.2rem' }}>
+                {isReturn ? '↩️ Vratka celkem: ' : '= Celkem '}
+                {(Math.abs(openPriceQty) * parseFloat(enteredOpenPrice || 0)).toLocaleString('cs-CZ')} Kč ({openPriceQty} ks)
               </div>
             )}
           </div>
@@ -72,10 +95,7 @@ export default function OpenPriceModal({
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               type="button"
-              onClick={() => {
-                soundFx.playKeypadClick();
-                setOpenPriceQty(prev => prev - 1);
-              }}
+              onClick={handleStepDown}
               style={{
                 flex: 1, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 gap: '0.35rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
@@ -106,15 +126,12 @@ export default function OpenPriceModal({
               }}
               title="Resetovat množství na 1×"
             >
-              {openPriceQty}×
+              {openPriceQty < 0 ? `↩️ ${openPriceQty}×` : `${openPriceQty}×`}
             </button>
 
             <button
               type="button"
-              onClick={() => {
-                soundFx.playKeypadClick();
-                setOpenPriceQty(prev => (prev < 0 ? 1 : prev + 1));
-              }}
+              onClick={handleStepUp}
               style={{
                 flex: 1, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 gap: '0.35rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
@@ -222,23 +239,20 @@ export default function OpenPriceModal({
                 height: '52px',
                 fontSize: '0.85rem',
                 fontWeight: '900',
-                background: enteredOpenPrice.startsWith('-') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.15)',
-                color: enteredOpenPrice.startsWith('-') ? '#ffffff' : 'var(--accent-rose)',
+                background: isReturn ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.15)',
+                color: isReturn ? '#ffffff' : 'var(--accent-rose)',
                 border: '1px solid rgba(239, 68, 68, 0.4)',
                 gridColumn: 'span 3',
                 aspectRatio: 'auto'
               }}
               onClick={() => {
                 soundFx.playKeypadClick();
-                setEnteredOpenPrice(prev => {
-                  if (!prev) return '-';
-                  if (prev.startsWith('-')) return prev.slice(1);
-                  return '-' + prev;
-                });
+                setOpenPriceQty(prev => (prev < 0 ? Math.abs(prev) : -Math.abs(prev || 1)));
+                setEnteredOpenPrice(prev => (prev.startsWith('-') ? prev.slice(1) : prev));
               }}
               title="Změnit znaménko / Vratka"
             >
-              ± Vratka
+              {isReturn ? '↩️ Aktivní Vratka (±)' : '± Vratka'}
             </button>
           </div>
 

@@ -172,7 +172,7 @@ export default function QuickPresetGrid({
     const finalPrice = parseFloat(enteredOpenPrice);
     if (isNaN(finalPrice) || finalPrice === 0 || !openPriceTarget) return;
 
-    const isReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
+    const isReturn = (openPriceQty < 0) || (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-')) || Boolean(enteredOpenPrice && enteredOpenPrice.startsWith('-'));
     const effectivePrice = isReturn ? -Math.abs(finalPrice) : Math.abs(finalPrice);
 
     onAddToCart({
@@ -183,6 +183,7 @@ export default function QuickPresetGrid({
 
     setOpenPriceTarget(null);
     setEnteredOpenPrice('');
+    setOpenPriceQty(1);
     if (onClearKeypadAmount) onClearKeypadAmount();
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
   };
