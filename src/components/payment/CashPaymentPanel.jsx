@@ -52,33 +52,65 @@ export default function CashPaymentPanel({
     <div className="cash-payment-container">
       {/* COLUMN 1: Fast Cash Denominations & Quick Tender Chips */}
       <div className="cash-col-left">
-        {/* Exact Amount Hero Button */}
-        <button
-          type="button"
-          className="cash-shortcut-btn"
-          style={{
-            height: '48px',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.22) 100%)',
-            color: 'var(--accent-emerald)',
-            border: '1.5px solid var(--accent-emerald)',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: '900',
-            fontSize: '1.05rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)'
-          }}
-          onClick={() => {
-            soundFx.playSuccessChime();
-            onCashAdd('exact');
-          }}
-        >
-          <Sparkles size={18} />
-          <span>{t('payment.exact') || 'Přesná částka'} ({effectiveCashTotal.toFixed(0)} Kč)</span>
-        </button>
+        {/* Top Shortcuts: Exact Amount & Reset */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '0.5rem' }}>
+          <button
+            type="button"
+            className="cash-shortcut-btn"
+            style={{
+              height: '48px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.22) 100%)',
+              color: 'var(--accent-emerald)',
+              border: '1.5px solid var(--accent-emerald)',
+              borderRadius: 'var(--radius-md)',
+              fontWeight: '900',
+              fontSize: '0.98rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(16, 185, 129, 0.12)',
+              whiteSpace: 'nowrap'
+            }}
+            onClick={() => {
+              soundFx.playSuccessChime();
+              onCashAdd('exact');
+            }}
+          >
+            <Sparkles size={17} />
+            <span>{t('payment.exact') || 'Přesně'} ({effectiveCashTotal.toFixed(0)} Kč)</span>
+          </button>
+
+          <button
+            type="button"
+            className="cash-shortcut-btn"
+            style={{
+              height: '48px',
+              background: 'rgba(244, 63, 94, 0.08)',
+              color: 'var(--accent-rose)',
+              border: '1.5px dashed var(--accent-rose)',
+              borderRadius: 'var(--radius-md)',
+              fontWeight: '800',
+              fontSize: '0.92rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.4rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease'
+            }}
+            onClick={() => {
+              soundFx.playDeleteTone();
+              onCashAdd('clear');
+            }}
+            title={t('payment.reset') || 'Vynulovat'}
+          >
+            <RotateCcw size={16} />
+            <span>{t('payment.reset') || 'Vynulovat'}</span>
+          </button>
+        </div>
 
         {/* 💵 Authentic Color-Coded Czech Banknotes */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
@@ -107,9 +139,9 @@ export default function CashPaymentPanel({
           </div>
         </div>
 
-        {/* 🪙 Streamlined Quick Coins + Reset Bar */}
+        {/* 🪙 Streamlined Quick Coins Bar (4 Coins) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Coins size={13} style={{ color: 'var(--accent-amber)' }} />
             <span>{t('payment.coins') || 'Mince'}</span>
           </div>
@@ -124,21 +156,9 @@ export default function CashPaymentPanel({
                   onCashAdd(coin);
                 }}
               >
-                +{coin}
+                +{coin} Kč
               </button>
             ))}
-            <button
-              type="button"
-              className="czech-reset-chip"
-              onClick={() => {
-                soundFx.playDeleteTone();
-                onCashAdd('clear');
-              }}
-              title={t('payment.reset') || 'Vynulovat'}
-            >
-              <RotateCcw size={14} />
-              <span>{t('payment.reset') || 'Reset'}</span>
-            </button>
           </div>
         </div>
       </div>
@@ -166,9 +186,9 @@ export default function CashPaymentPanel({
             fontFamily: 'var(--font-mono)',
             fontSize: '1.9rem',
             fontWeight: '900',
-            color: tenderedVal >= totalAmount ? '#10b981' : '#ffffff',
-            background: '#090d16',
-            border: '1.5px solid #1e293b',
+            color: tenderedVal >= totalAmount ? 'var(--accent-emerald)' : 'var(--text-primary)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
             borderRadius: 'var(--radius-md)',
             padding: '0.4rem 0.85rem',
             textAlign: 'right',
@@ -204,20 +224,20 @@ export default function CashPaymentPanel({
         <div
           style={{
             background: (tenderedVal > 0 && changeDue < 0)
-              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(225, 29, 72, 0.28) 100%), #1f0f15'
+              ? 'rgba(244, 63, 94, 0.08)'
               : (tenderedVal === 0 || changeDue === 0)
-                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.18) 100%), #0d1a18'
-                : 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%), #0d1a18',
+                ? 'rgba(16, 185, 129, 0.06)'
+                : 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%)',
             border: `2px solid ${(tenderedVal > 0 && changeDue < 0)
-              ? '#f43f5e'
-              : '#10b981'}`,
+              ? 'var(--accent-rose)'
+              : 'var(--accent-emerald)'}`,
             borderRadius: 'var(--radius-lg, 12px)',
             padding: '0.85rem 1.15rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
             marginTop: 'auto',
-            boxShadow: (changeDue > 0) ? '0 4px 20px rgba(16, 185, 129, 0.35)' : 'none',
+            boxShadow: (changeDue > 0) ? '0 4px 16px rgba(16, 185, 129, 0.2)' : 'none',
             transition: 'all 0.2s ease'
           }}
         >
@@ -228,7 +248,7 @@ export default function CashPaymentPanel({
                 fontWeight: '900',
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                color: (tenderedVal > 0 && changeDue < 0) ? '#f43f5e' : '#10b981'
+                color: (tenderedVal > 0 && changeDue < 0) ? 'var(--accent-rose)' : 'var(--accent-emerald)'
               }}
             >
               {tenderedVal === 0
@@ -243,8 +263,8 @@ export default function CashPaymentPanel({
                 fontSize: '2.5rem',
                 lineHeight: '1',
                 fontWeight: '900',
-                color: (tenderedVal > 0 && changeDue < 0) ? '#f43f5e' : '#ffffff',
-                textShadow: (changeDue > 0) ? '0 2px 10px rgba(16, 185, 129, 0.5)' : 'none'
+                color: (tenderedVal > 0 && changeDue < 0) ? 'var(--accent-rose)' : 'var(--accent-emerald)',
+                textShadow: (changeDue > 0) ? '0 2px 8px rgba(16, 185, 129, 0.25)' : 'none'
               }}
             >
               {tenderedVal === 0 ? '0 Kč' : `${Math.abs(changeDue).toFixed(0)} Kč`}
