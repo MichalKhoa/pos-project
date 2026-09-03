@@ -528,4 +528,104 @@ class ESCPOSPrinterService:
             logger.error(f"Failed to open cash drawer: {err}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
 
+    def print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1) -> dict:
+        """
+        Prints one or more physical ESC/POS thermal barcode shelf labels.
+        Each label contains store name, item name, price, native hardware barcode, and code text.
+        """
+        with _hardware_printer_lock:
+            return self._do_print_barcode_label(item_data, store_config, copies)
+
+    def _do_print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1) -> dict:
+        copies = max(1, min(100, int(copies or 1)))
+        store_name = store_config.get("storeName", store_config.get("store_name", "VoltFlow POS"))
+        item_name = item_data.get("name", "Položka")
+        price = float(item_data.get("price", 0.0))
+        vat = item_data.get("vat", 21)
+        barcode_val = str(item_data.get("barcode") or item_data.get("id") or "").strip()
+
+        logger.info(f"Printing {copies} barcode label(s) for '{item_name}' (barcode: {barcode_val}) via {self.interface_type}")
+
+        try:
+            printer = None
+            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                from escpos.printer import Win32Raw
+                target_name = self.address
+                if not target_name or target_name.startswith('/dev/'):
+                    target_name = ""
+                    try:
+                        import win32print
+                        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                        pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                        if pos_printers:
+                            target_name = pos_printers[0]
+                        elif printers:
+                            target_name = printers[0]
+                    except Exception:
+                        pass
+                printer = Win32Raw(target_name)
+            elif self.interface_type == "USB":
+                from escpos.printer import Usb, File
+                if os.path.exists(self.address):
+                    printer = File(self.address)
+                else:
+                    printer = Usb(0x04b8, 0x0e15, 0)
+            elif self.interface_type == "NETWORK" and self.address:
+                from escpos.printer import Network
+                printer = Network(self.address, port=9100, timeout=3.0)
+            elif self.interface_type == "SERIAL" and self.address:
+                from escpos.printer import Serial
+                printer = Serial(self.address, baudrate=9600)
+
+            if printer:
+                try:
+                    if hasattr(printer, 'open'):
+                        printer.open("VoltFlow_POS_Label_Print")
+
+                    for _ in range(copies):
+                        printer.set(align='center', font='a')
+                        if store_name:
+                            printer.text(f"{store_name}\n")
+                        
+                        # Product Name bold
+                        printer.set(align='center', bold=True, double_height=True, double_width=False)
+                        printer.text(f"{item_name}\n")
+
+                        # Price prominent
+                        printer.set(align='center', bold=True, double_height=True, double_width=True)
+                        printer.text(f"{price:.2f} Kč\n")
+
+                        # Barcode
+                        printer.set(align='center')
+                        if barcode_val:
+                            # Use EAN13 if 12 or 13 digits, else CODE128
+                            if barcode_val.isdigit() and len(barcode_val) in [12, 13]:
+                                btype = 'EAN13'
+                            else:
+                                btype = 'CODE128'
+                            try:
+                                printer.barcode(barcode_val, btype, height=64, width=2, pos='BELOW', font='A')
+                            except Exception as bc_err:
+                                logger.warning(f"Native barcode command failed: {bc_err}, falling back to text")
+                                printer.text(f"* {barcode_val} *\n")
+                        
+                        printer.set(align='center', font='b')
+                        printer.text(f"DPH {vat}%\n")
+                        printer.text("\n\n")
+                        printer.cut()
+
+                    return {"success": True, "physical": True, "status": "PRINTED", "copies": copies}
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
+            print(f"--- BARCODE LABEL SIMULATED: {item_name} | {price:.2f} Kč | {barcode_val} (x{copies}) ---")
+            return {"success": True, "physical": False, "status": "SIMULATED", "copies": copies}
+        except Exception as err:
+            logger.error(f"Failed to print barcode label: {err}")
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
+
 

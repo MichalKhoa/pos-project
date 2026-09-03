@@ -829,6 +829,7 @@ export default function App() {
             onUpdatePresets={setPresets}
             onAddPreset={handleAddPreset}
             onTogglePin={handleTogglePresetPin}
+            storeConfig={storeConfig}
           />
         )}
 

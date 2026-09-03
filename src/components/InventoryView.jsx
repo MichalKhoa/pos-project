@@ -6,9 +6,10 @@ import InventoryMetricsBar from './inventory/InventoryMetricsBar.jsx';
 import InventoryStockTable from './inventory/InventoryStockTable.jsx';
 import StockKeypadModal from './inventory/StockKeypadModal.jsx';
 import InventoryImportModal from './inventory/InventoryImportModal.jsx';
+import BarcodeLabelModal from './inventory/BarcodeLabelModal.jsx';
 import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
-export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin }) {
+export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin, storeConfig = {} }) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -23,6 +24,9 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   const [importData, setImportData] = useState(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+
+  // Barcode Label Print state
+  const [labelPrintTarget, setLabelPrintTarget] = useState(null);
 
   // Add & Edit Item Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -327,6 +331,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         isSaving={isSaving}
         categoryMap={categoryMap}
         onTogglePin={onTogglePin}
+        onPrintLabel={setLabelPrintTarget}
       />
 
       {/* Add Modal - defaults to unpinned warehouse item when added from Inventory! */}
@@ -377,6 +382,14 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         onConfirm={handleConfirmImport}
         importData={importData}
         isImporting={isImporting}
+      />
+
+      {/* Barcode Label Print Modal */}
+      <BarcodeLabelModal
+        isOpen={!!labelPrintTarget}
+        onClose={() => setLabelPrintTarget(null)}
+        preset={labelPrintTarget}
+        storeConfig={storeConfig}
       />
     </div>
   );

@@ -53,6 +53,7 @@ Directory: `/src/components`
   - `InventoryStockTable.jsx`: Sticky-header inventory table with 38px touch targets, column sorting, 1-tap pin/unpin to register, stock numpad modal trigger, quick +5/+10/+50 adds, barcode editor.
   - `StockKeypadModal.jsx`: Large touchscreen keypad modal for direct stock count entry.
   - `InventoryImportModal.jsx`: CSV import preview confirmation dialog showing update vs create item counts with sample preview.
+  - `BarcodeLabelModal.jsx`: 1-click shelf label printing modal with live SVG barcode preview (EAN-13 / Code-128 via `src/utils/barcodeGenerator.js`), copies selector (1, 2, 5, 10), ESC/POS hardware print trigger, and browser print fallback.
 - `payment/CashPaymentPanel.jsx`: Cash checkout with 6 Czech Banknote cards (100 green, 200 orange, 500 rose, 1000 violet, 2000 teal, 5000 navy), tap tender accumulation, 4 quick coins (5, 10, 20, 50 Kč), 3x4 numpad, change banner (2.5rem, `VRÁTIT / TRẢ LẠI`), audio clicks, greedy coin breakdown (`src/utils/currencyBreakdown.js`).
 - `Navbar.jsx`: Clock, backend status, cart toggle, lock button, 1-click thermal daily summary, navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
 - `CalendarModal.jsx`, `TouchCalendarModal.jsx`, `TouchDateRangeModal.jsx`: Date modals powered by `src/utils/calendarGrid.js` and `src/utils/czechHolidays.js`.

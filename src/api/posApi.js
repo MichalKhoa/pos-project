@@ -368,6 +368,24 @@ export async function printDailySummaryBackend(summaryData, storeConfig, openDra
 }
 
 /**
+ * Send print barcode shelf label request to backend hardware thermal printer service
+ */
+export async function printBarcodeLabelBackend(itemData, copies = 1, storeConfig = {}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-label`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemData, storeConfig, copies })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Barcode label thermal printing failed or backend offline:', err);
+    return null;
+  }
+}
+
+/**
  * Trigger physical cash drawer release pulse via printer service
  */
 export async function openCashDrawerBackend() {

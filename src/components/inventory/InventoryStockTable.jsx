@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check, ArrowUpDown, ArrowUp, ArrowDown, Printer } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function InventoryStockTable({
@@ -22,7 +22,8 @@ export default function InventoryStockTable({
   handleSaveRow,
   isSaving,
   categoryMap,
-  onTogglePin
+  onTogglePin,
+  onPrintLabel
 }) {
   const { t } = useTranslation();
 
@@ -389,16 +390,37 @@ export default function InventoryStockTable({
                   </td>
 
                   <td style={{ padding: '0.55rem 0.65rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Barcode size={16} style={{ color: 'var(--text-muted)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Barcode size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                       <input
                         type="text"
                         className="input-field"
                         placeholder={t('inventory.barcode_placeholder')}
                         value={currentBarcode}
                         onChange={e => handleStockChange(preset.id, 'barcode', e.target.value)}
-                        style={{ height: '38px', fontSize: '0.85rem', width: '145px', fontFamily: 'var(--font-mono)' }}
+                        style={{ height: '38px', fontSize: '0.85rem', width: '130px', fontFamily: 'var(--font-mono)' }}
                       />
+                      <button
+                        type="button"
+                        className="key-btn"
+                        style={{
+                          height: '38px',
+                          width: '38px',
+                          padding: 0,
+                          aspectRatio: 'auto',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(59, 130, 246, 0.1)',
+                          color: 'var(--accent-blue)',
+                          borderColor: 'rgba(59, 130, 246, 0.3)',
+                          flexShrink: 0
+                        }}
+                        onClick={() => onPrintLabel && onPrintLabel(preset)}
+                        title={t('inventory.print_label_tooltip') || 'Vytisknout štítek s čárovým kódem'}
+                      >
+                        <Printer size={16} />
+                      </button>
                     </div>
                   </td>
 

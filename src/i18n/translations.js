@@ -284,7 +284,14 @@ export const translations = {
       import_preview_desc: "Zkontrolujte souhrn před zápisem do databáze",
       import_to_update: "K aktualizaci",
       import_to_create: "Nových k vytvoření",
-      confirm_import: "Potvrdit import"
+      confirm_import: "Potvrdit import",
+      print_label_tooltip: "Vytisknout štítek s čárovým kódem",
+      label_modal_title: "Tisk čárového štítku",
+      label_copies: "Počet kopií k vytištění",
+      label_thermal_print: "Vytisknout štítek",
+      label_browser_print: "Tisk z PC",
+      label_printed_success: "Štítek byl úspěšně vytištěn.",
+      label_printed_error: "Nepodařilo se vytisknout štítek na tiskárně."
     },
     history: {
       title: "Historie a Přehled Prodejů",
@@ -864,7 +871,14 @@ export const translations = {
       import_preview_desc: "Kiểm tra tóm tắt trước khi lưu vào cơ sở dữ liệu",
       import_to_update: "Cần cập nhật",
       import_to_create: "Tạo mới",
-      confirm_import: "Xác nhận nhập"
+      confirm_import: "Xác nhận nhập",
+      print_label_tooltip: "In nhãn mã vạch sản phẩm",
+      label_modal_title: "In nhãn mã vạch",
+      label_copies: "Số lượng bản in",
+      label_thermal_print: "In nhãn máy in nhiệt",
+      label_browser_print: "In từ máy tính",
+      label_printed_success: "Đã in nhãn thành công.",
+      label_printed_error: "Không thể in nhãn ra máy in."
     },
     history: {
       title: "Lịch Sử & Tổng Quan Bán Hàng",
@@ -1444,7 +1458,14 @@ export const translations = {
       import_preview_desc: "Review summary before applying to database",
       import_to_update: "To Update",
       import_to_create: "To Create",
-      confirm_import: "Confirm Import"
+      confirm_import: "Confirm Import",
+      print_label_tooltip: "Print barcode shelf label",
+      label_modal_title: "Print Barcode Label",
+      label_copies: "Number of copies to print",
+      label_thermal_print: "Print Label",
+      label_browser_print: "Print from PC",
+      label_printed_success: "Label printed successfully.",
+      label_printed_error: "Failed to print label on hardware printer."
     },
     history: {
       title: "Sales History & Ledger Overview",

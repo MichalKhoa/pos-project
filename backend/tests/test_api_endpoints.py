@@ -70,6 +70,27 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertTrue(data.get("success"))
         self.assertIn(data.get("status"), ["PRINTED", "SIMULATED"])
 
+    def test_print_barcode_label_endpoint(self):
+        payload = {
+            "itemData": {
+                "id": "item-barcode-test",
+                "name": "Kofola 0.5L",
+                "price": 35.0,
+                "vat": 21,
+                "barcode": "8594001234567"
+            },
+            "storeConfig": {
+                "storeName": "Himmel Test Shop"
+            },
+            "copies": 1
+        }
+        res = self.client.post("/api/v1/printer/print-label", json=payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data.get("success"))
+        self.assertIn(data.get("status"), ["PRINTED", "SIMULATED"])
+        self.assertEqual(data.get("copies"), 1)
+
     def test_preset_show_in_presets_and_toggle_pin(self):
         # Create a new preset with showInPresets=False (barcode-only item)
         preset_id = "test-inv-item-01"

@@ -87,3 +87,34 @@ def print_daily_summary(req: PrintDailySummaryRequest, db: Session = Depends(get
     }
 
 
+class PrintBarcodeLabelRequest(BaseModel):
+    itemData: dict
+    storeConfig: dict = {}
+    copies: int = 1
+
+
+@router.post("/print-label")
+def print_barcode_label(req: PrintBarcodeLabelRequest, db: Session = Depends(get_db)):
+    """Trigger physical ESC/POS thermal barcode shelf label print job."""
+    config = db.query(StoreConfigModel).first()
+    interface = config.printer_interface if config else "USB"
+    address = config.printer_address if config else "/dev/usb/lp0"
+
+    store_config = req.storeConfig or {}
+    if config and not store_config.get("storeName"):
+        store_config["storeName"] = config.store_name
+
+    printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
+    res = printer_service.print_barcode_label(req.itemData, store_config, copies=req.copies)
+
+    if isinstance(res, dict) and not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to print barcode label"))
+
+    return {
+        "status": res.get("status", "PRINTED") if isinstance(res, dict) else "PRINTED",
+        "physical": res.get("physical", False) if isinstance(res, dict) else True,
+        "copies": req.copies,
+        "success": True
+    }
+
+
