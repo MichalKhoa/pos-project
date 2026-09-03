@@ -423,31 +423,20 @@ export default function App() {
     await checkPendingOfflineSales();
   };
 
-  // Intercept window close button (X)
+  // Warn before closing window if cart has active items
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-
-    const handleUnload = () => {
-      const host = window.location.hostname || 'localhost';
-      const shutdownUrl = `http://${host}:8000/api/v1/system/shutdown`;
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(shutdownUrl);
-      } else {
-        fetch(shutdownUrl, { method: 'POST', keepalive: true }).catch(() => {});
+      if (cartItems && cartItems.length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handleUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handleUnload);
     };
-  }, []);
+  }, [cartItems]);
 
   // Cart operations
   const handleAddToCart = useCallback((item, customQty = null) => {

@@ -18,8 +18,8 @@ REM 2. Ensure backend is running
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% neq 0 (
     echo Starting Python Backend Service...
-    start "VoltFlow POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
-    timeout /t 2 /nobreak >nul 2>&1
+    start "VoltFlow POS Backend" /min /D "%~dp0backend" cmd /c "%~dp0backend\run_backend.bat"
+    ping -n 3 127.0.0.1 >nul 2>&1
 )
 
 REM 3. Launch Edge directly into Customer Display route in full app mode

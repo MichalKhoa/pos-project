@@ -117,10 +117,12 @@ export default function Navbar({
       <div className="nav-island-left">
         <div
           className="nav-status-indicator"
-          title={isOnline ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : 'EET Offline'}
+          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms`) : 'Offline'}
         >
           <span className={`status-pulse-dot ${isOnline ? 'online' : 'offline'}`} />
-          <span className="status-label">{isOnline ? 'Online • EET' : 'Offline'}</span>
+          <span className="status-label">
+            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : 'Online • EET') : 'Offline'}
+          </span>
         </div>
         {pendingCount > 0 && (
           <button

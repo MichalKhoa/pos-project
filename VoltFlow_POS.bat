@@ -16,7 +16,7 @@ if exist "%~dp0backend\venv\Scripts\python.exe" (
 
 REM 2. Ensure frontend UI is built; only compile if dist/ is missing
 if not exist "%~dp0dist\index.html" (
-    echo [NPM] Compiling frontend UI bundle (first run)...
+    echo [NPM] Compiling frontend UI bundle [first run]...
     where npm >nul 2>&1
     if %errorlevel% equ 0 (
         call npm run build
@@ -27,13 +27,28 @@ REM 3. Ensure backend is running on port 8000
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo [INFO] Backend is active on port 8000.
-) else (
-    echo [INFO] Checking database migrations & schema changes...
-    "%PYTHON_EXE%" "%~dp0backend\migrations.py"
-    echo [INFO] Starting Backend Server...
-    start "VoltFlow POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
-    timeout /t 2 /nobreak >nul 2>&1
+    goto :BACKEND_READY
 )
+
+echo [INFO] Checking database migrations and schema changes...
+"%PYTHON_EXE%" "%~dp0backend\migrations.py"
+echo [INFO] Starting Backend Server...
+start "VoltFlow POS Backend" /min /D "%~dp0backend" cmd /c "%~dp0backend\run_backend.bat"
+
+echo [INFO] Waiting for backend server on port 8000...
+set /a RETRY_COUNT=0
+:WAIT_BACKEND
+ping -n 2 127.0.0.1 >nul 2>&1
+netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [OK] Backend server active on port 8000.
+    goto :BACKEND_READY
+)
+set /a RETRY_COUNT+=1
+if !RETRY_COUNT! lss 10 goto :WAIT_BACKEND
+echo [WARNING] Backend server startup took longer than 10 seconds.
+
+:BACKEND_READY
 
 REM 4. Start Litestream Database Backup if present and not running
 if exist "%~dp0backend\litestream.exe" (
@@ -61,10 +76,26 @@ if %errorlevel% equ 0 (
     qrencode -t ANSI256 "http://!LOCAL_IP!:8000/#/customer-display"
 )
 
-REM 7. Launch Full POS App via Microsoft Edge App Mode
+REM 7. Launch Full POS App via Microsoft Edge App Mode (or default browser fallback)
 echo.
 echo [LAUNCH] Opening VoltFlow POS Register...
-start msedge --app=http://localhost:8000
+set "EDGE_EXE="
+if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+) else if exist "C:\Program Files\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+) else if exist "%LocalAppData%\Microsoft\Edge\Application\msedge.exe" (
+    set "EDGE_EXE=%LocalAppData%\Microsoft\Edge\Application\msedge.exe"
+) else (
+    where msedge >nul 2>&1
+    if !errorlevel! equ 0 set "EDGE_EXE=msedge"
+)
+
+if not "!EDGE_EXE!"=="" (
+    start "" "!EDGE_EXE!" --app=http://localhost:8000
+) else (
+    start http://localhost:8000
+)
 
 echo.
 echo ========================================================

@@ -21,17 +21,17 @@ taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Web Dev*" >nul 2>&1
 
 REM 3. Launch Python Backend in visible terminal
-echo [INFO] Checking database migrations & schema changes...
+echo [INFO] Checking database migrations and schema changes...
 "%PYTHON_EXE%" "%~dp0backend\migrations.py"
 echo [1/2] Launching Python FastAPI Backend terminal (port 8000)...
-start "VoltFlow POS Backend (Debug)" cmd /k "cd /d "%~dp0backend" && set ENV=development && "%PYTHON_EXE%" main.py"
+start "VoltFlow POS Backend (Debug)" /D "%~dp0backend" cmd /k "set ENV=development&& "%PYTHON_EXE%" main.py"
 
 REM 4. Launch Vite Dev Server in visible terminal
 echo [2/2] Launching Vite Frontend Dev Server (port 5173)...
-start "VoltFlow POS Web Dev (Debug)" cmd /k "cd /d "%~dp0" && npm run dev"
+start "VoltFlow POS Web Dev (Debug)" /D "%~dp0" cmd /k "npm run dev"
 
 REM 5. Brief readiness wait
-timeout /t 2 /nobreak >nul 2>&1
+ping -n 3 127.0.0.1 >nul 2>&1
 
 REM 6. Open Edge in App Mode at dev port 5173
 set "EDGE_EXE="

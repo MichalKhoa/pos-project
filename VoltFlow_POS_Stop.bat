@@ -22,8 +22,10 @@ REM 2. Close command prompt terminals by window title
 taskkill /T /F /FI "WINDOWTITLE eq VoltFlow POS*" >nul 2>&1
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS*" >nul 2>&1
 
-REM 3. Terminate Litestream
+REM 3. Terminate Litestream & POS browser app windows
 taskkill /F /IM litestream.exe >nul 2>&1
+taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq *VoltFlow*" >nul 2>&1
+taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq *Himmel*" >nul 2>&1
 
 REM 4. Free ports 8000 and 5173
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 5173,8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
