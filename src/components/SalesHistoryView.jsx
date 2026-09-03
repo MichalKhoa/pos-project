@@ -8,7 +8,7 @@ import { exportSalesToCSV } from '../utils/csvExporter';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
 import ReceiptInspectorPanel from './history/ReceiptInspectorPanel.jsx';
-import { formatLocalDate, getPeriodDateRange } from '../utils/dateUtils';
+import { useSalesPeriodFilter } from '../hooks/useSalesPeriodFilter';
 
 export default function SalesHistoryView({
   salesHistory,
@@ -20,110 +20,37 @@ export default function SalesHistoryView({
   onInitiateRefund,
   initialDateFilter = null
 }) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSale, setActiveSale] = useState(null);
   const [fullModalSale, setFullModalSale] = useState(null);
-  const [periodFilter, setPeriodFilter] = useState('month'); // 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'all' | 'custom'
-  const [referenceDate, setReferenceDate] = useState(new Date());
-  const [calendarModal, setCalendarModal] = useState({ isOpen: false, field: 'from', initialDate: '', title: '' });
-  const [isRangeModalOpen, setIsRangeModalOpen] = useState(false);
-
-  const now = new Date();
+  const {
+    periodFilter,
+    setPeriodFilter,
+    referenceDate,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    calendarModal,
+    setCalendarModal,
+    isRangeModalOpen,
+    setIsRangeModalOpen,
+    handleStepPeriod,
+    handleSelectPreset,
+    periodBadgeLabel,
+    periodFilteredSales
+  } = useSalesPeriodFilter({ salesHistory, initialDateFilter });
 
   // Pagination states (default 15 per page for high density)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
-
-  // Custom date range states (default to first of current month & today)
-  const todayStr = formatLocalDate(now);
-  const firstOfMonthStr = formatLocalDate(new Date(now.getFullYear(), now.getMonth(), 1));
-
-  const [fromDate, setFromDate] = useState(firstOfMonthStr);
-  const [toDate, setToDate] = useState(todayStr);
   const [docTypeFilter, setDocTypeFilter] = useState('all'); // 'all' | 'sales' | 'refunds'
-
-  // Apply initial date filter if passed
-  useEffect(() => {
-    if (initialDateFilter) {
-      setPeriodFilter('custom');
-      setFromDate(initialDateFilter);
-      setToDate(initialDateFilter);
-    }
-  }, [initialDateFilter]);
-
-  // Stepper helper
-  const handleStepPeriod = (direction) => {
-    setReferenceDate(prevDate => {
-      const newD = new Date(prevDate);
-      if (periodFilter === 'today' || periodFilter === 'yesterday') {
-        newD.setDate(newD.getDate() + (direction === 'prev' ? -1 : 1));
-      } else if (periodFilter === 'week') {
-        newD.setDate(newD.getDate() + (direction === 'prev' ? -7 : 7));
-      } else if (periodFilter === 'month') {
-        newD.setMonth(newD.getMonth() + (direction === 'prev' ? -1 : 1));
-      } else if (periodFilter === 'year') {
-        newD.setFullYear(newD.getFullYear() + (direction === 'prev' ? -1 : 1));
-      }
-      return newD;
-    });
-  };
-
-  // Switch preset mode
-  const handleSelectPreset = (mode) => {
-    setPeriodFilter(mode);
-    if (mode === 'yesterday') {
-      const y = new Date();
-      y.setDate(y.getDate() - 1);
-      setReferenceDate(y);
-    } else {
-      setReferenceDate(new Date());
-    }
-  };
-
-  // Compute exact start and end Date objects
-  const computedDateRange = useMemo(() => {
-    return getPeriodDateRange(periodFilter, referenceDate, fromDate, toDate);
-  }, [periodFilter, referenceDate, fromDate, toDate]);
-
-  // Formatted date badge label
-  const periodBadgeLabel = useMemo(() => {
-    if (periodFilter === 'all') return t('history.all_period');
-    if (periodFilter === 'custom') return `${t('history.custom_date')} (${fromDate} – ${toDate})`;
-
-    const { start, end } = computedDateRange;
-    const localeStr = language === 'cs' ? 'cs-CZ' : language === 'vi' ? 'vi-VN' : 'en-US';
-
-    if (periodFilter === 'today' || periodFilter === 'yesterday') {
-      return start.toLocaleDateString(localeStr, { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric' });
-    }
-    if (periodFilter === 'week') {
-      return `${start.toLocaleDateString(localeStr, { day: 'numeric', month: 'numeric' })} – ${end.toLocaleDateString(localeStr, { day: 'numeric', month: 'numeric', year: 'numeric' })}`;
-    }
-    if (periodFilter === 'month') {
-      const monthName = start.toLocaleDateString(localeStr, { month: 'long', year: 'numeric' });
-      return `${monthName}`;
-    }
-    if (periodFilter === 'year') {
-      return `Rok ${start.getFullYear()}`;
-    }
-    return '';
-  }, [periodFilter, computedDateRange, fromDate, toDate, language, t]);
 
   // Reset pagination when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, periodFilter, referenceDate, fromDate, toDate, pageSize, docTypeFilter]);
-
-  // Filter sales by computed date range
-  const periodFilteredSales = useMemo(() => {
-    if (periodFilter === 'all') return salesHistory;
-    const { start, end } = computedDateRange;
-    return salesHistory.filter(sale => {
-      const saleDate = new Date(sale.timestamp || sale.created_at || sale.date);
-      return saleDate >= start && saleDate <= end;
-    });
-  }, [salesHistory, periodFilter, computedDateRange]);
 
   // Apply document type filter and search query
   const searchFilteredSales = useMemo(() => {

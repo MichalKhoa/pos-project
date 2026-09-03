@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { BarChart3, Download } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { exportSalesToCSV } from '../utils/csvExporter';
@@ -6,86 +6,28 @@ import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesAnalyticsCharts from './history/SalesAnalyticsCharts.jsx';
 import TouchCalendarModal from './TouchCalendarModal.jsx';
 import TouchDateRangeModal from './TouchDateRangeModal.jsx';
-import { formatLocalDate, getPeriodDateRange } from '../utils/dateUtils';
+import { useSalesPeriodFilter } from '../hooks/useSalesPeriodFilter';
 
 export default function AnalyticsView({
   salesHistory = []
 }) {
-  const { t, language } = useTranslation();
-  const [periodFilter, setPeriodFilter] = useState('month');
-  const [referenceDate, setReferenceDate] = useState(new Date());
-  const [calendarModal, setCalendarModal] = useState({ isOpen: false, field: 'from', initialDate: '', title: '' });
-  const [isRangeModalOpen, setIsRangeModalOpen] = useState(false);
-
-  const now = new Date();
-  const todayStr = formatLocalDate(now);
-  const firstOfMonthStr = formatLocalDate(new Date(now.getFullYear(), now.getMonth(), 1));
-
-  const [fromDate, setFromDate] = useState(firstOfMonthStr);
-  const [toDate, setToDate] = useState(todayStr);
-
-  // Stepper helper for date navigation
-  const handleStepPeriod = (direction) => {
-    setReferenceDate(prevDate => {
-      const newD = new Date(prevDate);
-      if (periodFilter === 'today' || periodFilter === 'yesterday') {
-        newD.setDate(newD.getDate() + (direction === 'prev' ? -1 : 1));
-      } else if (periodFilter === 'week') {
-        newD.setDate(newD.getDate() + (direction === 'prev' ? -7 : 7));
-      } else if (periodFilter === 'month') {
-        newD.setMonth(newD.getMonth() + (direction === 'prev' ? -1 : 1));
-      } else if (periodFilter === 'year') {
-        newD.setFullYear(newD.getFullYear() + (direction === 'prev' ? -1 : 1));
-      }
-      return newD;
-    });
-  };
-
-  const handleSelectPreset = (mode) => {
-    setPeriodFilter(mode);
-    if (mode === 'yesterday') {
-      const y = new Date();
-      y.setDate(y.getDate() - 1);
-      setReferenceDate(y);
-    } else {
-      setReferenceDate(new Date());
-    }
-  };
-
-  const computedDateRange = useMemo(() => {
-    return getPeriodDateRange(periodFilter, referenceDate, fromDate, toDate);
-  }, [periodFilter, referenceDate, fromDate, toDate]);
-
-  const periodBadgeLabel = useMemo(() => {
-    if (periodFilter === 'all') return t('history.all_period');
-    if (periodFilter === 'custom') return `${t('history.custom_date')} (${fromDate} – ${toDate})`;
-
-    const { start, end } = computedDateRange;
-    const localeStr = language === 'cs' ? 'cs-CZ' : language === 'vi' ? 'vi-VN' : 'en-US';
-
-    if (periodFilter === 'today' || periodFilter === 'yesterday') {
-      return start.toLocaleDateString(localeStr, { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric' });
-    }
-    if (periodFilter === 'week') {
-      return `${start.toLocaleDateString(localeStr, { day: 'numeric', month: 'numeric' })} – ${end.toLocaleDateString(localeStr, { day: 'numeric', month: 'numeric', year: 'numeric' })}`;
-    }
-    if (periodFilter === 'month') {
-      return start.toLocaleDateString(localeStr, { month: 'long', year: 'numeric' });
-    }
-    if (periodFilter === 'year') {
-      return `Rok ${start.getFullYear()}`;
-    }
-    return '';
-  }, [periodFilter, computedDateRange, fromDate, toDate, language, t]);
-
-  const periodFilteredSales = useMemo(() => {
-    if (periodFilter === 'all') return salesHistory;
-    const { start, end } = computedDateRange;
-    return salesHistory.filter(sale => {
-      const saleDate = new Date(sale.timestamp || sale.created_at || sale.date);
-      return saleDate >= start && saleDate <= end;
-    });
-  }, [salesHistory, periodFilter, computedDateRange]);
+  const { t } = useTranslation();
+  const {
+    periodFilter,
+    setPeriodFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    calendarModal,
+    setCalendarModal,
+    isRangeModalOpen,
+    setIsRangeModalOpen,
+    handleStepPeriod,
+    handleSelectPreset,
+    periodBadgeLabel,
+    periodFilteredSales
+  } = useSalesPeriodFilter({ salesHistory });
 
   // Financial Metrics Calculations
   const {
