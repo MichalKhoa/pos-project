@@ -59,3 +59,13 @@ Directory: `/src/components`
 - `useOfflineSync.js`: EET offline queue check and sync handler.
 - `useAutoLock.js`: Touch/mouse/keyboard activity tracking and auto-lock.
 - `useSalesPeriodFilter.js`: Shared period range filtering for history and analytics.
+
+## Audio Engine & Touch Feedback (`/src/utils/audio.js`)
+- Synthesizes distinct procedural audio cues using HTML5 Web Audio API without audio asset loading:
+  - `playScanChime()`: Crisp rising tone (1800Hz -> 2400Hz) on item addition or barcode match.
+  - `playErrorChime()`: Low buzz warning (220Hz -> 160Hz sawtooth) on unknown barcode or failure.
+  - `playSuccessChime()`: Harmonious two-tone chime (880Hz / 1760Hz) on checkout completion, restore, or hold.
+  - `playCashChime()`: Multi-tone bell chime simulating physical cash drawer kick.
+  - `playDeleteTone()`: Descending sine drop (420Hz -> 140Hz) on item deletion or cart wipe.
+  - `playKeypadClick()`: Ultra-short tactile tick (1200Hz, 25ms) on keypad touches.
+- Mute toggle integrated in top navbar and persisted in `pos_sound_enabled` localStorage.
