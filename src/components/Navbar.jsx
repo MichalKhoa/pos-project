@@ -75,13 +75,10 @@ export default function Navbar({
   return (
     <header className="navbar">
       <div className="brand-section">
-        <div className="brand-icon" style={{ overflow: 'hidden', padding: '0', border: 'none', background: 'transparent', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="brand-icon" style={{ overflow: 'hidden', padding: '0', border: 'none', background: 'transparent', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <img src={voltflowLogo} alt="VoltFlow POS Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))' }} />
         </div>
-        <div>
-          <div className="brand-title">{storeConfig?.storeName || 'VoltFlow POS'}</div>
-          <div className="brand-subtitle">{storeConfig?.registerNo || 'Pokladna #01'}</div>
-        </div>
+        <span className="brand-name">VoltFlow</span>
       </div>
 
       <nav className="nav-tabs">
@@ -210,22 +207,44 @@ export default function Navbar({
           {/* Custom SVG Language Switcher Dropdown */}
           <LanguageSelector compact />
 
-          {/* Combined EET 2.0 & Online Latency Status Pill */}
-          <div
-            className="status-badge nav-badge-eet"
-            style={{ gap: '0.4rem', opacity: storeConfig?.eetEnabled === false ? 0.85 : 1 }}
-            title={
-              storeConfig?.eetEnabled === false
-                ? 'EET evidování je v nastavení vypnuto'
-                : isOnline ? `EET 2.0 Online • Odezva backendu: ${latency !== null ? latency : '--'} ms` : 'EET Offline'
-            }
-          >
-            <span className={storeConfig?.eetEnabled === false ? '' : isOnline ? 'status-dot' : 'status-dot-offline'} style={{ background: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)', borderRadius: '50%', width: '8px', height: '8px' }}></span>
-            <ShieldCheck size={14} style={{ color: storeConfig?.eetEnabled === false ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
-            <span className="eet-status-text">
-              {storeConfig?.eetEnabled === false ? (t('nav.eet_off') || 'EET Vypnuto') : `EET 2.0 • ${isOnline ? `${latency !== null ? latency : 12}ms` : t('nav.offline')}`}
-            </span>
-          </div>
+          {/* Compact EET Status Icon with EET text (Green = Online, Red = Offline, Blue = Disabled) */}
+          {(() => {
+            const isEetDisabled = storeConfig?.eetEnabled === false;
+            const eetStatusColor = isEetDisabled ? 'var(--accent-blue)' : isOnline ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+            const eetStatusBg = isEetDisabled ? 'rgba(59, 130, 246, 0.12)' : isOnline ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+            const eetStatusBorder = isEetDisabled ? 'rgba(59, 130, 246, 0.35)' : isOnline ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+
+            return (
+              <div
+                className="nav-action-btn nav-badge-eet"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0 0.55rem',
+                  height: '36px',
+                  width: 'auto',
+                  borderRadius: 'var(--radius-md)',
+                  background: eetStatusBg,
+                  borderColor: eetStatusBorder,
+                  color: eetStatusColor,
+                  fontWeight: '800',
+                  fontSize: '0.78rem',
+                  letterSpacing: '0.02em',
+                  cursor: 'default',
+                  flexShrink: 0
+                }}
+                title={
+                  isEetDisabled
+                    ? 'EET evidování je v nastavení vypnuto'
+                    : isOnline ? `EET 2.0 Online • Odezva backendu: ${latency !== null ? latency : '--'} ms` : 'EET Offline (server nedostupný)'
+                }
+              >
+                <ShieldCheck size={15} style={{ color: eetStatusColor }} />
+                <span>EET</span>
+              </div>
+            );
+          })()}
 
           {/* Compact Theme Mode Switcher Icon Button */}
           <button
