@@ -23,9 +23,11 @@ export default function TerminalSection({
   const { t } = useTranslation();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 💳 Card 1: Režim platby kartou */}
-      <div className="settings-section-card">
+    <div className="settings-grid-layout">
+      {/* 💳 LEFT COLUMN: Terminal Mode */}
+      <div className="settings-grid-col">
+        {/* 💳 Card 1: Režim platby kartou */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -108,136 +110,173 @@ export default function TerminalSection({
         </div>
       </div>
 
-      {/* ⚙️ Card 2: Konfigurace sítě pro ČSOB (pokud je zapnuto) */}
-      {termEnabled && (
-        <div className="settings-section-card">
-          <div className="settings-section-header">
-            <div>
-              <h3 className="settings-section-title">
-                <Wifi size={19} style={{ color: 'var(--accent-emerald)' }} />
-                <span>Síťové nastavení terminálu ČSOB</span>
-              </h3>
-              <p className="settings-section-desc">
-                Zadejte lokální IP adresu a port terminálu přidělené vaším routerem.
-              </p>
-            </div>
-          </div>
-
-          <div className="settings-field">
-            <label className="settings-label">
-              {t('settings.csob_ip') || 'IP adresa terminálu v síti'}
-            </label>
-            <input
-              type="text"
-              className="settings-input"
-              placeholder="např. 192.168.1.150"
-              value={termIp}
-              onChange={e => setTermIp(e.target.value)}
-              style={{ fontFamily: 'var(--font-mono)' }}
-            />
-          </div>
-
-          <div className="settings-form-grid">
-            <div className="settings-field">
-              <label className="settings-label">
-                {t('settings.csob_port') || 'Komunikační port'}
-              </label>
-              <input
-                type="text"
-                className="settings-input"
-                value={termPort}
-                onChange={e => setTermPort(e.target.value)}
-                style={{ fontFamily: 'var(--font-mono)' }}
-              />
-            </div>
-
-            <div className="settings-field">
-              <label className="settings-label">
-                {t('settings.csob_tid') || 'ID terminálu (TID)'}
-              </label>
-              <input
-                type="text"
-                className="settings-input"
-                placeholder="TID terminálu"
-                value={termId}
-                onChange={e => setTermId(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Test & Reconcile Buttons */}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="nav-tab"
-              onClick={onPing}
-              disabled={pingLoading || !termIp}
-              style={{ flex: 1, minHeight: '44px', padding: '0 1rem', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '800' }}
-            >
-              <RefreshCw size={15} className={pingLoading ? 'spin-icon' : ''} />
-              <span>{pingLoading ? 'Ověřuji spojení...' : 'Test spojení (Ping)'}</span>
-            </button>
-
-            <button
-              type="button"
-              className="nav-tab"
-              onClick={onReconcile}
-              disabled={reconcileLoading || !termIp}
-              style={{ flex: 1, minHeight: '44px', padding: '0 1rem', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '800' }}
-            >
-              <RefreshCw size={15} className={reconcileLoading ? 'spin-icon' : ''} />
-              <span>{reconcileLoading ? 'Provádím uzávěrku...' : 'Denní uzávěrka terminálu'}</span>
-            </button>
-          </div>
-
-          {pingResult && (
-            <div style={{
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.85rem',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              background: pingResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-              color: pingResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-              border: `1px solid ${pingResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-            }}>
-              {pingResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
-              <span>{pingResult.message || (pingResult.success ? 'Spojení s terminálem ČSOB je aktivní a funkční' : 'Terminál neodpovídá na zadané IP adrese')}</span>
-            </div>
-          )}
-
-          {reconcileResult && (
-            <div style={{
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.85rem',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              background: reconcileResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-              color: reconcileResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-              border: `1px solid ${reconcileResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-            }}>
-              {reconcileResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
-              <span>{reconcileResult.message || (reconcileResult.success ? 'Denní finanční uzávěrka terminálu byla úspěšně provedena' : 'Chyba při provádění uzávěrky')}</span>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Save Button */}
       <button
         type="button"
         className="pay-btn pay-btn-cash"
         onClick={onSaveTerminal}
-        style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+        style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}
       >
         <Save size={18} />
         <span>{termSaveSuccess ? 'Uloženo!' : 'Uložit nastavení terminálu'}</span>
       </button>
+    </div>
+
+    {/* ⚙️ RIGHT COLUMN: CSOB Network Configuration or Manual Info */}
+    <div className="settings-grid-col">
+        {termEnabled ? (
+          <div className="settings-section-card">
+            <div className="settings-section-header">
+              <div>
+                <h3 className="settings-section-title">
+                  <Wifi size={19} style={{ color: 'var(--accent-emerald)' }} />
+                  <span>Síťové nastavení terminálu ČSOB</span>
+                </h3>
+                <p className="settings-section-desc">
+                  Zadejte lokální IP adresu a port terminálu přidělené vaším routerem.
+                </p>
+              </div>
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-label">
+                {t('settings.csob_ip') || 'IP adresa terminálu v síti'}
+              </label>
+              <input
+                type="text"
+                className="settings-input"
+                placeholder="např. 192.168.1.150"
+                value={termIp}
+                onChange={e => setTermIp(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-form-grid">
+              <div className="settings-field">
+                <label className="settings-label">
+                  {t('settings.csob_port') || 'Komunikační port'}
+                </label>
+                <input
+                  type="text"
+                  className="settings-input"
+                  placeholder="8888"
+                  value={termPort}
+                  onChange={e => setTermPort(e.target.value)}
+                />
+              </div>
+
+              <div className="settings-field">
+                <label className="settings-label">
+                  {t('settings.csob_tid') || 'ID Terminálu (TID)'}
+                </label>
+                <input
+                  type="text"
+                  className="settings-input"
+                  placeholder="např. 12345678"
+                  value={termId}
+                  onChange={e => setTermId(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Test Connection and Reconcile actions */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="key-btn"
+                onClick={onPing}
+                disabled={pingLoading}
+                style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+              >
+                <RefreshCw size={15} className={pingLoading ? 'spin-icon' : ''} />
+                <span>{pingLoading ? 'Testuji...' : 'Otestovat spojení (Ping)'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="key-btn"
+                onClick={onReconcile}
+                disabled={reconcileLoading}
+                style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+              >
+                <RefreshCw size={15} className={reconcileLoading ? 'spin-icon' : ''} />
+                <span>{reconcileLoading ? 'Uzavírám...' : 'Denní uzávěrka terminálu'}</span>
+              </button>
+            </div>
+
+            {/* Ping Result Banner */}
+            {pingResult && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '1rem',
+                background: pingResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                color: pingResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                border: `1px solid ${pingResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+              }}>
+                {pingResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                <span>{pingResult.message || (pingResult.success ? 'Terminál je dostupný na síti' : 'Terminál neodpovídá na zadané adrese')}</span>
+              </div>
+            )}
+
+            {/* Reconcile Result Banner */}
+            {reconcileResult && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '0.5rem',
+                background: reconcileResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                color: reconcileResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                border: `1px solid ${reconcileResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+              }}>
+                {reconcileResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                <span>{reconcileResult.message || (reconcileResult.success ? 'Denní finanční uzávěrka terminálu byla úspěšně provedena' : 'Chyba při provádění uzávěrky')}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="settings-section-card">
+            <div className="settings-section-header">
+              <div>
+                <h3 className="settings-section-title">
+                  <Smartphone size={19} style={{ color: 'var(--accent-blue)' }} />
+                  <span>Jak funguje ruční režim</span>
+                </h3>
+                <p className="settings-section-desc">
+                  Jednoduché a bezchybné řešení bez nutnosti síťového nastavování.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>1</div>
+                <div>Zákazník zvolí platbu kartou. Pokladna na obrazovce zobrazí přesnou částku k úhradě.</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>2</div>
+                <div>Obsluha zadá tuto částku do libovolného přenosného terminálu (ČSOB, SumUp, myPOS) a přiloží kartu.</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>3</div>
+                <div>Po úspěšném pípnutí terminálu klikne obsluha na pokladně na <strong>Dokončit platbu</strong>.</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -43,9 +43,11 @@ export default function PrinterSection({
   const currentDev = printerDevices.find(d => d.address === config.printerAddress || d.id === config.printerAddress);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 🖨️ Card 1: Připojené tiskové zařízení */}
-      <div className="settings-section-card">
+    <div className="settings-grid-layout">
+      {/* 🖨️ LEFT COLUMN: Printer Device Selection */}
+      <div className="settings-grid-col">
+        {/* 🖨️ Card 1: Připojené tiskové zařízení */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -100,9 +102,12 @@ export default function PrinterSection({
           )}
         </div>
       </div>
+      </div>
 
-      {/* 📄 Card 2: Formátování a parametry tisku */}
-      <div className="settings-section-card">
+      {/* 📄 RIGHT COLUMN: Receipt Parameters & Drawer Test */}
+      <div className="settings-grid-col">
+        {/* 📄 Card 2: Formátování a parametry tisku */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -229,6 +234,7 @@ export default function PrinterSection({
             <span>{drawerMessage}</span>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -7,7 +7,8 @@ import {
   CreditCard,
   Shield,
   HardDrive,
-  Check
+  Check,
+  Activity
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -29,6 +30,7 @@ import PrinterSection from './settings/PrinterSection.jsx';
 import TerminalSection from './settings/TerminalSection.jsx';
 import SecuritySection from './settings/SecuritySection.jsx';
 import BackupSection from './settings/BackupSection.jsx';
+import DiagnosticsSection from './settings/DiagnosticsSection.jsx';
 
 export default function SettingsView({
   storeConfig,
@@ -282,6 +284,7 @@ export default function SettingsView({
     { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: 'Platební terminál', subtitle: 'ČSOB terminál a ruční režim' },
     { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: 'Zabezpečení a PIN kód', subtitle: 'Správce, PIN kód a zamykání' },
     { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: 'Zálohování a systémová správa', subtitle: 'Export/import dat, aktualizace a EET' },
+    { id: 'diagnostics', icon: Activity, title: t('settings.tab_diagnostics') || 'Náhled & Diagnostika', heading: 'Živý náhled účtenky a diagnostika', subtitle: 'Reálná účtenka, kontrola periferií a tržba' },
   ];
 
   const currentTabObj = SUBTABS.find(t => t.id === activeSubTab) || SUBTABS[0];
@@ -451,6 +454,15 @@ export default function SettingsView({
               updateData={updateData}
               updateLoading={updateLoading}
               onCheckUpdate={handleCheckUpdate}
+            />
+          )}
+
+          {activeSubTab === 'diagnostics' && (
+            <DiagnosticsSection
+              config={config}
+              printerDevices={printerDevices}
+              scanningPrinters={scanningPrinters}
+              onScanPrinters={handleScanPrinters}
             />
           )}
         </div>

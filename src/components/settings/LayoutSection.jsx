@@ -23,8 +23,10 @@ export default function LayoutSection({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 🎛️ Card 1: Product Grid Layout Settings */}
+    <div className="settings-grid-layout">
+      {/* 🎛️ LEFT COLUMN: Preset Buttons & Catalog */}
+      <div className="settings-grid-col">
+        {/* 🎛️ Card 1: Product Grid Layout Settings */}
       <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
@@ -185,9 +187,12 @@ export default function LayoutSection({
           <ArrowRight size={16} />
         </button>
       </div>
+      </div>
 
-      {/* 📐 Card 3: Register Ergonomics & Layout */}
-      <div className="settings-section-card">
+      {/* 📐 RIGHT COLUMN: Register Ergonomics & Customer Display */}
+      <div className="settings-grid-col">
+        {/* 📐 Card 3: Register Ergonomics & Layout */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -297,6 +302,7 @@ export default function LayoutSection({
             <span className="settings-switch-slider" />
           </label>
         </div>
+      </div>
       </div>
     </div>
   );

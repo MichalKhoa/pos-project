@@ -410,6 +410,216 @@
 }
 
 /* --------------------------------------------------------------------------
+   Standardized 2-Column Responsive Grid Layout
+   -------------------------------------------------------------------------- */
+.settings-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1350px;
+  box-sizing: border-box;
+  align-items: start;
+}
+
+.settings-grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.settings-grid-full {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .settings-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Thermal Receipt Paper Live Preview
+   -------------------------------------------------------------------------- */
+.thermal-receipt-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  gap: 1.25rem;
+}
+
+.thermal-receipt-paper {
+  width: 100%;
+  max-width: 330px;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 4px;
+  padding: 1.25rem 1.15rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+  box-sizing: border-box;
+  position: relative;
+  user-select: none;
+}
+
+.thermal-receipt-header {
+  text-align: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed #9ca3af;
+}
+
+.thermal-receipt-store-name {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #000000;
+}
+
+.thermal-receipt-divider {
+  border-top: 1px dashed #9ca3af;
+  margin: 0.5rem 0;
+}
+
+.thermal-receipt-double-divider {
+  border-top: 2px solid #111827;
+  margin: 0.5rem 0;
+}
+
+.thermal-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.thermal-receipt-total {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #000000;
+}
+
+.thermal-receipt-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0.75rem 0;
+  gap: 0.35rem;
+}
+
+.thermal-receipt-footer {
+  text-align: center;
+  font-size: 0.76rem;
+  margin-top: 0.65rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #9ca3af;
+  color: #4b5563;
+}
+
+/* --------------------------------------------------------------------------
+   Diagnostics Status Items
+   -------------------------------------------------------------------------- */
+.diag-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.diag-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.95rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.diag-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.diag-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg-main);
+  color: var(--text-secondary);
+}
+
+.diag-item-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.diag-item-label {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diag-item-detail {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.diag-pill-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--accent-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.diag-pill-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--accent-amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.diag-pill-neutral {
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* --------------------------------------------------------------------------
    Responsive Layout on Mobile/Narrow Screens
    -------------------------------------------------------------------------- */
 @media (max-width: 860px) {

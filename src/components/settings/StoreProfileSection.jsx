@@ -23,8 +23,10 @@ export default function StoreProfileSection({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 🏢 Card 1: Základní identifikační údaje */}
+    <div className="settings-grid-layout">
+      {/* 🏢 LEFT COLUMN: Store Identity & Address */}
+      <div className="settings-grid-col">
+        {/* 🏢 Card 1: Základní identifikační údaje */}
       <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
@@ -127,9 +129,12 @@ export default function StoreProfileSection({
           </div>
         </div>
       </div>
+      </div>
 
-      {/* 💰 Card 3: Finance a Daně */}
-      <div className="settings-section-card">
+      {/* 💰 RIGHT COLUMN: Finance, VAT & Language */}
+      <div className="settings-grid-col">
+        {/* 💰 Card 3: Finance a Daně */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -215,6 +220,7 @@ export default function StoreProfileSection({
             }
           }}
         />
+      </div>
       </div>
     </div>
   );

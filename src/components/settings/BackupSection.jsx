@@ -28,9 +28,11 @@ export default function BackupSection({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 💾 Card 1: Zálohování a obnova dat */}
-      <div className="settings-section-card">
+    <div className="settings-grid-layout">
+      {/* 💾 LEFT COLUMN: Backup & Restore */}
+      <div className="settings-grid-col">
+        {/* 💾 Card 1: Zálohování a obnova dat */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -113,9 +115,12 @@ export default function BackupSection({
           </div>
         </div>
       </div>
+      </div>
 
-      {/* 🔄 Card 2: Aktualizace systému */}
-      <div className="settings-section-card">
+      {/* 🔄 RIGHT COLUMN: System Updates & EET 2.0 */}
+      <div className="settings-grid-col">
+        {/* 🔄 Card 2: Aktualizace systému */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -180,6 +185,7 @@ export default function BackupSection({
             <span>EET je vypnuté. Pokladna funguje v plném rychlém offline režimu bez generování EET podpisů.</span>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

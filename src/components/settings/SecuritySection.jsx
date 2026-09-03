@@ -20,8 +20,10 @@ export default function SecuritySection({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* 🛡️ Card 1: Režim správce (Admin Mode) */}
+    <div className="settings-grid-layout">
+      {/* 🛡️ LEFT COLUMN: Admin Mode & Admin PIN */}
+      <div className="settings-grid-col">
+        {/* 🛡️ Card 1: Režim správce (Admin Mode) */}
       <div className="settings-section-card" style={{ background: isAdminMode ? 'rgba(245, 158, 11, 0.05)' : 'var(--bg-main)', borderColor: isAdminMode ? 'var(--accent-amber)' : 'var(--border-color)' }}>
         <div className="settings-section-header">
           <div>
@@ -115,9 +117,12 @@ export default function SecuritySection({
           </button>
         </div>
       </div>
+      </div>
 
-      {/* 🔒 Card 3: PIN Pokladny & Automatické Zamykání */}
-      <div className="settings-section-card">
+      {/* 🔒 RIGHT COLUMN: Cashier PIN & Inactivity Auto-Lock */}
+      <div className="settings-grid-col">
+        {/* 🔒 Card 3: PIN Pokladny & Automatické Zamykání */}
+        <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
@@ -162,6 +167,7 @@ export default function SecuritySection({
             </select>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
