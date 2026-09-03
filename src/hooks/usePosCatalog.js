@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS } from '../data/initialData';
+import { getStorageItem, setStorageItem } from '../utils/storage';
 import {
   fetchCategoriesBackend,
   saveCategoryBackend,
@@ -24,7 +25,7 @@ export const sanitizePresets = (list) => {
 export function usePosCatalog() {
   const [categories, setCategories] = useState(() => {
     try {
-      const saved = localStorage.getItem('himmel_pos_categories');
+      const saved = getStorageItem('categories');
       const parsed = saved ? JSON.parse(saved) : null;
       return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_CATEGORIES;
     } catch {
@@ -34,7 +35,7 @@ export function usePosCatalog() {
 
   const [presets, setPresets] = useState(() => {
     try {
-      const saved = localStorage.getItem('himmel_pos_presets');
+      const saved = getStorageItem('presets');
       const parsed = saved ? JSON.parse(saved) : null;
       const initial = Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRESETS;
       return sanitizePresets(initial);
@@ -45,11 +46,11 @@ export function usePosCatalog() {
 
   // Sync to LocalStorage (offline fallback)
   useEffect(() => {
-    localStorage.setItem('himmel_pos_categories', JSON.stringify(categories));
+    setStorageItem('categories', categories);
   }, [categories]);
 
   useEffect(() => {
-    localStorage.setItem('himmel_pos_presets', JSON.stringify(presets));
+    setStorageItem('presets', presets);
   }, [presets]);
 
   // Load from backend on mount and handle storage/focus sync
@@ -69,9 +70,9 @@ export function usePosCatalog() {
       if (!e.key || !e.newValue) return;
       try {
         const data = JSON.parse(e.newValue);
-        if (e.key === 'himmel_pos_categories' && Array.isArray(data)) {
+        if ((e.key === 'voltflow_pos_categories' || e.key === 'himmel_pos_categories') && Array.isArray(data)) {
           setCategories(data);
-        } else if (e.key === 'himmel_pos_presets' && Array.isArray(data)) {
+        } else if ((e.key === 'voltflow_pos_presets' || e.key === 'himmel_pos_presets') && Array.isArray(data)) {
           setPresets(sanitizePresets(data));
         }
       } catch (err) {
@@ -130,11 +131,7 @@ export function usePosCatalog() {
 
   const handleReorderCategories = useCallback(async (reordered) => {
     setCategories(reordered);
-    try {
-      localStorage.setItem('himmel_pos_categories', JSON.stringify(reordered));
-    } catch {
-      // ignore
-    }
+    setStorageItem('categories', reordered);
     await reorderCategoriesBackend(reordered);
   }, []);
 

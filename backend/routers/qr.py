@@ -46,7 +46,7 @@ def generate_spd_qr(
     vs: str = Query("", description="Variable symbol / receipt number"),
     ks: str = Query("0008", description="Constant symbol (e.g. 0008 for retail)"),
     ss: str = Query("", description="Specific symbol"),
-    msg: str = Query("Platba Himmel POS", description="Payment message"),
+    msg: str = Query("Platba VoltFlow POS", description="Payment message"),
     recipient: str = Query("", description="Recipient name"),
     db: Session = Depends(get_db)
 ):
@@ -59,7 +59,7 @@ def generate_spd_qr(
     target_vs = vs if isinstance(vs, str) else ""
     target_ks = ks if isinstance(ks, str) else "0008"
     target_ss = ss if isinstance(ss, str) else ""
-    target_msg = msg if isinstance(msg, str) else "Platba Himmel POS"
+    target_msg = msg if isinstance(msg, str) else "Platba VoltFlow POS"
     target_recipient = recipient if isinstance(recipient, str) else ""
 
     if not target_iban or target_iban.startswith("CZ000000"):

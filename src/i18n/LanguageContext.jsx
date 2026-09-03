@@ -1,20 +1,21 @@
-/* eslint-disable react/only-export-components */
+/* eslint-disable react/only-export-components, react-refresh/only-export-components */
 import React, { createContext, useContext, useState } from 'react';
 import { translations } from './translations';
 import { LANGUAGES } from './languages';
+import { getStorageItem, setStorageItem } from '../utils/storage';
 export { LANGUAGES };
 
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(() => {
-    return localStorage.getItem('himmel_pos_lang') || 'cs';
+    return getStorageItem('lang') || 'cs';
   });
 
   const setLanguage = (lang) => {
     if (translations[lang]) {
       setLanguageState(lang);
-      localStorage.setItem('himmel_pos_lang', lang);
+      setStorageItem('lang', lang);
     }
   };
 

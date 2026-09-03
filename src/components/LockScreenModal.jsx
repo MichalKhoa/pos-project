@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, KeyRound, HelpCircle, RefreshCw } from 'lucide-react';
 import { verifyPinBackend, verifyPukBackend } from '../api/posApi';
-import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
+import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
 export default function LockScreenModal({ storeConfig, onUnlock }) {
   const [enteredPin, setEnteredPin] = useState('');
@@ -176,9 +176,9 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
       >
         {/* Header Icon & Title */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <img src={himmelLogo} alt="Himmel POS" style={{ width: '48px', height: '48px', margin: '0 auto 0.75rem auto', display: 'block' }} />
+          <img src={voltflowLogo} alt="VoltFlow POS" style={{ width: '48px', height: '48px', margin: '0 auto 0.75rem auto', display: 'block' }} />
           <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-            {storeConfig?.storeName || 'Himmel POS'}
+            {storeConfig?.storeName || 'VoltFlow POS'}
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
             <Lock size={14} style={{ color: 'var(--accent-amber)' }} />
@@ -335,7 +335,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
 
             <input
               type="text"
-              placeholder="HIMMEL-12345678-MASTER"
+              placeholder="VOLTFLOW-12345678-MASTER"
               value={pukValue}
               onChange={e => setPukValue(e.target.value)}
               style={{

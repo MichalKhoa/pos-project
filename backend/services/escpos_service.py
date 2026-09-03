@@ -106,7 +106,7 @@ class ESCPOSPrinterService:
             if printer:
                 try:
                     if hasattr(printer, 'open'):
-                        printer.open(f"Himmel_POS_Receipt_{sale_data.get('receiptNumber')}")
+                        printer.open(f"VoltFlow_POS_Receipt_{sale_data.get('receiptNumber')}")
                 except Exception as open_err:
                     logger.warning(f"Failed to open printer device ({open_err}), falling back to simulation.")
                     printer = None
@@ -127,7 +127,7 @@ class ESCPOSPrinterService:
 
                     # Store Header
                     printer.set(align='center', font='a', width=2, height=2)
-                    printer.text(f"{store_config.get('storeName', 'Himmel POS')}\n")
+                    printer.text(f"{store_config.get('storeName', 'VoltFlow POS')}\n")
                     printer.set(align='center', font='a', width=1, height=1)
                     if store_config.get('street'):
                         printer.text(f"{store_config.get('street')}\n")
@@ -355,7 +355,7 @@ class ESCPOSPrinterService:
             if printer:
                 try:
                     if hasattr(printer, 'open'):
-                        printer.open("Himmel_POS_Drawer_Kick")
+                        printer.open("VoltFlow_POS_Drawer_Kick")
                     # Try kicking pin 2 and pin 5 to cover all cash drawer wiring types
                     try:
                         printer.cashdraw(2)

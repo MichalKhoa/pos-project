@@ -25,7 +25,7 @@ Security practices, authentication workflows, cryptographic hashing, and PIN rec
 ## 🔑 PIN Recovery Mechanisms (PUK & Local Script)
 1. **Master Recovery Code (PUK):**
    - In-app unlock on lock screen via `POST /api/v1/config/verify-puk`.
-   - Format: `HIMMEL-<ICO>-MASTER` or universal fallback `HIMMEL-RECOVERY-99`.
+   - Format: `VOLTFLOW-<ICO>-MASTER` or universal fallback `VOLTFLOW-RECOVERY-99` (with backward compatibility for `HIMMEL-*`).
    - Resets stored PIN to default `1234` and unlocks the screen.
 2. **Local Terminal Script:**
    - `Himmel_POS_Reset_PIN.bat` directly executes an SQLite update in `pos_store.db` to set PIN hash to `1234`.

@@ -98,7 +98,7 @@ export function exportSalesToCSV(salesHistory, periodLabel = 'vsechna_data') {
   const dateToday = new Date().toISOString().slice(0, 10);
   
   link.setAttribute('href', url);
-  link.setAttribute('download', `himmel_pos_sales_${sanitizedLabel}_${dateToday}.csv`);
+  link.setAttribute('download', `voltflow_pos_sales_${sanitizedLabel}_${dateToday}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

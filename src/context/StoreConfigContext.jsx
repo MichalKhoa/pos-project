@@ -1,14 +1,15 @@
-/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react/only-export-components, react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_STORE_CONFIG } from '../data/initialData';
 import { fetchStoreConfigBackend, saveStoreConfigBackend } from '../api/posApi';
+import { getStorageItem, setStorageItem } from '../utils/storage';
 
 const StoreConfigContext = createContext(null);
 
 export function StoreConfigProvider({ children }) {
   const [storeConfig, setStoreConfig] = useState(() => {
     try {
-      const saved = localStorage.getItem('himmel_pos_config');
+      const saved = getStorageItem('config');
       if (saved) return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved) };
     } catch {
       // ignore parse error
@@ -25,7 +26,7 @@ export function StoreConfigProvider({ children }) {
       .then((cfg) => {
         if (isMounted && cfg && typeof cfg === 'object') {
           setStoreConfig((prev) => ({ ...prev, ...cfg }));
-          localStorage.setItem('himmel_pos_config', JSON.stringify(cfg));
+          setStorageItem('config', cfg);
         }
       })
       .catch(() => {
@@ -40,7 +41,7 @@ export function StoreConfigProvider({ children }) {
     const merged = { ...storeConfig, ...newConfig };
     setStoreConfig(merged);
     try {
-      localStorage.setItem('himmel_pos_config', JSON.stringify(merged));
+      setStorageItem('config', merged);
       await saveStoreConfigBackend(merged);
     } catch (e) {
       console.warn('Failed to save store configuration to backend:', e);

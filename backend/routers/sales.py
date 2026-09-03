@@ -262,7 +262,7 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     # Retrieve store config
     config = db.query(StoreConfigModel).first()
     store_dict = {
-        "storeName": config.store_name if config else "Himmel Home s.r.o.",
+        "storeName": config.store_name if config else "VoltFlow Store s.r.o.",
         "eic_popl": config.dic if config else "CZ00000019",
         "dic": config.dic if config else "CZ00000019",
         "id_jednotky": config.id_provozovny if config else "11",

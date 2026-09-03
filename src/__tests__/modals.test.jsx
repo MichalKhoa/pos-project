@@ -160,7 +160,7 @@ describe('Modals & Dialog Component Tests', () => {
       changeDue: 150,
       timestamp: new Date().toISOString(),
       items: [
-        { id: '1', name: 'Tričko Himmel', price: 350, quantity: 1, vat: 21 }
+        { id: '1', name: 'Tričko VoltFlow', price: 350, quantity: 1, vat: 21 }
       ],
       taxSummary: {
         '21': { rate: 21, net: 289.26, tax: 60.74, gross: 350 }
@@ -181,7 +181,7 @@ describe('Modals & Dialog Component Tests', () => {
 
       // Verify receipt title and number
       expect(screen.getByText(/DAŇOVÝ DOKLAD č\. 2026-0001/i)).toBeInTheDocument();
-      expect(screen.getByText(/Tričko Himmel/i)).toBeInTheDocument();
+      expect(screen.getByText(/Tričko VoltFlow/i)).toBeInTheDocument();
       expect(screen.getAllByText(/350/i).length).toBeGreaterThanOrEqual(1);
 
       // Verify print and new sale buttons

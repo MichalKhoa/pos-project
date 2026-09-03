@@ -47,7 +47,7 @@ export default class ErrorBoundary extends React.Component {
             width: '100%'
           }}>
             <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1rem', color: isChunkError ? '#38bdf8' : '#f87171' }}>
-              {isChunkError ? '🚀 Nová verze pokladny' : '⚠️ Chyba aplikace Himmel POS'}
+              {isChunkError ? '🚀 Nová verze pokladny' : '⚠️ Chyba aplikace VoltFlow POS'}
             </h1>
             <p style={{ color: '#94a3b8', marginBottom: '1.5rem', lineHeight: '1.5' }}>
               {isChunkError

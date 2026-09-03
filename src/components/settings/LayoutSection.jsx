@@ -95,6 +95,7 @@ export default function LayoutSection({
                   setConfig(updated);
                   onSaveStoreConfig(updated);
                   try {
+                    localStorage.setItem('voltflow_pos_preset_density', sz.id);
                     localStorage.setItem('himmel_pos_preset_density', sz.id);
                   } catch (e) {
                     console.warn(e);

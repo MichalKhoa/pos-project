@@ -205,7 +205,7 @@ export default function ReceiptPreviewPaper({
           {storeConfig?.receiptFooter || 'Děkujeme za Váš nákup a těšíme se na Vaši příští návštěvu!'}
         </div>
         <div style={{ fontSize: '0.62rem', color: '#777', marginTop: '0.3rem' }}>
-          Vystaveno v pokladním systému Himmel POS
+          Vystaveno v pokladním systému VoltFlow POS
         </div>
       </div>
     </div>

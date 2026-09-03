@@ -12,7 +12,7 @@ export default function QrPaymentPanel({
   const rawIban = storeConfig?.bankAccountIban || "CZ6508000000001234567890";
   const merchantIban = rawIban.replace(/\s/g, '').toUpperCase();
   const varSymbol = useMemo(() => Date.now().toString().slice(-8), []);
-  const spdString = `SPD*1.0*ACC:${merchantIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba Himmel POS`;
+  const spdString = `SPD*1.0*ACC:${merchantIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba VoltFlow POS`;
   const formattedIban = merchantIban.match(/.{1,4}/g)?.join(' ') || merchantIban;
   const qrImageUrl = useMemo(() => generateQrDataUrl(spdString, 280), [spdString]);
 
@@ -112,7 +112,7 @@ export default function QrPaymentPanel({
               {t('payment.payment_message')}:
             </span>
             <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-              Platba Himmel POS
+              Platba VoltFlow POS
             </span>
           </div>
 

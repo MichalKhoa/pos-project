@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createQrMatrix, generateQrSvg, generateQrDataUrl } from '../qrCode.js';
 
 describe('Offline Pure-JS QR Code Generator (qrCode.js)', () => {
-  const sampleSpd = 'SPD*1.0*ACC:CZ6508000000001234567890*AM:450.00*CC:CZK*X-VS:87654321*MSG:Platba Himmel POS';
+  const sampleSpd = 'SPD*1.0*ACC:CZ6508000000001234567890*AM:450.00*CC:CZK*X-VS:87654321*MSG:Platba VoltFlow POS';
 
   it('generates a square binary matrix with finder patterns', () => {
     const matrix = createQrMatrix(sampleSpd);

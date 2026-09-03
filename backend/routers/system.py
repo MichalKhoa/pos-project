@@ -122,16 +122,16 @@ def shutdown_system(request: Request):
     def terminate():
         try:
             if sys.platform == "win32":
-                # Stop NSSM service cleanly if installed & active
+                # Stop Windows service cleanly if installed & active
+                subprocess.run(["net", "stop", "VoltFlowPOSBackend"], shell=False, capture_output=True)
                 subprocess.run(["net", "stop", "HimmelPOSBackend"], shell=False, capture_output=True)
 
-                # Target POS launcher terminal windows and app instances
-                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Web*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Launcher*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Kiosk Launcher*"], shell=False, capture_output=True)
+                # Target POS launcher terminal windows and app instances (both VoltFlow and legacy Himmel)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq VoltFlow POS*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq *VoltFlow*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq *Himmel*"], shell=False, capture_output=True)
                 subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq http://localhost:5173*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq Himmel POS App*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS Backend*"], shell=False, capture_output=True)
             else:
                 subprocess.run(["pkill", "-f", "vite"], shell=False, capture_output=True)
                 subprocess.run(["pkill", "-f", "main.py"], shell=False, capture_output=True)

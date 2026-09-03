@@ -1,6 +1,6 @@
-# Himmel POS - Core Overview
+# VoltFlow POS - Core Overview
 
-Top-level entry point for `pos-eet-himmel` project structure and system capabilities.
+Top-level entry point for `voltflow-pos` (formerly `pos-eet-himmel`) project structure and system capabilities.
 
 ## Domain Memories
 - System architecture and REST/WS communication protocols: `mem:architecture`

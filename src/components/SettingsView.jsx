@@ -221,8 +221,8 @@ export default function SettingsView({
   };
 
   const handleExportJSON = () => {
-    const categories = JSON.parse(localStorage.getItem('himmel_pos_categories') || '[]');
-    const salesHistory = JSON.parse(localStorage.getItem('himmel_pos_sales') || '[]');
+    const categories = JSON.parse(localStorage.getItem('voltflow_pos_categories') || localStorage.getItem('himmel_pos_categories') || '[]');
+    const salesHistory = JSON.parse(localStorage.getItem('voltflow_pos_sales') || localStorage.getItem('himmel_pos_sales') || '[]');
 
     const backupData = {
       storeConfig: config,
@@ -235,7 +235,7 @@ export default function SettingsView({
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `himmel_pos_backup_${new Date().toISOString().slice(0, 10)}.json`);
+    downloadAnchor.setAttribute("download", `voltflow_pos_backup_${new Date().toISOString().slice(0, 10)}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();

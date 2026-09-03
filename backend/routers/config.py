@@ -232,11 +232,16 @@ def verify_puk(data: PukVerifyRequest, db: Session = Depends(get_db)):
     # Fixed Master PUK / Recovery Key derived from ICO or default
     puk_clean = data.puk.strip().upper()
 
-    # PUK Format: HIMMEL-<ICO>-MASTER or fallback HIMMEL-RECOVERY-99
-    expected_puk_1 = f"HIMMEL-{(config.ico if config and config.ico else '12345678')}-MASTER"
-    expected_puk_2 = "HIMMEL-RECOVERY-99"
+    # PUK Format: VOLTFLOW-<ICO>-MASTER or fallback VOLTFLOW-RECOVERY-99 (with legacy HIMMEL-* support)
+    ico_val = config.ico if config and config.ico else '12345678'
+    valid_puks = {
+        f"VOLTFLOW-{ico_val}-MASTER",
+        "VOLTFLOW-RECOVERY-99",
+        f"HIMMEL-{ico_val}-MASTER",
+        "HIMMEL-RECOVERY-99"
+    }
 
-    if puk_clean in (expected_puk_1, expected_puk_2):
+    if puk_clean in valid_puks:
         if config:
             config.cashier_pin = _hash_pin("1234")
             db.commit()

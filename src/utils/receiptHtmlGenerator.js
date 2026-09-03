@@ -312,7 +312,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
           <div class="center" style="font-size: ${is58mm ? '8px' : '9.5px'}; margin-top: 6px; padding-bottom: 6px;">
             <div style="font-size: 8px; color: #666; margin-bottom: 2px;">★ ★ ★ ★ ★</div>
             <div style="font-weight: bold; font-style: italic;">${receiptFooter}</div>
-            <div style="font-size: 7.5px; color: #555; margin-top: 3px;">Vystaveno v pokladním systému Himmel POS</div>
+            <div style="font-size: 7.5px; color: #555; margin-top: 3px;">Vystaveno v pokladním systému VoltFlow POS</div>
           </div>
         </div>
         <script>

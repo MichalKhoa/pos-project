@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3 } from 'lucide-react';
-import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
+import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
 import CashDrawerIcon from './CashDrawerIcon';
@@ -76,10 +76,10 @@ export default function Navbar({
     <header className="navbar">
       <div className="brand-section">
         <div className="brand-icon" style={{ overflow: 'hidden', padding: '0', border: 'none', background: 'transparent', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src={himmelLogo} alt="Himmel POS Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))' }} />
+          <img src={voltflowLogo} alt="VoltFlow POS Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))' }} />
         </div>
         <div>
-          <div className="brand-title">{storeConfig?.storeName || 'Himmel POS'}</div>
+          <div className="brand-title">{storeConfig?.storeName || 'VoltFlow POS'}</div>
           <div className="brand-subtitle">{storeConfig?.registerNo || 'Pokladna #01'}</div>
         </div>
       </div>

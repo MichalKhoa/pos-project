@@ -128,14 +128,14 @@ export const DEFAULT_PRESETS = [
 ];
 
 export const DEFAULT_STORE_CONFIG = {
-  storeName: 'Himmel Home s.r.o.',
+  storeName: 'VoltFlow Store s.r.o.',
   street: 'Václavské náměstí 15',
   city: '110 00 Praha 1',
   ico: '12345678',
   dic: 'CZ12345678',
   registerNo: 'Pokladna #01',
   defaultVat: 21,
-  receiptFooter: 'Děkujeme za váš nákup! www.himmelhome.cz',
+  receiptFooter: 'Děkujeme za váš nákup!',
   currencySymbol: 'Kč',
   printerPaperWidth: '80', // '58' or '80' mm thermal receipt printer
   autoPrintReceipt: false, // Auto-print receipt on finished transaction

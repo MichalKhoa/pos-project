@@ -94,7 +94,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Graceful shutdown sequence
-    logger.info("Himmel POS Backend shutting down gracefully...")
+    logger.info("VoltFlow POS Backend shutting down gracefully...")
     _shutdown_event.set()
     try:
         run_wal_checkpoint()
@@ -104,7 +104,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Himmel POS Backend API",
+    title="VoltFlow POS Backend API",
     description="Python FastAPI backend for POS register sales database, ESC/POS hardware printing, customer LCD display, and Czech EET 2.0 / QR payment verification.",
     version="1.0.0",
     lifespan=lifespan
@@ -159,7 +159,7 @@ app.mount("/assets", StaticFiles(directory=assets_dir), name="static_assets")
 def status_check():
     return {
         "status": "ONLINE",
-        "app": "Himmel POS Python FastAPI Backend",
+        "app": "VoltFlow POS Python FastAPI Backend",
         "docs_url": "/docs",
         "version": "1.0.0"
     }
@@ -186,7 +186,7 @@ async def serve_spa(full_path: str):
 
     return {
         "status": "ONLINE",
-        "app": "Himmel POS Python FastAPI Backend",
+        "app": "VoltFlow POS Python FastAPI Backend",
         "docs_url": "/docs",
         "version": "1.0.0",
         "notice": "Frontend build (dist/index.html) missing. Run 'npm run build' to generate static UI."

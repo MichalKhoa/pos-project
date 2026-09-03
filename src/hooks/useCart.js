@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { getStorageItem, setStorageItem } from '../utils/storage';
 
 export function useCart() {
   const [cartItems, setCartItems] = useState([]);
@@ -8,7 +9,7 @@ export function useCart() {
   // Parked Carts state (temporary cart storage for holding transactions)
   const [parkedCarts, setParkedCarts] = useState(() => {
     try {
-      const saved = localStorage.getItem('himmel_pos_parked_carts');
+      const saved = getStorageItem('parked_carts');
       const parsed = saved ? JSON.parse(saved) : null;
       return Array.isArray(parsed) ? parsed : [];
     } catch {
@@ -18,7 +19,7 @@ export function useCart() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('himmel_pos_parked_carts', JSON.stringify(parkedCarts));
+      setStorageItem('parked_carts', parkedCarts);
     } catch (e) {
       console.warn('Failed to save parked carts:', e);
     }

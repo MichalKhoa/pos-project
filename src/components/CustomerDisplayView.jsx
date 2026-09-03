@@ -173,7 +173,7 @@ export default function CustomerDisplayView({ storeConfig }) {
     }
   }, [displayState.type]);
 
-  const storeName = storeConfig?.store_name || storeConfig?.storeName || 'Himmel POS Store';
+  const storeName = storeConfig?.store_name || storeConfig?.storeName || 'VoltFlow POS Store';
   const displayTitle = storeConfig?.customerDisplayTitle || storeConfig?.customer_display_title || 'Vítejte u nás';
   const cartItems = Array.isArray(displayState.cart) ? displayState.cart : [];
   const itemsSum = cartItems.reduce((acc, i) => acc + ((i.price || 0) * (i.qty || 1)), 0);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, X, Check } from 'lucide-react';
 import { verifyPinBackend } from '../api/posApi';
-import himmelLogo from '../assets/himmel_logo_icon_nobg.png';
+import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
 export default function AdminPinModal({
   mode = 'VERIFY', // 'VERIFY' | 'CHANGE_PIN'
@@ -184,7 +184,7 @@ export default function AdminPinModal({
         </button>
 
         <div style={{ marginBottom: '1.25rem' }}>
-          <img src={himmelLogo} alt="Himmel POS" style={{ width: '44px', height: '44px', margin: '0 auto 0.5rem auto', display: 'block' }} />
+          <img src={voltflowLogo} alt="VoltFlow POS" style={{ width: '44px', height: '44px', margin: '0 auto 0.5rem auto', display: 'block' }} />
           <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)' }}>
             {getStepTitle()}
           </div>

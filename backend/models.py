@@ -61,7 +61,7 @@ class StoreConfigModel(Base):
     __tablename__ = "store_config"
 
     id = Column(Integer, primary_key=True, default=1)
-    store_name = Column(String, default="Himmel Home s.r.o.")
+    store_name = Column(String, default="VoltFlow Store s.r.o.")
     street = Column(String, default="Václavské náměstí 15")
     city = Column(String, default="110 00 Praha 1")
     ico = Column(String, default="12345678")

@@ -35,7 +35,7 @@ class HardwareLCDService:
         self.port = port
         self.baudrate = baudrate
 
-    def send_display_update(self, payload: Dict[str, Any], store_name: str = "Himmel POS"):
+    def send_display_update(self, payload: Dict[str, Any], store_name: str = "VoltFlow POS"):
         msg_type = payload.get("type", "CART_CLEAR")
         cart = payload.get("cart", [])
         total_amount = payload.get("totalAmount", 0.0)

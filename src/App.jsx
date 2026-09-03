@@ -12,6 +12,7 @@ import { useOfflineSync } from './hooks/useOfflineSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { soundFx } from './utils/audio';
 import { calculateCartTotals } from './utils/tax';
+import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
 import { DEFAULT_STORE_CONFIG } from './data/initialData';
 import {
   createSaleBackend,
@@ -62,7 +63,7 @@ export default function App() {
 
   const [storeConfig, setStoreConfig] = useState(() => {
     try {
-      const saved = localStorage.getItem('himmel_pos_config');
+      const saved = getStorageItem('config');
       const parsed = saved ? JSON.parse(saved) : null;
       return parsed && typeof parsed === 'object' ? parsed : DEFAULT_STORE_CONFIG;
     } catch {
@@ -78,7 +79,7 @@ export default function App() {
 
   const [salesHistory, setSalesHistory] = useState(() => {
     try {
-      const saved = localStorage.getItem('himmel_pos_sales');
+      const saved = getStorageItem('sales');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed.map(normalizeSale);
@@ -308,13 +309,13 @@ export default function App() {
     if (storeConfig) {
       const safeConfig = { ...storeConfig };
       delete safeConfig.cashierPin;
-      localStorage.setItem('himmel_pos_config', JSON.stringify(safeConfig));
+      setStorageItem('config', safeConfig);
     }
   }, [storeConfig]);
 
   // Sync salesHistory to LocalStorage
   useEffect(() => {
-    localStorage.setItem('himmel_pos_sales', JSON.stringify(salesHistory));
+    setStorageItem('sales', salesHistory);
   }, [salesHistory]);
 
   // Load store config & sales history from SQLite backend on mount
@@ -360,9 +361,9 @@ export default function App() {
       if (!e.key || !e.newValue) return;
       try {
         const data = JSON.parse(e.newValue);
-        if (e.key === 'himmel_pos_config' && typeof data === 'object') {
+        if ((e.key === 'voltflow_pos_config' || e.key === 'himmel_pos_config') && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
-        } else if (e.key === 'himmel_pos_sales' && Array.isArray(data)) {
+        } else if ((e.key === 'voltflow_pos_sales' || e.key === 'himmel_pos_sales') && Array.isArray(data)) {
           setSalesHistory(data);
         }
       } catch (err) {
@@ -560,9 +561,9 @@ export default function App() {
 
   const handleResetData = () => {
     if (window.confirm('Opravdu chcete resetovat zálohy a vrátit výchozí nastavení?')) {
-      localStorage.removeItem('himmel_pos_presets');
-      localStorage.removeItem('himmel_pos_config');
-      localStorage.removeItem('himmel_pos_sales');
+      removeStorageItem('presets');
+      removeStorageItem('config');
+      removeStorageItem('sales');
       setPresets(DEFAULT_PRESETS);
       setStoreConfig(DEFAULT_STORE_CONFIG);
       setSalesHistory([]);

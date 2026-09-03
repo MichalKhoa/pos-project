@@ -80,7 +80,7 @@ export default function BackupSection({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
           <div>
             <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-              Verze: {updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}
+              Verze: {updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}
             </div>
           </div>
 

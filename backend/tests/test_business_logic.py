@@ -151,11 +151,15 @@ class TestPinAndPukSecurityLogic(unittest.TestCase):
 
     def test_master_puk_format(self):
         ico = "12345678"
-        puk_master = f"HIMMEL-{ico}-MASTER"
-        puk_universal = "HIMMEL-RECOVERY-99"
+        puk_master_voltflow = f"VOLTFLOW-{ico}-MASTER"
+        puk_universal_voltflow = "VOLTFLOW-RECOVERY-99"
+        puk_master_himmel = f"HIMMEL-{ico}-MASTER"
+        puk_universal_himmel = "HIMMEL-RECOVERY-99"
         
-        self.assertEqual(puk_master, "HIMMEL-12345678-MASTER")
-        self.assertEqual(puk_universal, "HIMMEL-RECOVERY-99")
+        self.assertEqual(puk_master_voltflow, "VOLTFLOW-12345678-MASTER")
+        self.assertEqual(puk_universal_voltflow, "VOLTFLOW-RECOVERY-99")
+        self.assertEqual(puk_master_himmel, "HIMMEL-12345678-MASTER")
+        self.assertEqual(puk_universal_himmel, "HIMMEL-RECOVERY-99")
 
 
 class TestDefaultLanguageConfig(unittest.TestCase):

@@ -50,7 +50,7 @@ export default function QuickPresetGrid({
 
   const density = storeConfig?.presetDensity || (() => {
     try {
-      return localStorage.getItem('himmel_pos_preset_density') || 'standard';
+      return localStorage.getItem('voltflow_pos_preset_density') || localStorage.getItem('himmel_pos_preset_density') || 'standard';
     } catch {
       return 'standard';
     }
