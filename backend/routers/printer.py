@@ -61,3 +61,29 @@ def open_cash_drawer(db: Session = Depends(get_db)):
     return {"status": res.get("status", "OPENED"), "physical": res.get("physical", False), "success": True}
 
 
+class PrintDailySummaryRequest(BaseModel):
+    summaryData: dict
+    storeConfig: dict
+    openDrawer: bool = True
+
+
+@router.post("/print-daily-summary")
+def print_daily_summary(req: PrintDailySummaryRequest, db: Session = Depends(get_db)):
+    """Trigger physical ESC/POS daily shift summary print job and cash drawer release."""
+    config = db.query(StoreConfigModel).first()
+    interface = config.printer_interface if config else "USB"
+    address = config.printer_address if config else "/dev/usb/lp0"
+
+    printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
+    res = printer_service.print_daily_summary(req.summaryData, req.storeConfig, open_drawer=req.openDrawer)
+
+    if isinstance(res, dict) and not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to print daily summary slip"))
+
+    return {
+        "status": res.get("status", "PRINTED") if isinstance(res, dict) else "PRINTED",
+        "physical": res.get("physical", False) if isinstance(res, dict) else True,
+        "success": True
+    }
+
+

@@ -4,6 +4,7 @@ import subprocess
 import logging
 import threading
 import time
+from datetime import datetime
 
 logger = logging.getLogger("pos-escpos")
 
@@ -310,6 +311,152 @@ class ESCPOSPrinterService:
 
         except Exception as e:
             logger.error(f"Failed to print thermal receipt: {e}")
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
+
+    def print_daily_summary(self, summary_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
+        """
+        Prints a concise daily summary slip on thermal receipt paper
+        and optionally kicks open the cash drawer for cash counting.
+        """
+        with _hardware_printer_lock:
+            return self._do_print_daily_summary(summary_data, store_config, open_drawer)
+
+    def _do_print_daily_summary(self, summary_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_58mm = paper_width in ["58", "48"]
+        line_width = 32 if is_58mm else 48
+        separator = "=" * line_width
+        dash_line = "-" * line_width
+
+        logger.info(f"Printing daily summary slip via {self.interface_type}")
+
+        try:
+            printer = None
+            try:
+                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                    from escpos.printer import Win32Raw
+                    target_name = self.address
+                    if not target_name or target_name.startswith('/dev/'):
+                        target_name = ""
+                        try:
+                            import win32print
+                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                            if pos_printers:
+                                target_name = pos_printers[0]
+                            elif printers:
+                                target_name = printers[0]
+                        except Exception:
+                            pass
+                    printer = Win32Raw(target_name)
+                elif self.interface_type == "USB":
+                    from escpos.printer import Usb, File
+                    if os.path.exists(self.address):
+                        printer = File(self.address)
+                    else:
+                        printer = Usb(0x04b8, 0x0e15, 0)
+                elif self.interface_type == "NETWORK" and self.address:
+                    from escpos.printer import Network
+                    printer = Network(self.address, port=9100, timeout=3.0)
+                elif self.interface_type == "SERIAL" and self.address:
+                    from escpos.printer import Serial
+                    printer = Serial(self.address, baudrate=9600)
+            except Exception as conn_err:
+                logger.info(f"Physical printer offline for daily summary ({conn_err}), using simulation fallback.")
+                printer = None
+
+            if printer:
+                try:
+                    if hasattr(printer, 'open'):
+                        printer.open("VoltFlow_POS_Daily_Summary")
+                    try:
+                        if hasattr(printer, 'charcode'):
+                            printer.charcode('CP852')
+                    except Exception:
+                        pass
+
+                    # Store Header
+                    printer.set(align='center', font='a', width=1, height=1)
+                    printer.text(f"{store_config.get('storeName', 'VoltFlow POS')}\n")
+                    if store_config.get("street"):
+                        printer.text(f"{store_config.get('street')}\n")
+                    if store_config.get("city"):
+                        printer.text(f"{store_config.get('city')}\n")
+                    if store_config.get("ico"):
+                        printer.text(f"ICO: {store_config.get('ico')}\n")
+
+                    printer.text(f"{separator}\n")
+                    printer.set(align='center', bold=True)
+                    printer.text("DENNI PREHLED TRZEB / TONG KET\n")
+                    printer.set(align='center', bold=False)
+                    date_str = summary_data.get("date", datetime.now().strftime("%d.%m.%Y"))
+                    time_str = summary_data.get("time", datetime.now().strftime("%H:%M"))
+                    printer.text(f"Datum: {date_str}  Cas: {time_str}\n")
+                    printer.text(f"{separator}\n")
+
+                    # Grand Total
+                    total_rev = float(summary_data.get("totalRevenue", 0.0))
+                    printer.set(align='left', font='a', width=1, height=2)
+                    printer.text(f"CELKEM: {total_rev:,.2f} Kc\n".replace(",", " "))
+                    printer.set(align='left', font='a', width=1, height=1)
+                    printer.text(f"{dash_line}\n")
+
+                    # Cash & Card Breakdown
+                    cash_amt = float(summary_data.get("cashAmount", 0.0))
+                    card_amt = float(summary_data.get("cardAmount", 0.0))
+                    count = int(summary_data.get("salesCount", 0))
+
+                    printer.text(f"Hotovost v pokladne: {cash_amt:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Platby kartou:       {card_amt:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Pocet uctenek:       {count}\n")
+                    printer.text(f"{dash_line}\n")
+
+                    # Cash Drawer Message & Cut
+                    if open_drawer:
+                        printer.text("Zasuvka otevrena pro prepocet.\n")
+                    printer.text(f"{separator}\n\n\n")
+
+                    printer.cut()
+                    if open_drawer:
+                        try:
+                            printer.cashdraw(2)
+                        except Exception:
+                            pass
+                        try:
+                            printer.cashdraw(5)
+                        except Exception:
+                            pass
+
+                    return {"success": True, "physical": True, "status": "PRINTED"}
+                except Exception as print_err:
+                    logger.warning(f"Error during physical daily summary print: {print_err}")
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
+            # Simulation fallback
+            total_rev = float(summary_data.get("totalRevenue", 0.0))
+            cash_amt = float(summary_data.get("cashAmount", 0.0))
+            card_amt = float(summary_data.get("cardAmount", 0.0))
+            count = int(summary_data.get("salesCount", 0))
+
+            print(separator)
+            print("--- PHYSICAL ESC/POS DAILY SUMMARY SIMULATION ---")
+            print(f"Store: {store_config.get('storeName', 'VoltFlow POS')}")
+            print("DENNI PREHLED TRZEB")
+            print(f"Total: {total_rev:.2f} Kc | Cash: {cash_amt:.2f} Kc | Card: {card_amt:.2f} Kc")
+            print(f"Count: {count}")
+            if open_drawer:
+                print("--- CASH DRAWER OPEN SIGNAL SIMULATED ---")
+            print(separator)
+
+            return {"success": True, "physical": False, "status": "SIMULATED"}
+
+        except Exception as e:
+            logger.error(f"Failed to print daily summary: {e}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
 
     def open_cash_drawer(self) -> dict:

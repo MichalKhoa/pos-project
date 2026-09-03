@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3 } from 'lucide-react';
+import { ShoppingBag, History, Settings, ShieldCheck, Clock, Tag, Lock, AlertTriangle, Power, Calendar, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
@@ -15,7 +15,8 @@ export default function Navbar({
   onOpenShutdownModal,
   onOpenCalendarModal,
   onLockApp,
-  onOpenCashDrawer
+  onOpenCashDrawer,
+  onPrintDailySummary
 }) {
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -295,6 +296,23 @@ export default function Navbar({
           >
             <CashDrawerIcon size={16} color="var(--accent-emerald)" />
           </button>
+
+          {/* Print Daily Summary Slip Button */}
+          {onPrintDailySummary && (
+            <button
+              type="button"
+              className="nav-action-btn nav-badge-summary-print"
+              onClick={onPrintDailySummary}
+              title={t('nav.print_daily_summary') || 'Vytisknout denní tržbu na tiskárnu a otevřít zásuvku'}
+              style={{
+                background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(2, 132, 199, 0.25) 100%)',
+                border: '1px solid rgba(2, 132, 199, 0.4)',
+                color: '#38bdf8'
+              }}
+            >
+              <Printer size={16} />
+            </button>
+          )}
 
           {/* Streamlined Quick Lock Icon Button */}
           <button

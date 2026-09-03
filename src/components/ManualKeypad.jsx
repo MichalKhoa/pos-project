@@ -23,7 +23,8 @@ export default function ManualKeypad({
   onParkedModalOpenChange,
   hasCartItems = false,
   salesHistory = [],
-  onNavigateToHistory
+  onNavigateToHistory,
+  onPrintDailySummary
 }) {
   const { t } = useTranslation();
   const [label, setLabel] = useState('');
@@ -252,6 +253,7 @@ export default function ManualKeypad({
       <ShiftStatsWidget
         salesHistory={salesHistory}
         onNavigateToHistory={onNavigateToHistory}
+        onPrintDailySummary={onPrintDailySummary}
       />
     </div>
   );

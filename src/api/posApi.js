@@ -350,6 +350,24 @@ export async function printReceiptBackend(saleData, storeConfig) {
 }
 
 /**
+ * Send print daily summary slip request to backend hardware thermal printer service
+ */
+export async function printDailySummaryBackend(summaryData, storeConfig, openDrawer = true) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-daily-summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ summaryData, storeConfig, openDrawer })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Daily summary thermal printing failed or backend offline:', err);
+    return null;
+  }
+}
+
+/**
  * Trigger physical cash drawer release pulse via printer service
  */
 export async function openCashDrawerBackend() {
