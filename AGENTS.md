@@ -42,6 +42,7 @@ Himmel POS (`pos-eet-himmel`) is a production touchscreen Point of Sale system.
 - **Always Start with an Implementation Plan**: Before modifying code or executing multi-file tasks, you MUST first create a structured, multi-step implementation plan (`implementation_plan.md`).
 - **Phased Subtask Breakdown**: Complex tasks MUST be partitioned into sequential, numbered phases (Phase 1, Phase 2, Phase 3...) to ensure small, focused, and surgical subtasks.
 - **User Approval First**: Obtain user review and explicit approval on the implementation plan before beginning code edits.
+- **Proactive Follow-Ups & Next Plan Options**: At the conclusion of every response, task, or phase, you MUST always ask relevant follow-up questions and present clear, structured options for next plans or subsequent steps.
 
 ### Knowledge Base & Index Discipline (Serena & Codegraph)
 - **Always Update Serena Memories**: After completing architectural changes, adding new hooks/utilities, modifying database models, or updating API contracts, you MUST update the corresponding memory in `.serena/memories/` using Serena tools (`edit_memory` / `write_memory`). Never allow memories to drift or become obsolete.
