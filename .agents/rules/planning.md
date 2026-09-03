@@ -9,6 +9,7 @@ This document defines mandatory planning protocols, interactive inquiry standard
 - **Mandatory Plan**: Create `implementation_plan.md` before making multi-file modifications or executing non-trivial feature tasks.
 - **Phased Subtask Breakdown**: Complex tasks MUST be partitioned into sequential, numbered phases (Phase 1, Phase 2, Phase 3...) to keep edits surgical and verifiable.
 - **User Approval First**: Obtain explicit user approval on the implementation plan before beginning code edits.
+- **Autonomous Serena & Codegraph Operations**: Querying, reading, creating, and updating Serena memories (`.serena/memories/`) or Codegraph index (`.codegraph/`) are strictly autonomous. Do NOT ask for permission, user approval, or create blocking plans for memory/index maintenance.
 
 ---
 

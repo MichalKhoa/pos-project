@@ -36,5 +36,4 @@
 
 ## Mandatory Agent Discipline
 - **Implementation Planning First**: Always start tasks by creating a phased, multi-step implementation plan (`implementation_plan.md`) and get approval before executing code changes.
-- **Serena Memory Sync**: Always update `.serena/memories/` when models, routers, utilities, or architectural patterns change.
-- **Codegraph Sync**: Check `codegraph_explore` before modifying symbols and ensure index stays healthy.
+- **Serena Memory & Codegraph (Autonomous - No Permission Needed)**: Full autonomous authority to read, query, create, and update Serena memories (`.serena/memories/`) and Codegraph index (`.codegraph/`) at any time without asking for permission or confirmation. Never allow memories to drift.

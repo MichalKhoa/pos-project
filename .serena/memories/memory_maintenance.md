@@ -27,7 +27,8 @@ Keep guidance durable and generalizable, not task-local.
 Add or update memories only with stable, non-obvious project conventions that avoid complex rediscovery in the future.
 Do not add: quick-read facts; generic language/framework knowledge; one-off task notes; volatile line-level details; behavior likely to change soon.
 
-## Maintenance Actions
+## Maintenance Actions & Autonomous Authority
 
+- Autonomous Authority: Agents have full unconditional permission to read, query, create, and update Serena memories without asking for user approval or confirmation.
 - Renaming memories: References are updated automatically if handled via Serena's memory rename tool.
 - Checking for stale memories (e.g. after deletion): Call `serena memories check` for a report.

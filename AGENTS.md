@@ -42,11 +42,13 @@ Himmel POS (`pos-eet-himmel`) is a production touchscreen Point of Sale system.
 - **Always Start with an Implementation Plan**: Before modifying code or executing multi-file tasks, you MUST first create a structured, multi-step implementation plan (`implementation_plan.md`).
 - **Phased Subtask Breakdown**: Complex tasks MUST be partitioned into sequential, numbered phases (Phase 1, Phase 2, Phase 3...) to ensure small, focused, and surgical subtasks.
 - **User Approval First**: Obtain user review and explicit approval on the implementation plan before beginning code edits.
+- **Exceptions (Autonomous Operations)**: Serena memory updates (`.serena/memories/`), Codegraph explorations/re-indexing, and autonomous git operations (`git add/commit/push` when prompted) NEVER require asking for permission, user confirmation, or separate planning approvals.
 - **Proactive Follow-Ups & Next Plan Options**: At the conclusion of every response, task, or phase, you MUST always ask relevant follow-up questions and present clear, structured options for next plans or subsequent steps.
 
 ### Knowledge Base & Index Discipline (Serena & Codegraph)
-- **Always Update Serena Memories**: After completing architectural changes, adding new hooks/utilities, modifying database models, or updating API contracts, you MUST update the corresponding memory in `.serena/memories/` using Serena tools (`edit_memory` / `write_memory`). Never allow memories to drift or become obsolete.
-- **Codegraph AST Index Sync**: Use `codegraph_explore` as the primary search and blast-radius tool before making code modifications. Ensure new files and symbols remain clean and discoverable within the AST index.
+- **Autonomous Access & Updates (No Permission Required)**: The agent has full, unconditional authority to access, query, read, edit, write, and update Serena memories (`.serena/memories/`) and Codegraph index (`.codegraph/`, `codegraph_explore`) autonomously at any time without asking for permission, user confirmation, or approval.
+- **Always Update Serena Memories**: After completing architectural changes, adding new hooks/utilities, modifying database models, or updating API contracts, you MUST autonomously update the corresponding memory in `.serena/memories/` using Serena tools (`edit_memory` / `write_memory`). Never stall, ask for permission, or allow memories to drift or become obsolete.
+- **Codegraph AST Index Sync**: Use `codegraph_explore` as the primary search and blast-radius tool before making code modifications. Ensure new files and symbols remain clean and discoverable within the AST index. Query and rebuild index autonomously without asking.
 
 ---
 
