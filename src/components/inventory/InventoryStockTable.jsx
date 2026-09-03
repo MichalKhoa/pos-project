@@ -73,17 +73,17 @@ export default function InventoryStockTable({
 
   return (
     <div className="inventory-main-content">
-      {/* Filter & Search Toolbar (Ultra-Compact) */}
-      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-card)', padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '170px', maxWidth: '280px' }}>
-          <Search size={14} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* Filter & Search Toolbar (Ergonomic 38px Touch Targets) */}
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-card)', padding: '0.45rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '180px', maxWidth: '300px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
             className="input-field"
             placeholder={t('inventory.search_placeholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: '2.1rem', height: '32px', fontSize: '0.84rem' }}
+            style={{ paddingLeft: '2.3rem', height: '38px', fontSize: '0.88rem' }}
           />
         </div>
 
@@ -91,7 +91,7 @@ export default function InventoryStockTable({
           className="input-field"
           value={selectedCategory}
           onChange={e => setSelectedCategory(e.target.value)}
-          style={{ width: '145px', height: '32px', fontSize: '0.82rem', padding: '0 0.5rem' }}
+          style={{ width: '160px', height: '38px', fontSize: '0.86rem', padding: '0 0.65rem' }}
         >
           <option value="all">{t('inventory.all_categories')}</option>
           {categories.filter(c => c.id !== 'all').map(c => (
@@ -101,11 +101,11 @@ export default function InventoryStockTable({
 
         {/* Preset vs Warehouse Filter Segment */}
         {setPresetFilter && (
-          <div style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '2px', borderRadius: 'var(--radius-sm)', gap: '2px', border: '1px solid var(--border-color)', height: '32px', alignItems: 'center' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '3px', borderRadius: 'var(--radius-sm)', gap: '3px', border: '1px solid var(--border-color)', height: '38px', alignItems: 'center' }}>
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'all' ? 'active' : ''}`}
-              style={{ padding: '0 0.55rem', fontSize: '0.76rem', fontWeight: '700', height: '26px', minHeight: 'unset', border: 'none' }}
+              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '30px', minHeight: 'unset', border: 'none' }}
               onClick={() => setPresetFilter('all')}
             >
               {t('common.all') || 'Vše'}
@@ -113,7 +113,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'pinned' ? 'active' : ''}`}
-              style={{ padding: '0 0.55rem', fontSize: '0.76rem', fontWeight: '700', height: '26px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '30px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
               onClick={() => setPresetFilter('pinned')}
               title={t('inventory.filter_pinned_desc') || 'Zobrazit pouze položky připnuté na pokladnu'}
             >
@@ -123,7 +123,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'unpinned' ? 'active' : ''}`}
-              style={{ padding: '0 0.55rem', fontSize: '0.76rem', fontWeight: '700', height: '26px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '30px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
               onClick={() => setPresetFilter('unpinned')}
               title={t('inventory.filter_unpinned_desc') || 'Zobrazit pouze skladové položky (bez tlačítka na pokladně)'}
             >
@@ -137,13 +137,13 @@ export default function InventoryStockTable({
           type="button"
           onClick={() => setShowLowStockOnly(prev => !prev)}
           style={{
-            height: '32px',
-            padding: '0 0.65rem',
-            fontSize: '0.76rem',
+            height: '38px',
+            padding: '0 0.85rem',
+            fontSize: '0.82rem',
             fontWeight: '800',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.3rem',
+            gap: '0.35rem',
             borderRadius: 'var(--radius-sm)',
             border: showLowStockOnly ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
             background: showLowStockOnly ? 'var(--accent-amber)' : 'var(--bg-input)',
@@ -155,7 +155,7 @@ export default function InventoryStockTable({
           }}
           title={showLowStockOnly ? 'Zrušit filtr nízkých zásob' : 'Filtrovat pouze položky s nízkou zásobou'}
         >
-          <AlertTriangle size={14} style={{ color: showLowStockOnly ? '#000000' : 'var(--accent-amber)' }} />
+          <AlertTriangle size={15} style={{ color: showLowStockOnly ? '#000000' : 'var(--accent-amber)' }} />
           <span>{showLowStockOnly ? (t('inventory.filter_showing_low') || 'Nízké zásoby') : (t('inventory.filter_low_stock') || 'Nízký stav')}</span>
         </button>
 
@@ -163,13 +163,13 @@ export default function InventoryStockTable({
           type="button"
           onClick={onOpenAddModal}
           style={{
-            height: '32px',
-            padding: '0 0.75rem',
-            fontSize: '0.78rem',
+            height: '38px',
+            padding: '0 1rem',
+            fontSize: '0.85rem',
             fontWeight: '800',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.35rem',
+            gap: '0.45rem',
             borderRadius: 'var(--radius-sm)',
             background: 'var(--accent-emerald)',
             color: '#ffffff',
@@ -181,7 +181,7 @@ export default function InventoryStockTable({
             transition: 'opacity 0.15s ease'
           }}
         >
-          <Plus size={15} />
+          <Plus size={16} />
           <span>{t('inventory.add_item') || 'Přidat položku'}</span>
         </button>
       </div>
@@ -305,14 +305,14 @@ export default function InventoryStockTable({
                   </td>
 
                   {/* 1-Tap Quick Pin to Register Toggle */}
-                  <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
+                  <td style={{ padding: '0.55rem 0.45rem', textAlign: 'center' }}>
                     <button
                       type="button"
                       title={isPinned ? (t('inventory.unpin_action') || 'Odebrat z rychlých dlaždic na pokladně') : (t('inventory.pin_action') || 'Připnout na pokladnu jako rychlou dlaždici')}
                       style={{
-                        height: '28px',
-                        padding: '0 0.5rem',
-                        fontSize: '0.74rem',
+                        height: '34px',
+                        padding: '0 0.65rem',
+                        fontSize: '0.78rem',
                         fontWeight: '800',
                         borderRadius: 'var(--radius-sm)',
                         border: isPinned ? '1px solid rgba(59, 130, 246, 0.45)' : '1px solid var(--border-color)',
@@ -321,7 +321,7 @@ export default function InventoryStockTable({
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '0.25rem',
+                        gap: '0.3rem',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
                       }}
@@ -332,44 +332,44 @@ export default function InventoryStockTable({
                     </button>
                   </td>
 
-                  <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
+                  <td style={{ padding: '0.55rem 0.45rem', textAlign: 'center' }}>
                     <input
                       type="checkbox"
                       checked={currentTrack}
                       onChange={e => handleStockChange(preset.id, 'trackStock', e.target.checked)}
-                      style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent-blue)' }}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-blue)' }}
                     />
                   </td>
 
-                  <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}>
+                  <td style={{ padding: '0.55rem 0.45rem', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
                       <input
                         type="number"
                         className="input-field"
                         value={currentStock}
                         onChange={e => handleStockChange(preset.id, 'stockQuantity', parseInt(e.target.value || '0', 10))}
-                        style={{ width: '64px', height: '34px', textAlign: 'center', fontWeight: '900', fontSize: '0.95rem', color: isOut ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : 'inherit' }}
+                        style={{ width: '70px', height: '38px', textAlign: 'center', fontWeight: '900', fontSize: '1rem', color: isOut ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : 'inherit' }}
                       />
                       <button
                         type="button"
                         className="key-btn"
-                        style={{ height: '34px', width: '34px', padding: 0, aspectRatio: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderColor: 'rgba(59, 130, 246, 0.3)' }}
+                        style={{ height: '38px', width: '38px', padding: 0, aspectRatio: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderColor: 'rgba(59, 130, 246, 0.3)' }}
                         onClick={() => handleOpenStockKeypad(preset, currentStock)}
                         title="Otevřít numpad pro zadaný stav zásoby"
                       >
-                        <Calculator size={15} />
+                        <Calculator size={16} />
                       </button>
                     </div>
                   </td>
 
-                  <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                  <td style={{ padding: '0.55rem 0.45rem', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'center' }}>
                       {[+5, +10, +50].map(amt => (
                         <button
                           key={amt}
                           type="button"
                           className="key-btn"
-                          style={{ height: '28px', padding: '0 0.4rem', fontSize: '0.72rem', fontWeight: '800', aspectRatio: 'auto' }}
+                          style={{ height: '32px', padding: '0 0.5rem', fontSize: '0.78rem', fontWeight: '800', aspectRatio: 'auto' }}
                           onClick={() => handleQuickAddStock(preset, amt)}
                         >
                           +{amt}
@@ -378,40 +378,40 @@ export default function InventoryStockTable({
                     </div>
                   </td>
 
-                  <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
+                  <td style={{ padding: '0.55rem 0.45rem', textAlign: 'center' }}>
                     <input
                       type="number"
                       className="input-field"
                       value={currentMin}
                       onChange={e => handleStockChange(preset.id, 'minStockAlert', parseInt(e.target.value || '5', 10))}
-                      style={{ width: '58px', height: '34px', textAlign: 'center', fontSize: '0.85rem' }}
+                      style={{ width: '62px', height: '38px', textAlign: 'center', fontSize: '0.88rem' }}
                     />
                   </td>
 
-                  <td style={{ padding: '0.45rem 0.65rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <Barcode size={15} style={{ color: 'var(--text-muted)' }} />
+                  <td style={{ padding: '0.55rem 0.65rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Barcode size={16} style={{ color: 'var(--text-muted)' }} />
                       <input
                         type="text"
                         className="input-field"
                         placeholder={t('inventory.barcode_placeholder')}
                         value={currentBarcode}
                         onChange={e => handleStockChange(preset.id, 'barcode', e.target.value)}
-                        style={{ height: '34px', fontSize: '0.8rem', width: '135px', fontFamily: 'var(--font-mono)' }}
+                        style={{ height: '38px', fontSize: '0.85rem', width: '145px', fontFamily: 'var(--font-mono)' }}
                       />
                     </div>
                   </td>
 
-                  <td style={{ padding: '0.45rem 0.85rem', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <td style={{ padding: '0.55rem 0.85rem', textAlign: 'right' }}>
+                    <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button
                         type="button"
                         className="key-btn"
-                        style={{ height: '34px', width: '34px', padding: 0, aspectRatio: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderColor: 'rgba(59, 130, 246, 0.3)' }}
+                        style={{ height: '38px', width: '38px', padding: 0, aspectRatio: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderColor: 'rgba(59, 130, 246, 0.3)' }}
                         onClick={() => setEditingPresetTarget(preset)}
                         title="Upravit položku"
                       >
-                        <Edit3 size={15} />
+                        <Edit3 size={16} />
                       </button>
 
                       <button
@@ -419,9 +419,9 @@ export default function InventoryStockTable({
                         disabled={!hasEdit || isSaving}
                         onClick={() => handleSaveRow(preset)}
                         style={{
-                          height: '30px',
-                          padding: '0 0.65rem',
-                          fontSize: '0.76rem',
+                          height: '38px',
+                          padding: '0 0.85rem',
+                          fontSize: '0.82rem',
                           fontWeight: '700',
                           borderRadius: 'var(--radius-sm)',
                           border: 'none',
@@ -429,13 +429,13 @@ export default function InventoryStockTable({
                           color: hasEdit ? '#ffffff' : 'var(--text-muted)',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '0.25rem',
+                          gap: '0.35rem',
                           cursor: hasEdit ? 'pointer' : 'default',
                           opacity: hasEdit ? 1 : 0.4,
                           transition: 'all 0.15s ease'
                         }}
                       >
-                        <Check size={14} />
+                        <Check size={16} />
                         <span>{t('common.save')}</span>
                       </button>
                     </div>

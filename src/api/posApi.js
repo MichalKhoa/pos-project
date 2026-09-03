@@ -498,6 +498,24 @@ export async function savePresetBackend(preset) {
 }
 
 /**
+ * Bulk save/update presets in backend database (e.g. from CSV import)
+ */
+export async function bulkSavePresetsBackend(presets) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/catalog/presets/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(presets)
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to bulk save presets to backend:', err);
+    return null;
+  }
+}
+
+/**
  * Bulk reorder presets in backend database
  */
 export async function reorderPresetsBackend(presets) {

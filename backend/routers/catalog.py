@@ -268,6 +268,55 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
     }
 
 
+@router.post("/presets/bulk")
+def bulk_save_presets(presets: List[PresetSchema], db: Session = Depends(get_db)):
+    """Bulk upsert preset items (e.g. from CSV import or batch edit)."""
+    saved_count = 0
+    for p in presets:
+        existing = db.query(PresetModel).filter(PresetModel.id == p.id).first()
+        if existing:
+            existing.name = p.name
+            existing.price = p.price
+            existing.category = p.category
+            existing.vat = p.vat
+            existing.color = p.color
+            existing.is_open_price = p.isOpenPrice
+            existing.is_general = p.isGeneralPreset if p.isGeneralPreset is not None else False
+            existing.position = p.position
+            existing.stock_quantity = p.stockQuantity if p.stockQuantity is not None else 0
+            existing.track_stock = p.trackStock if p.trackStock is not None else False
+            existing.min_stock_alert = p.minStockAlert if p.minStockAlert is not None else 5
+            existing.barcode = p.barcode or ""
+            existing.show_in_presets = p.showInPresets if p.showInPresets is not None else True
+            existing.cost_price = p.costPrice if p.costPrice is not None else 0.0
+            if hasattr(existing, 'icon'): existing.icon = p.icon
+            if hasattr(existing, 'image_url'): existing.image_url = p.imageUrl
+        else:
+            new_item = PresetModel(
+                id=p.id,
+                name=p.name,
+                price=p.price,
+                category=p.category,
+                vat=p.vat,
+                color=p.color,
+                is_open_price=p.isOpenPrice,
+                is_general=p.isGeneralPreset if p.isGeneralPreset is not None else False,
+                position=p.position,
+                stock_quantity=p.stockQuantity if p.stockQuantity is not None else 0,
+                track_stock=p.trackStock if p.trackStock is not None else False,
+                min_stock_alert=p.minStockAlert if p.minStockAlert is not None else 5,
+                barcode=p.barcode or "",
+                icon=p.icon,
+                image_url=p.imageUrl,
+                show_in_presets=p.showInPresets if p.showInPresets is not None else True,
+                cost_price=p.costPrice if p.costPrice is not None else 0.0
+            )
+            db.add(new_item)
+        saved_count += 1
+    db.commit()
+    return {"status": "SUCCESS", "savedCount": saved_count}
+
+
 @router.patch("/presets/{preset_id}/toggle-pin")
 def toggle_preset_pin(preset_id: str, db: Session = Depends(get_db)):
     """1-Tap toggle: Pin or unpin an item to/from register touchscreen presets."""

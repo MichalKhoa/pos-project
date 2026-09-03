@@ -277,7 +277,14 @@ export const translations = {
       barcode_placeholder: "EAN čárové kódy...",
       no_items: "Žádné položky neodpovídají zadanému hledání.",
       saved_success: "Skladová zásoba pro {name} byla úspěšně uložena.",
-      save_error: "Chyba při ukládání skladu: {error}"
+      save_error: "Chyba při ukládání skladu: {error}",
+      export_csv: "Exportovat CSV",
+      import_csv: "Importovat CSV",
+      import_preview_title: "Import skladových položek z CSV",
+      import_preview_desc: "Zkontrolujte souhrn před zápisem do databáze",
+      import_to_update: "K aktualizaci",
+      import_to_create: "Nových k vytvoření",
+      confirm_import: "Potvrdit import"
     },
     history: {
       title: "Historie a Přehled Prodejů",
@@ -850,7 +857,14 @@ export const translations = {
       barcode_placeholder: "Mã vạch EAN...",
       no_items: "Không có mặt hàng nào phù hợp với bộ lọc.",
       saved_success: "Đã lưu tồn kho cho {name}.",
-      save_error: "Lỗi khi lưu kho: {error}"
+      save_error: "Lỗi khi lưu kho: {error}",
+      export_csv: "Xuất CSV",
+      import_csv: "Nhập CSV",
+      import_preview_title: "Nhập mặt hàng từ file CSV",
+      import_preview_desc: "Kiểm tra tóm tắt trước khi lưu vào cơ sở dữ liệu",
+      import_to_update: "Cần cập nhật",
+      import_to_create: "Tạo mới",
+      confirm_import: "Xác nhận nhập"
     },
     history: {
       title: "Lịch Sử & Tổng Quan Bán Hàng",
@@ -1423,7 +1437,14 @@ export const translations = {
       barcode_placeholder: "EAN barcodes...",
       no_items: "No items match the current filters.",
       saved_success: "Stock inventory for {name} saved successfully.",
-      save_error: "Error saving stock: {error}"
+      save_error: "Error saving stock: {error}",
+      export_csv: "Export CSV",
+      import_csv: "Import CSV",
+      import_preview_title: "Import Inventory from CSV",
+      import_preview_desc: "Review summary before applying to database",
+      import_to_update: "To Update",
+      import_to_create: "To Create",
+      confirm_import: "Confirm Import"
     },
     history: {
       title: "Sales History & Ledger Overview",

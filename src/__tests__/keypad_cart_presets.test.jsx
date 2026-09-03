@@ -519,7 +519,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
 
       // Verify stock status badges
       expect(screen.getByText('Skladem')).toBeInTheDocument();
-      expect(screen.getByText('Nízký stav')).toBeInTheDocument();
+      expect(screen.getAllByText('Nízký stav').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('Vyprodáno')).toBeInTheDocument();
 
       // Click pin toggle button on unpinned item

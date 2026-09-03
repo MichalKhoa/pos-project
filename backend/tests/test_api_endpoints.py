@@ -111,6 +111,40 @@ class TestApiEndpoints(unittest.TestCase):
         del_res = self.client.delete(f"/api/v1/catalog/presets/{preset_id}")
         self.assertEqual(del_res.status_code, 200)
 
+    def test_bulk_save_presets(self):
+        items = [
+            {
+                "id": "bulk-test-item-1",
+                "name": "Bulk Item 1",
+                "price": 100.0,
+                "category": "general",
+                "vat": 21,
+                "stockQuantity": 50,
+                "costPrice": 60.0,
+                "trackStock": True,
+                "barcode": "999111222333"
+            },
+            {
+                "id": "bulk-test-item-2",
+                "name": "Bulk Item 2",
+                "price": 200.0,
+                "category": "general",
+                "vat": 12,
+                "stockQuantity": 30,
+                "costPrice": 120.0,
+                "trackStock": True,
+                "barcode": "999111222444"
+            }
+        ]
+        res = self.client.post("/api/v1/catalog/presets/bulk", json=items)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["status"], "SUCCESS")
+        self.assertEqual(res.json()["savedCount"], 2)
+
+        # Cleanup
+        self.client.delete("/api/v1/catalog/presets/bulk-test-item-1")
+        self.client.delete("/api/v1/catalog/presets/bulk-test-item-2")
+
 if __name__ == "__main__":
     unittest.main()
 

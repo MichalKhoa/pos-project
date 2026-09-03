@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
-import { savePresetBackend } from '../api/posApi';
+import { savePresetBackend, bulkSavePresetsBackend } from '../api/posApi';
 import PresetModal from './PresetModal';
 import InventoryMetricsBar from './inventory/InventoryMetricsBar.jsx';
 import InventoryStockTable from './inventory/InventoryStockTable.jsx';
 import StockKeypadModal from './inventory/StockKeypadModal.jsx';
+import InventoryImportModal from './inventory/InventoryImportModal.jsx';
+import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
 export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin }) {
   const { t } = useTranslation();
@@ -15,6 +17,12 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   const [editingStock, setEditingStock] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
+
+  // CSV Import / Export state
+  const fileInputRef = useRef(null);
+  const [importData, setImportData] = useState(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Add & Edit Item Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -205,9 +213,76 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
     }
   };
 
+  const handleExportCSV = () => {
+    exportInventoryToCSV(presets, categories);
+  };
+
+  const handleImportCSVClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result;
+        const parsed = parseInventoryCSV(text, presets);
+        if (parsed.toUpdate.length === 0 && parsed.toCreate.length === 0) {
+          alert('V souboru CSV nebyly nalezeny žádné platné položky.');
+          return;
+        }
+        setImportData(parsed);
+        setIsImportModalOpen(true);
+      } catch (err) {
+        console.error('Error parsing CSV:', err);
+        alert('Chyba při čtení CSV: ' + err.message);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
+  const handleConfirmImport = async () => {
+    if (!importData) return;
+    setIsImporting(true);
+    const allItems = [...importData.toUpdate, ...importData.toCreate];
+    try {
+      await bulkSavePresetsBackend(allItems);
+
+      const updatedMap = new Map();
+      allItems.forEach(item => updatedMap.set(item.id, item));
+      const newPresets = presets.map(p => updatedMap.has(p.id) ? updatedMap.get(p.id) : p);
+      importData.toCreate.forEach(item => {
+        if (!newPresets.some(p => p.id === item.id)) {
+          newPresets.push(item);
+        }
+      });
+
+      if (onUpdatePresets) onUpdatePresets(newPresets);
+
+      setStatusMessage({
+        type: 'success',
+        text: `Úspěšně importováno ${allItems.length} položek (${importData.toUpdate.length} aktualizováno, ${importData.toCreate.length} vytvořeno).`
+      });
+      setIsImportModalOpen(false);
+      setImportData(null);
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to import items:', err);
+      setStatusMessage({ type: 'error', text: 'Chyba při ukládání importovaných položek: ' + err.message });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="full-view-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {/* Top Metrics Valuation Bar */}
+      {/* Top Metrics Valuation Bar with CSV Actions */}
       <InventoryMetricsBar
         totalTrackedCount={totalTrackedCount}
         healthyStockCount={healthyStockCount}
@@ -220,6 +295,8 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         outPct={outPct}
         showLowStockOnly={showLowStockOnly}
         setShowLowStockOnly={setShowLowStockOnly}
+        onExportCSV={handleExportCSV}
+        onImportCSVClick={handleImportCSVClick}
       />
 
       {statusMessage && (
@@ -282,6 +359,24 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         setStockKeypadValue={setStockKeypadValue}
         onClose={() => setStockKeypadTarget(null)}
         onConfirm={handleConfirmStockKeypad}
+      />
+
+      {/* Hidden CSV File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        style={{ display: 'none' }}
+        onChange={handleFileSelected}
+      />
+
+      {/* CSV Import Preview Confirmation Modal */}
+      <InventoryImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onConfirm={handleConfirmImport}
+        importData={importData}
+        isImporting={isImporting}
       />
     </div>
   );
