@@ -94,6 +94,10 @@ export default function PaymentModal({
     }
   };
 
+  const handleCashSet = (val) => {
+    setTenderedStr(val.toString());
+  };
+
   const handleNumpadKey = (digit) => {
     if (digit === 'CLEAR') {
       setTenderedStr('0');
@@ -314,6 +318,7 @@ export default function PaymentModal({
                 totalAmount={totalAmount}
                 changeDue={changeDue}
                 onCashAdd={handleCashAdd}
+                onCashSet={handleCashSet}
                 onNumpadKey={handleNumpadKey}
                 onComplete={handleComplete}
               />
