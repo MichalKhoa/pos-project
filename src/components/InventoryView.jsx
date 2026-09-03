@@ -123,6 +123,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
     outOfStockCount,
     healthyStockCount,
     totalValuation,
+    totalCostValuation,
     healthyPct,
     lowPct,
     outPct
@@ -134,6 +135,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
     const outCount = tracked.filter(p => (p.stockQuantity || 0) <= 0).length;
     const healthyCount = tracked.filter(p => (p.stockQuantity || 0) > (p.minStockAlert || 5)).length;
     const valuation = tracked.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
+    const costValuation = tracked.reduce((sum, p) => sum + (((p.costPrice !== undefined ? p.costPrice : p.cost_price) || 0) * (p.stockQuantity || 0)), 0);
 
     const hPct = totalTracked > 0 ? (healthyCount / totalTracked) * 100 : 100;
     const lPct = totalTracked > 0 ? ((lowCount - outCount) / totalTracked) * 100 : 0;
@@ -145,6 +147,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
       outOfStockCount: outCount,
       healthyStockCount: healthyCount,
       totalValuation: valuation,
+      totalCostValuation: costValuation,
       healthyPct: hPct,
       lowPct: lPct,
       outPct: oPct
@@ -203,7 +206,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   };
 
   return (
-    <div className="full-view-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+    <div className="full-view-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {/* Top Metrics Valuation Bar */}
       <InventoryMetricsBar
         totalTrackedCount={totalTrackedCount}
@@ -211,9 +214,12 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         lowStockCount={lowStockCount}
         outOfStockCount={outOfStockCount}
         totalValuation={totalValuation}
+        totalCostValuation={totalCostValuation}
         healthyPct={healthyPct}
         lowPct={lowPct}
         outPct={outPct}
+        showLowStockOnly={showLowStockOnly}
+        setShowLowStockOnly={setShowLowStockOnly}
       />
 
       {statusMessage && (

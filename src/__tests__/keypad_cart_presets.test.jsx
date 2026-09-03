@@ -6,6 +6,7 @@ import QuickPresetGrid from '../components/QuickPresetGrid';
 import Cart from '../components/Cart';
 import ParkedCartsDrawer from '../components/keypad/ParkedCartsDrawer';
 import InventoryStockTable from '../components/inventory/InventoryStockTable.jsx';
+import InventoryMetricsBar from '../components/inventory/InventoryMetricsBar.jsx';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { DEFAULT_STORE_CONFIG } from '../data/initialData';
 
@@ -569,6 +570,37 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
 
       const rowsAfterStockDesc = screen.getAllByRole('row');
       expect(rowsAfterStockDesc[1]).toHaveTextContent('Káva Espresso');
+    });
+  });
+
+  describe('InventoryMetricsBar', () => {
+    it('renders compact metrics and responds to interactive filter click', () => {
+      const setShowLowStockOnly = vi.fn();
+      wrapWithLanguage(
+        <InventoryMetricsBar
+          totalTrackedCount={42}
+          healthyStockCount={38}
+          lowStockCount={4}
+          outOfStockCount={1}
+          totalValuation={150000}
+          totalCostValuation={95000}
+          healthyPct={90}
+          lowPct={10}
+          outPct={2.5}
+          showLowStockOnly={false}
+          setShowLowStockOnly={setShowLowStockOnly}
+        />
+      );
+
+      // Verify tracked items and valuation
+      expect(screen.getByText('42')).toBeInTheDocument();
+      expect(screen.getByText(/150\s?000\s*Kč/)).toBeInTheDocument();
+      expect(screen.getByText(/95\s?000\s*Kč/)).toBeInTheDocument();
+
+      // Click low stock filter button
+      const lowStockBtn = screen.getByRole('button', { name: /Nízk/i });
+      fireEvent.click(lowStockBtn);
+      expect(setShowLowStockOnly).toHaveBeenCalledTimes(1);
     });
   });
 });
