@@ -1,41 +1,16 @@
-# Frontend Core
+# Frontend Core Architecture & State Management
 
-React 19 single-page register application located in `/src`.
+## Overview
+- **Framework**: React 19, Vite, Vanilla CSS design tokens (no Tailwind).
+- **Entry point**: `src/App.jsx` with code-split views (`RegisterView`, `InventoryView`, `PresetManagerView`, `HistoryView`, `AnalyticsView`, `SettingsView`).
+- **Core Styles**: `src/styles/tokens.css`, `src/styles/layout.css`, `src/styles/register.css`.
 
-## Structure
-- [main.jsx](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/main.jsx): React root renderer wrapped in `ErrorBoundary`, `LanguageProvider`, and `StoreConfigProvider`.
-- [App.jsx](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/App.jsx): Main register container with lazy-loaded views via `React.lazy()` + `<Suspense>`, active tab switcher (`register`, `presets`, `inventory`, `history`, `settings`), and global modal controllers.
-- [index.css](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/index.css): Master stylesheet importing modular domain sheets from `src/styles/` (`tokens.css`, `layout.css`, `register.css`, `modals.css`, `history.css`, `settings.css`).
-  - `tokens.css`: 3-tier elevation tokens (`--shadow-card-elevated`, `--shadow-key`, `--shadow-key-pressed`), theme colors, and font definitions.
-  - `register.css`: Tactile 3D numeric keypad keycaps, Grand Total hero card, and 3D cash/card payment action buttons with active compression physics.
-
-## Contexts & State Providers (`/src/context`)
-- `StoreConfigContext.jsx`: Centralizes store configuration, live SQLite DB synchronization, `localStorage` caching, and cashier/manager `isAdminMode` gates without prop drilling (`useStoreConfig()`).
-
-## Custom Hooks (`/src/hooks`)
-- `useCart.js`: Cart state management, line additions, item discounts, cart-level discounts, 4s undo toasts, 8s clear cart recovery snapshots, parked carts (held tickets with zero-data-loss auto-swap on restore, custom customer labels/notes via `updateParkedCartNote`, localStorage persistence).
-- `useRegisterKeypad.js`: Numeric keypad buffer, decimal entry, multiplier state (+1x / -1x return mode), hotkey listeners (`0-9`, `-`, `ArrowUp/Down`, `*`, `Enter`, `Escape`).
-- `usePosAudio.js`: Web Audio API synthesized sounds (scan chime, sale completed chime, mute state).
-- `usePosCatalog.js`: Product categories and presets state, LocalStorage synchronization, and CRUD operations.
-- `useOfflineSync.js`: Czech EET offline queue status checking, 30s background poll, online listener, and manual queue flushing.
-- `useAutoLock.js`: Inactivity auto-lock timer (mouse/touch/keyboard activity listener) and unlock handler.
-- `useSalesPeriodFilter.js`: Sales period date range filtering (today, yesterday, week, month, year, custom) shared across SalesHistoryView and AnalyticsView.
-
-## Utilities (`/src/utils`)
-- `tax.js`: Centralized financial calculation engine (`roundCZK`, `calculateItemLineGross`, `calculateCartTotals`, `calculateCashChange`).
-- `audio.js`: Synthesized Web Audio manager (`SoundEffectsManager`).
-- `csvExporter.js`: Sales ledger CSV export formatting.
-- `presetIcons.js`: Dynamic Lucide icon mappings for product categories and tiles.
-- `czechHolidays.js`: Meeus Easter Sunday calculation algorithm and Czech retail closing law holiday checker (Zákon č. 223/2016 Sb.).
-- `calendarGrid.js`: Czech month/weekday constants, `buildCalendarGrid`, and `stepMonth` navigation.
-- `receiptHtmlGenerator.js`: Browser print HTML template generator (`generateReceiptHtml`, `escapeHtml`) for thermal (58mm/80mm) and A4 formats.
-
-## API Client Layer (`/src/api/posApi.js`)
-- Abstracted REST and WebSocket fetch functions connecting to `http://localhost:8000/api/v1`.
-- Provides fallback local mode when backend API server is disconnected.
-- `fetchSalesHistoryBackend`: Supports pagination (`limit`, `offset`), date filtering, doc type, search, and returns normalized sales with `.totalCount` metadata.
-- `fetchDailySalesStats` & `fetchShiftStats`: Direct aggregation helpers querying `/stats/daily` and `/stats/shift`.
-
-## Related Memories
-- Component details: `mem:frontend/components`
-- Tech stack & testing: `mem:tech_stack`
+## Theming & Navbar Architecture
+- **Theme Mode**: `[data-theme='light|dark']` with root tokens.
+- **Dynamic Accent Color**: `[data-accent='indigo|emerald|blue|amber|charcoal|rose|purple']` controlling `--accent-highlight`, `--accent-highlight-hover`, `--accent-highlight-text`, and `--shadow-highlight-glow`.
+- **Navbar Layout**: 3-Island floating architecture matching modern Zenwood/Framer design:
+  - **Left Island (`.nav-island-left`)**: Pulsing status indicator (`● Online • EET`) and pending sync badge.
+  - **Center Island (`.nav-island-center`)**: Main hero capsule with embedded frameless 28px logo (`.nav-embedded-logo`), navigation tabs with silky Apple deceleration sliding pill indicator (`.nav-sliding-pill`) with zero bounce, bold primary text, and micro-scaling accent icons.
+  - **Right Island (`.nav-island-right`)**: Unified hardware capsule containing borderless 32px circular tool buttons (`.nav-tool-btn`), compact language dropdown (`LanguageSelector`), hairline dividers, and localized live time/date chip (`.nav-clock-chip`) in `weekday DD/MM` format.
+- **Navbar Style Variants**: `.navbar.style-floating` (default), `.navbar.style-standard`, `.navbar.style-slim`.
+- **Category Chips**: Synchronized with elevated crisp card tile styling.

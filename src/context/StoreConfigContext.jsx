@@ -19,6 +19,18 @@ export function StoreConfigProvider({ children }) {
 
   const [isAdminMode, setIsAdminMode] = useState(false);
 
+  // Sync highlight accent to root element
+  useEffect(() => {
+    const accent = storeConfig?.highlightColor || (() => {
+      try {
+        return localStorage.getItem('voltflow_highlight_color') || 'indigo';
+      } catch {
+        return 'indigo';
+      }
+    })();
+    document.documentElement.setAttribute('data-accent', accent);
+  }, [storeConfig?.highlightColor]);
+
   // Sync with SQLite backend on initial mount
   useEffect(() => {
     let isMounted = true;

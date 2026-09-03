@@ -63,10 +63,17 @@
 }
 
 .category-chip.active {
-  background: var(--accent-blue);
-  color: #ffffff;
-  border-color: var(--accent-blue);
-  box-shadow: var(--shadow-blue-glow);
+  background: var(--bg-card);
+  color: var(--accent-highlight, var(--accent-indigo));
+  border: 1.5px solid var(--accent-highlight, var(--accent-indigo));
+  box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.1);
+  font-weight: 800;
+}
+
+[data-theme='dark'] .category-chip.active {
+  background: #1e293b;
+  border-color: var(--accent-highlight, var(--accent-indigo));
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
 }
 
 .category-chip.edit-mode-chip {
@@ -79,10 +86,11 @@
   background: rgba(245, 158, 11, 0.1);
 }
 .category-chip.edit-mode-chip.active {
-  background: var(--accent-blue);
+  background: var(--accent-highlight, var(--accent-indigo));
   border-style: solid;
-  border-color: var(--accent-blue);
-  color: #ffffff;
+  border-color: var(--accent-highlight, var(--accent-indigo));
+  color: var(--accent-highlight-text, #ffffff);
+  box-shadow: var(--shadow-highlight-glow, 0 2px 10px rgba(79, 70, 229, 0.35));
 }
 
 .category-chip-manage {

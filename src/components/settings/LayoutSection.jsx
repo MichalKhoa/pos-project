@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Tag, ArrowRight, Tv, Sliders } from 'lucide-react';
+import { Layout, Tag, ArrowRight, Tv, Sliders, Palette, Check } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function LayoutSection({
@@ -11,8 +11,150 @@ export default function LayoutSection({
 }) {
   const { t } = useTranslation();
 
+  const ACCENT_COLORS = [
+    { id: 'indigo', name: t('settings.accent_indigo') || 'Indigo', hex: '#6366f1' },
+    { id: 'emerald', name: t('settings.accent_emerald') || 'Smaragd', hex: '#10b981' },
+    { id: 'blue', name: t('settings.accent_blue') || 'Klasická modrá', hex: '#3b82f6' },
+    { id: 'amber', name: t('settings.accent_amber') || 'Jantar', hex: '#f59e0b' },
+    { id: 'charcoal', name: t('settings.accent_charcoal') || 'Břidlice', hex: '#0f172a' },
+    { id: 'rose', name: t('settings.accent_rose') || 'Růže', hex: '#f43f5e' },
+    { id: 'purple', name: t('settings.accent_purple') || 'Fialová', hex: '#8b5cf6' }
+  ];
+
+  const NAVBAR_STYLES = [
+    { id: 'standard', name: t('settings.navbar_style_standard') || 'Klasická lišta', desc: 'Plná šířka s plynulým rozostřením' },
+    { id: 'floating', name: t('settings.navbar_style_floating') || 'Plovoucí ostrov', desc: 'Zaoblený dock odsazený od okrajů' },
+    { id: 'slim', name: t('settings.navbar_style_slim') || 'Kompaktní lišta', desc: 'Výška 46px s plynule se rozpínajícím podsvíceným paprskem' }
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* Navbar Style Selector Card */}
+      <div className="table-card" style={{ padding: '1.25rem 1.5rem' }}>
+        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+          <Layout size={20} style={{ color: 'var(--accent-highlight, #6366f1)' }} />
+          <span>{t('settings.navbar_style_title') || 'Styl a rozvržení horní lišty (Navbar)'}</span>
+        </div>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.1rem' }}>
+          {t('settings.navbar_style_desc') || 'Zvolte vizuální styl a uspořádání horní navigační lišty pokladny.'}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
+          {NAVBAR_STYLES.map(st => {
+            const isSelected = (config.navbarStyle || 'standard') === st.id;
+            return (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => {
+                  const updated = { ...config, navbarStyle: st.id };
+                  setConfig(updated);
+                  onSaveStoreConfig(updated);
+                  try {
+                    localStorage.setItem('voltflow_navbar_style', st.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '0.35rem',
+                  padding: '0.85rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: isSelected ? '2px solid var(--accent-highlight, #6366f1)' : '1px solid var(--border-color)',
+                  background: isSelected ? 'var(--bg-card)' : 'var(--bg-input)',
+                  boxShadow: isSelected ? 'var(--shadow-highlight-glow, 0 2px 10px rgba(99, 102, 241, 0.25))' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  textAlign: 'left',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <span style={{ fontWeight: '800', fontSize: '0.92rem', color: isSelected ? 'var(--accent-highlight, #6366f1)' : 'var(--text-primary)' }}>
+                    {st.name}
+                  </span>
+                  {isSelected && <Check size={16} color="var(--accent-highlight, #6366f1)" strokeWidth={2.5} />}
+                </div>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.3' }}>
+                  {st.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Accent Highlight Color Card */}
+      <div className="table-card" style={{ padding: '1.25rem 1.5rem' }}>
+        <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+          <Palette size={20} style={{ color: 'var(--accent-highlight, #6366f1)' }} />
+          <span>{t('settings.accent_color_title') || 'Zvýrazňovací barva (Akcent)'}</span>
+        </div>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.1rem' }}>
+          {t('settings.accent_color_desc') || 'Barva aktivních záložek v horní liště a vybraných kategorií produktů.'}
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+          {ACCENT_COLORS.map(col => {
+            const isSelected = (config.highlightColor || 'indigo') === col.id;
+            return (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => {
+                  const updated = { ...config, highlightColor: col.id };
+                  setConfig(updated);
+                  onSaveStoreConfig(updated);
+                  try {
+                    localStorage.setItem('voltflow_highlight_color', col.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                  document.documentElement.setAttribute('data-accent', col.id);
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0 0.85rem',
+                  minHeight: '40px',
+                  borderRadius: 'var(--radius-md)',
+                  border: isSelected ? `2px solid ${col.hex}` : '1px solid var(--border-color)',
+                  background: isSelected ? 'var(--bg-card)' : 'var(--bg-input)',
+                  boxShadow: isSelected ? `0 2px 8px ${col.hex}40` : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  fontSize: '0.85rem',
+                  fontWeight: isSelected ? '800' : '600',
+                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <span
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    background: col.hex,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: `0 0 6px ${col.hex}60`,
+                    flexShrink: 0
+                  }}
+                >
+                  {isSelected && <Check size={10} color="#ffffff" strokeWidth={3} />}
+                </span>
+                <span>{col.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Product Grid Layout Settings */}
       <div className="table-card" style={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>

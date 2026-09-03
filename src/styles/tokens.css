@@ -24,6 +24,12 @@
   --accent-purple-hover: #6d28d9;
   --accent-indigo: #4f46e5;
 
+  /* Highlight Accent Tokens - Default: Indigo */
+  --accent-highlight: #4f46e5;
+  --accent-highlight-hover: #4338ca;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(79, 70, 229, 0.35);
+
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -67,6 +73,12 @@
   --accent-purple-hover: #7c3aed;
   --accent-indigo: #6366f1;
 
+  /* Highlight Accent Tokens - Default: Indigo (Dark) */
+  --accent-highlight: #6366f1;
+  --accent-highlight-hover: #4f46e5;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 12px rgba(99, 102, 241, 0.4);
+
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-card-elevated: 0 4px 20px rgba(0, 0, 0, 0.45);
@@ -75,6 +87,110 @@
   --shadow-hero-glow: 0 4px 24px -2px rgba(16, 185, 129, 0.28);
   --shadow-glow: 0 0 16px rgba(16, 185, 129, 0.25);
   --shadow-blue-glow: 0 0 16px rgba(59, 130, 246, 0.25);
+}
+
+/* ==========================================================================
+   Selectable Accent Highlights
+   ========================================================================== */
+
+/* Light Mode Accent Overrides */
+:root[data-accent='emerald'], [data-theme='light'][data-accent='emerald'] {
+  --accent-highlight: #059669;
+  --accent-highlight-hover: #047857;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(16, 185, 129, 0.35);
+}
+
+:root[data-accent='blue'], [data-theme='light'][data-accent='blue'] {
+  --accent-highlight: #2563eb;
+  --accent-highlight-hover: #1d4ed8;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(37, 99, 235, 0.35);
+}
+
+:root[data-accent='amber'], [data-theme='light'][data-accent='amber'] {
+  --accent-highlight: #d97706;
+  --accent-highlight-hover: #b45309;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(217, 119, 6, 0.35);
+}
+
+:root[data-accent='rose'], [data-theme='light'][data-accent='rose'] {
+  --accent-highlight: #e11d48;
+  --accent-highlight-hover: #be123c;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(225, 29, 72, 0.35);
+}
+
+:root[data-accent='purple'], [data-theme='light'][data-accent='purple'] {
+  --accent-highlight: #7c3aed;
+  --accent-highlight-hover: #6d28d9;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(124, 58, 237, 0.35);
+}
+
+:root[data-accent='charcoal'], [data-theme='light'][data-accent='charcoal'] {
+  --accent-highlight: #0f172a;
+  --accent-highlight-hover: #1e293b;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 8px rgba(15, 23, 42, 0.25);
+}
+
+:root[data-accent='indigo'], [data-theme='light'][data-accent='indigo'] {
+  --accent-highlight: #4f46e5;
+  --accent-highlight-hover: #4338ca;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 10px rgba(79, 70, 229, 0.35);
+}
+
+/* Dark Mode Accent Overrides */
+[data-theme='dark'][data-accent='emerald'] {
+  --accent-highlight: #10b981;
+  --accent-highlight-hover: #059669;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 12px rgba(16, 185, 129, 0.4);
+}
+
+[data-theme='dark'][data-accent='blue'] {
+  --accent-highlight: #3b82f6;
+  --accent-highlight-hover: #2563eb;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 12px rgba(59, 130, 246, 0.4);
+}
+
+[data-theme='dark'][data-accent='amber'] {
+  --accent-highlight: #f59e0b;
+  --accent-highlight-hover: #d97706;
+  --accent-highlight-text: #000000;
+  --shadow-highlight-glow: 0 2px 12px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme='dark'][data-accent='rose'] {
+  --accent-highlight: #f43f5e;
+  --accent-highlight-hover: #e11d48;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 12px rgba(244, 63, 94, 0.4);
+}
+
+[data-theme='dark'][data-accent='purple'] {
+  --accent-highlight: #8b5cf6;
+  --accent-highlight-hover: #7c3aed;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 12px rgba(139, 92, 246, 0.4);
+}
+
+[data-theme='dark'][data-accent='charcoal'] {
+  --accent-highlight: #f8fafc;
+  --accent-highlight-hover: #e2e8f0;
+  --accent-highlight-text: #090d16;
+  --shadow-highlight-glow: 0 2px 12px rgba(255, 255, 255, 0.25);
+}
+
+[data-theme='dark'][data-accent='indigo'] {
+  --accent-highlight: #6366f1;
+  --accent-highlight-hover: #4f46e5;
+  --accent-highlight-text: #ffffff;
+  --shadow-highlight-glow: 0 2px 12px rgba(99, 102, 241, 0.4);
 }
 
 /* Smooth theme transition */
