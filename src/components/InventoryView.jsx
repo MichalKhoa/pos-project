@@ -198,7 +198,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   };
 
   return (
-    <div className="full-view-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div className="full-view-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
       {/* Top Metrics Valuation Bar */}
       <InventoryMetricsBar
         totalTrackedCount={totalTrackedCount}

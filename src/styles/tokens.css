@@ -265,6 +265,10 @@ body, .navbar, .modal-card, .table-card, .preset-card, .pos-col-left, .pos-col-c
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-main);
