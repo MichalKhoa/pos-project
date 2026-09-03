@@ -196,14 +196,16 @@ export async function updateSaleRefundStatusBackend(saleId, refundStatus, refund
 /**
  * Delete a single test sale transaction from backend SQLite DB (Admin Mode)
  */
-export async function deleteSaleBackend(saleId) {
+export async function deleteSaleBackend(saleId, pin = '') {
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Admin-Override': 'true'
+    };
+    if (pin) headers['X-Admin-PIN'] = pin;
     const res = await fetch(`${API_BASE_URL}/sales/${saleId}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Override': 'true'
-      }
+      headers
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -216,14 +218,16 @@ export async function deleteSaleBackend(saleId) {
 /**
  * Purge ALL test sales transactions from backend SQLite DB (Admin Mode)
  */
-export async function purgeAllSalesBackend() {
+export async function purgeAllSalesBackend(pin = '') {
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Admin-Override': 'true'
+    };
+    if (pin) headers['X-Admin-PIN'] = pin;
     const res = await fetch(`${API_BASE_URL}/sales/purge-all`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Override': 'true'
-      }
+      headers
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();

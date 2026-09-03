@@ -73,6 +73,9 @@ backend/certs/*.key
 .env
 .env.local
 .env.*.local
+.secret_key
+*.secret_key
+.mcp.json
 
 # ==========================================
 # Logs

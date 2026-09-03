@@ -110,20 +110,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for React frontend (Vite & LAN network clients)
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
-allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
-if not allowed_origins:
-    allowed_origins = ["*"]
+# Enable secure CORS for React frontend (Vite & LAN network clients)
+cors_kwargs = {
+    "allow_credentials": True,
+    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization", "X-API-Key", "X-Admin-Override", "X-Admin-PIN", "X-Idempotency-Key"],
+}
 
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "").strip()
+if allowed_origins_env and allowed_origins_env != "*":
+    cors_kwargs["allow_origins"] = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+else:
+    cors_kwargs["allow_origin_regex"] = r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$"
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-API-Key", "X-Admin-Override"],
-)
+app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 
 # Include API Routers
