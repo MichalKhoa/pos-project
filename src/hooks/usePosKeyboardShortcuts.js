@@ -36,17 +36,29 @@ export function usePosKeyboardShortcuts({
         });
       } else if (key === '-' || key === 'Subtract') {
         e.preventDefault();
-        setKeypadAmount(prev => {
-          if (!prev) return '-';
-          if (prev.startsWith('-')) return prev.slice(1);
-          return '-' + prev;
-        });
+        const currentlyReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
+        if (currentlyReturn) {
+          if (itemMultiplier < 0) setItemMultiplier(Math.abs(itemMultiplier));
+          setKeypadAmount(prev => (prev.startsWith('-') ? prev.slice(1) : prev));
+        } else {
+          setKeypadAmount(prev => (prev ? '-' + prev : '-'));
+        }
       } else if (key === 'ArrowUp' || key === '+' || key === 'Add') {
         e.preventDefault();
-        setItemMultiplier(prev => Math.min(999, (prev || 1) + 1));
+        setItemMultiplier(prev => {
+          const current = prev || 1;
+          if (current === -1) return 1;
+          if (current < -1) return current + 1;
+          return current + 1;
+        });
       } else if (key === 'ArrowDown') {
         e.preventDefault();
-        setItemMultiplier(prev => Math.max(1, (prev || 1) - 1));
+        setItemMultiplier(prev => {
+          const current = prev || 1;
+          if (current === 1) return -1;
+          if (current > 1) return current - 1;
+          return current - 1;
+        });
       } else if (key === '.' || key === ',') {
         e.preventDefault();
         setKeypadAmount(prev => {
@@ -65,7 +77,7 @@ export function usePosKeyboardShortcuts({
         setKeypadAmount(prev => {
           if (prev && !prev.includes('.')) {
             const parsedQty = parseInt(prev, 10);
-            if (!isNaN(parsedQty) && parsedQty >= 1 && parsedQty <= 999) {
+            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -999 && parsedQty <= 999) {
               setItemMultiplier(parsedQty);
               return '';
             }
@@ -79,7 +91,7 @@ export function usePosKeyboardShortcuts({
         e.preventDefault();
         const amtVal = parseFloat(keypadAmount);
         if (keypadAmount && !isNaN(amtVal) && amtVal !== 0) {
-          const isReturn = keypadAmount.startsWith('-');
+          const isReturn = (itemMultiplier < 0) || keypadAmount.startsWith('-');
           const qty = Math.max(1, Math.abs(itemMultiplier || 1));
           const unitPrice = isReturn ? -Math.abs(amtVal) : Math.abs(amtVal);
           handleAddToCart({

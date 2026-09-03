@@ -15,6 +15,8 @@ export default function KeypadNumberGrid({
 }) {
   const { t } = useTranslation();
 
+  const isReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
+
   return (
     <div className="keypad-grid">
       {/* Row 1: 7 8 9 ⌫ */}
@@ -95,14 +97,14 @@ export default function KeypadNumberGrid({
       {/* ± quick sign toggle */}
       <button
         type="button"
-        className={`key-btn ${amountStr.startsWith('-') ? 'active-return' : ''} ${activeKey === 'PLUSMINUS' || activeKey === '±' ? 'active-press' : ''}`}
+        className={`key-btn ${isReturn ? 'active-return' : ''} ${activeKey === 'PLUSMINUS' || activeKey === '±' ? 'active-press' : ''}`}
         onClick={() => onKeyPress('±')}
         style={{
-          color: amountStr.startsWith('-') ? 'var(--accent-rose)' : 'var(--text-primary)',
+          color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
           fontWeight: '900',
           fontSize: '1.25rem',
-          background: amountStr.startsWith('-') ? 'rgba(239, 68, 68, 0.15)' : undefined,
-          borderColor: amountStr.startsWith('-') ? 'rgba(239, 68, 68, 0.6)' : undefined
+          background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
+          borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
         }}
         title="Změnit znaménko (±)"
       >
@@ -146,13 +148,13 @@ export default function KeypadNumberGrid({
         style={{
           gridColumn: 'span 4',
           minHeight: '48px',
-          background: amountStr.startsWith('-') && hasValidAmount
+          background: isReturn && hasValidAmount
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
             : undefined,
-          borderColor: amountStr.startsWith('-') && hasValidAmount
+          borderColor: isReturn && hasValidAmount
             ? '#ef4444'
             : undefined,
-          boxShadow: amountStr.startsWith('-') && hasValidAmount
+          boxShadow: isReturn && hasValidAmount
             ? '0 4px 14px rgba(239, 68, 68, 0.35)'
             : undefined
         }}
@@ -163,7 +165,7 @@ export default function KeypadNumberGrid({
         <span>
           {!hasValidAmount
             ? t('keypad.enter_amount')
-            : (amountStr.startsWith('-')
+            : (isReturn
                 ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
                 : t('keypad.add_to_cart'))}
         </span>

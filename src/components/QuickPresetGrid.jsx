@@ -131,7 +131,7 @@ export default function QuickPresetGrid({
       return;
     }
 
-    const isReturn = Boolean(keypadAmount && keypadAmount.startsWith('-'));
+    const isReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
     const parsedKeypad = parseFloat(keypadAmount);
     const hasNumericKeypad = !isNaN(parsedKeypad) && parsedKeypad !== 0;
 
@@ -172,7 +172,7 @@ export default function QuickPresetGrid({
     const finalPrice = parseFloat(enteredOpenPrice);
     if (isNaN(finalPrice) || finalPrice === 0 || !openPriceTarget) return;
 
-    const isReturn = Boolean(keypadAmount && keypadAmount.startsWith('-'));
+    const isReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
     const effectivePrice = isReturn ? -Math.abs(finalPrice) : Math.abs(finalPrice);
 
     onAddToCart({

@@ -43,11 +43,17 @@ export default function ManualKeypad({
     triggerKeyAnimation(val);
 
     if (val === 'PLUSMINUS' || val === '±') {
-      setAmountStr(prev => {
-        if (!prev) return '-';
-        if (prev.startsWith('-')) return prev.slice(1);
-        return '-' + prev;
-      });
+      const currentlyReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
+      if (currentlyReturn) {
+        // Toggle return mode OFF
+        if (setItemMultiplier && itemMultiplier < 0) {
+          setItemMultiplier(Math.abs(itemMultiplier));
+        }
+        setAmountStr(prev => (prev.startsWith('-') ? prev.slice(1) : prev));
+      } else {
+        // Toggle return mode ON
+        setAmountStr(prev => (prev ? '-' + prev : '-'));
+      }
       return;
     }
     if (val === 'CLEAR') {
@@ -79,7 +85,7 @@ export default function ManualKeypad({
     setAmountStr(prev => prev + val);
   };
 
-  const isReturn = amountStr.startsWith('-');
+  const isReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
   const hasValidAmount = !isNaN(parseFloat(amountStr)) && parseFloat(amountStr) !== 0;
 
   const handleAddCustomItem = () => {
@@ -193,7 +199,7 @@ export default function ManualKeypad({
               borderTop: '1px dashed rgba(245,158,11,0.35)',
               paddingTop: '2px', marginTop: '2px'
             }}>
-              = Celkem {(itemMultiplier * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1)).toLocaleString('cs-CZ')} Kč
+              = Celkem {(Math.abs(itemMultiplier) * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1)).toLocaleString('cs-CZ')} Kč
             </div>
           )}
         </div>
@@ -202,6 +208,7 @@ export default function ManualKeypad({
         <KeypadVatSelector
           selectedVat={selectedVat}
           setSelectedVat={setSelectedVat}
+          activeKey={activeKey}
         />
 
         {/* ── Quantity Stepper Bar (New Subcomponent) ── */}

@@ -37,9 +37,9 @@ Directory: `/src/components`
   - `OpenPriceModal.jsx`: Numeric touch popover for open-price items and return items.
   - `src/hooks/usePresetDragDrop.js`: Drag-and-drop tile reordering and keyboard arrow shifting.
 - `ManualKeypad.jsx`: Touch numeric pad coordinator with `touch-action: manipulation` zero-delay keys. Unified sign and return handling (stepper strictly positive `>= 1 ks`, `±` controls return mode, subtotal preview strictly negative in return mode). Decomposed into `/src/components/keypad/`:
-  - `KeypadStepperBar.jsx`: Touch quantity stepper (`[-1 ks]`, Multiplier Display / Reset, `[+1 ks]`). Clamped to positive quantities (min 1 ks; disabled at 1 ks).
+  - `KeypadStepperBar.jsx`: Touch quantity stepper with prominent chevron buttons (`ChevronDown` `-1`, `ChevronUp` `+1`) and compact static `{itemMultiplier}×` badge. Stepping down below 1 enters negative return mode (`-1×`, `-2×`); unified with `±` toggle without positive flip.
   - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), dedicated `±` return toggle, and custom product/return insertion button.
-  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) expanded evenly across selector bar.
+  - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) with sleek 36px touch height and tactile active-press scale responsiveness.
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
   - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
 - `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).

@@ -95,7 +95,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       }));
     });
 
-    it('clamps stepper down at 1 ks and never goes negative', () => {
+    it('steps multiplier down to negative to enter return mode', () => {
       const onAddToCart = vi.fn();
       wrapWithLanguage(
         <ManualKeypadHarness
@@ -109,12 +109,48 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(screen.getByRole('button', { name: '0' }));
       fireEvent.click(screen.getByRole('button', { name: '0' }));
 
-      // Step down multiplier button is disabled at 1 ks
-      const stepDownBtn = screen.getByRole('button', { name: /-1 ks/i });
-      expect(stepDownBtn).toBeDisabled();
+      // Step down multiplier from 1 to -1 (activates return)
+      const stepDownBtn = screen.getByRole('button', { name: /snížit|−1|-1/i });
+      fireEvent.click(stepDownBtn);
+
+      // Verify subtotal preview text shows return total
+      expect(screen.getByText(/= Celkem -100 Kč/i)).toBeInTheDocument();
 
       // Click Add button
       const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });
+      fireEvent.click(addBtn);
+
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
+        price: -100,
+        quantity: 1
+      }));
+    });
+
+    it('pressing ± while in negative stepper return mode toggles return off without positive flip', () => {
+      const onAddToCart = vi.fn();
+      wrapWithLanguage(
+        <ManualKeypadHarness
+          onAddToCart={onAddToCart}
+          defaultVat={21}
+        />
+      );
+
+      // Type 100
+      fireEvent.click(screen.getByRole('button', { name: '1' }));
+      fireEvent.click(screen.getByRole('button', { name: '0' }));
+      fireEvent.click(screen.getByRole('button', { name: '0' }));
+
+      // Step down into return mode (-1)
+      const stepDownBtn = screen.getByRole('button', { name: /snížit|−1|-1/i });
+      fireEvent.click(stepDownBtn);
+      expect(screen.getByText(/= Celkem -100 Kč/i)).toBeInTheDocument();
+
+      // Press ± to toggle return mode OFF
+      const plusMinusBtn = screen.getByRole('button', { name: '±' });
+      fireEvent.click(plusMinusBtn);
+
+      // Total must be positive 100, not double-negated
+      const addBtn = screen.getByRole('button', { name: /Vložit do košíku|Přidat/i });
       fireEvent.click(addBtn);
 
       expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({
@@ -133,7 +169,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       );
 
       // Step up to 2 ks
-      const stepUpBtn = screen.getByRole('button', { name: /\+1 ks/i });
+      const stepUpBtn = screen.getByRole('button', { name: /zvýšit|\+1/i });
       fireEvent.click(stepUpBtn);
 
       // Type 100

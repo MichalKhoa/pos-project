@@ -2,7 +2,8 @@ import React from 'react';
 
 export default function KeypadVatSelector({
   selectedVat,
-  setSelectedVat
+  setSelectedVat,
+  activeKey
 }) {
   return (
     <div className="vat-selector" style={{ flexShrink: 0, display: 'flex', gap: '0.35rem' }}>
@@ -10,9 +11,9 @@ export default function KeypadVatSelector({
         <button
           key={rate}
           type="button"
-          className={`vat-btn vat-${rate} ${selectedVat === rate ? 'active' : ''}`}
+          className={`vat-btn vat-${rate} ${selectedVat === rate ? 'active' : ''} ${activeKey === `VAT_${rate}` ? 'active-press' : ''}`}
           onClick={() => setSelectedVat(rate)}
-          style={{ flex: 1, padding: '0.35rem 0', fontSize: '0.82rem', height: '36px' }}
+          style={{ flex: 1, height: '28px' }}
         >
           DPH {rate}%
         </button>

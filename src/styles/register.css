@@ -691,31 +691,65 @@ select.input-field:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 36px;
+  height: 28px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: 0.82rem;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-muted);
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   user-select: none;
   touch-action: manipulation;
+  box-sizing: border-box;
 }
 
 .vat-btn:hover {
-  background: var(--bg-card-hover);
+  background: var(--border-color);
   color: var(--text-primary);
-  border-color: var(--border-focus);
+}
+
+.vat-btn:active,
+.vat-btn.active-press {
+  transform: scale(0.95);
 }
 
 .vat-btn.active {
   background: var(--accent-blue);
   color: #ffffff;
   border-color: var(--accent-blue);
-  box-shadow: var(--shadow-blue-glow);
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.35);
   font-weight: 800;
+}
+
+.multiplier-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 900;
+  user-select: none;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.multiplier-badge.has-multiplier {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: var(--accent-amber);
+}
+
+.multiplier-badge.has-return {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--accent-rose);
 }
 
 /* Keypad Grid Buttons */
