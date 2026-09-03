@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -7,24 +7,17 @@ import AppModals from './components/app/AppModals';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
 import { useCart } from './hooks/useCart';
 import { usePosKeyboardShortcuts } from './hooks/usePosKeyboardShortcuts';
+import { useAutoLock } from './hooks/useAutoLock';
+import { useOfflineSync } from './hooks/useOfflineSync';
+import { usePosCatalog } from './hooks/usePosCatalog';
 import { soundFx } from './utils/audio';
 import { calculateCartTotals } from './utils/tax';
-import { DEFAULT_CATEGORIES, DEFAULT_PRESETS, DEFAULT_STORE_CONFIG } from './data/initialData';
+import { DEFAULT_STORE_CONFIG } from './data/initialData';
 import {
   createSaleBackend,
-  fetchEetStatus,
-  processEetQueue,
   fetchSalesHistoryBackend,
   normalizeSale,
   updateSaleRefundStatusBackend,
-  fetchCategoriesBackend,
-  saveCategoryBackend,
-  deleteCategoryBackend,
-  reorderCategoriesBackend,
-  fetchPresetsBackend,
-  savePresetBackend,
-  deletePresetBackend,
-  reorderPresetsBackend,
   fetchStoreConfigBackend,
   saveStoreConfigBackend,
   broadcastCustomerDisplay,
@@ -39,16 +32,6 @@ import InventoryView from './components/InventoryView';
 import SettingsView from './components/SettingsView';
 import CustomerDisplayView from './components/CustomerDisplayView';
 
-const sanitizePresets = (list) => {
-  if (!Array.isArray(list)) return list;
-  return list.map(p => {
-    if (p && p.isGeneralPreset) {
-      return { ...p, trackStock: false, stockQuantity: 0 };
-    }
-    return p;
-  });
-};
-
 export default function App() {
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
 
@@ -61,22 +44,14 @@ export default function App() {
   }, []);
 
   const [activeTab, setActiveTab] = useState('register');
-  const [pendingSyncCount, setPendingSyncCount] = useState(0);
-  const [showSyncModal, setShowSyncModal] = useState(false);
   const [showShutdownModal, setShowShutdownModal] = useState(false);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [discountModalSelectedItem, setDiscountModalSelectedItem] = useState(null);
   const [historyDateFilter, setHistoryDateFilter] = useState(null);
-  const [isSyncingQueue, setIsSyncingQueue] = useState(false);
-  const [snoozedUntil, setSnoozedUntil] = useState(0);
-  const [syncNotification, setSyncNotification] = useState(null);
   const [flashBanner, setFlashBanner] = useState(null);
-  const [isAppLocked, setIsAppLocked] = useState(false);
   const [mobilePosTab, setMobilePosTab] = useState('keypad');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-
-  const lastActivityRef = useRef(Date.now());
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -84,28 +59,6 @@ export default function App() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-
-  // State — start from localStorage fallback, backend load will overwrite on mount
-  const [categories, setCategories] = useState(() => {
-    try {
-      const saved = localStorage.getItem('himmel_pos_categories');
-      const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_CATEGORIES;
-    } catch {
-      return DEFAULT_CATEGORIES;
-    }
-  });
-
-  const [presets, setPresets] = useState(() => {
-    try {
-      const saved = localStorage.getItem('himmel_pos_presets');
-      const parsed = saved ? JSON.parse(saved) : null;
-      const initial = Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PRESETS;
-      return sanitizePresets(initial);
-    } catch {
-      return sanitizePresets(DEFAULT_PRESETS);
-    }
-  });
 
   const [storeConfig, setStoreConfig] = useState(() => {
     try {
@@ -135,6 +88,38 @@ export default function App() {
     }
     return [];
   });
+
+  const {
+    categories,
+    presets,
+    setPresets,
+    handleAddCategory,
+    handleEditCategory,
+    handleDeleteCategory,
+    handleReorderCategories,
+    handleAddPreset,
+    handleUpdatePreset,
+    handleDeletePreset,
+    handleReorderPresets
+  } = usePosCatalog();
+
+  const {
+    pendingSyncCount,
+    showSyncModal,
+    setShowSyncModal,
+    isSyncingQueue,
+    syncNotification,
+    setSyncNotification,
+    handleSnoozeSync,
+    handleSyncQueueNow,
+    checkPendingOfflineSales
+  } = useOfflineSync({ salesHistory, setSalesHistory });
+
+  const {
+    isAppLocked,
+    setIsAppLocked,
+    unlockApp
+  } = useAutoLock(storeConfig?.autoLockMinutes);
 
   const {
     cartItems,
@@ -315,15 +300,7 @@ export default function App() {
     setCurrentReceiptData(stornoSale);
   };
 
-  // Sync to LocalStorage (offline fallback)
-  useEffect(() => {
-    localStorage.setItem('himmel_pos_categories', JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    localStorage.setItem('himmel_pos_presets', JSON.stringify(presets));
-  }, [presets]);
-
+  // Sync storeConfig to LocalStorage
   useEffect(() => {
     if (storeConfig) {
       const safeConfig = { ...storeConfig };
@@ -332,19 +309,14 @@ export default function App() {
     }
   }, [storeConfig]);
 
+  // Sync salesHistory to LocalStorage
   useEffect(() => {
     localStorage.setItem('himmel_pos_sales', JSON.stringify(salesHistory));
   }, [salesHistory]);
 
-  // Load categories, presets & store config from SQLite backend on mount
+  // Load store config & sales history from SQLite backend on mount
   useEffect(() => {
     const reloadBackendData = () => {
-      fetchCategoriesBackend().then(data => {
-        if (Array.isArray(data) && data.length > 0) setCategories(data);
-      });
-      fetchPresetsBackend().then(data => {
-        if (Array.isArray(data) && data.length > 0) setPresets(sanitizePresets(data));
-      });
       fetchStoreConfigBackend().then(data => {
         if (data && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
@@ -374,11 +346,7 @@ export default function App() {
       if (!e.key || !e.newValue) return;
       try {
         const data = JSON.parse(e.newValue);
-        if (e.key === 'himmel_pos_categories' && Array.isArray(data)) {
-          setCategories(data);
-        } else if (e.key === 'himmel_pos_presets' && Array.isArray(data)) {
-          setPresets(sanitizePresets(data));
-        } else if (e.key === 'himmel_pos_config' && typeof data === 'object') {
+        if (e.key === 'himmel_pos_config' && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
         } else if (e.key === 'himmel_pos_sales' && Array.isArray(data)) {
           setSalesHistory(data);
@@ -407,70 +375,6 @@ export default function App() {
     await checkPendingOfflineSales();
   };
 
-  const checkPendingOfflineSales = useCallback(async () => {
-    try {
-      const eetStatus = await fetchEetStatus();
-      if (eetStatus && typeof eetStatus.pending_offline_sales === 'number') {
-        const count = eetStatus.pending_offline_sales;
-        setPendingSyncCount(count);
-
-        if (count > 0) {
-          const now = Date.now();
-          if (now >= snoozedUntil) {
-            setShowSyncModal(true);
-          }
-        } else {
-          setShowSyncModal(false);
-        }
-      }
-    } catch (err) {
-      console.warn('EET status check error:', err);
-    }
-  }, [snoozedUntil]);
-
-  useEffect(() => {
-    checkPendingOfflineSales(true);
-
-    const handleOnline = () => {
-      checkPendingOfflineSales(true);
-    };
-
-    window.addEventListener('online', handleOnline);
-    const interval = setInterval(() => {
-      checkPendingOfflineSales(false);
-    }, 30000);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      clearInterval(interval);
-    };
-  }, [checkPendingOfflineSales]);
-
-  // Auto-lock cashier app on 15 minutes of inactivity
-  useEffect(() => {
-    const handleUserActivity = () => {
-      lastActivityRef.current = Date.now();
-    };
-
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
-    events.forEach(evt => window.addEventListener(evt, handleUserActivity));
-
-    const checkInterval = setInterval(() => {
-      const minutesLimit = storeConfig?.autoLockMinutes !== undefined ? storeConfig.autoLockMinutes : 15;
-      if (minutesLimit > 0 && !isAppLocked) {
-        const elapsedMs = Date.now() - lastActivityRef.current;
-        if (elapsedMs >= minutesLimit * 60 * 1000) {
-          setIsAppLocked(true);
-        }
-      }
-    }, 10000);
-
-    return () => {
-      events.forEach(evt => window.removeEventListener(evt, handleUserActivity));
-      clearInterval(checkInterval);
-    };
-  }, [storeConfig?.autoLockMinutes, isAppLocked]);
-
   // Intercept window close button (X)
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -496,68 +400,6 @@ export default function App() {
       window.removeEventListener('pagehide', handleUnload);
     };
   }, []);
-
-  const handleSnoozeSync = () => {
-    setSnoozedUntil(Date.now() + 5 * 60 * 1000);
-    setShowSyncModal(false);
-  };
-
-  const handleSyncQueueNow = async () => {
-    setShowSyncModal(false);
-    setIsSyncingQueue(true);
-    setSnoozedUntil(Date.now() + 5 * 60 * 1000);
-
-    try {
-      const res = await processEetQueue();
-      let processed = res?.processed_count || 0;
-
-      const offlineLocalSales = salesHistory.filter(s => s.eet_status === 'OFFLINE_PENDING' || s.is_sent_to_eet === false);
-      for (const localSale of offlineLocalSales) {
-        const backendRes = await createSaleBackend(localSale);
-        if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
-          processed += 1;
-        }
-      }
-
-      if (res?.status === 'EET_DISABLED') {
-        setSyncNotification({
-          type: 'info',
-          message: 'EET evidování je v nastavení vypnuto.'
-        });
-      } else if (processed > 0) {
-        setSyncNotification({
-          type: 'success',
-          message: `✅ Úspěšně odesláno ${processed} neodeslaných účtenek na EET (Finanční správa ČR).`
-        });
-      } else if (offlineLocalSales.length > 0 || (res?.processed_count === 0 && res?.status === 'SUCCESS')) {
-        setSyncNotification({
-          type: 'error',
-          message: '⚠️ Nepodařilo se odeslat neodeslané účtenky na EET (server je nedostupný nebo vypršel časový limit).'
-        });
-      } else {
-        setSyncNotification({
-          type: 'success',
-          message: 'Všechny tržby jsou již řádně evidovány na EET.'
-        });
-      }
-
-      const updatedHistory = await fetchSalesHistoryBackend();
-      if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
-        setSalesHistory(updatedHistory);
-      }
-    } catch (err) {
-      setSyncNotification({
-        type: 'error',
-        message: `Chyba při komunikaci s EET serverem: ${err.message}`
-      });
-    } finally {
-      setIsSyncingQueue(false);
-      const eetStatus = await fetchEetStatus();
-      if (eetStatus && typeof eetStatus.pending_offline_sales === 'number') {
-        setPendingSyncCount(eetStatus.pending_offline_sales);
-      }
-    }
-  };
 
   // Cart operations
   const handleAddToCart = useCallback((item, customQty = null) => {
@@ -603,52 +445,6 @@ export default function App() {
     storeConfig
   });
 
-  // Category handlers
-  const handleAddCategory = (name) => {
-    if (!name.trim()) return;
-    const newCat = {
-      id: `cat-${Date.now()}`,
-      name: name.trim(),
-      position: categories.length
-    };
-    setCategories(prev => [...prev, newCat]);
-    saveCategoryBackend(newCat);
-    return newCat.id;
-  };
-
-  const handleEditCategory = (catId, newName) => {
-    if (!newName.trim() || catId === 'all') return;
-    setCategories(prev => prev.map(c => {
-      if (c.id !== catId) return c;
-      const updated = { ...c, name: newName.trim() };
-      saveCategoryBackend(updated);
-      return updated;
-    }));
-  };
-
-  const handleDeleteCategory = (catId) => {
-    if (catId === 'all') return;
-    setCategories(prev => prev.filter(c => c.id !== catId));
-    deleteCategoryBackend(catId);
-    const fallbackCategory = categories.find(c => c.id !== 'all' && c.id !== catId)?.id || 'all';
-    setPresets(prev => prev.map(p => {
-      if (p.category !== catId) return p;
-      const updated = { ...p, category: fallbackCategory };
-      savePresetBackend(updated);
-      return updated;
-    }));
-  };
-
-  const handleReorderCategories = async (reordered) => {
-    setCategories(reordered);
-    try {
-      localStorage.setItem('himmel_pos_categories', JSON.stringify(reordered));
-    } catch {
-      // ignore
-    }
-    await reorderCategoriesBackend(reordered);
-  };
-
   const handleOpenCustomDiscountModal = (item = null) => {
     setDiscountModalSelectedItem(item);
     setIsDiscountModalOpen(true);
@@ -671,31 +467,6 @@ export default function App() {
         }
       }
     }
-  };
-
-  // Preset handlers
-  const handleAddPreset = async (presetData) => {
-    const newPreset = {
-      ...presetData,
-      id: `preset-${Date.now()}`
-    };
-    setPresets(prev => sanitizePresets([...prev, newPreset]));
-    await savePresetBackend(newPreset);
-  };
-
-  const handleUpdatePreset = async (updated) => {
-    setPresets(prev => sanitizePresets(prev.map(p => p.id === updated.id ? updated : p)));
-    await savePresetBackend(updated);
-  };
-
-  const handleDeletePreset = async (presetId) => {
-    setPresets(prev => prev.filter(p => p.id !== presetId));
-    await deletePresetBackend(presetId);
-  };
-
-  const handleReorderPresets = async (reordered) => {
-    setPresets(sanitizePresets(reordered));
-    await reorderPresetsBackend(reordered);
   };
 
   // Checkout flow
@@ -1002,10 +773,7 @@ export default function App() {
         showShutdownModal={showShutdownModal}
         setShowShutdownModal={setShowShutdownModal}
         isAppLocked={isAppLocked}
-        onUnlockApp={() => {
-          setIsAppLocked(false);
-          lastActivityRef.current = Date.now();
-        }}
+        onUnlockApp={unlockApp}
         undoToast={undoToast}
         onUndoLastAction={undoLastAction}
         onDismissUndoToast={dismissUndoToast}
