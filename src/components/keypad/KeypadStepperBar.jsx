@@ -51,22 +51,22 @@ export default function KeypadStepperBar({
         title="Snížit množství (−1 / Vratka)"
         style={{
           flex: 1.3,
-          height: '42px',
+          height: '38px',
           background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
           color: '#ffffff',
           border: 'none',
-          fontSize: '0.95rem',
+          fontSize: '0.92rem',
           fontWeight: '900',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.35rem',
+          gap: '0.3rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 6px rgba(239, 68, 68, 0.35)',
+          boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
           cursor: 'pointer'
         }}
       >
-        <ChevronDown size={20} strokeWidth={2.5} />
+        <ChevronDown size={18} strokeWidth={2.5} />
         <span>-1</span>
       </button>
 
@@ -75,8 +75,8 @@ export default function KeypadStepperBar({
         className={`multiplier-badge ${isReturn ? 'has-return' : (itemMultiplier > 1 ? 'has-multiplier' : '')}`}
         style={{
           flex: 0.8,
-          height: '42px',
-          fontSize: '1rem',
+          height: '38px',
+          fontSize: '0.95rem',
           letterSpacing: '0.02em',
           padding: '0 0.25rem'
         }}
@@ -93,22 +93,22 @@ export default function KeypadStepperBar({
         title="Zvýšit množství (+1)"
         style={{
           flex: 1.3,
-          height: '42px',
+          height: '38px',
           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
           color: '#ffffff',
           border: 'none',
-          fontSize: '0.95rem',
+          fontSize: '0.92rem',
           fontWeight: '900',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.35rem',
+          gap: '0.3rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 6px rgba(16, 185, 129, 0.35)',
+          boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
           cursor: 'pointer'
         }}
       >
-        <ChevronUp size={20} strokeWidth={2.5} />
+        <ChevronUp size={18} strokeWidth={2.5} />
         <span>+1</span>
       </button>
     </div>

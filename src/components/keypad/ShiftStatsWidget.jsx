@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { BarChart3, Banknote, CreditCard, Receipt, ArrowRight, Printer } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { BarChart3, Banknote, CreditCard, Receipt, ArrowRight, Printer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { formatLocalDate } from '../../utils/dateUtils';
 
@@ -52,28 +52,39 @@ export default function ShiftStatsWidget({
     };
   }, [salesHistory, todayStr]);
 
+  const [isExpanded, setIsExpanded] = useState(true);
+
   return (
     <div
       className="shift-stats-card pos-standalone-card"
       style={{
-        background: 'var(--bg-main)',
-        border: '1px solid var(--border-color)',
+        background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--border-color) 70%, transparent)',
         borderRadius: 'var(--radius-md)',
-        padding: '0.75rem 0.85rem',
-        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
+        padding: isExpanded ? '0.75rem 0.85rem' : '0.55rem 0.85rem',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.5rem'
+        gap: isExpanded ? '0.5rem' : '0',
+        transition: 'all 0.2s ease',
+        flexShrink: 0
       }}
     >
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+      {/* Header - Clickable Collapse / Expand Toggle */}
+      <div
+        onClick={() => setIsExpanded(prev => !prev)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          userSelect: 'none',
+          touchAction: 'manipulation'
+        }}
+        title={isExpanded ? 'Sbalit přehled směny' : 'Rozbalit přehled směny'}
+      >
         <div style={{
-          fontSize: '0.72rem',
+          fontSize: '0.7rem',
           fontWeight: '800',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
@@ -86,18 +97,40 @@ export default function ShiftStatsWidget({
           <span>{t('shift_stats.title') || 'Dnešní směna (Přehled)'}</span>
         </div>
 
-        <span style={{
-          fontSize: '0.72rem',
-          fontWeight: '800',
-          color: 'var(--accent-blue)',
-          background: 'rgba(59, 130, 246, 0.1)',
-          border: '1px solid rgba(59, 130, 246, 0.25)',
-          padding: '2px 7px',
-          borderRadius: '999px'
-        }}>
-          {todaySalesCount} {t('shift_stats.receipts') || 'účtenek'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          {!isExpanded && (
+            <span style={{
+              fontSize: '0.78rem',
+              fontWeight: '900',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--accent-emerald)',
+              marginRight: '2px'
+            }}>
+              {todayRevenue.toLocaleString('cs-CZ')} Kč
+            </span>
+          )}
+
+          <span style={{
+            fontSize: '0.72rem',
+            fontWeight: '800',
+            color: 'var(--accent-blue)',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            padding: '2px 7px',
+            borderRadius: '999px',
+            whiteSpace: 'nowrap'
+          }}>
+            {todaySalesCount} {t('shift_stats.receipts') || 'účtenek'}
+          </span>
+
+          <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </span>
+        </div>
       </div>
+
+      {isExpanded && (
+        <>
 
       {/* KPI Grid (2x2) */}
       <div style={{
@@ -107,8 +140,8 @@ export default function ShiftStatsWidget({
       }}>
         {/* Total Revenue */}
         <div style={{
-          background: 'var(--bg-input)',
-          border: '1px solid var(--border-color)',
+          background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--border-color) 50%, transparent)',
           borderRadius: '10px',
           padding: '0.5rem 0.65rem',
           gridColumn: 'span 2'
@@ -129,8 +162,8 @@ export default function ShiftStatsWidget({
 
         {/* Cash */}
         <div style={{
-          background: 'var(--bg-input)',
-          border: '1px solid var(--border-color)',
+          background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--border-color) 50%, transparent)',
           borderRadius: '10px',
           padding: '0.45rem 0.65rem'
         }}>
@@ -151,8 +184,8 @@ export default function ShiftStatsWidget({
 
         {/* Card */}
         <div style={{
-          background: 'var(--bg-input)',
-          border: '1px solid var(--border-color)',
+          background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--border-color) 50%, transparent)',
           borderRadius: '10px',
           padding: '0.45rem 0.65rem'
         }}>
@@ -178,19 +211,20 @@ export default function ShiftStatsWidget({
           type="button"
           onClick={onPrintDailySummary}
           style={{
-            background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(2, 132, 199, 0.25) 100%)',
-            border: '1px solid rgba(2, 132, 199, 0.4)',
+            background: 'color-mix(in srgb, var(--accent-blue) 12%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
             borderRadius: 'var(--radius-sm)',
             padding: '0.45rem 0.65rem',
             fontSize: '0.78rem',
             fontWeight: '800',
-            color: '#38bdf8',
+            color: 'var(--accent-blue)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.4rem',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
+            marginTop: '0.1rem',
             boxShadow: '0 2px 6px rgba(2, 132, 199, 0.12)'
           }}
           title={t('shift_stats.print_summary_tooltip') || 'Vytisknout souhrn dnešních tržeb na pokladní tiskárnu a otevřít zásuvku'}
@@ -234,6 +268,8 @@ export default function ShiftStatsWidget({
           <span>{t('shift_stats.view_history') || 'Zobrazit dnešní účtenky'}</span>
           <ArrowRight size={13} />
         </button>
+      )}
+        </>
       )}
     </div>
   );

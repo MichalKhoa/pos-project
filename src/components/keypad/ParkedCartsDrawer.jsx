@@ -69,19 +69,19 @@ export default function ParkedCartsDrawer({
       <div
         className="hold-cart-card-standalone pos-standalone-card"
         style={{
-          background: 'var(--bg-main)',
-          border: '1px solid var(--border-color)',
+          background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--border-color) 70%, transparent)',
           borderRadius: 'var(--radius-md)',
-          padding: '0.75rem 0.85rem',
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
+          padding: '0.65rem 0.85rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.5rem',
+          gap: '0.45rem',
           flexShrink: 0
         }}
       >
         <div style={{
-          fontSize: '0.72rem',
+          fontSize: '0.7rem',
           fontWeight: '800',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
@@ -102,29 +102,29 @@ export default function ParkedCartsDrawer({
             disabled={!hasCartItems}
             onClick={() => onParkCart && onParkCart()}
             style={{
-              height: '46px',
-              fontSize: '0.86rem',
+              height: '42px',
+              fontSize: '0.84rem',
               fontWeight: '800',
               background: hasCartItems
-                ? 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(217,119,6,0.35) 100%)'
-                : 'var(--bg-card)',
+                ? 'color-mix(in srgb, var(--accent-amber) 16%, transparent)'
+                : 'transparent',
               color: hasCartItems ? 'var(--accent-amber)' : 'var(--text-muted)',
-              border: hasCartItems ? '1.5px solid rgba(245,158,11,0.6)' : '1px solid var(--border-color)',
-              borderRadius: '10px',
+              border: hasCartItems ? '1.5px solid color-mix(in srgb, var(--accent-amber) 50%, transparent)' : '1px solid color-mix(in srgb, var(--border-color) 60%, transparent)',
+              borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.4rem',
               opacity: hasCartItems ? 1 : 0.45,
               cursor: hasCartItems ? 'pointer' : 'default',
-              boxShadow: hasCartItems ? '0 3px 10px rgba(245,158,11,0.2)' : 'none',
+              boxShadow: hasCartItems ? '0 2px 8px rgba(245,158,11,0.18)' : 'none',
               whiteSpace: 'nowrap',
               padding: '0 0.5rem',
               overflow: 'hidden'
             }}
             title={t('parked_carts.park_btn_title')}
           >
-            <PauseCircle size={18} style={{ flexShrink: 0 }} />
+            <PauseCircle size={16} style={{ flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('parked_carts.park_btn')}</span>
           </button>
 
@@ -135,29 +135,29 @@ export default function ParkedCartsDrawer({
             disabled={parkedCarts.length === 0}
             onClick={() => setModalOpen(true)}
             style={{
-              height: '46px',
-              fontSize: '0.86rem',
+              height: '42px',
+              fontSize: '0.84rem',
               fontWeight: '800',
               background: parkedCarts.length > 0
-                ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                : 'var(--bg-card)',
+                ? 'var(--accent-blue)'
+                : 'transparent',
               color: parkedCarts.length > 0 ? '#fff' : 'var(--text-muted)',
-              border: parkedCarts.length > 0 ? 'none' : '1px solid var(--border-color)',
-              borderRadius: '10px',
+              border: parkedCarts.length > 0 ? 'none' : '1px solid color-mix(in srgb, var(--border-color) 60%, transparent)',
+              borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.4rem',
               opacity: parkedCarts.length > 0 ? 1 : 0.45,
               cursor: parkedCarts.length > 0 ? 'pointer' : 'default',
-              boxShadow: parkedCarts.length > 0 ? '0 3px 12px rgba(59,130,246,0.35)' : 'none',
+              boxShadow: parkedCarts.length > 0 ? '0 2px 10px rgba(59,130,246,0.3)' : 'none',
               whiteSpace: 'nowrap',
               padding: '0 0.5rem',
               overflow: 'hidden'
             }}
             title={t('parked_carts.restore_btn_title')}
           >
-            <PlayCircle size={18} style={{ flexShrink: 0 }} />
+            <PlayCircle size={16} style={{ flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('parked_carts.restore_btn')} ({parkedCarts.length})</span>
           </button>
         </div>

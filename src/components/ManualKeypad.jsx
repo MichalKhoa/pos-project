@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator } from 'lucide-react';
+import { Calculator, Delete, Plus } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
 import KeypadVatSelector from './keypad/KeypadVatSelector';
@@ -118,22 +118,27 @@ export default function ManualKeypad({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', overflowY: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
       {/* ── CARD 1: NUMERIC KEYPAD SECTION ───────────────── */}
       <div
         className="keypad-section touch-large-keypad"
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.5rem',
+          gap: '0.45rem',
           flexShrink: 0
         }}
       >
-        {/* ── Item name input ─────────────────── */}
+        {/* ── Standalone Item name input ─────────────────── */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.45rem',
-          height: '36px', padding: '0 0.65rem', flexShrink: 0,
-          background: 'var(--bg-main)', borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.45rem',
+          height: '36px',
+          padding: '0 0.65rem',
+          flexShrink: 0,
+          background: 'var(--bg-main)',
+          borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)'
         }}>
           <Calculator size={15} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
@@ -150,19 +155,27 @@ export default function ManualKeypad({
               }
             }}
             style={{
-              fontSize: '0.85rem', border: 'none', outline: 'none',
-              background: 'transparent', width: '100%', height: '100%',
+              fontSize: '0.85rem',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              width: '100%',
+              height: '100%',
               color: 'var(--text-primary)'
             }}
           />
         </div>
 
-        {/* ── Amount display card ───────────────────────────────── */}
+        {/* ── Amount display card with inline Backspace ── */}
         <div
           className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
           style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-            padding: '0.4rem 0.75rem', flexShrink: 0, borderRadius: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            padding: '0.45rem 0.75rem',
+            flexShrink: 0,
+            borderRadius: '10px',
             border: isReturn
               ? '2px solid var(--accent-rose)'
               : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)'),
@@ -175,36 +188,108 @@ export default function ManualKeypad({
             transition: 'all 0.2s ease'
           }}
         >
-          <span style={{
-            fontSize: '0.63rem', fontWeight: '800', textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            color: isReturn
-              ? 'var(--accent-rose)'
-              : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
-          }}>
-            {isReturn ? `${t('keypad.amount_label')} — ↩️ VRATKA` : t('keypad.amount_label')}
-          </span>
+          {/* Header row: mode indicator & multiplier pill */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{
+              fontSize: '0.64rem',
+              fontWeight: '800',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: isReturn
+                ? 'var(--accent-rose)'
+                : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
+            }}>
+              {isReturn ? `${t('keypad.amount_label')} — ↩️ VRATKA` : t('keypad.amount_label')}
+            </span>
 
-          {/* Big price / equation */}
+            {itemMultiplier !== 1 && (
+              <span style={{
+                fontSize: '0.64rem',
+                fontWeight: '800',
+                color: 'var(--accent-amber)',
+                background: 'rgba(245,158,11,0.12)',
+                padding: '1px 5px',
+                borderRadius: '4px'
+              }}>
+                ⚡ {itemMultiplier}×
+              </span>
+            )}
+          </div>
+
+          {/* Main Price Readout Row with Inline Backspace */}
           <div style={{
-            fontSize: itemMultiplier !== 1 ? '1.2rem' : '1.4rem',
-            fontWeight: '900',
-            fontFamily: 'var(--font-mono)',
-            color: isReturn ? 'var(--accent-rose)' : (itemMultiplier > 1 ? 'var(--accent-amber)' : (amountStr ? 'var(--text-primary)' : 'var(--text-muted)')),
-            wordBreak: 'break-all'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
+            marginTop: '1px'
           }}>
-            {itemMultiplier !== 1
-              ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : (isReturn ? '-___ Kč' : '___ Kč')}`
-              : (amountStr ? `${amountStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč'))}
+            <div style={{
+              fontSize: itemMultiplier !== 1 ? '1.25rem' : '1.5rem',
+              fontWeight: '900',
+              fontFamily: 'var(--font-mono)',
+              color: isReturn
+                ? 'var(--accent-rose)'
+                : (itemMultiplier > 1 ? 'var(--accent-amber)' : (amountStr ? 'var(--text-primary)' : 'var(--text-muted)')),
+              wordBreak: 'break-all',
+              flex: 1
+            }}>
+              {itemMultiplier !== 1
+                ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : (isReturn ? '-___ Kč' : '___ Kč')}`
+                : (amountStr ? `${amountStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč'))}
+            </div>
+
+            {/* Inline Backspace button (Subtle & Borderless) */}
+            <button
+              type="button"
+              onClick={() => handleKeyPress('BACK')}
+              disabled={!amountStr && itemMultiplier === 1}
+              style={{
+                width: '34px',
+                height: '34px',
+                minWidth: '34px',
+                borderRadius: 'var(--radius-sm)',
+                border: 'none',
+                background: 'transparent',
+                color: amountStr ? 'var(--text-muted)' : 'transparent',
+                opacity: amountStr ? 0.75 : 0,
+                cursor: amountStr ? 'pointer' : 'default',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.15s ease, opacity 0.15s ease, background 0.15s ease',
+                flexShrink: 0,
+                padding: 0
+              }}
+              onMouseEnter={e => {
+                if (amountStr) {
+                  e.currentTarget.style.color = 'var(--accent-rose)';
+                  e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-rose) 10%, transparent)';
+                  e.currentTarget.style.opacity = '1';
+                }
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = amountStr ? 'var(--text-muted)' : 'transparent';
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.opacity = amountStr ? '0.75' : '0';
+              }}
+              title="Smazat poslední číslici (Backspace)"
+            >
+              <Delete size={18} />
+            </button>
           </div>
 
           {/* Subtotal line */}
           {itemMultiplier !== 1 && hasValidAmount && (
             <div style={{
-              fontSize: '0.82rem', fontWeight: '800', fontFamily: 'var(--font-mono)',
-              color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', textAlign: 'right',
+              fontSize: '0.82rem',
+              fontWeight: '800',
+              fontFamily: 'var(--font-mono)',
+              color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
+              textAlign: 'right',
               borderTop: '1px dashed rgba(245,158,11,0.35)',
-              paddingTop: '2px', marginTop: '2px'
+              paddingTop: '2px',
+              marginTop: '2px'
             }}>
               = Celkem {(Math.abs(itemMultiplier) * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1)).toLocaleString('cs-CZ')} Kč
             </div>
@@ -238,26 +323,64 @@ export default function ManualKeypad({
           hasValidAmount={hasValidAmount}
           onAddCustomItem={handleAddCustomItem}
         />
+
+        {/* ── Keypad Bottom Action Dock (Placeholder for future action buttons) ── */}
+        <div
+          className="keypad-bottom-dock"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: '0.4rem',
+            width: '100%',
+            marginTop: '0.15rem'
+          }}
+        >
+          <button
+            type="button"
+            className="key-btn"
+            style={{
+              height: '38px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--radius-md)',
+              border: '1px dashed color-mix(in srgb, var(--border-color) 70%, transparent)',
+              background: 'color-mix(in srgb, var(--text-primary) 2%, transparent)',
+              color: 'var(--text-muted)',
+              cursor: 'default',
+              transition: 'all 0.15s ease',
+              touchAction: 'manipulation'
+            }}
+            aria-label="Placeholder pro budoucí rychlou akci"
+          >
+            <Plus size={16} style={{ opacity: 0.5 }} />
+          </button>
+        </div>
       </div>
 
-      {/* ── CARD 2: STANDALONE HOLD / PARK CART STORAGE CARD ─────── */}
-      <ParkedCartsDrawer
-        hasCartItems={hasCartItems}
-        parkedCarts={parkedCarts}
-        onParkCart={onParkCart}
-        onRestoreParkedCart={onRestoreParkedCart}
-        onDeleteParkedCart={onDeleteParkedCart}
-        onUpdateParkedCartNote={onUpdateParkedCartNote}
-        isOpen={isParkedModalOpen}
-        onOpenChange={onParkedModalOpenChange}
-      />
+      {/* ── LIGHT SEPARATOR & AUXILIARY WIDGETS SECTION ───────────── */}
+      <div className="category-presets-separator" style={{ margin: '0.85rem 0 0.55rem 0' }} />
 
-      {/* ── CARD 3: SHIFT QUICK STATS MINI-WIDGET (Option D) ─────── */}
-      <ShiftStatsWidget
-        salesHistory={salesHistory}
-        onNavigateToHistory={onNavigateToHistory}
-        onPrintDailySummary={onPrintDailySummary}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        {/* ── CARD 2: STANDALONE HOLD / PARK CART STORAGE CARD ─────── */}
+        <ParkedCartsDrawer
+          hasCartItems={hasCartItems}
+          parkedCarts={parkedCarts}
+          onParkCart={onParkCart}
+          onRestoreParkedCart={onRestoreParkedCart}
+          onDeleteParkedCart={onDeleteParkedCart}
+          onUpdateParkedCartNote={onUpdateParkedCartNote}
+          isOpen={isParkedModalOpen}
+          onOpenChange={onParkedModalOpenChange}
+        />
+
+        {/* ── CARD 3: SHIFT QUICK STATS MINI-WIDGET (Option D) ─────── */}
+        <ShiftStatsWidget
+          salesHistory={salesHistory}
+          onNavigateToHistory={onNavigateToHistory}
+          onPrintDailySummary={onPrintDailySummary}
+        />
+      </div>
     </div>
   );
 }

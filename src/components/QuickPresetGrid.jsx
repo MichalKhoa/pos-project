@@ -210,33 +210,6 @@ export default function QuickPresetGrid({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
-          {/* Dedicated Modern Product Search Bar */}
-          <div className="preset-search-bar">
-            <Search size={15} className="preset-search-icon" />
-            <input
-              type="text"
-              className="preset-search-input"
-              placeholder={t('presets.search')}
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <span className="preset-search-badge">
-                {filteredPresets.length}
-              </span>
-            )}
-            {searchTerm && (
-              <button
-                type="button"
-                className="preset-search-clear"
-                onClick={() => setSearchTerm('')}
-                title={t('common.clear') || 'Vymazat'}
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-
           {itemMultiplier > 1 && (
             <div
               style={{
@@ -341,6 +314,33 @@ export default function QuickPresetGrid({
               <span>{t('presets.add_category')}</span>
             </button>
           )}
+
+          {/* Dedicated Modern Product Search Bar (First from the right) */}
+          <div className="preset-search-bar">
+            <Search size={15} className="preset-search-icon" />
+            <input
+              type="text"
+              className="preset-search-input"
+              placeholder={t('presets.search')}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <span className="preset-search-badge">
+                {filteredPresets.length}
+              </span>
+            )}
+            {searchTerm && (
+              <button
+                type="button"
+                className="preset-search-clear"
+                onClick={() => setSearchTerm('')}
+                title={t('common.clear') || 'Vymazat'}
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
