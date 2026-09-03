@@ -9,6 +9,7 @@ import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
 import ReceiptInspectorPanel from './history/ReceiptInspectorPanel.jsx';
 import { useSalesPeriodFilter } from '../hooks/useSalesPeriodFilter';
+import { fetchSalesHistoryBackend } from '../api/posApi';
 
 export default function SalesHistoryView({
   salesHistory,
@@ -39,6 +40,7 @@ export default function SalesHistoryView({
     handleStepPeriod,
     handleSelectPreset,
     periodBadgeLabel,
+    computedDateRange,
     periodFilteredSales
   } = useSalesPeriodFilter({ salesHistory, initialDateFilter });
 
@@ -47,12 +49,49 @@ export default function SalesHistoryView({
   const [pageSize, setPageSize] = useState(15);
   const [docTypeFilter, setDocTypeFilter] = useState('all'); // 'all' | 'sales' | 'refunds'
 
+  // Server-driven sales state
+  const [serverSales, setServerSales] = useState(null);
+  const [serverTotalCount, setServerTotalCount] = useState(null);
+
   // Reset pagination when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, periodFilter, referenceDate, fromDate, toDate, pageSize, docTypeFilter]);
 
-  // Apply document type filter and search query
+  // Fetch paginated sales from backend with automatic fallback to local salesHistory
+  useEffect(() => {
+    let isCancelled = false;
+    const fromIso = periodFilter !== 'all' ? computedDateRange.start.toISOString() : null;
+    const toIso = periodFilter !== 'all' ? computedDateRange.end.toISOString() : null;
+
+    fetchSalesHistoryBackend({
+      limit: pageSize,
+      offset: (currentPage - 1) * pageSize,
+      fromDate: fromIso,
+      toDate: toIso,
+      docType: docTypeFilter,
+      search: searchTerm.trim() || null,
+      returnDetails: true
+    }).then(res => {
+      if (isCancelled) return;
+      if (res && Array.isArray(res.sales)) {
+        setServerSales(res.sales);
+        setServerTotalCount(res.totalCount);
+      } else {
+        setServerSales(null);
+        setServerTotalCount(null);
+      }
+    }).catch(() => {
+      if (!isCancelled) {
+        setServerSales(null);
+        setServerTotalCount(null);
+      }
+    });
+
+    return () => { isCancelled = true; };
+  }, [currentPage, pageSize, docTypeFilter, searchTerm, periodFilter, computedDateRange, salesHistory]);
+
+  // Apply document type filter and search query for local fallback
   const searchFilteredSales = useMemo(() => {
     return periodFilteredSales.filter(sale => {
       if (!sale) return false;
@@ -75,13 +114,27 @@ export default function SalesHistoryView({
     });
   }, [periodFilteredSales, docTypeFilter, searchTerm]);
 
+  // Pagination Math (Server-driven if serverSales available, otherwise client-side fallback)
+  const isServerDriven = serverSales !== null;
+  const totalItems = isServerDriven ? (serverTotalCount !== null ? serverTotalCount : serverSales.length) : searchFilteredSales.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = isServerDriven ? Math.min(startIndex + serverSales.length, totalItems) : Math.min(startIndex + pageSize, totalItems);
+
+  const paginatedSales = useMemo(() => {
+    if (isServerDriven) return serverSales;
+    return searchFilteredSales.slice(startIndex, endIndex);
+  }, [isServerDriven, serverSales, searchFilteredSales, startIndex, endIndex]);
+
   // High-level summary metrics
   const { totalRevenue, cashRevenue, cardRevenue } = useMemo(() => {
     let rev = 0;
     let cash = 0;
     let card = 0;
+    const sourceList = (!isServerDriven && searchFilteredSales.length > 0) ? searchFilteredSales : (serverSales || searchFilteredSales);
 
-    searchFilteredSales.forEach(sale => {
+    sourceList.forEach(sale => {
       const amount = parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0;
       rev += amount;
       if (sale.cashAmount !== undefined || sale.cardAmount !== undefined || sale.cash_amount !== undefined || sale.card_amount !== undefined) {
@@ -95,29 +148,18 @@ export default function SalesHistoryView({
     });
 
     return { totalRevenue: rev, cashRevenue: cash, cardRevenue: card };
-  }, [searchFilteredSales]);
+  }, [isServerDriven, searchFilteredSales, serverSales]);
 
-  // Pagination Math
-  const totalItems = searchFilteredSales.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIndex = (validCurrentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-
-  const paginatedSales = useMemo(() => {
-    return searchFilteredSales.slice(startIndex, endIndex);
-  }, [searchFilteredSales, startIndex, endIndex]);
-
-  // Keep activeSale in sync with searchFilteredSales
+  // Keep activeSale in sync with paginatedSales
   useEffect(() => {
-    if (searchFilteredSales.length > 0) {
-      if (!activeSale || !searchFilteredSales.some(s => (s.id && s.id === activeSale.id) || (s.receiptNumber && s.receiptNumber === activeSale.receiptNumber))) {
-        setActiveSale(searchFilteredSales[0]);
+    if (paginatedSales.length > 0) {
+      if (!activeSale || !paginatedSales.some(s => (s.id && s.id === activeSale.id) || (s.receiptNumber && s.receiptNumber === activeSale.receiptNumber))) {
+        setActiveSale(paginatedSales[0]);
       }
     } else {
       setActiveSale(null);
     }
-  }, [searchFilteredSales, activeSale]);
+  }, [paginatedSales, activeSale]);
 
   const getPeriodLabel = () => {
     return periodBadgeLabel || t('history.all_period');

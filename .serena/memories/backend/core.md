@@ -10,7 +10,7 @@ Python FastAPI backend structure located in `/backend`.
 
 ## Routers (`/backend/routers`)
 - `system.py`: System endpoints (`/api/v1/system/litestream-status`, `/api/v1/system/backup-status`, `/api/v1/system/trigger-backup`, `/api/v1/system/shutdown` with loopback check, offline EET flush, and graceful termination).
-- `sales.py`: Transaction creation with thread-safe `BoundedTTLIdempotencyCache`, paginated sales history retrieval with date and payment method filtering (`X-Total-Count` header), admin deletion, EET signing, and refund status updates.
+- `sales.py`: Transaction creation with thread-safe `BoundedTTLIdempotencyCache`, paginated sales history retrieval with default limit (50, capped at 500), `doc_type` ('sales' | 'refunds'), `include_items` (noload support), text search (receipt number, original receipt number, item name), date/payment filtering (`X-Total-Count` header), aggregation endpoints (`GET /api/v1/sales/stats/daily`, `GET /api/v1/sales/stats/shift`), admin deletion, EET signing, and refund status updates.
 - `config.py`: Store configuration GET/POST API endpoints (`/api/v1/config`) for full SQLite database persistence.
 - `printer.py`: Hardware device discovery (`/api/v1/printer/devices`) and ESC/POS thermal print triggers.
 - `eet.py`: Certificate validation, status check, manual payload test, PKCS#12 upload.

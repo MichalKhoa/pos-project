@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Receipt, Banknote,
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 
 import { getCzechHoliday } from '../utils/czechHolidays.js';
+import { fetchDailySalesStats } from '../api/posApi';
 
 export default function CalendarModal({
   salesHistory = [],
@@ -99,8 +100,28 @@ export default function CalendarModal({
     calendarCells.push({ dateObj, isCurrentMonth: true, dayNum: d });
   }
 
-  // Calculate sales stats for all days to show indicators
+  const viewMonthStr = useMemo(() => {
+    return `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}`;
+  }, [viewDate]);
+
+  const [backendStatsMap, setBackendStatsMap] = useState({});
+
+  useEffect(() => {
+    let isCancelled = false;
+    fetchDailySalesStats({ month: viewMonthStr }).then(data => {
+      if (!isCancelled && data && typeof data === 'object') {
+        setBackendStatsMap(data);
+      }
+    });
+    return () => { isCancelled = true; };
+  }, [viewMonthStr]);
+
+  // Calculate sales stats for all days to show indicators (backend aggregate first, local fallback)
   const salesByDateMap = useMemo(() => {
+    if (backendStatsMap && Object.keys(backendStatsMap).length > 0) {
+      return backendStatsMap;
+    }
+
     const map = {};
     salesHistory.forEach(sale => {
       if (!sale.timestamp) return;
@@ -131,7 +152,7 @@ export default function CalendarModal({
       }
     });
     return map;
-  }, [salesHistory]);
+  }, [salesHistory, backendStatsMap]);
 
   // Selected Day Stats
   const selectedDayStats = salesByDateMap[selectedDateKey] || {

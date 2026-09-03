@@ -313,21 +313,42 @@ export default function App() {
     }
   }, [storeConfig]);
 
-  // Sync salesHistory to LocalStorage
+  // Sync salesHistory to LocalStorage (sanitized: only persist offline pending + latest 50 completed to prevent QuotaExceededError)
   useEffect(() => {
-    setStorageItem('sales', salesHistory);
+    const offlinePending = salesHistory.filter(s => s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false);
+    const recentCompleted = salesHistory.filter(s => s.eet_status !== 'OFFLINE_PENDING' && s.eetStatus !== 'OFFLINE_PENDING' && s.is_sent_to_eet !== false).slice(0, 50);
+    setStorageItem('sales', [...offlinePending, ...recentCompleted]);
   }, [salesHistory]);
 
   // Load store config & sales history from SQLite backend on mount
   useEffect(() => {
-    const reloadBackendData = () => {
+    let lastFocusReload = 0;
+
+    const reloadBackendData = (isInitial = false) => {
       fetchStoreConfigBackend().then(data => {
         if (data && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
         }
       });
-      fetchSalesHistoryBackend().then(backendSales => {
+      fetchSalesHistoryBackend({ limit: isInitial ? 100 : 50 }).then(backendSales => {
         if (Array.isArray(backendSales) && backendSales.length > 0) {
+          // Sync highest receipt sequence number to localStorage
+          const currentYear = new Date().getFullYear().toString();
+          const yearPrefix = `${currentYear}-`;
+          let maxSeq = 0;
+          for (const bs of backendSales) {
+            if (bs.receiptNumber && bs.receiptNumber.startsWith(yearPrefix)) {
+              const num = parseInt(bs.receiptNumber.slice(yearPrefix.length), 10);
+              if (!isNaN(num) && num > maxSeq) maxSeq = num;
+            }
+          }
+          if (maxSeq > 0) {
+            const currentStoredSeq = parseInt(getStorageItem('last_receipt_seq', '0'), 10) || 0;
+            if (maxSeq > currentStoredSeq) {
+              setStorageItem('last_receipt_seq', String(maxSeq));
+            }
+          }
+
           setSalesHistory(prev => {
             const prevSaleMap = new Map(prev.map(s => [s.id, s]));
             const backendIds = new Set(backendSales.map(s => s.id));
@@ -347,7 +368,10 @@ export default function App() {
               return bs;
             });
 
-            const merged = [...pendingLocalSales, ...safelyMergedBackend];
+            const seenIds = new Set([...pendingLocalSales.map(s => s.id), ...safelyMergedBackend.map(s => s.id)]);
+            const remainingLocal = prev.filter(s => !seenIds.has(s.id));
+
+            const merged = [...pendingLocalSales, ...safelyMergedBackend, ...remainingLocal];
             merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             return merged;
           });
@@ -355,7 +379,7 @@ export default function App() {
       });
     };
 
-    reloadBackendData();
+    reloadBackendData(true);
 
     const handleStorageChange = (e) => {
       if (!e.key || !e.newValue) return;
@@ -372,7 +396,12 @@ export default function App() {
     };
 
     const handleFocus = () => {
-      reloadBackendData();
+      const now = Date.now();
+      // Throttle window focus reloads to at most once every 30 seconds
+      if (now - lastFocusReload > 30000) {
+        lastFocusReload = now;
+        reloadBackendData(false);
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -499,14 +528,16 @@ export default function App() {
 
     const currentYear = new Date().getFullYear().toString();
     const yearPrefix = `${currentYear}-`;
-    let maxSeq = 0;
+    let maxSeq = parseInt(getStorageItem('last_receipt_seq', '0'), 10) || 0;
     for (const s of salesHistory) {
       if (s.receiptNumber && s.receiptNumber.startsWith(yearPrefix)) {
         const num = parseInt(s.receiptNumber.slice(yearPrefix.length), 10);
         if (!isNaN(num) && num > maxSeq) maxSeq = num;
       }
     }
-    const nextReceiptNum = `${currentYear}-${(maxSeq + 1).toString().padStart(6, '0')}`;
+    const nextSeq = maxSeq + 1;
+    setStorageItem('last_receipt_seq', String(nextSeq));
+    const nextReceiptNum = `${currentYear}-${nextSeq.toString().padStart(6, '0')}`;
 
     const newSale = normalizeSale({
       id: `sale-${Date.now()}`,
@@ -532,9 +563,17 @@ export default function App() {
 
     createSaleBackend(newSale).then(backendRes => {
       if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
+        const assignedRn = backendRes.receipt_number || newSale.receiptNumber;
+        if (assignedRn && assignedRn.startsWith(yearPrefix)) {
+          const num = parseInt(assignedRn.slice(yearPrefix.length), 10);
+          if (!isNaN(num)) {
+            const curSeq = parseInt(getStorageItem('last_receipt_seq', '0'), 10) || 0;
+            if (num > curSeq) setStorageItem('last_receipt_seq', String(num));
+          }
+        }
         const enrichedSale = normalizeSale({
           ...newSale,
-          receiptNumber: backendRes.receipt_number || newSale.receiptNumber,
+          receiptNumber: assignedRn,
           fik: backendRes.fik,
           pok: backendRes.fik,
           bkp: backendRes.bkp,

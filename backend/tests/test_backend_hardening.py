@@ -105,6 +105,69 @@ class TestBackendHardening(unittest.TestCase):
             self.db.query(SaleModel).filter(SaleModel.id.in_(sale_ids)).delete(synchronize_session=False)
             self.db.commit()
 
+    def test_sales_stats_and_search_endpoints(self):
+        """Test search, doc_type filter, daily stats and shift stats endpoints."""
+        now = datetime.utcnow()
+        today_str = now.strftime("%Y-%m-%d")
+        sale_ids = []
+        try:
+            s1 = SaleModel(
+                id=f"test_s_{uuid.uuid4().hex[:8]}",
+                receipt_number="2026-999001",
+                timestamp=now,
+                total_amount=500.0,
+                payment_method="cash",
+                tax_summary={"total": 500.0},
+                eet_status="EVD_OK",
+                is_refund=False
+            )
+            s2 = SaleModel(
+                id=f"test_s_{uuid.uuid4().hex[:8]}",
+                receipt_number="2026-999002",
+                timestamp=now,
+                total_amount=-200.0,
+                payment_method="cash",
+                tax_summary={"total": -200.0},
+                eet_status="EVD_OK",
+                is_refund=True,
+                original_receipt_number="2026-999001"
+            )
+            self.db.add(s1)
+            self.db.add(s2)
+            self.db.commit()
+            sale_ids.extend([s1.id, s2.id])
+
+            # 1. Test doc_type=sales vs refunds
+            res_sales = self.client.get("/api/v1/sales/?doc_type=sales")
+            self.assertEqual(res_sales.status_code, 200)
+            self.assertTrue(all(not s["is_refund"] for s in res_sales.json()))
+
+            res_refunds = self.client.get("/api/v1/sales/?doc_type=refunds")
+            self.assertEqual(res_refunds.status_code, 200)
+            self.assertTrue(all(s["is_refund"] for s in res_refunds.json()))
+
+            # 2. Test search by receipt number
+            res_search = self.client.get("/api/v1/sales/?search=999001")
+            self.assertEqual(res_search.status_code, 200)
+            self.assertTrue(any(s["receipt_number"] == "2026-999001" for s in res_search.json()))
+
+            # 3. Test daily stats aggregation
+            res_daily = self.client.get(f"/api/v1/sales/stats/daily?month={now.strftime('%Y-%m')}")
+            self.assertEqual(res_daily.status_code, 200)
+            daily_data = res_daily.json()
+            self.assertIn(today_str, daily_data)
+            self.assertGreaterEqual(daily_data[today_str]["count"], 2)
+
+            # 4. Test shift stats aggregation
+            res_shift = self.client.get(f"/api/v1/sales/stats/shift?date_str={today_str}")
+            self.assertEqual(res_shift.status_code, 200)
+            shift_data = res_shift.json()
+            self.assertEqual(shift_data["date"], today_str)
+            self.assertGreaterEqual(shift_data["todaySalesCount"], 2)
+        finally:
+            self.db.query(SaleModel).filter(SaleModel.id.in_(sale_ids)).delete(synchronize_session=False)
+            self.db.commit()
+
 
 if __name__ == "__main__":
     unittest.main()

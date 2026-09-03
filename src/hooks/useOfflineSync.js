@@ -97,9 +97,12 @@ export function useOfflineSync({ salesHistory = [], setSalesHistory } = {}) {
       }
 
       if (setSalesHistory) {
-        const updatedHistory = await fetchSalesHistoryBackend();
+        const updatedHistory = await fetchSalesHistoryBackend({ limit: 50 });
         if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
-          setSalesHistory(updatedHistory);
+          setSalesHistory(prev => {
+            const updatedMap = new Map(updatedHistory.map(s => [s.id, s]));
+            return prev.map(s => updatedMap.get(s.id) || s);
+          });
         }
       }
     } catch (err) {

@@ -31,6 +31,8 @@ React 19 single-page register application located in `/src`.
 ## API Client Layer (`/src/api/posApi.js`)
 - Abstracted REST and WebSocket fetch functions connecting to `http://localhost:8000/api/v1`.
 - Provides fallback local mode when backend API server is disconnected.
+- `fetchSalesHistoryBackend`: Supports pagination (`limit`, `offset`), date filtering, doc type, search, and returns normalized sales with `.totalCount` metadata.
+- `fetchDailySalesStats` & `fetchShiftStats`: Direct aggregation helpers querying `/stats/daily` and `/stats/shift`.
 
 ## Related Memories
 - Component details: `mem:frontend/components`

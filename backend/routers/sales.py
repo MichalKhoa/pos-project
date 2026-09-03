@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session, selectinload
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from sqlalchemy.orm import Session, selectinload, noload
+from sqlalchemy import func, case
 from typing import List, Optional
 from database import get_db
 from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel
@@ -161,24 +162,29 @@ class BoundedTTLIdempotencyCache:
 idempotency_cache = BoundedTTLIdempotencyCache(max_size=1000, ttl_seconds=300.0)
 
 
-from fastapi import Response
-
 @router.get("/", response_model=List[SaleResponseSchema])
 def get_sales_history(
     response: Response,
-    limit: Optional[int] = None,
+    limit: Optional[int] = 50,
     offset: int = 0,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     payment_method: Optional[str] = None,
+    search: Optional[str] = None,
+    doc_type: Optional[str] = None,
+    export_all: bool = False,
+    include_items: bool = True,
     db: Session = Depends(get_db)
 ):
     """
-    Fetch sales ledger history with optional pagination and date/payment-method filtering.
-    Backward-compatible: if limit is None, returns all records.
+    Fetch sales ledger history with pagination, date, payment-method, doc-type, and text search.
+    Default limit is 50, capped at 500 unless export_all=True.
     Sets X-Total-Count response header with total matched sales count.
     """
-    query = db.query(SaleModel).options(selectinload(SaleModel.items))
+    if include_items:
+        query = db.query(SaleModel).options(selectinload(SaleModel.items))
+    else:
+        query = db.query(SaleModel).options(noload(SaleModel.items))
 
     if from_date:
         dt_from = parse_iso_timestamp(from_date)
@@ -188,8 +194,22 @@ def get_sales_history(
         dt_to = parse_iso_timestamp(to_date)
         query = query.filter(SaleModel.timestamp <= dt_to)
 
-    if payment_method:
+    if payment_method and payment_method != "all":
         query = query.filter(SaleModel.payment_method == payment_method.lower())
+
+    if doc_type == "sales":
+        query = query.filter(SaleModel.is_refund == False)
+    elif doc_type == "refunds":
+        query = query.filter(SaleModel.is_refund == True)
+
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            (SaleModel.receipt_number.ilike(term)) |
+            (SaleModel.original_receipt_number.ilike(term)) |
+            (SaleModel.id.ilike(term)) |
+            (SaleModel.items.any(SaleItemModel.name.ilike(term)))
+        )
 
     total_count = query.count()
     response.headers["X-Total-Count"] = str(total_count)
@@ -199,8 +219,12 @@ def get_sales_history(
     if offset > 0:
         query = query.offset(offset)
 
-    if limit is not None and limit > 0:
-        query = query.limit(limit)
+    if export_all:
+        if limit is not None and limit > 0:
+            query = query.limit(limit)
+    else:
+        effective_limit = min(limit or 50, 500)
+        query = query.limit(effective_limit)
 
     return query.all()
 
@@ -226,6 +250,92 @@ def get_next_receipt_number_preview(db: Session = Depends(get_db)):
         next_num = max_num + 1
 
     return {"next_receipt_number": f"{year}-{next_num:06d}"}
+
+
+@router.get("/stats/daily")
+def get_daily_sales_stats(
+    month: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Aggregate daily sales statistics (count, revenue, cash, card, refunds) grouped by date.
+    Optimized for CalendarModal and high-level ledger overviews without downloading line items.
+    """
+    date_col = func.date(SaleModel.timestamp)
+    query = db.query(
+        date_col.label("date"),
+        func.count(SaleModel.id).label("count"),
+        func.sum(SaleModel.total_amount).label("total_revenue"),
+        func.sum(
+            case((SaleModel.is_refund == False, case((SaleModel.payment_method == 'card', SaleModel.total_amount), else_=0.0)), else_=0.0)
+        ).label("card_total"),
+        func.sum(
+            case((SaleModel.is_refund == False, case((SaleModel.payment_method != 'card', SaleModel.total_amount), else_=0.0)), else_=0.0)
+        ).label("cash_total"),
+        func.sum(
+            case((SaleModel.is_refund == True, 1), else_=0)
+        ).label("refund_count"),
+        func.sum(
+            case((SaleModel.is_refund == True, func.abs(SaleModel.total_amount)), else_=0.0)
+        ).label("refund_total")
+    )
+
+    if month:
+        query = query.filter(func.strftime('%Y-%m', SaleModel.timestamp) == month)
+    if from_date:
+        dt_from = parse_iso_timestamp(from_date)
+        query = query.filter(SaleModel.timestamp >= dt_from)
+    if to_date:
+        dt_to = parse_iso_timestamp(to_date)
+        query = query.filter(SaleModel.timestamp <= dt_to)
+
+    rows = query.group_by(date_col).order_by(date_col).all()
+
+    result = {}
+    for r in rows:
+        result[r.date] = {
+            "count": r.count or 0,
+            "totalRevenue": round_currency(r.total_revenue or 0.0),
+            "cardTotal": round_currency(r.card_total or 0.0),
+            "cashTotal": round_currency(r.cash_total or 0.0),
+            "refundCount": r.refund_count or 0,
+            "refundTotal": round_currency(r.refund_total or 0.0)
+        }
+    return result
+
+
+@router.get("/stats/shift")
+def get_shift_sales_stats(
+    date_str: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Fast turnover aggregation for current shift/day.
+    Optimized for ShiftStatsWidget without scanning full client sales history array.
+    """
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
+    res = db.query(
+        func.count(SaleModel.id).label("count"),
+        func.sum(SaleModel.total_amount).label("total_revenue"),
+        func.sum(
+            case((SaleModel.payment_method == 'cash', SaleModel.total_amount), else_=0.0)
+        ).label("cash_total"),
+        func.sum(
+            case((SaleModel.payment_method == 'card', SaleModel.total_amount), else_=0.0)
+        ).label("card_total")
+    ).filter(func.date(SaleModel.timestamp) == date_str).first()
+
+    return {
+        "date": date_str,
+        "todaySalesCount": res.count or 0 if res else 0,
+        "todayRevenue": round_currency(res.total_revenue or 0.0) if res else 0.0,
+        "todayCash": round_currency(res.cash_total or 0.0) if res else 0.0,
+        "todayCard": round_currency(res.card_total or 0.0) if res else 0.0
+    }
 
 
 @router.get("/{sale_id}", response_model=SaleResponseSchema)

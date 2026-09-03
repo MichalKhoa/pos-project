@@ -234,16 +234,75 @@ export async function purgeAllSalesBackend() {
 }
 
 /**
- * Fetch sales history ledger from backend
+ * Fetch sales history ledger from backend with optional pagination, search, and filtering
  */
-export async function fetchSalesHistoryBackend() {
+export async function fetchSalesHistoryBackend(options = {}) {
   try {
-    const res = await fetch(`${API_BASE_URL}/sales/`);
+    const params = new URLSearchParams();
+    if (options.limit !== undefined) params.append('limit', options.limit);
+    if (options.offset !== undefined) params.append('offset', options.offset);
+    if (options.fromDate) params.append('from_date', options.fromDate);
+    if (options.toDate) params.append('to_date', options.toDate);
+    if (options.paymentMethod && options.paymentMethod !== 'all') params.append('payment_method', options.paymentMethod);
+    if (options.docType && options.docType !== 'all') params.append('doc_type', options.docType);
+    if (options.search) params.append('search', options.search);
+    if (options.exportAll) params.append('export_all', 'true');
+    if (options.includeItems !== undefined) params.append('include_items', options.includeItems);
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/sales/${queryString}`);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
-    return Array.isArray(data) ? data.map(normalizeSale) : [];
+    const normalized = Array.isArray(data) ? data.map(normalizeSale) : [];
+
+    const totalCountHeader = res.headers.get('X-Total-Count');
+    normalized.totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : normalized.length;
+
+    if (options.returnDetails) {
+      return {
+        sales: normalized,
+        totalCount: normalized.totalCount
+      };
+    }
+
+    return normalized;
   } catch (err) {
     console.warn('Backend sales history unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch daily sales statistics grouped by date (for CalendarModal)
+ */
+export async function fetchDailySalesStats({ month = null, fromDate = null, toDate = null } = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (fromDate) params.append('from_date', fromDate);
+    if (toDate) params.append('to_date', toDate);
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/sales/stats/daily${queryString}`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Daily sales stats unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch shift / today sales statistics (for ShiftStatsWidget)
+ */
+export async function fetchShiftStats(dateStr = null) {
+  try {
+    const params = dateStr ? `?date_str=${dateStr}` : '';
+    const res = await fetch(`${API_BASE_URL}/sales/stats/shift${params}`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Shift sales stats unavailable:', err);
     return null;
   }
 }
