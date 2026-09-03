@@ -40,7 +40,7 @@ function getFlagComponent(code) {
   }
 }
 
-export default function LanguageSelector({ value, onChange, compact = false, style = {} }) {
+export default function LanguageSelector({ value, onChange, compact = false, style = {}, buttonStyle = {} }) {
   const { language, setLanguage, languages } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -88,7 +88,8 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
           fontWeight: '800',
           cursor: 'pointer',
           outline: 'none',
-          transition: 'all 0.15s ease'
+          transition: 'all 0.15s ease',
+          ...buttonStyle
         }}
       >
         {getFlagComponent(currentLang.code)}
@@ -103,7 +104,7 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
             top: 'calc(100% + 4px)',
             right: 0,
             zIndex: 999,
-            minWidth: '150px',
+            minWidth: '190px',
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
             borderRadius: 'var(--radius-md)',
@@ -124,23 +125,24 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
+                  gap: '0.55rem',
                   width: '100%',
-                  padding: '0.45rem 0.6rem',
+                  padding: '0.5rem 0.75rem',
                   borderRadius: 'var(--radius-sm)',
                   background: isSelected ? 'var(--bg-input)' : 'transparent',
                   color: isSelected ? 'var(--accent-blue)' : 'var(--text-primary)',
                   border: 'none',
-                  fontSize: '0.8rem',
+                  fontSize: '0.82rem',
                   fontWeight: isSelected ? '800' : '600',
                   cursor: 'pointer',
                   textAlign: 'left',
+                  whiteSpace: 'nowrap',
                   transition: 'background 0.15s ease'
                 }}
               >
                 {getFlagComponent(l.code)}
-                <span style={{ flex: 1 }}>{l.name} ({l.label})</span>
-                {isSelected && <Check size={14} style={{ color: 'var(--accent-blue)' }} />}
+                <span style={{ flex: 1, whiteSpace: 'nowrap' }}>{l.name} ({l.label})</span>
+                {isSelected && <Check size={14} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />}
               </button>
             );
           })}

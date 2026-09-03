@@ -59,8 +59,8 @@ describe('App Shell & Navigation Regression Tests', () => {
   it('renders the main POS register shell without crashing', async () => {
     renderAppWithProviders();
 
-    // Verify brand title is present
-    expect(screen.getByText(/VoltFlow/i)).toBeInTheDocument();
+    // Verify brand logo is present
+    expect(screen.getByAltText(/VoltFlow/i)).toBeInTheDocument();
 
     // Verify main register tabs are present in navbar
     expect(screen.getAllByRole('button', { name: /Pokladna/i }).length).toBeGreaterThanOrEqual(1);
