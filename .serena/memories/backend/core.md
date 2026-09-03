@@ -3,11 +3,13 @@
 Python FastAPI backend structure located in `/backend`.
 
 ## Core Files
-- `main.py`: Application entry point with modern `lifespan` context manager, CORS middleware, router registration, database table auto-creation, and graceful shutdown signal handling for WAL checkpoints and automated backups.
-- `database.py`: SQLAlchemy engine (SQLite WAL mode, `PRAGMA busy_timeout=15000`, `foreign_keys=ON`), session maker (`SessionLocal`), dynamic column and index auto-migrations (`init_db_schema()`), and `get_db()` dependency.
+- `main.py`: Application entry point with modern `lifespan` context manager, CORS middleware, router registration, and static asset serving.
+- `migrations.py`: Schema migrations runner (`run_schema_migrations`) isolating dynamic column alterations and index migrations.
+- `database.py`: SQLAlchemy engine (SQLite WAL mode, `PRAGMA busy_timeout=15000`, `foreign_keys=ON`), session maker (`SessionLocal`), and `get_db()` dependency.
 - `models.py`: Database tables (`SaleModel` with compound indexes on `timestamp` and `payment_method`, `SaleItemModel`, `StoreConfigModel`, `PresetModel`, `ReceiptSequenceModel`).
 
 ## Routers (`/backend/routers`)
+- `system.py`: System endpoints (`/api/v1/system/litestream-status`, `/api/v1/system/backup-status`, `/api/v1/system/trigger-backup`, `/api/v1/system/shutdown` with loopback check, offline EET flush, and graceful termination).
 - `sales.py`: Transaction creation with thread-safe `BoundedTTLIdempotencyCache`, paginated sales history retrieval with date and payment method filtering (`X-Total-Count` header), admin deletion, EET signing, and refund status updates.
 - `config.py`: Store configuration GET/POST API endpoints (`/api/v1/config`) for full SQLite database persistence.
 - `printer.py`: Hardware device discovery (`/api/v1/printer/devices`) and ESC/POS thermal print triggers.

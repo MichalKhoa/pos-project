@@ -6,17 +6,21 @@ Directory: `/src/components`
 - `App.jsx`: Main register shell coordinator. Uses `useMemo` for cart subtotal calculations. Decomposed into:
   - `src/components/app/AppModals.jsx`: Centralized modal and portal coordinator.
   - `src/hooks/usePosKeyboardShortcuts.js`: Hardware numpad and shortcut keybindings.
+  - `src/hooks/usePosCatalog.js`: Category & preset state and CRUD handlers.
+  - `src/hooks/useOfflineSync.js`: EET offline queue monitoring and synchronization.
+  - `src/hooks/useAutoLock.js`: User activity tracking and register auto-lock.
+- `ReceiptModal.jsx`: Thermal and A4 receipt preview and reprint modal. Browser print HTML generation isolated in `src/utils/receiptHtmlGenerator.js`.
 - `PresetsCatalogView.jsx`: Tile and category manager with color pickers and icon mappings.
 - `InventoryView.jsx`: Stock management coordinator with `useMemo` memoized catalog filters and inventory valuation metrics. Decomposed into modular domain subcomponents in `/src/components/inventory/`:
   - `InventoryMetricsBar.jsx`: Stock valuation and health KPIs (Healthy/Low/Out of Stock).
   - `InventoryStockTable.jsx`: Filterable data table with quick `+5`/`+10` adjustment buttons and barcode input.
   - `StockKeypadModal.jsx`: Touch numeric pad for fast inventory quantity adjustment.
 - `CustomerDisplayView.jsx`: Real-time LCD customer-facing display.
-- `SalesHistoryView.jsx`: Streamlined sales ledger view dedicated 100% to receipt lookup, search, reprint, and refunds with a 2-pane Master-Detail layout. Decomposed into `/src/components/history/`:
+- `SalesHistoryView.jsx`: Streamlined sales ledger view dedicated 100% to receipt lookup, search, reprint, and refunds with a 2-pane Master-Detail layout. Uses `useSalesPeriodFilter`. Decomposed into `/src/components/history/`:
   - `ReceiptInspectorPanel.jsx`: Left pane displaying live thermal receipt paper preview with instant reprint and refund action triggers.
   - `SalesPeriodBar.jsx`: Preset chips (Today/Yesterday/Week/Month/Year/Custom), `< >` stepper navigation, and calendar triggers.
   - `SalesLedgerTable.jsx`: Paginated receipt ledger table with search, document type filter, refund triggers, active row highlight, and pagination (default 15 rows/page).
-- `AnalyticsView.jsx`: Dedicated top-level analytics dashboard tab with financial KPI cards, time period selector, CSV export, and visual chart breakdowns. Decomposed into `/src/components/history/`:
+- `AnalyticsView.jsx`: Dedicated top-level analytics dashboard tab with financial KPI cards, time period selector, CSV export, and visual chart breakdowns. Uses `useSalesPeriodFilter`. Decomposed into `/src/components/history/`:
   - `SalesPeriodBar.jsx`: Period filters (Today, Yesterday, Week, Month, Year, Custom) with stepper navigation and calendar triggers.
   - `SalesAnalyticsCharts.jsx`: Visual POS dashboard featuring top 4 KPI cards (Gross, Netto/VAT, Receipts/AOV, Payments), Top 8 Best-Selling Products ranking (#1–#8 with volume bars), Hourly Rush-Hour chart (07:00–22:00 with peak rush highlight), visual multi-segment payment split bar (Cash vs Card vs QR), category sales volume bars, and official Czech VAT tax table (21%, 12%, 0%).
 - `SettingsView.jsx`: POS system configuration coordinator. Decomposed into modular domain subcomponents in `/src/components/settings/`:
@@ -43,8 +47,13 @@ Directory: `/src/components`
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
   - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
 - `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
+- `CalendarModal.jsx`, `TouchCalendarModal.jsx`, `TouchDateRangeModal.jsx`: Reusable calendar modals powered by `src/utils/calendarGrid.js` and `src/utils/czechHolidays.js`. (Unreferenced `DateKeypadModal.jsx` pruned).
 
 ## Active Custom Hooks in `/src/hooks/`
 - `useCart.js`: Active shopping cart state, discounts, `updateItemDetails`, and item modifiers.
 - `usePresetDragDrop.js`: Drag-and-drop preset ordering.
 - `usePosKeyboardShortcuts.js`: Hardware keyboard listener for fast numeric keypad checkout.
+- `usePosCatalog.js`: Product categories and presets state and CRUD.
+- `useOfflineSync.js`: EET offline queue check and sync handler.
+- `useAutoLock.js`: Touch/mouse/keyboard activity tracking and auto-lock.
+- `useSalesPeriodFilter.js`: Shared period range filtering for history and analytics.
