@@ -1,160 +1,116 @@
-# Himmel POS — Future Feature Roadmap & Architecture Specifications
+# Himmel POS — Active Feature Roadmap for Mixed Retail Shop
 
+**Target Audience:** Parents' Mixed Retail & Convenience Store (Smíšené zboží / Večerka)  
 **Date:** 2026-09-03  
-**Status:** Proposals & Architectural Blueprints  
-**Target:** Retail, Hospitality & Czech Accounting Compliance Enhancements
+**Status:** Approved for Implementation
 
 ---
 
-## 📋 Feature Overview Matrix
+## 🎯 High-Priority Selected Features
 
-| ID | Feature Name | Category | Priority | Complexity | Czech Compliance Value |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **FEAT-01** | Cash Float Management (Vklad a Výběr) | Accounting / Cash Drawer | `P1 (High)` | Low | Critical for drawer reconciliation |
-| **FEAT-02** | Shift Closures & Thermal Z-Report / X-Report | Fiscal Reports | `P1 (High)` | Medium | Official daily closure requirement |
-| **FEAT-03** | B2B Full Tax Invoice Mode & ARES Lookup | Invoicing / B2B | `P2 (Medium)` | Medium | Mandatory for transactions > 10,000 Kč |
-| **FEAT-04** | Embedded Price/Weight Barcode Parser (EAN-13) | Retail / Scanner | `P2 (Medium)` | Low | Standard for butcher/bakery/scales |
-| **FEAT-05** | Customer Display Idle Promotional Carousel | Customer Experience | `P3 (Low)` | Low | Merchant branding / upsell |
-| **FEAT-06** | 1-Click Database Restore & Snapshot Rollback | System Stability | `P2 (Medium)` | Low | Disaster recovery |
+| ID | Feature Name | Description | Benefit for Parents |
+| :--- | :--- | :--- | :--- |
+| **RET-01** | **Global USB Barcode Scanner Hook** | Captures fast scanner keystrokes (<50ms ending in Enter), resolves EAN to preset, and adds to cart with multiplier support (e.g. `6 * [scan]` = 6x). | Fixes current bug where scanning types 13 digits into keypad and adds fake multi-billion Kč item. |
+| **RET-02** | **Unknown Barcode Quick-Add Modal** | When an unscanned/new product is scanned, shows an instant 5-second popup on the register: name, price, 1-tap "Save & Add to Cart". | No need to leave sales screen or navigate complex inventory menus when suppliers deliver new goods. |
+| **RET-03** | **Fast Banknote Tender & Huge Change Display** | 1-tap banknote buttons (`100`, `200`, `500`, `1000`, `2000`, `5000 Kč`, `Přesně`), paired with massive high-contrast **VRÁTIT / TRẢ LẠI: XXX Kč** display (48px+). | Eliminates mental arithmetic errors on cash-heavy retail shifts. |
+| **RET-04** | **1-Click Thermal Daily Summary Slip** | Single button in Top Bar: "Vytisknout denní tržbu". Thermal printer spits out compact 80mm/58mm ticket with Total, Cash in drawer, Card total, and customer count. | Reconciles the cash drawer at 9 PM closing in 2 minutes without confusing accounting terminology. |
+| **RET-05** | **Audio Feedback & Distinct Tone Engine** | Pleasant positive beep on valid scan, loud error buzz on unknown barcode/issue, distinct cash drawer bell chime. | Immediate sensory confirmation so cashiers don't need to stare at screen during checkout. |
 
 ---
 
 ## 🔍 Detailed Specifications
 
-### FEAT-01: Cash Float Management (Pokladní operace — Vklad a Výběr)
+### RET-01: Global USB Barcode Scanner Hook & Multiplier Resolution
 
-#### Problem & Context
-Currently, cash sales increment running cash totals, but there is no mechanism to record:
-1. **Initial Cash Float (Počáteční stav pokladny)**: The starting change placed in the drawer at the beginning of the shift.
-2. **Cash In (Vklad do pokladny)**: Adding extra cash float during the day.
-3. **Cash Out (Výběr z pokladny / Odvod tržby)**: Mid-day cash drops to safe or paying a delivery supplier from the drawer.
-Without cash movements, the cashier cannot reconcile the actual physical cash drawer count against expected cash at the end of the day.
+#### Problem
+In [`src/hooks/usePosKeyboardShortcuts.js`](file:///home/misko/Documents/pos-eet-himmel/src/hooks/usePosKeyboardShortcuts.js), all numeric keystrokes from USB barcode scanners (which emulate HID keyboards typing ~20-40ms per character followed by Enter) leak directly into the manual price input buffer. Scanning a barcoded product creates a fake "Volný prodej" item with an astronomical price (e.g. 8,594,001,234,567 Kč) instead of resolving the actual item.
 
-#### Proposed Architecture
-- **Database Model**: `CashMovementModel` (`cash_movements` table)
-  - `id`: String (UUID)
-  - `timestamp`: DateTime
-  - `type`: String (`FLOAT_INIT`, `CASH_IN`, `CASH_OUT`)
-  - `amount`: Float (always positive Decimal rounded to 2 places)
-  - `note`: String (e.g. "Drobné do pokladny", "Platba dodavateli pečiva")
-  - `cashier_name`: String
-- **API Endpoints**:
-  - `POST /api/v1/cash/movement`: Record cash in, cash out, or opening float. Automatically triggers printer drawer kick.
-  - `GET /api/v1/cash/summary?date=YYYY-MM-DD`: Returns:
-    - `opening_float`
-    - `total_cash_sales`
-    - `total_cash_refunds`
-    - `total_cash_in`
-    - `total_cash_out`
-    - `expected_cash_drawer_total`
-- **Hardware Integration**:
-  - Automatically prints a 58mm/80mm receipt voucher for the cashier/manager to sign and leave in the drawer.
+#### Solution
+- Implement dedicated `useBarcodeScanner` hook:
+  - Buffer characters when elapsed time between keystrokes is `< 50ms`.
+  - When Enter is pressed and buffer length is `>= 6` characters:
+    - Prevent default keypad entry.
+    - Query `presets` by `barcode` (EAN-13, EAN-8, UPC).
+    - If found:
+      - Quantity = `itemMultiplier || 1`.
+      - Play positive audio chime (`playSuccessBeep()`).
+      - Add item to cart and reset multiplier.
+    - If not found:
+      - Play alert buzzer (`playErrorBuzz()`).
+      - Trigger `RET-02` (Unknown Barcode Quick-Add Modal).
 
 ---
 
-### FEAT-02: Shift Closures & Thermal Z-Report / X-Report (Denní uzávěrka)
+### RET-02: Unknown Barcode Quick-Add Modal
 
-#### Problem & Context
-In Czech retail operations, daily fiscal closing is standard:
-- **X-Report (Průběžná uzávěrka)**: Non-destructive mid-shift snapshot of revenue, tax tiers, payment methods, and cash status.
-- **Z-Report (Denní uzávěrka / Konec směny)**: Official end-of-day closure that prints a comprehensive physical thermal report, archives sales stats, and marks the shift as closed.
+#### Problem
+When suppliers deliver a new beverage, snack, or household item, scanning the barcode currently fails or does nothing. Parents have to open Settings -> Inventory, manually create a preset, and return to Register.
 
-#### Proposed Architecture
-- **Database Model**: `DailyClosingModel` (`daily_closings` table)
-  - `id`: String (UUID)
-  - `closing_number`: Integer (incremental sequence, e.g. Z-0001)
-  - `opened_at`: DateTime
-  - `closed_at`: DateTime
-  - `total_revenue`: Float
-  - `cash_total`: Float
-  - `card_total`: Float
-  - `qr_total`: Float
-  - `vat_21_base`, `vat_21_tax`
-  - `vat_12_base`, `vat_12_tax`
-  - `vat_0_base`
-  - `total_sales_count`: Integer
-  - `total_refunds_count`: Integer
-  - `cash_drawer_expected`: Float
-  - `cash_drawer_actual`: Float (entered by cashier)
-  - `discrepancy`: Float (actual - expected)
-- **API Endpoints**:
-  - `GET /api/v1/reports/x-report`: Generates current non-destructive report payload.
-  - `POST /api/v1/reports/z-report`: Commits the closure, locks current shift records, generates sequential Z-number, and dispatches print job.
-- **Hardware Output**:
-  - Formatted thermal printout with VAT breakdown, transaction counts, EET status summary, and drawer count verification.
+#### Solution
+- When an unrecognized barcode is scanned on the register:
+  - Pop a lightweight modal directly over the register screen:
+    - **Scanned Barcode:** e.g. `8594001234567` (read-only)
+    - **Item Name:** Autofocused text input (e.g. "Kofola 0.5L")
+    - **Selling Price:** Numeric keypad / input (e.g. "25")
+    - **Default VAT:** 21% / 12% selector
+    - **Action Button:** `Uložit & do košíku / Lưu & thêm vào giỏ`
+  - Instantly issues `POST /api/v1/catalog/presets`, updates catalog state, and inserts item into active cart. Total transaction interruption: < 10 seconds.
 
 ---
 
-### FEAT-03: B2B Full Tax Invoice Mode & ARES Lookup (Daňový doklad s IČO)
+### RET-03: Fast Banknote Tender & Huge Change Display
 
-#### Problem & Context
-Under Czech VAT law (§ 28 ZDPH):
-- Sales up to 10,000 Kč can be issued as a Simplified Tax Document (*Zjednodušený daňový doklad*).
-- Sales exceeding 10,000 Kč or upon customer request require a Full Tax Document (*Běžný daňový doklad*), which must include the customer's legal company name, address, IČO, and DIČ.
+#### Problem
+Mixed retail shops process high cash volumes (often 70-80% of sales). Tired cashiers making mental calculations for change from 500, 1000, or 2000 Kč notes frequently make change errors.
 
-#### Proposed Architecture
-- **ARES Public API Integration**:
-  - Endpoint: `GET /api/v1/ares/{ico}`
-  - Calls official Czech Business Register: `https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/{ico}`.
-  - Cashier enters 8-digit IČO; backend auto-fetches company name, billing address, and VAT number (`dic`), caching results in SQLite to minimize external latency.
-- **Database Model Updates**:
-  - Add customer fields to `SaleModel`:
-    - `customer_ico`: String (optional)
-    - `customer_dic`: String (optional)
-    - `customer_name`: String (optional)
-    - `customer_address`: String (optional)
-- **Receipt Template**:
-  - Automatically expands receipt header to include customer's billing credentials whenever `customer_ico` is present.
+#### Solution
+- In [`PaymentModal.jsx`](file:///home/misko/Documents/pos-eet-himmel/src/components/PaymentModal.jsx) / Cash payment panel:
+  - Prominent quick-cash chips: `100 Kč`, `200 Kč`, `500 Kč`, `1000 Kč`, `2000 Kč`, `5000 Kč`, and `Přesně (Exact)`.
+  - Massive, high-contrast, uncluttered change banner:
+    ```
+    ┌──────────────────────────────────────────────┐
+    │  VRÁTIT / TRẢ LẠI:                  145 Kč   │
+    └──────────────────────────────────────────────┘
+    ```
+  - Optional coin breakdown hint: `(1x 100 Kč, 2x 20 Kč, 1x 5 Kč)`.
 
 ---
 
-### FEAT-04: Embedded Price/Weight Barcode Parser (Váhové čárové kódy EAN-13)
+### RET-04: 1-Click Thermal Daily Summary Slip
 
-#### Problem & Context
-Retail scales (used for fruit, cheese, meat, and weighed goods) print standard GS1/EAN-13 barcodes with prefixes `28` or `29`:
-- Structure: `28 I I I I I P P P P P K`
-  - `28` / `29`: Standard in-store price/weight prefix.
-  - `IIIII`: 5-digit item identification code (PLU).
-  - `PPPPP`: 5-digit price or weight (e.g. `00150` = 150g or 15.00 Kč).
-  - `K`: Checksum digit.
+#### Problem
+Parents do not want or need complex accounting software, export menus, or multi-step closure wizards. At the end of the day, they need to count the cash drawer and match it against receipts.
 
-#### Proposed Architecture
-- **Barcode Resolver Utility**:
-  - When scanner inputs an EAN-13 starting with `28` or `29`:
-    1. Extract the 5-digit item identifier (`item_sku`).
-    2. Lookup product in `PresetModel` / `catalog_presets`.
-    3. Parse the embedded value (either calculated quantity = `weight / 1000` or calculated price).
-    4. Automatically insert into cart with parsed quantity or price without requiring manual cashier weight entry.
-
----
-
-### FEAT-05: Customer Display Idle Promotional Carousel
-
-#### Problem & Context
-When the register is between sales, the secondary customer display monitor currently shows a blank screen or a single static welcome greeting.
-
-#### Proposed Architecture
-- **Configurable Slide Deck**:
-  - Add `customer_display_slides` table or JSON configuration in `StoreConfigModel`.
-  - Merchants can configure image URLs or text announcement cards (e.g., "Dnes čerstvé zákusky", "Akce: Káva + Croissant 79 Kč").
-- **WebSocket Synchronization**:
-  - When cart is idle for > 30 seconds (`CART_CLEAR`), secondary screen transitions into carousel mode.
-  - As soon as the cashier scans the first item (`CART_UPDATE`), carousel instantly fades out and displays active cart items and totals.
+#### Solution
+- Add a direct `Vytisknout denní tržbu` button in Navbar / Top Bar (or Cash Drawer quick menu).
+- Backend endpoint: `POST /api/v1/printer/print-daily-summary` (or client format):
+  - Queries today's sales from midnight to current time.
+  - Formats clean 80mm/58mm thermal receipt:
+    ```
+    ================================================
+              DENNÍ PŘEHLED TRŽEB (DNEŠEK)
+              Datum: 03.09.2026 - 21:05
+    ================================================
+    Celková tržba (Total):              18 450 Kč
+    ------------------------------------------------
+    Hotovost v pokladně (Cash):         14 200 Kč
+    Platby kartou (Card):                4 250 Kč
+    Počet nákupů (Transactions):              142
+    Průměrný nákup (Avg Sale):             130 Kč
+    ================================================
+    ```
+  - Printer immediately cuts receipt paper; drawer kicks open for counting.
 
 ---
 
-### FEAT-06: 1-Click Database Restore & Snapshot Rollback
+### RET-05: Audio Feedback & Distinct Tone Engine
 
-#### Problem & Context
-The system currently creates automated zip backups in `backend/backups/`, but restoring requires manual terminal operations. In case of accidental data corruption or hardware swap, a 1-click restore mechanism is critical.
+#### Problem
+In a busy convenience store, cashiers look at customers, cash, or the counter while scanning. If a barcode scan fails to register, the cashier may bag the item without knowing it wasn't added.
 
-#### Proposed Architecture
-- **API Endpoints**:
-  - `GET /api/v1/system/backups`: Returns list of available backup archives with date, size, and integrity check.
-  - `POST /api/v1/system/restore`:
-    1. Validates admin PIN.
-    2. Takes an immediate pre-restore safety snapshot of the current DB.
-    3. Closes active SQLite engine connections.
-    4. Extracts selected ZIP file onto `backend/data/pos_store.db`.
-    5. Runs `PRAGMA integrity_check`.
-    6. Re-opens connection and returns status.
+#### Solution
+- Upgrade [`usePosAudio.js`](file:///home/misko/Documents/pos-eet-himmel/src/hooks/usePosAudio.js) / Web Audio API synth:
+  - **Success Scan**: Short, pleasant high-frequency chime (`880Hz -> 1760Hz`, 80ms).
+  - **Unknown Barcode / Error**: Double low-frequency buzz (`220Hz -> 180Hz`, 200ms) that is distinctly audible.
+  - **Cash Drawer Open**: Crisp mechanical bell chime (`1200Hz`, decaying envelope).
+  - Works offline with zero audio file dependencies via Web Audio synthesizer.
