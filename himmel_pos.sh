@@ -55,6 +55,8 @@ trap cleanup SIGINT SIGTERM EXIT
 echo "[1/3] Starting Backend Service..."
 cd "$SCRIPT_DIR/backend" || exit 1
 source venv/bin/activate
+echo "[INFO] Checking database migrations & schema changes..."
+python3 migrations.py
 ENV=production python3 main.py &
 BACKEND_PID=$!
 

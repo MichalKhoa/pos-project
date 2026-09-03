@@ -55,6 +55,8 @@ if exist "%~dp0backend\requirements.txt" (
     "%PYTHON_EXE%" -m pip install --upgrade pip --quiet
     "%PYTHON_EXE%" -m pip install -r "%~dp0backend\requirements.txt" --quiet
     echo [OK] Backend Python packages installed.
+    echo [INFO] Initializing database schema & applying migrations...
+    "%PYTHON_EXE%" "%~dp0backend\migrations.py"
 )
 
 REM 4. Ensure backend/.env Configuration

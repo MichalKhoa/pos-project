@@ -21,6 +21,8 @@ taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Backend*" >nul 2>&1
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS Web Dev*" >nul 2>&1
 
 REM 3. Launch Python Backend in visible terminal
+echo [INFO] Checking database migrations & schema changes...
+"%PYTHON_EXE%" "%~dp0backend\migrations.py"
 echo [1/2] Launching Python FastAPI Backend terminal (port 8000)...
 start "VoltFlow POS Backend (Debug)" cmd /k "cd /d "%~dp0backend" && set ENV=development && "%PYTHON_EXE%" main.py"
 

@@ -187,7 +187,11 @@ def verify_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(g
 @router.get("/system/health")
 def get_system_health():
     """Returns detailed diagnostic health metrics of backend server and database."""
-    import os, psutil, datetime
+    import os, datetime
+    try:
+        import psutil
+    except ImportError:
+        psutil = None
     from database import DB_PATH, check_db_integrity
 
     db_ok = check_db_integrity()
