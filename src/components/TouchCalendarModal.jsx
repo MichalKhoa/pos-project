@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
-const CZECH_MONTHS = [
-  'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
-  'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
-];
-
-const WEEKDAY_NAMES = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+import { CZECH_MONTHS, WEEKDAY_NAMES, buildCalendarGrid, stepMonth } from '../utils/calendarGrid.js';
 
 export default function TouchCalendarModal({
   isOpen,
@@ -56,21 +51,15 @@ export default function TouchCalendarModal({
   if (!isOpen) return null;
 
   const handlePrevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear(prev => prev - 1);
-    } else {
-      setViewMonth(prev => prev - 1);
-    }
+    const next = stepMonth(viewYear, viewMonth, 'prev');
+    setViewYear(next.year);
+    setViewMonth(next.month);
   };
 
   const handleNextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear(prev => prev + 1);
-    } else {
-      setViewMonth(prev => prev + 1);
-    }
+    const next = stepMonth(viewYear, viewMonth, 'next');
+    setViewYear(next.year);
+    setViewMonth(next.month);
   };
 
   const handleSelectDay = (year, month, day) => {
@@ -88,40 +77,7 @@ export default function TouchCalendarModal({
     onClose();
   };
 
-  const calendarGridCells = () => {
-    const cells = [];
-    const firstDayOfMonth = new Date(viewYear, viewMonth, 1);
-    const daysInActiveMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
-
-    let dayOfWeek = firstDayOfMonth.getDay();
-    let leadDaysCount = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    for (let i = leadDaysCount - 1; i >= 0; i--) {
-      const prevDayNum = daysInPrevMonth - i;
-      const prevMonthNum = viewMonth === 0 ? 11 : viewMonth - 1;
-      const prevYearNum = viewMonth === 0 ? viewYear - 1 : viewYear;
-      const iso = `${prevYearNum}-${(prevMonthNum + 1).toString().padStart(2, '0')}-${prevDayNum.toString().padStart(2, '0')}`;
-
-      cells.push({ type: 'prev', day: prevDayNum, month: prevMonthNum, year: prevYearNum, iso });
-    }
-
-    for (let d = 1; d <= daysInActiveMonth; d++) {
-      const iso = `${viewYear}-${(viewMonth + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-      cells.push({ type: 'current', day: d, month: viewMonth, year: viewYear, iso });
-    }
-
-    const remainingCount = 42 - cells.length;
-    for (let n = 1; n <= remainingCount; n++) {
-      const nextMonthNum = viewMonth === 11 ? 0 : viewMonth + 1;
-      const nextYearNum = viewMonth === 11 ? viewYear + 1 : viewYear;
-      const iso = `${nextYearNum}-${(nextMonthNum + 1).toString().padStart(2, '0')}-${n.toString().padStart(2, '0')}`;
-
-      cells.push({ type: 'next', day: n, month: nextMonthNum, year: nextYearNum, iso });
-    }
-
-    return cells;
-  };
+  const calendarGridCells = () => buildCalendarGrid(viewYear, viewMonth);
 
   const cells = calendarGridCells();
   const yearRange = Array.from({ length: 11 }, (_, i) => 2020 + i);

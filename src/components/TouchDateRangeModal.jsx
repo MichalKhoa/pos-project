@@ -2,12 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, X, Check, Sparkles } from 'lucide-react';
 
 
-const CZECH_MONTHS = [
-  'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
-  'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'
-];
-
-const WEEKDAY_NAMES = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+import { CZECH_MONTHS, WEEKDAY_NAMES, buildCalendarGrid, stepMonth } from '../utils/calendarGrid.js';
 
 export default function TouchDateRangeModal({
   isOpen,
@@ -65,21 +60,15 @@ export default function TouchDateRangeModal({
   const rightYear = viewMonth === 11 ? viewYear + 1 : viewYear;
 
   const handlePrevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear(prev => prev - 1);
-    } else {
-      setViewMonth(prev => prev - 1);
-    }
+    const next = stepMonth(viewYear, viewMonth, 'prev');
+    setViewYear(next.year);
+    setViewMonth(next.month);
   };
 
   const handleNextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear(prev => prev + 1);
-    } else {
-      setViewMonth(prev => prev + 1);
-    }
+    const next = stepMonth(viewYear, viewMonth, 'next');
+    setViewYear(next.year);
+    setViewMonth(next.month);
   };
 
   const handleDayClick = (clickedIso) => {
@@ -127,39 +116,6 @@ export default function TouchDateRangeModal({
       setEndDateIso(last);
     }
     setPickingState('start');
-  };
-
-  const buildCalendarGrid = (yr, mo) => {
-    const cells = [];
-    const firstDay = new Date(yr, mo, 1);
-    const daysInActive = new Date(yr, mo + 1, 0).getDate();
-    const daysInPrev = new Date(yr, mo, 0).getDate();
-
-    let dayOfWeek = firstDay.getDay();
-    let leadCount = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    for (let i = leadCount - 1; i >= 0; i--) {
-      const prevDay = daysInPrev - i;
-      const prevMo = mo === 0 ? 11 : mo - 1;
-      const prevYr = mo === 0 ? yr - 1 : yr;
-      const iso = `${prevYr}-${(prevMo + 1).toString().padStart(2, '0')}-${prevDay.toString().padStart(2, '0')}`;
-      cells.push({ type: 'prev', day: prevDay, month: prevMo, year: prevYr, iso });
-    }
-
-    for (let d = 1; d <= daysInActive; d++) {
-      const iso = `${yr}-${(mo + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-      cells.push({ type: 'current', day: d, month: mo, year: yr, iso });
-    }
-
-    const fillCount = 42 - cells.length;
-    for (let n = 1; n <= fillCount; n++) {
-      const nextMo = mo === 11 ? 0 : mo + 1;
-      const nextYr = mo === 11 ? yr + 1 : yr;
-      const iso = `${nextYr}-${(nextMo + 1).toString().padStart(2, '0')}-${n.toString().padStart(2, '0')}`;
-      cells.push({ type: 'next', day: n, month: nextMo, year: nextYr, iso });
-    }
-
-    return cells;
   };
 
   const leftCells = buildCalendarGrid(viewYear, viewMonth);
