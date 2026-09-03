@@ -118,17 +118,17 @@ export default function ManualKeypad({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-      {/* ── CARD 1: NUMERIC KEYPAD SECTION ───────────────── */}
-      <div
-        className="keypad-section touch-large-keypad"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.45rem',
-          flexShrink: 0
-        }}
-      >
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+        minHeight: '100%',
+        width: '100%'
+      }}
+    >
+      {/* ── CARD 1: NUMERIC KEYPAD BOX ───────────────── */}
+      <div className="pos-card-box keypad-card-box touch-large-keypad">
         {/* ── Standalone Item name input ─────────────────── */}
         <div style={{
           display: 'flex',
@@ -358,11 +358,14 @@ export default function ManualKeypad({
         </div>
       </div>
 
-      {/* ── LIGHT SEPARATOR & AUXILIARY WIDGETS SECTION ───────────── */}
-      <div className="category-presets-separator" style={{ margin: '0.85rem 0 0.55rem 0' }} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-        {/* ── CARD 2: STANDALONE HOLD / PARK CART STORAGE CARD ─────── */}
+      {/* ── CARD 2: DOCKED AUXILIARY WIDGETS BOX ──────────── */}
+      <div
+        className="pos-card-box keypad-auxiliary-box"
+        style={{
+          marginTop: 'auto'
+        }}
+      >
+        {/* Standalone Hold / Park Cart Storage */}
         <ParkedCartsDrawer
           hasCartItems={hasCartItems}
           parkedCarts={parkedCarts}
@@ -374,7 +377,7 @@ export default function ManualKeypad({
           onOpenChange={onParkedModalOpenChange}
         />
 
-        {/* ── CARD 3: SHIFT QUICK STATS MINI-WIDGET (Option D) ─────── */}
+        {/* Shift Quick Stats Mini-Widget */}
         <ShiftStatsWidget
           salesHistory={salesHistory}
           onNavigateToHistory={onNavigateToHistory}

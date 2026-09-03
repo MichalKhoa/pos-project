@@ -669,16 +669,39 @@ input, textarea, [contenteditable="true"] {
 .pos-col-left {
   width: 380px;
   min-width: 340px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card-elevated);
-  padding: 0.85rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   box-sizing: border-box;
+}
+
+.pos-card-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-elevated);
+  box-sizing: border-box;
+}
+
+.keypad-card-box {
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.keypad-auxiliary-box {
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex-shrink: 0;
 }
 
 /* Center Column: Quick Presets Grid */
