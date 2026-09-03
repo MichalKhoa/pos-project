@@ -204,8 +204,9 @@ export default function StoreProfileSection({
         </div>
 
         <LanguageSelector
-          currentLang={config.defaultLanguage || 'cs'}
-          onSelectLang={(lang) => {
+          variant="bar"
+          value={config.defaultLanguage || 'cs'}
+          onChange={(lang) => {
             if (saveConfigField) {
               saveConfigField('defaultLanguage', lang);
             } else {
