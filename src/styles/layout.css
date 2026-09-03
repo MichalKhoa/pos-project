@@ -696,11 +696,19 @@ input, textarea, [contenteditable="true"] {
   flex-shrink: 0;
 }
 
-.keypad-auxiliary-box {
-  padding: 0.75rem 0.85rem;
+.keypad-parked-box {
+  padding: 0.65rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.keypad-stats-box {
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
   flex-shrink: 0;
 }
 

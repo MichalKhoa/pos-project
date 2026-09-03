@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, X, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { Tag, X, ChevronUp, ChevronDown, Check, Delete } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { soundFx } from '../../utils/audio.js';
 
@@ -36,7 +36,55 @@ export default function OpenPriceModal({
     });
   };
 
+  const handleDigit = (d) => {
+    soundFx.playKeypadClick();
+    setEnteredOpenPrice(prev => {
+      if (prev.includes('.')) {
+        const parts = prev.split('.');
+        if (parts[1] && parts[1].length >= 2) return prev;
+      }
+      return prev.length < 10 ? prev + d : prev;
+    });
+  };
+
+  const handleDoubleZero = () => {
+    soundFx.playKeypadClick();
+    setEnteredOpenPrice(prev => {
+      if (!prev || prev === '0') return '0';
+      if (prev.includes('.')) {
+        const parts = prev.split('.');
+        if (parts[1] && parts[1].length >= 1) return prev;
+      }
+      return prev.length < 9 ? prev + '00' : prev;
+    });
+  };
+
+  const handleComma = () => {
+    soundFx.playKeypadClick();
+    setEnteredOpenPrice(prev => {
+      if (prev.includes('.')) return prev;
+      return prev ? prev + '.' : '0.';
+    });
+  };
+
+  const handleBackspace = () => {
+    soundFx.playKeypadClick();
+    setEnteredOpenPrice(prev => (prev.length > 1 ? prev.slice(0, -1) : ''));
+  };
+
+  const handleClear = () => {
+    soundFx.playDeleteTone();
+    setEnteredOpenPrice('');
+  };
+
+  const handleToggleSign = () => {
+    soundFx.playKeypadClick();
+    setOpenPriceQty(prev => (prev < 0 ? Math.abs(prev || 1) : -Math.abs(prev || 1)));
+    setEnteredOpenPrice(prev => (prev.startsWith('-') ? prev.slice(1) : prev));
+  };
+
   const isReturn = openPriceQty < 0 || Boolean(enteredOpenPrice && enteredOpenPrice.startsWith('-'));
+  const hasValidAmount = Boolean(enteredOpenPrice && !isNaN(parseFloat(enteredOpenPrice)) && parseFloat(enteredOpenPrice) > 0);
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
@@ -45,222 +93,345 @@ export default function OpenPriceModal({
         onClick={e => e.stopPropagation()}
         style={{
           width: '92vw',
-          maxWidth: '420px',
+          maxWidth: '380px',
           background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1.5px solid var(--border-color)',
-          boxShadow: 'var(--shadow-xl)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-card-elevated)',
           overflow: 'hidden'
         }}
       >
-        <div className="modal-header" style={{ padding: '0.85rem 1.25rem' }}>
-          <div className="modal-title" style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Tag size={18} style={{ color: 'var(--accent-blue)' }} />
-            <span>{openPriceTarget.name}</span>
+        {/* Modal Header */}
+        <div className="modal-header" style={{ padding: '0.75rem 1rem' }}>
+          <div className="modal-title" style={{ fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <Tag size={17} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {openPriceTarget.name}
+            </span>
           </div>
           <button type="button" className="close-modal-btn" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div style={{
-            background: 'var(--bg-input)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '0.85rem 1rem',
-            textAlign: 'center',
-            border: isReturn ? '2px solid var(--accent-rose)' : '2px solid var(--accent-blue)',
-            boxShadow: isReturn ? '0 0 12px rgba(244, 63, 94, 0.25)' : '0 0 12px rgba(59, 130, 246, 0.2)'
-          }}>
-            <div style={{ fontSize: '0.72rem', color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
-              {isReturn ? '↩️ Cena pro vrácení zboží (Vratka)' : 'Zadejte cenu za jednotku (Kč)'}
+        <form onSubmit={onSubmit} style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+          {/* ── Compact Amount Display Card (Matches Main Keypad) ── */}
+          <div
+            className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '0.45rem 0.75rem',
+              borderRadius: '10px',
+              border: isReturn
+                ? '2px solid var(--accent-rose)'
+                : (hasValidAmount ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)'),
+              background: isReturn
+                ? 'rgba(239, 68, 68, 0.06)'
+                : (hasValidAmount ? 'color-mix(in srgb, var(--accent-blue) 4%, var(--bg-input))' : 'var(--bg-input)'),
+              boxShadow: isReturn
+                ? '0 0 12px rgba(239, 68, 68, 0.18)'
+                : (hasValidAmount ? '0 0 12px rgba(59, 130, 246, 0.15)' : 'none'),
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {/* Header row: mode indicator & multiplier pill */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{
+                fontSize: '0.64rem',
+                fontWeight: '800',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)'
+              }}>
+                {isReturn ? 'Cena pro vrácení — ↩️ VRATKA' : 'Zadejte cenu za jednotku (Kč)'}
+              </span>
+
+              {openPriceQty !== 1 && (
+                <span style={{
+                  fontSize: '0.64rem',
+                  fontWeight: '800',
+                  color: isReturn ? 'var(--accent-rose)' : 'var(--accent-amber)',
+                  background: isReturn ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                  padding: '1px 5px',
+                  borderRadius: '4px'
+                }}>
+                  {isReturn ? `↩️ ${openPriceQty}×` : `⚡ ${openPriceQty}×`}
+                </span>
+              )}
             </div>
+
+            {/* Main Price Readout Row with Inline Backspace */}
             <div style={{
-              fontSize: '2rem',
-              fontWeight: '900',
-              fontFamily: 'var(--font-mono)',
-              color: enteredOpenPrice ? (isReturn ? 'var(--accent-rose)' : 'var(--text-primary)') : 'var(--text-muted)'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.5rem',
+              marginTop: '1px'
             }}>
-              {enteredOpenPrice ? `${enteredOpenPrice} Kč` : '0 Kč'}
+              <div style={{
+                fontSize: '1.45rem',
+                fontWeight: '900',
+                fontFamily: 'var(--font-mono)',
+                color: isReturn
+                  ? 'var(--accent-rose)'
+                  : (enteredOpenPrice ? 'var(--text-primary)' : 'var(--text-muted)'),
+                wordBreak: 'break-all',
+                flex: 1
+              }}>
+                {enteredOpenPrice ? `${enteredOpenPrice} Kč` : (isReturn ? '-0 Kč' : '0 Kč')}
+              </div>
+
+              {/* Inline Backspace button (Subtle & Borderless) */}
+              <button
+                type="button"
+                onClick={handleBackspace}
+                disabled={!enteredOpenPrice}
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  minWidth: '34px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  background: 'transparent',
+                  color: enteredOpenPrice ? 'var(--text-muted)' : 'transparent',
+                  opacity: enteredOpenPrice ? 0.75 : 0,
+                  cursor: enteredOpenPrice ? 'pointer' : 'default',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.15s ease',
+                  padding: 0
+                }}
+                title="Smazat poslední znak (Backspace)"
+              >
+                <Delete size={18} />
+              </button>
             </div>
-            {openPriceQty !== 1 && enteredOpenPrice && (
-              <div style={{ fontSize: '0.85rem', color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800', marginTop: '0.2rem' }}>
-                {isReturn ? '↩️ Vratka celkem: ' : '= Celkem '}
+
+            {/* Total calculation preview when qty > 1 */}
+            {openPriceQty !== 1 && hasValidAmount && (
+              <div style={{
+                fontSize: '0.76rem',
+                color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
+                fontWeight: '800',
+                marginTop: '1px'
+              }}>
+                {isReturn ? '↩️ Vratka celkem: ' : '= Celkem: '}
                 {(Math.abs(openPriceQty) * parseFloat(enteredOpenPrice || 0)).toLocaleString('cs-CZ')} Kč ({openPriceQty} ks)
               </div>
             )}
           </div>
 
-          {/* Quick Qty +/- controls (Enlarged 48px touch targets) */}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {/* ── Sleek 38px Quantity Stepper (Matches Main Keypad) ── */}
+          <div
+            className="keypad-stepper-bar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
             <button
               type="button"
+              className="key-btn"
               onClick={handleStepDown}
               style={{
-                flex: 1, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: '0.35rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                border: 'none', fontWeight: '900', fontSize: '1.1rem', color: '#fff',
-                cursor: 'pointer', boxShadow: '0 2px 6px rgba(239,68,68,0.35)',
-                touchAction: 'manipulation', transition: 'all 0.15s ease'
+                flex: 1.3,
+                height: '38px',
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '0.92rem',
+                fontWeight: '900',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.3rem',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
+                cursor: 'pointer'
               }}
-              title="Snížit množství (-1 / Vratka)"
+              title="Snížit množství (−1 / Vratka)"
             >
-              <ChevronDown size={22} strokeWidth={2.5} />
+              <ChevronDown size={18} strokeWidth={2.5} />
               <span>-1</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundFx.playKeypadClick();
-                setOpenPriceQty(1);
-              }}
+            <div
+              className={`multiplier-badge ${isReturn ? 'has-return' : (openPriceQty > 1 ? 'has-multiplier' : '')}`}
               style={{
-                minWidth: '64px', padding: '0 0.85rem', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderRadius: 'var(--radius-md)',
-                background: openPriceQty === 1 ? 'rgba(255,255,255,0.08)' : (openPriceQty < 0 ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'),
-                border: `1.5px solid ${openPriceQty === 1 ? 'var(--border-color)' : (openPriceQty < 0 ? 'rgba(239,68,68,0.5)' : 'rgba(245,158,11,0.5)')}`,
-                color: openPriceQty === 1 ? 'var(--text-muted)' : (openPriceQty < 0 ? 'var(--accent-rose)' : 'var(--accent-amber)'),
-                fontWeight: '900', fontSize: '1.05rem', fontFamily: 'var(--font-mono)', cursor: 'pointer',
-                touchAction: 'manipulation'
+                flex: 0.8,
+                height: '38px',
+                fontSize: '0.95rem',
+                letterSpacing: '0.02em',
+                padding: '0 0.25rem'
               }}
-              title="Resetovat množství na 1×"
             >
-              {openPriceQty < 0 ? `↩️ ${openPriceQty}×` : `${openPriceQty}×`}
-            </button>
+              {isReturn ? `↩️ ${openPriceQty}×` : `${openPriceQty}×`}
+            </div>
 
             <button
               type="button"
+              className="key-btn"
               onClick={handleStepUp}
               style={{
-                flex: 1, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: '0.35rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                border: 'none', fontWeight: '900', fontSize: '1.1rem', color: '#fff',
-                cursor: 'pointer', boxShadow: '0 2px 6px rgba(16,185,129,0.35)',
-                touchAction: 'manipulation', transition: 'all 0.15s ease'
+                flex: 1.3,
+                height: '38px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '0.92rem',
+                fontWeight: '900',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.3rem',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
+                cursor: 'pointer'
               }}
               title="Zvýšit množství (+1)"
             >
-              <ChevronUp size={22} strokeWidth={2.5} />
+              <ChevronUp size={18} strokeWidth={2.5} />
               <span>+1</span>
             </button>
           </div>
 
-          {/* Touch Numpad */}
-          <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+          {/* ── Standard 4×4 Touch Numpad (Matches KeypadNumberGrid) ── */}
+          <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.45rem' }}>
+            {/* Row 1: 7 8 9 ⌫ */}
             {['7', '8', '9'].map(num => (
-              <button key={num} type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => {
-                soundFx.playKeypadClick();
-                setEnteredOpenPrice(prev => {
-                  if (prev.includes('.')) {
-                    const parts = prev.split('.');
-                    if (parts[1] && parts[1].length >= 2) return prev;
-                  }
-                  return prev.length < 10 ? prev + num : prev;
-                });
-              }}>{num}</button>
+              <button
+                key={num}
+                type="button"
+                className="key-btn"
+                style={{ height: '44px', aspectRatio: 'auto' }}
+                onClick={() => handleDigit(num)}
+              >
+                {num}
+              </button>
             ))}
             <button
               type="button"
               className="key-btn key-action"
-              style={{ height: '52px', aspectRatio: 'auto' }}
-              onClick={() => {
-                soundFx.playKeypadClick();
-                setEnteredOpenPrice(prev => prev.length > 1 ? prev.slice(0, -1) : '');
-              }}
+              style={{ height: '44px', aspectRatio: 'auto' }}
+              onClick={handleBackspace}
+              title="Backspace"
             >
-              ⌫
+              <Delete size={18} />
             </button>
 
+            {/* Row 2: 4 5 6 C */}
             {['4', '5', '6'].map(num => (
-              <button key={num} type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => {
-                soundFx.playKeypadClick();
-                setEnteredOpenPrice(prev => {
-                  if (prev.includes('.')) {
-                    const parts = prev.split('.');
-                    if (parts[1] && parts[1].length >= 2) return prev;
-                  }
-                  return prev.length < 10 ? prev + num : prev;
-                });
-              }}>{num}</button>
+              <button
+                key={num}
+                type="button"
+                className="key-btn"
+                style={{ height: '44px', aspectRatio: 'auto' }}
+                onClick={() => handleDigit(num)}
+              >
+                {num}
+              </button>
             ))}
             <button
               type="button"
               className="key-btn key-action"
-              style={{ height: '52px', fontSize: '0.9rem', fontWeight: '700', aspectRatio: 'auto' }}
-              onClick={() => {
-                soundFx.playDeleteTone();
-                setEnteredOpenPrice('');
-              }}
+              style={{ height: '44px', fontSize: '0.92rem', fontWeight: '800', aspectRatio: 'auto' }}
+              onClick={handleClear}
+              title="Smazat vše (Clear)"
             >
               C
             </button>
 
+            {/* Row 3: 1 2 3 , */}
             {['1', '2', '3'].map(num => (
-              <button key={num} type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => {
-                soundFx.playKeypadClick();
-                setEnteredOpenPrice(prev => {
-                  if (prev.includes('.')) {
-                    const parts = prev.split('.');
-                    if (parts[1] && parts[1].length >= 2) return prev;
-                  }
-                  return prev.length < 10 ? prev + num : prev;
-                });
-              }}>{num}</button>
+              <button
+                key={num}
+                type="button"
+                className="key-btn"
+                style={{ height: '44px', aspectRatio: 'auto' }}
+                onClick={() => handleDigit(num)}
+              >
+                {num}
+              </button>
             ))}
             <button
               type="button"
               className="key-btn"
-              style={{ height: '52px', fontSize: '1.4rem', fontWeight: '700', color: 'var(--accent-blue)', aspectRatio: 'auto' }}
-              onClick={() => {
-                soundFx.playKeypadClick();
-                if (enteredOpenPrice.includes('.')) return;
-                setEnteredOpenPrice(prev => prev ? prev + '.' : '0.');
-              }}
+              style={{ height: '44px', fontSize: '1.3rem', fontWeight: '800', color: 'var(--accent-blue)', aspectRatio: 'auto' }}
+              onClick={handleComma}
+              title="Čárka"
             >
               ,
             </button>
 
-            <button type="button" className="key-btn" style={{ height: '52px', aspectRatio: 'auto' }} onClick={() => {
-              soundFx.playKeypadClick();
-              setEnteredOpenPrice(prev => {
-                if (prev.includes('.')) {
-                  const parts = prev.split('.');
-                  if (parts[1] && parts[1].length >= 2) return prev;
-                }
-                return prev.length < 10 ? prev + '0' : prev;
-              });
-            }}>0</button>
-
+            {/* Row 4: 0 00 ± × */}
             <button
               type="button"
               className="key-btn"
+              style={{ height: '44px', aspectRatio: 'auto' }}
+              onClick={() => handleDigit('0')}
+            >
+              0
+            </button>
+            <button
+              type="button"
+              className="key-btn"
+              style={{ height: '44px', aspectRatio: 'auto' }}
+              onClick={handleDoubleZero}
+            >
+              00
+            </button>
+            <button
+              type="button"
+              className={`key-btn ${isReturn ? 'active-return' : ''}`}
               style={{
-                height: '52px',
-                fontSize: '0.85rem',
+                height: '44px',
+                fontSize: '1.2rem',
                 fontWeight: '900',
-                background: isReturn ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239, 68, 68, 0.15)',
-                color: isReturn ? '#ffffff' : 'var(--accent-rose)',
-                border: '1px solid rgba(239, 68, 68, 0.4)',
-                gridColumn: 'span 3',
+                color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
+                background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
+                borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined,
                 aspectRatio: 'auto'
               }}
-              onClick={() => {
-                soundFx.playKeypadClick();
-                setOpenPriceQty(prev => (prev < 0 ? Math.abs(prev) : -Math.abs(prev || 1)));
-                setEnteredOpenPrice(prev => (prev.startsWith('-') ? prev.slice(1) : prev));
-              }}
-              title="Změnit znaménko / Vratka"
+              onClick={handleToggleSign}
+              title="Změnit znaménko (± Vratka)"
             >
-              {isReturn ? '↩️ Aktivní Vratka (±)' : '± Vratka'}
+              ±
+            </button>
+            <button
+              type="button"
+              className="key-btn key-action"
+              style={{
+                height: '44px',
+                fontSize: '1.2rem',
+                fontWeight: '800',
+                color: openPriceQty > 1 ? '#fff' : 'var(--accent-amber)',
+                background: openPriceQty > 1 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : undefined,
+                aspectRatio: 'auto'
+              }}
+              onClick={handleStepUp}
+              title="Zvýšit množství (×)"
+            >
+              ×
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
+          {/* ── Action Buttons Row ── */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.35rem' }}>
             <button
               type="button"
               className="nav-tab"
-              style={{ flex: 1, justifyContent: 'center', height: '48px' }}
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                height: '44px',
+                fontSize: '0.86rem',
+                fontWeight: '700'
+              }}
               onClick={onClose}
             >
               {t('common.cancel')}
@@ -269,13 +440,19 @@ export default function OpenPriceModal({
               type="submit"
               className="pay-btn pay-btn-cash"
               style={{
-                flex: 1.5, height: '48px',
-                background: (openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined
+                flex: 1.6,
+                height: '44px',
+                fontSize: '0.88rem',
+                fontWeight: '800',
+                gap: '0.45rem',
+                background: isReturn ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined,
+                borderColor: isReturn ? '#ef4444' : undefined,
+                boxShadow: isReturn ? '0 4px 14px rgba(239, 68, 68, 0.35)' : undefined
               }}
-              disabled={!enteredOpenPrice || isNaN(parseFloat(enteredOpenPrice)) || parseFloat(enteredOpenPrice) === 0}
+              disabled={!hasValidAmount}
             >
-              <Check size={18} />
-              <span>{(openPriceQty < 0 || (enteredOpenPrice && parseFloat(enteredOpenPrice) < 0)) ? 'Vrátit zboží (Vratka)' : t('keypad.add_to_cart')}</span>
+              <Check size={17} />
+              <span>{isReturn ? 'Vrátit zboží (Vratka)' : t('keypad.add_to_cart')}</span>
             </button>
           </div>
         </form>

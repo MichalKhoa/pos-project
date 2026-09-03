@@ -56,18 +56,11 @@ export default function ShiftStatsWidget({
 
   return (
     <div
-      className="shift-stats-card pos-standalone-card"
+      className="pos-card-box keypad-stats-box shift-stats-card"
       style={{
-        background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
-        border: '1px solid color-mix(in srgb, var(--border-color) 70%, transparent)',
-        borderRadius: 'var(--radius-md)',
         padding: isExpanded ? '0.75rem 0.85rem' : '0.55rem 0.85rem',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
-        display: 'flex',
-        flexDirection: 'column',
         gap: isExpanded ? '0.5rem' : '0',
-        transition: 'all 0.2s ease',
-        flexShrink: 0
+        transition: 'all 0.2s ease'
       }}
     >
       {/* Header - Clickable Collapse / Expand Toggle */}

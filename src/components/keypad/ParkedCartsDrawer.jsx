@@ -67,18 +67,7 @@ export default function ParkedCartsDrawer({
   return (
     <>
       <div
-        className="hold-cart-card-standalone pos-standalone-card"
-        style={{
-          background: 'color-mix(in srgb, var(--text-primary) 3%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--border-color) 70%, transparent)',
-          borderRadius: 'var(--radius-md)',
-          padding: '0.65rem 0.85rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.45rem',
-          flexShrink: 0
-        }}
+        className="pos-card-box keypad-parked-box hold-cart-card-standalone"
       >
         <div style={{
           fontSize: '0.7rem',

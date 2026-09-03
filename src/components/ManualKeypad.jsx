@@ -358,14 +358,16 @@ export default function ManualKeypad({
         </div>
       </div>
 
-      {/* ── CARD 2: DOCKED AUXILIARY WIDGETS BOX ──────────── */}
+      {/* ── BOTTOM DOCKED CARDS (PARKED CARTS & SHIFT SUMMARY) ──────────── */}
       <div
-        className="pos-card-box keypad-auxiliary-box"
         style={{
-          marginTop: 'auto'
+          marginTop: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.65rem'
         }}
       >
-        {/* Standalone Hold / Park Cart Storage */}
+        {/* Standalone Hold / Park Cart Storage Card */}
         <ParkedCartsDrawer
           hasCartItems={hasCartItems}
           parkedCarts={parkedCarts}
@@ -377,7 +379,7 @@ export default function ManualKeypad({
           onOpenChange={onParkedModalOpenChange}
         />
 
-        {/* Shift Quick Stats Mini-Widget */}
+        {/* Shift Quick Stats Mini-Widget Card */}
         <ShiftStatsWidget
           salesHistory={salesHistory}
           onNavigateToHistory={onNavigateToHistory}
