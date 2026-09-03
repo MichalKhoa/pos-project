@@ -45,14 +45,16 @@ Directory: `/src/components`
   - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), dedicated `±` return toggle, and custom product/return insertion button.
   - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) with sleek 36px touch height and tactile active-press scale responsiveness.
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
-  - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
-- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
+  - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, quick link to Sales History, and 1-tap "Vytisknout denní tržbu" thermal printer summary trigger.
+- `payment/CashPaymentPanel.jsx`: Cash checkout panel with direct banknote tender chips (100, 200, 500, 1000, 2000 Kč), 3x4 numpad, giant hero change banner (2.5rem font, `VRÁTIT / TRẢ LẠI`), and automated greedy coin/banknote breakdown assistant (`src/utils/currencyBreakdown.js`).
+- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, 1-click thermal daily summary trigger, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
 - `CalendarModal.jsx`, `TouchCalendarModal.jsx`, `TouchDateRangeModal.jsx`: Reusable calendar modals powered by `src/utils/calendarGrid.js` and `src/utils/czechHolidays.js`. (Unreferenced `DateKeypadModal.jsx` pruned).
+- `UnknownBarcodeModal.jsx`: Instant 5-second touch modal triggered when an unrecognized barcode is scanned at checkout. Allows quick registration (name, price, VAT, category) and direct insertion into active cart with multiplier without leaving sales screen.
 
 ## Active Custom Hooks in `/src/hooks/`
 - `useCart.js`: Active shopping cart state, discounts, `updateItemDetails`, and item modifiers.
 - `usePresetDragDrop.js`: Drag-and-drop preset ordering.
-- `usePosKeyboardShortcuts.js`: Hardware keyboard listener for fast numeric keypad checkout.
+- `usePosKeyboardShortcuts.js`: Hardware keyboard listener for fast numeric keypad checkout and global USB barcode scanner listener (<70ms burst detection, resolves EAN to presets, handles multiplier `qty * [scan]`, triggers UnknownBarcodeModal on unknown codes).
 - `usePosCatalog.js`: Product categories and presets state and CRUD.
 - `useOfflineSync.js`: EET offline queue check and sync handler.
 - `useAutoLock.js`: Touch/mouse/keyboard activity tracking and auto-lock.

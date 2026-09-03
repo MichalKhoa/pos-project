@@ -10,7 +10,8 @@ Hardware drivers & protocols for thermal receipt printers, ČSOB card terminals,
 - Printer discovery isolated in `/backend/services/printer_discovery.py` (`detect_connected_printers` across Windows Win32Print, Linux `/dev/usb/lp*`, `/dev/tty*`, and CUPS).
 - Automatic printer discovery scanner (`GET /api/v1/printer/scan`): Scans local subnets (`192.168.x.x:9100`) and USB ports (`/dev/usb/lp*`, COM ports) in parallel with a 1.5s socket timeout.
 - Cut command: `\x1b\x69` (ESC/POS full cut).
-- Cash drawer kick command: `\x1b\x70\x00\x19\xfa` (Pin 2 pulse) broadcast on cash checkout.
+- Cash drawer kick command: `\x1b\x70\x00\x19\xfa` (Pin 2 / Pin 5 pulse) broadcast on cash checkout.
+- 1-Click Daily Shift Summary slip (`POST /api/v1/printer/print-daily-summary`): Prints concise 80mm/58mm closing slip (total revenue, cash in drawer, card total, receipt count, VAT breakdown) and automatically triggers drawer kick pulse for 2-minute cash reconciliation.
 
 ## ČSOB Payment Terminal Driver (`/backend/services/csob_terminal_service.py` & `/backend/routers/csob_terminal.py`)
 - TCP/IP protocol driver for ČSOB Ingenico / Verifone Ethernet payment terminals.
