@@ -73,17 +73,17 @@ export default function InventoryStockTable({
 
   return (
     <div className="inventory-main-content">
-      {/* Filter & Search Toolbar (Compact) */}
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-card)', padding: '0.45rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-          <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* Filter & Search Toolbar (Ultra-Compact) */}
+      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-card)', padding: '0.35rem 0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '170px', maxWidth: '280px' }}>
+          <Search size={14} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
             className="input-field"
             placeholder={t('inventory.search_placeholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: '2.3rem', height: '38px', fontSize: '0.88rem' }}
+            style={{ paddingLeft: '2.1rem', height: '32px', fontSize: '0.84rem' }}
           />
         </div>
 
@@ -91,7 +91,7 @@ export default function InventoryStockTable({
           className="input-field"
           value={selectedCategory}
           onChange={e => setSelectedCategory(e.target.value)}
-          style={{ width: '160px', height: '38px', fontSize: '0.88rem' }}
+          style={{ width: '145px', height: '32px', fontSize: '0.82rem', padding: '0 0.5rem' }}
         >
           <option value="all">{t('inventory.all_categories')}</option>
           {categories.filter(c => c.id !== 'all').map(c => (
@@ -101,11 +101,11 @@ export default function InventoryStockTable({
 
         {/* Preset vs Warehouse Filter Segment */}
         {setPresetFilter && (
-          <div style={{ display: 'flex', background: 'var(--bg-input)', padding: '2px', borderRadius: 'var(--radius-md)', gap: '2px', border: '1px solid var(--border-color)', height: '38px', alignItems: 'center' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '2px', borderRadius: 'var(--radius-sm)', gap: '2px', border: '1px solid var(--border-color)', height: '32px', alignItems: 'center' }}>
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'all' ? 'active' : ''}`}
-              style={{ padding: '0.35rem 0.55rem', fontSize: '0.78rem', fontWeight: '700', height: '32px' }}
+              style={{ padding: '0 0.55rem', fontSize: '0.76rem', fontWeight: '700', height: '26px', minHeight: 'unset', border: 'none' }}
               onClick={() => setPresetFilter('all')}
             >
               {t('common.all') || 'Vše'}
@@ -113,7 +113,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'pinned' ? 'active' : ''}`}
-              style={{ padding: '0.35rem 0.55rem', fontSize: '0.78rem', fontWeight: '700', height: '32px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              style={{ padding: '0 0.55rem', fontSize: '0.76rem', fontWeight: '700', height: '26px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
               onClick={() => setPresetFilter('pinned')}
               title={t('inventory.filter_pinned_desc') || 'Zobrazit pouze položky připnuté na pokladnu'}
             >
@@ -123,7 +123,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'unpinned' ? 'active' : ''}`}
-              style={{ padding: '0.35rem 0.55rem', fontSize: '0.78rem', fontWeight: '700', height: '32px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              style={{ padding: '0 0.55rem', fontSize: '0.76rem', fontWeight: '700', height: '26px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
               onClick={() => setPresetFilter('unpinned')}
               title={t('inventory.filter_unpinned_desc') || 'Zobrazit pouze skladové položky (bez tlačítka na pokladně)'}
             >
@@ -135,21 +135,53 @@ export default function InventoryStockTable({
 
         <button
           type="button"
-          className={`pay-btn ${showLowStockOnly ? 'pay-btn-card' : ''}`}
-          style={{ height: '38px', padding: '0 0.85rem', fontSize: '0.8rem', background: showLowStockOnly ? 'var(--accent-amber)' : 'var(--bg-input)', color: showLowStockOnly ? '#fff' : 'var(--text-primary)', fontWeight: '700' }}
           onClick={() => setShowLowStockOnly(prev => !prev)}
+          style={{
+            height: '32px',
+            padding: '0 0.65rem',
+            fontSize: '0.76rem',
+            fontWeight: '800',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            borderRadius: 'var(--radius-sm)',
+            border: showLowStockOnly ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
+            background: showLowStockOnly ? 'var(--accent-amber)' : 'var(--bg-input)',
+            color: showLowStockOnly ? '#000000' : 'var(--text-primary)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s ease'
+          }}
+          title={showLowStockOnly ? 'Zrušit filtr nízkých zásob' : 'Filtrovat pouze položky s nízkou zásobou'}
         >
-          <AlertTriangle size={15} />
-          <span>{showLowStockOnly ? t('inventory.filter_showing_low') : t('inventory.filter_low_stock')}</span>
+          <AlertTriangle size={14} style={{ color: showLowStockOnly ? '#000000' : 'var(--accent-amber)' }} />
+          <span>{showLowStockOnly ? (t('inventory.filter_showing_low') || 'Nízké zásoby') : (t('inventory.filter_low_stock') || 'Nízký stav')}</span>
         </button>
 
         <button
           type="button"
-          className="pay-btn pay-btn-cash"
-          style={{ height: '38px', padding: '0 1rem', fontSize: '0.82rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginLeft: 'auto' }}
           onClick={onOpenAddModal}
+          style={{
+            height: '32px',
+            padding: '0 0.75rem',
+            fontSize: '0.78rem',
+            fontWeight: '800',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--accent-emerald)',
+            color: '#ffffff',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 'auto',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
+            transition: 'opacity 0.15s ease'
+          }}
         >
-          <Plus size={16} />
+          <Plus size={15} />
           <span>{t('inventory.add_item') || 'Přidat položku'}</span>
         </button>
       </div>
@@ -276,11 +308,10 @@ export default function InventoryStockTable({
                   <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
                     <button
                       type="button"
-                      className="pay-btn"
                       title={isPinned ? (t('inventory.unpin_action') || 'Odebrat z rychlých dlaždic na pokladně') : (t('inventory.pin_action') || 'Připnout na pokladnu jako rychlou dlaždici')}
                       style={{
-                        height: '30px',
-                        padding: '0 0.55rem',
+                        height: '28px',
+                        padding: '0 0.5rem',
                         fontSize: '0.74rem',
                         fontWeight: '800',
                         borderRadius: 'var(--radius-sm)',
@@ -289,6 +320,7 @@ export default function InventoryStockTable({
                         color: isPinned ? 'var(--accent-blue)' : 'var(--text-muted)',
                         display: 'inline-flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '0.25rem',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
@@ -384,12 +416,26 @@ export default function InventoryStockTable({
 
                       <button
                         type="button"
-                        className="pay-btn pay-btn-card"
                         disabled={!hasEdit || isSaving}
                         onClick={() => handleSaveRow(preset)}
-                        style={{ height: '34px', padding: '0 0.75rem', fontSize: '0.78rem', opacity: hasEdit ? 1 : 0.4 }}
+                        style={{
+                          height: '30px',
+                          padding: '0 0.65rem',
+                          fontSize: '0.76rem',
+                          fontWeight: '700',
+                          borderRadius: 'var(--radius-sm)',
+                          border: 'none',
+                          background: hasEdit ? 'var(--accent-blue)' : 'var(--bg-input)',
+                          color: hasEdit ? '#ffffff' : 'var(--text-muted)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          cursor: hasEdit ? 'pointer' : 'default',
+                          opacity: hasEdit ? 1 : 0.4,
+                          transition: 'all 0.15s ease'
+                        }}
                       >
-                        <Check size={15} />
+                        <Check size={14} />
                         <span>{t('common.save')}</span>
                       </button>
                     </div>
