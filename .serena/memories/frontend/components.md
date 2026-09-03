@@ -23,6 +23,7 @@ Directory: `/src/components`
 - `AnalyticsView.jsx`: Financial KPI cards, period selector, CSV export, chart breakdowns (`useSalesPeriodFilter`). Subcomponents in `/src/components/history/`:
   - `SalesPeriodBar.jsx`: Period filters with stepper navigation.
   - `SalesAnalyticsCharts.jsx`: 4 KPI cards (Gross, Netto/VAT, Receipts/AOV, Payments), Top 8 Products ranking, Rush-Hour chart (07:00–22:00), payment split bar (Cash/Card/QR), category sales volume bars, Czech VAT table (21%, 12%, 0%).
+  - `MultiPeriodComparison.jsx`: Side-by-side comparative dashboard at bottom of Analytics for Last 30 Days, Last 12 Weeks, Last 12 Months with volume bars, averages, and transaction counts (`src/utils/periodAggregator.js`).
 - `SettingsView.jsx`: Master-Detail sidebar (`.settings-view-container`), left 250px vertical rail, right 2-column grid (`.settings-grid-layout`), auto-save (`saveConfigField` onBlur, `saveConfigBatch` onChange) with toast (`.settings-save-toast`). Subcomponents in `/src/components/settings/`:
   - `StoreProfileSection.jsx`: Left: identity, address, IČO/DIČ. Right: default VAT 21%/12%/0%, IBAN for QR, language bar.
   - `LayoutSection.jsx`: Left: preset columns Auto/3/4/5/6, button size S/M/L, style left-stripe/color-fill/modern-card/modern-glass, showPresetVat toggle, catalog shortcut. Right: cart position left/right, cart item style elevated-card/divided-row/rounded-tile, high-legibility mode, customer LCD title & auto-sleep.
