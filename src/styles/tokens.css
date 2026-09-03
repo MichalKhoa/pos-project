@@ -1,9 +1,11 @@
 :root, [data-theme='light'] {
-  --bg-main: #f8fafc;
+  --bg-main: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-input: #f1f5f9;
-  --border-color: #cbd5e1;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #f8fafc;
+  --bg-elevated: #ffffff;
+  --border-color: #e2e8f0;
+  --border-subtle: #cbd5e1;
   --border-focus: #2563eb;
 
   --text-primary: #0f172a;
@@ -26,8 +28,12 @@
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-card-elevated: 0 4px 14px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-key: 0 3px 0 #cbd5e1, 0 2px 4px rgba(15, 23, 42, 0.05);
+  --shadow-key-pressed: 0 1px 0 #cbd5e1, 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-hero-glow: 0 4px 20px -2px rgba(16, 185, 129, 0.2);
   --shadow-glow: 0 0 16px rgba(5, 150, 105, 0.2);
   --shadow-blue-glow: 0 0 16px rgba(37, 99, 235, 0.2);
 
@@ -36,11 +42,13 @@
 }
 
 [data-theme='dark'] {
-  --bg-main: #090d16;
-  --bg-card: #131a2a;
+  --bg-main: #0a0e17;
+  --bg-card: #111827;
   --bg-card-hover: #1e293b;
-  --bg-input: #1e293b;
-  --border-color: #334155;
+  --bg-input: #0f172a;
+  --bg-elevated: #1e293b;
+  --border-color: #1f293d;
+  --border-subtle: #334155;
   --border-focus: #3b82f6;
 
   --text-primary: #f8fafc;
@@ -61,6 +69,10 @@
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-card-elevated: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --shadow-key: 0 3px 0 #1e293b, 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-key-pressed: 0 1px 0 #1e293b, 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-hero-glow: 0 4px 24px -2px rgba(16, 185, 129, 0.28);
   --shadow-glow: 0 0 16px rgba(16, 185, 129, 0.25);
   --shadow-blue-glow: 0 0 16px rgba(59, 130, 246, 0.25);
 }
@@ -71,7 +83,7 @@ body, .navbar, .modal-card, .table-card, .preset-card, .pos-col-left, .pos-col-c
 }
 
 /* Touch feedback for touchscreen buttons */
-.preset-card:active, .key-btn:active, .pay-btn:active, .nav-tab:active, .category-chip:active {
+.preset-card:active, .nav-tab:active, .category-chip:active {
   transform: scale(0.95) !important;
 }
 

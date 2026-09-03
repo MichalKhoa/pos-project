@@ -6,6 +6,8 @@ React 19 single-page register application located in `/src`.
 - [main.jsx](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/main.jsx): React root renderer wrapped in `ErrorBoundary`, `LanguageProvider`, and `StoreConfigProvider`.
 - [App.jsx](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/App.jsx): Main register container with lazy-loaded views via `React.lazy()` + `<Suspense>`, active tab switcher (`register`, `presets`, `inventory`, `history`, `settings`), and global modal controllers.
 - [index.css](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/index.css): Master stylesheet importing modular domain sheets from `src/styles/` (`tokens.css`, `layout.css`, `register.css`, `modals.css`, `history.css`, `settings.css`).
+  - `tokens.css`: 3-tier elevation tokens (`--shadow-card-elevated`, `--shadow-key`, `--shadow-key-pressed`), theme colors, and font definitions.
+  - `register.css`: Tactile 3D numeric keypad keycaps, Grand Total hero card, and 3D cash/card payment action buttons with active compression physics.
 
 ## Contexts & State Providers (`/src/context`)
 - `StoreConfigContext.jsx`: Centralizes store configuration, live SQLite DB synchronization, `localStorage` caching, and cashier/manager `isAdminMode` gates without prop drilling (`useStoreConfig()`).

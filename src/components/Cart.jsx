@@ -335,13 +335,21 @@ export default function Cart({
             <span>{t('cart.tax_total')}</span>
             <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)' }}>{totalTax.toFixed(2)} Kč</span>
           </div>
+        </div>
 
-          <div className="summary-row total-row" style={{ color: isRefundTransaction ? 'var(--accent-rose)' : undefined }}>
-            <span>{isRefundTransaction ? '↩️ K VRÁCENÍ ZÁKAZNÍKOVI:' : `${t('cart.total')}:`}</span>
-            <span className="total-amount" style={{ color: isRefundTransaction ? 'var(--accent-rose)' : undefined }}>
-              {isRefundTransaction ? `${Math.abs(finalGrandTotal).toFixed(2)} Kč` : `${finalGrandTotal.toFixed(2)} Kč`}
+        {/* Grand Total Hero Card */}
+        <div className={`total-hero-card ${isRefundTransaction ? 'is-refund' : ''}`}>
+          <div className="total-hero-label">
+            <span className="total-hero-title">
+              {isRefundTransaction ? '↩️ K VRÁCENÍ' : t('cart.total')}
+            </span>
+            <span className="total-items-badge">
+              {totalItemCount} {totalItemCount === 1 ? 'položka' : (totalItemCount >= 2 && totalItemCount <= 4 ? 'položky' : 'položek')}
             </span>
           </div>
+          <span className="total-hero-amount total-amount">
+            {isRefundTransaction ? `${Math.abs(finalGrandTotal).toFixed(2)} Kč` : `${finalGrandTotal.toFixed(2)} Kč`}
+          </span>
         </div>
 
         <div className="payment-actions-grid">
