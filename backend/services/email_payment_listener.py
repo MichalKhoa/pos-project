@@ -105,15 +105,34 @@ class EmailPaymentListenerThread(threading.Thread):
     def run(self):
         self.running = True
         logger.info(f"📧 Starting Bank Email Listener thread on {self.imap_server}:{self.port} for: {self.username}")
+        mail = None
 
         while self.running:
             try:
-                mail = imaplib.IMAP4_SSL(self.imap_server, self.port)
-                mail.login(self.username, self.password)
-                mail.select("INBOX")
+                if mail is None:
+                    mail = imaplib.IMAP4_SSL(self.imap_server, self.port)
+                    mail.login(self.username, self.password)
+                    mail.select("INBOX")
+                    logger.info("Connected and authenticated to IMAP server.")
+
+                # Keep-alive check / liveness ping
+                try:
+                    mail.noop()
+                except Exception:
+                    # Connection dropped or timed out, reset for clean reconnect
+                    try:
+                        mail.close()
+                    except Exception:
+                        pass
+                    try:
+                        mail.logout()
+                    except Exception:
+                        pass
+                    mail = None
+                    time.sleep(self.interval)
+                    continue
 
                 # Search UNSEEN (unread) emails
-                # Can be filtered specifically by bank sender (e.g. 'UNSEEN FROM "oznameni@csob.cz"')
                 status, messages = mail.search(None, 'UNSEEN')
                 
                 if status == 'OK' and messages[0]:
@@ -143,14 +162,23 @@ class EmailPaymentListenerThread(threading.Thread):
                                         subject
                                     )
 
-                mail.close()
-                mail.logout()
-
             except Exception as e:
                 logger.debug(f"IMAP listener check loop: {e}")
+                if mail:
+                    try:
+                        mail.logout()
+                    except Exception:
+                        pass
+                    mail = None
 
             payment_cache.cleanup()
             time.sleep(self.interval)
+
+        if mail:
+            try:
+                mail.logout()
+            except Exception:
+                pass
 
     def stop(self):
         self.running = False

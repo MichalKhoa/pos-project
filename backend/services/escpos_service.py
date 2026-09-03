@@ -95,7 +95,7 @@ class ESCPOSPrinterService:
                         printer = Usb(0x04b8, 0x0e15, 0)
                 elif self.interface_type == "NETWORK" and self.address:
                     from escpos.printer import Network
-                    printer = Network(self.address, port=9100)
+                    printer = Network(self.address, port=9100, timeout=3.0)
                 elif self.interface_type == "SERIAL" and self.address:
                     from escpos.printer import Serial
                     printer = Serial(self.address, baudrate=9600)
@@ -347,7 +347,7 @@ class ESCPOSPrinterService:
                     printer = Usb(0x04b8, 0x0e15, 0)
             elif self.interface_type == "NETWORK" and self.address:
                 from escpos.printer import Network
-                printer = Network(self.address, port=9100)
+                printer = Network(self.address, port=9100, timeout=3.0)
             elif self.interface_type == "SERIAL" and self.address:
                 from escpos.printer import Serial
                 printer = Serial(self.address, baudrate=9600)

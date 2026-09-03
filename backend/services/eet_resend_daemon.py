@@ -1,7 +1,7 @@
 import time
 import logging
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from database import SessionLocal
 from models import SaleModel, StoreConfigModel, EetAuditLogModel
 from services.eet_service import CzechEETService
@@ -23,12 +23,12 @@ def resend_pending_offline_sales():
 
         pending_sales = db.query(SaleModel).filter(
             (SaleModel.is_sent_to_eet == False) | (SaleModel.eet_status == "OFFLINE_PENDING")
-        ).all()
+        ).order_by(SaleModel.timestamp.asc()).limit(20).all()
 
         if not pending_sales:
             return 0
 
-        logger.info(f"EET Resend Daemon: Processing {len(pending_sales)} pending offline sales...")
+        logger.info(f"EET Resend Daemon: Processing batch of {len(pending_sales)} pending offline sales...")
 
         store_dict = {
             "eic_popl": config.dic or "CZ00000019",
@@ -42,6 +42,7 @@ def resend_pending_offline_sales():
         }
 
         processed_count = 0
+        consecutive_errors = 0
 
         for sale in pending_sales:
             sale_data = {
@@ -54,20 +55,24 @@ def resend_pending_offline_sales():
 
             try:
                 res = eet_service.sign_and_submit_sale(sale_data, store_dict)
-                status_code = res.get("eet_status") or "ERROR"
+                status_code = res.get("eet_status", "EVD_OK")
                 fik = res.get("fik")
-                bkp = res.get("bkp") or sale.bkp_code
+                bkp = res.get("bkp")
 
-                if status_code == "EVD_OK" or res.get("is_sent_to_eet"):
+                if status_code == "EVD_OK" and fik:
                     sale.fik_code = fik
+                    sale.bkp_code = bkp
                     sale.eet_status = "EVD_OK"
                     sale.is_sent_to_eet = True
+                    consecutive_errors = 0
                     processed_count += 1
+                else:
+                    consecutive_errors += 1
 
                 # Record audit log entry
                 audit_log = EetAuditLogModel(
                     sale_id=sale.id,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(timezone.utc),
                     action="RETRY_SEND",
                     status=sale.eet_status,
                     bkp=bkp,
@@ -76,18 +81,27 @@ def resend_pending_offline_sales():
                 )
                 db.add(audit_log)
 
+                # Back off if server is unreachable
+                if consecutive_errors >= 3:
+                    logger.warning("EET Resend Daemon: 3 consecutive submission failures. Pausing batch until next cycle.")
+                    break
+
             except Exception as ex:
                 logger.error(f"EET Resend Daemon error processing sale #{sale.receipt_number}: {ex}")
                 sale.eet_status = "OFFLINE_PENDING"
+                consecutive_errors += 1
                 audit_log = EetAuditLogModel(
                     sale_id=sale.id,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(timezone.utc),
                     action="RETRY_SEND",
                     status="ERROR",
                     bkp=sale.bkp_code,
                     error_message=str(ex)
                 )
                 db.add(audit_log)
+                if consecutive_errors >= 3:
+                    logger.warning("EET Resend Daemon: 3 consecutive network exceptions. Pausing batch.")
+                    break
 
         db.commit()
         return processed_count

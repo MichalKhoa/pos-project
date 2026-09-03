@@ -1,6 +1,7 @@
 import socket
 import logging
 import struct
+import time
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger("csob-terminal-service")
@@ -139,19 +140,43 @@ class CSOBTerminalService:
                 "port": port
             }
 
+    def _read_gpe_frame(self, sock: socket.socket, overall_timeout: float = 60.0) -> bytes:
+        """
+        Reads streaming bytes from terminal TCP socket until ETX + LRC is received
+        or timeout expires, handling TCP packet segmentation cleanly.
+        """
+        sock.settimeout(min(overall_timeout, 3.0))
+        buffer = bytearray()
+        deadline = time.time() + overall_timeout
+
+        while time.time() < deadline:
+            try:
+                chunk = sock.recv(1024)
+                if not chunk:
+                    break
+                buffer.extend(chunk)
+                if ETX in buffer:
+                    etx_idx = buffer.index(ETX)
+                    # Check if trailing LRC byte is present
+                    if len(buffer) > etx_idx + 1:
+                        return bytes(buffer)
+            except socket.timeout:
+                if buffer and ETX in buffer:
+                    return bytes(buffer)
+                continue
+
+        return bytes(buffer)
+
     def process_payment(self, amount: float, variable_symbol: str = "", timeout: float = 60.0) -> Dict[str, Any]:
         """
-        Executes sale transaction on Ingenico Move 3500 terminal via TCP socket.
-        If IP/Port not configured, returns clear NOT_CONFIGURED status.
+        Initiates cashless payment card transaction on ČSOB terminal via GPE protocol over TCP socket.
         """
         if not self.ip or not self.port:
-            logger.info("CSOB Terminal IP or Port not set. Returning preparation status.")
             return {
                 "success": False,
                 "status": "NOT_CONFIGURED",
-                "message": "ČSOB terminál není připojen (chybí pevná IP adresa nebo port). Nastavte v Nastavení pokladny po dodání IP.",
-                "amount": amount,
-                "simulated": True
+                "message": "ČSOB terminál nemá nastavenou IP adresu. Nakonfigurujte terminál v nastavení.",
+                "amount": amount
             }
 
         if not self.enabled:
@@ -168,7 +193,7 @@ class CSOBTerminalService:
             logger.info(f"Connecting to CSOB terminal {self.ip}:{self.port} to process payment of {amount} CZK...")
             with socket.create_connection((self.ip, self.port), timeout=timeout) as sock:
                 sock.sendall(frame)
-                raw_res = sock.recv(4096)
+                raw_res = self._read_gpe_frame(sock, overall_timeout=timeout)
                 parsed = self.parse_gpe_response_frame(raw_res)
                 parsed["amount"] = amount
                 return parsed
@@ -176,7 +201,7 @@ class CSOBTerminalService:
             return {
                 "success": False,
                 "status": "TIMEOUT",
-                "message": "Časový limit transakce vypršel. Zákazník nepriložil kartu včas.",
+                "message": "Časový limit transakce vypršel. Zákazník nepřiložil kartu včas.",
                 "amount": amount
             }
         except Exception as e:
@@ -201,7 +226,7 @@ class CSOBTerminalService:
         try:
             with socket.create_connection((self.ip, self.port), timeout=timeout) as sock:
                 sock.sendall(frame)
-                raw_res = sock.recv(4096)
+                raw_res = self._read_gpe_frame(sock, overall_timeout=timeout)
                 return self.parse_gpe_response_frame(raw_res)
         except Exception as e:
             return {
