@@ -1,8 +1,10 @@
 import React from 'react';
 import { DollarSign, Banknote, CreditCard, Receipt, BarChart3, PieChart, Flame, Trophy, Clock, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import MultiPeriodComparison from './MultiPeriodComparison.jsx';
 
 export default function SalesAnalyticsCharts({
+  salesHistory = [],
   periodLabel,
   totalRevenue = 0,
   cashRevenue = 0,
@@ -370,6 +372,9 @@ export default function SalesAnalyticsCharts({
           </div>
         </div>
       </div>
+
+      {/* Independent Macro-Trends: Side-by-Side 30 Days, 12 Weeks, 12 Months */}
+      <MultiPeriodComparison salesHistory={salesHistory} />
     </div>
   );
 }

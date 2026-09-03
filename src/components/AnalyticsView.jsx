@@ -313,6 +313,7 @@ export default function AnalyticsView({
 
       {/* Visual Analytics Dashboard */}
       <SalesAnalyticsCharts
+        salesHistory={salesHistory}
         periodLabel={getPeriodLabel()}
         totalRevenue={totalRevenue}
         cashRevenue={cashRevenue}
