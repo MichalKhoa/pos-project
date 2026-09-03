@@ -2,10 +2,18 @@ import React, { useMemo } from 'react';
 import { RotateCcw, Sparkles, Coins, Banknote, Delete, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { getCzechCashBreakdown } from '../../utils/currencyBreakdown.js';
+import { soundFx } from '../../utils/audio.js';
 
-const COINS = [1, 2, 5, 10, 20, 50];
-const BANKNOTES = [100, 200, 500, 1000, 2000, 5000];
-const DIRECT_TENDER_NOTES = [100, 200, 500, 1000, 2000];
+const CZECH_BANKNOTES = [
+  { val: 100, label: '100 Kč', colorClass: 'banknote-100' },
+  { val: 200, label: '200 Kč', colorClass: 'banknote-200' },
+  { val: 500, label: '500 Kč', colorClass: 'banknote-500' },
+  { val: 1000, label: '1 000 Kč', colorClass: 'banknote-1000' },
+  { val: 2000, label: '2 000 Kč', colorClass: 'banknote-2000' },
+  { val: 5000, label: '5 000 Kč', colorClass: 'banknote-5000' }
+];
+
+const QUICK_COINS = [5, 10, 20, 50];
 
 export default function CashPaymentPanel({
   tenderedStr,
@@ -25,6 +33,21 @@ export default function CashPaymentPanel({
     return changeDue > 0 ? getCzechCashBreakdown(changeDue) : [];
   }, [changeDue]);
 
+  const handleBanknoteClick = (noteVal) => {
+    soundFx.playScanChime();
+    // If nothing tendered yet (or equals exact total), direct set to this note
+    if (tenderedVal === 0 || tenderedVal === effectiveCashTotal) {
+      if (onCashSet) {
+        onCashSet(noteVal);
+      } else {
+        onCashAdd(noteVal);
+      }
+    } else {
+      // Already entered cash, accumulate
+      onCashAdd(noteVal);
+    }
+  };
+
   return (
     <div className="cash-payment-container">
       {/* COLUMN 1: Fast Cash Denominations & Quick Tender Chips */}
@@ -34,7 +57,7 @@ export default function CashPaymentPanel({
           type="button"
           className="cash-shortcut-btn"
           style={{
-            height: '52px',
+            height: '48px',
             background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.22) 100%)',
             color: 'var(--accent-emerald)',
             border: '1.5px solid var(--accent-emerald)',
@@ -48,91 +71,74 @@ export default function CashPaymentPanel({
             cursor: 'pointer',
             boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)'
           }}
-          onClick={() => onCashAdd('exact')}
+          onClick={() => {
+            soundFx.playSuccessChime();
+            onCashAdd('exact');
+          }}
         >
           <Sparkles size={18} />
           <span>{t('payment.exact') || 'Přesná částka'} ({effectiveCashTotal.toFixed(0)} Kč)</span>
         </button>
 
-        {/* ⚡ DIRECT TENDER (Přímá bankovka) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        {/* 💵 Authentic Color-Coded Czech Banknotes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Banknote size={14} style={{ color: 'var(--accent-emerald)' }} />
-            <span>{t('payment.direct_tender') || 'Zákazník platí bankovkou'}</span>
+            <span>{t('payment.banknotes') || 'České Bankovky'}</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem' }}>
-            {DIRECT_TENDER_NOTES.map(note => (
+
+          <div className="czech-banknotes-rack">
+            {CZECH_BANKNOTES.map(note => {
+              const isExactMatch = tenderedVal === note.val;
+              return (
+                <button
+                  key={note.val}
+                  type="button"
+                  className={`czech-banknote-card ${note.colorClass} ${isExactMatch ? 'active-tender' : ''}`}
+                  onClick={() => handleBanknoteClick(note.val)}
+                >
+                  <div className="banknote-val">{note.label}</div>
+                  <div className="banknote-watermark">
+                    <Banknote size={24} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 🪙 Streamlined Quick Coins + Reset Bar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: 'auto' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Coins size={13} style={{ color: 'var(--accent-amber)' }} />
+            <span>{t('payment.coins') || 'Mince'}</span>
+          </div>
+          <div className="czech-coins-bar">
+            {QUICK_COINS.map(coin => (
               <button
-                key={note}
+                key={coin}
                 type="button"
-                className="banknote-btn-lg"
-                style={{
-                  height: '46px',
-                  fontSize: '0.95rem',
-                  fontWeight: '900',
-                  border: tenderedVal === note ? '2px solid var(--accent-emerald)' : '1px solid rgba(16, 185, 129, 0.35)',
-                  backgroundColor: tenderedVal === note ? 'rgba(16, 185, 129, 0.25)' : 'var(--bg-card)'
+                className="czech-coin-chip"
+                onClick={() => {
+                  soundFx.playKeypadClick();
+                  onCashAdd(coin);
                 }}
-                onClick={() => onCashSet ? onCashSet(note) : onCashAdd(note)}
               >
-                {note} Kč
+                +{coin}
               </button>
             ))}
             <button
               type="button"
-              className="banknote-btn-lg"
-              style={{
-                height: '46px',
-                fontSize: '0.95rem',
-                fontWeight: '900',
-                border: '1px dashed var(--accent-rose)',
-                color: 'var(--accent-rose)',
-                backgroundColor: 'rgba(244, 63, 94, 0.08)'
+              className="czech-reset-chip"
+              onClick={() => {
+                soundFx.playDeleteTone();
+                onCashAdd('clear');
               }}
-              onClick={() => onCashAdd('clear')}
+              title={t('payment.reset') || 'Vynulovat'}
             >
-              {t('payment.reset') || 'Reset'}
+              <RotateCcw size={14} />
+              <span>{t('payment.reset') || 'Reset'}</span>
             </button>
-          </div>
-        </div>
-
-        {/* 💵 ACCUMULATE BANKNOTES (+100, +200...) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Sparkles size={14} style={{ color: 'var(--accent-emerald)' }} />
-            <span>{t('payment.add_banknotes') || 'Přidat bankovku (+)'}</span>
-          </div>
-          <div className="banknotes-grid-lg">
-            {BANKNOTES.map(note => (
-              <button
-                key={note}
-                type="button"
-                className="banknote-btn-lg"
-                onClick={() => onCashAdd(note)}
-              >
-                +{note} Kč
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 🪙 COINS (Mince 3x2 Grid) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Coins size={14} style={{ color: 'var(--accent-amber)' }} />
-            <span>{t('payment.coins') || 'Mince'}</span>
-          </div>
-          <div className="coins-grid-lg">
-            {COINS.map(coin => (
-              <button
-                key={coin}
-                type="button"
-                className="coin-btn-lg"
-                onClick={() => onCashAdd(coin)}
-              >
-                +{coin} Kč
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -147,7 +153,10 @@ export default function CashPaymentPanel({
             </span>
             <button
               type="button"
-              onClick={() => onCashAdd('clear')}
+              onClick={() => {
+                soundFx.playDeleteTone();
+                onCashAdd('clear');
+              }}
               style={{ background: 'transparent', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
             >
               <RotateCcw size={12} /> {t('payment.reset') || 'Vynulovat'}
@@ -172,21 +181,21 @@ export default function CashPaymentPanel({
         {/* 3x4 Touch Numpad Grid */}
         <div className="side-numpad-grid">
           {['7', '8', '9'].map(n => (
-            <button key={n} type="button" className="side-num-btn" onClick={() => onNumpadKey(n)}>{n}</button>
+            <button key={n} type="button" className="side-num-btn" onClick={() => { soundFx.playKeypadClick(); onNumpadKey(n); }}>{n}</button>
           ))}
           {['4', '5', '6'].map(n => (
-            <button key={n} type="button" className="side-num-btn" onClick={() => onNumpadKey(n)}>{n}</button>
+            <button key={n} type="button" className="side-num-btn" onClick={() => { soundFx.playKeypadClick(); onNumpadKey(n); }}>{n}</button>
           ))}
           {['1', '2', '3'].map(n => (
-            <button key={n} type="button" className="side-num-btn" onClick={() => onNumpadKey(n)}>{n}</button>
+            <button key={n} type="button" className="side-num-btn" onClick={() => { soundFx.playKeypadClick(); onNumpadKey(n); }}>{n}</button>
           ))}
-          <button type="button" className="side-num-btn key-action" onClick={() => onNumpadKey('CLEAR')} title={t('payment.reset') || 'Vynulovat'}>
+          <button type="button" className="side-num-btn key-action" onClick={() => { soundFx.playDeleteTone(); onNumpadKey('CLEAR'); }} title={t('payment.reset') || 'Vynulovat'}>
             C
           </button>
-          <button type="button" className="side-num-btn" onClick={() => onNumpadKey('0')}>
+          <button type="button" className="side-num-btn" onClick={() => { soundFx.playKeypadClick(); onNumpadKey('0'); }}>
             0
           </button>
-          <button type="button" className="side-num-btn key-action" onClick={() => onNumpadKey('BACK')} title="Backspace">
+          <button type="button" className="side-num-btn key-action" onClick={() => { soundFx.playKeypadClick(); onNumpadKey('BACK'); }} title="Backspace">
             <Delete size={20} />
           </button>
         </div>
@@ -285,7 +294,10 @@ export default function CashPaymentPanel({
           className="pay-btn pay-btn-cash"
           style={{ width: '100%', height: '54px', fontSize: '1.05rem', fontWeight: '800' }}
           disabled={tenderedVal > 0 && changeDue < 0}
-          onClick={onComplete}
+          onClick={() => {
+            soundFx.playSuccessChime();
+            onComplete();
+          }}
         >
           <CheckCircle2 size={22} />
           <span>

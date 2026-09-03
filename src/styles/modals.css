@@ -249,6 +249,186 @@
   border: 1px solid var(--border-color);
 }
 
+/* Authentic Color-Coded Czech Banknotes Rack */
+.czech-banknotes-rack {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+}
+
+.czech-banknote-card {
+  position: relative;
+  height: 56px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.czech-banknote-card:hover {
+  transform: translateY(-1.5px);
+  filter: brightness(1.08);
+}
+
+.czech-banknote-card:active {
+  transform: scale(0.97);
+}
+
+.banknote-val {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.banknote-watermark {
+  opacity: 0.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+}
+
+.czech-banknote-card:hover .banknote-watermark {
+  opacity: 0.6;
+}
+
+/* 100 Kč: Emerald / Forest Green (Karel IV) */
+.banknote-100 {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.24) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.45);
+  color: #10b981;
+}
+.banknote-100.active-tender {
+  border-color: #10b981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+}
+
+/* 200 Kč: Warm Orange / Terracotta (Jan Amos Komenský) */
+.banknote-200 {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(234, 88, 12, 0.24) 100%);
+  border: 1.5px solid rgba(249, 115, 22, 0.45);
+  color: #f97316;
+}
+.banknote-200.active-tender {
+  border-color: #f97316;
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+}
+
+/* 500 Kč: Crimson Rose / Pink-Brown (Božena Němcová) */
+.banknote-500 {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(225, 29, 72, 0.24) 100%);
+  border: 1.5px solid rgba(244, 63, 94, 0.45);
+  color: #f43f5e;
+}
+.banknote-500.active-tender {
+  border-color: #f43f5e;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.45);
+}
+
+/* 1 000 Kč: Royal Violet / Purple (František Palacký) */
+.banknote-1000 {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(124, 58, 237, 0.24) 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.45);
+  color: #a78bfa;
+}
+.banknote-1000.active-tender {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.45);
+}
+
+/* 2 000 Kč: Olive Teal / Sage (Ema Destinnová) */
+.banknote-2000 {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(13, 148, 136, 0.24) 100%);
+  border: 1.5px solid rgba(20, 184, 166, 0.45);
+  color: #14b8a6;
+}
+.banknote-2000.active-tender {
+  border-color: #14b8a6;
+  box-shadow: 0 0 14px rgba(20, 184, 166, 0.45);
+}
+
+/* 5 000 Kč: Sapphire Blue / Navy (T. G. Masaryk) */
+.banknote-5000 {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.24) 100%);
+  border: 1.5px solid rgba(59, 130, 246, 0.45);
+  color: #60a5fa;
+}
+.banknote-5000.active-tender {
+  border-color: #3b82f6;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.45);
+}
+
+/* Streamlined Czech Quick Coins Bar */
+.czech-coins-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) 1.2fr;
+  gap: 0.5rem;
+}
+
+.czech-coin-chip {
+  height: 44px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 900;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.18) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--accent-amber);
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.czech-coin-chip:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: var(--accent-amber);
+  transform: translateY(-1px);
+}
+
+.czech-coin-chip:active {
+  transform: scale(0.97);
+}
+
+.czech-reset-chip {
+  height: 44px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px dashed var(--accent-rose);
+  color: var(--accent-rose);
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.czech-reset-chip:hover {
+  background: rgba(244, 63, 94, 0.18);
+  transform: translateY(-1px);
+}
+
+.czech-reset-chip:active {
+  transform: scale(0.97);
+}
+
+/* Fallbacks for backwards compatibility */
 .coins-grid-lg, .banknotes-grid-lg {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -276,23 +456,11 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.coin-btn-lg:hover {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: var(--accent-amber);
-  transform: translateY(-1px);
-}
-
 .banknote-btn-lg {
   background: var(--bg-card);
   color: var(--accent-emerald);
   border: 1px solid rgba(16, 185, 129, 0.35);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.banknote-btn-lg:hover {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: var(--accent-emerald);
-  transform: translateY(-1px);
 }
 
 /* Side Touch Numpad Grid */
