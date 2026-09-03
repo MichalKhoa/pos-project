@@ -3,6 +3,7 @@ import { Banknote, CreditCard, QrCode, Split } from 'lucide-react';
 import CashDrawerIcon from './CashDrawerIcon';
 import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { soundFx } from '../utils/audio.js';
 import CashPaymentPanel from './payment/CashPaymentPanel.jsx';
 import CardPaymentPanel from './payment/CardPaymentPanel.jsx';
 import QrPaymentPanel from './payment/QrPaymentPanel.jsx';
@@ -242,16 +243,18 @@ export default function PaymentModal({
           <div className="modal-title" style={{ fontSize: '1.2rem', fontWeight: '800' }}>
             {isRefund ? t('payment.refund_title') : t('payment.title')}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             {onOpenCashDrawer && (
               <button
                 type="button"
                 className="payment-modal-drawer-btn"
-                onClick={onOpenCashDrawer}
+                onClick={() => {
+                  soundFx.playCashChime();
+                  onOpenCashDrawer();
+                }}
                 title={t('cart.open_drawer') || 'Otevřít zásuvku'}
-                style={{ height: '34px', padding: '0 0.75rem', fontSize: '0.8rem' }}
               >
-                <CashDrawerIcon size={15} />
+                <CashDrawerIcon size={16} />
                 <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
               </button>
             )}

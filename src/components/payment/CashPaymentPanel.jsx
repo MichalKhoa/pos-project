@@ -108,8 +108,8 @@ export default function CashPaymentPanel({
         </div>
 
         {/* 🪙 Streamlined Quick Coins + Reset Bar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: 'auto' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Coins size={13} style={{ color: 'var(--accent-amber)' }} />
             <span>{t('payment.coins') || 'Mince'}</span>
           </div>
@@ -148,7 +148,7 @@ export default function CashPaymentPanel({
         {/* Tendered Input Display */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('payment.received_from_customer') || 'Přijato od zákazníka'}
             </span>
             <button
@@ -157,7 +157,7 @@ export default function CashPaymentPanel({
                 soundFx.playDeleteTone();
                 onCashAdd('clear');
               }}
-              style={{ background: 'transparent', border: 'none', color: 'var(--accent-rose)', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+              style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
             >
               <RotateCcw size={12} /> {t('payment.reset') || 'Vynulovat'}
             </button>
@@ -166,9 +166,9 @@ export default function CashPaymentPanel({
             fontFamily: 'var(--font-mono)',
             fontSize: '1.9rem',
             fontWeight: '900',
-            color: tenderedVal >= totalAmount ? 'var(--accent-emerald)' : 'var(--text-primary)',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
+            color: tenderedVal >= totalAmount ? '#10b981' : '#ffffff',
+            background: '#090d16',
+            border: '1.5px solid #1e293b',
             borderRadius: 'var(--radius-md)',
             padding: '0.4rem 0.85rem',
             textAlign: 'right',
@@ -204,20 +204,20 @@ export default function CashPaymentPanel({
         <div
           style={{
             background: (tenderedVal > 0 && changeDue < 0)
-              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(225, 29, 72, 0.22) 100%)'
+              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(225, 29, 72, 0.28) 100%), #1f0f15'
               : (tenderedVal === 0 || changeDue === 0)
-                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.12) 100%)'
-                : 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)',
+                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.18) 100%), #0d1a18'
+                : 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%), #0d1a18',
             border: `2px solid ${(tenderedVal > 0 && changeDue < 0)
-              ? 'var(--accent-rose, #f43f5e)'
-              : 'var(--accent-emerald, #10b981)'}`,
+              ? '#f43f5e'
+              : '#10b981'}`,
             borderRadius: 'var(--radius-lg, 12px)',
             padding: '0.85rem 1.15rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
             marginTop: 'auto',
-            boxShadow: (changeDue > 0) ? '0 4px 16px rgba(16, 185, 129, 0.25)' : 'none',
+            boxShadow: (changeDue > 0) ? '0 4px 20px rgba(16, 185, 129, 0.35)' : 'none',
             transition: 'all 0.2s ease'
           }}
         >
@@ -228,7 +228,7 @@ export default function CashPaymentPanel({
                 fontWeight: '900',
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                color: (tenderedVal > 0 && changeDue < 0) ? 'var(--accent-rose, #f43f5e)' : 'var(--accent-emerald, #10b981)'
+                color: (tenderedVal > 0 && changeDue < 0) ? '#f43f5e' : '#10b981'
               }}
             >
               {tenderedVal === 0
@@ -243,8 +243,8 @@ export default function CashPaymentPanel({
                 fontSize: '2.5rem',
                 lineHeight: '1',
                 fontWeight: '900',
-                color: (tenderedVal > 0 && changeDue < 0) ? 'var(--accent-rose, #f43f5e)' : 'var(--accent-emerald, #10b981)',
-                textShadow: (changeDue > 0) ? '0 2px 8px rgba(16, 185, 129, 0.35)' : 'none'
+                color: (tenderedVal > 0 && changeDue < 0) ? '#f43f5e' : '#ffffff',
+                textShadow: (changeDue > 0) ? '0 2px 10px rgba(16, 185, 129, 0.5)' : 'none'
               }}
             >
               {tenderedVal === 0 ? '0 Kč' : `${Math.abs(changeDue).toFixed(0)} Kč`}

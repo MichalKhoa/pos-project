@@ -99,7 +99,7 @@
   width: 100%;
 }
 
-/* Modern Payment Modal */
+/* Modern Payment Modal — Deep Dark Theme */
 .modal-widescreen {
   width: 95vw;
   max-width: 1060px;
@@ -109,9 +109,53 @@
   flex-direction: column;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-xl);
-  background: var(--bg-card);
+  border: 1px solid #1e293b;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  background: #0b0f17;
+  color: #ffffff;
+}
+
+.modal-widescreen .modal-header {
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  color: #ffffff;
+}
+
+.modal-widescreen .modal-title {
+  color: #ffffff;
+}
+
+/* Styled Cash Drawer Button in Payment Modal */
+.payment-modal-drawer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 0.95rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+  touch-action: manipulation;
+}
+
+.payment-modal-drawer-btn:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.35) 100%);
+  border-color: #10b981;
+  color: #34d399;
+  transform: translateY(-1px);
+}
+
+.payment-modal-drawer-btn:active {
+  transform: scale(0.97);
 }
 
 .modal-body.payment-widescreen-body {
@@ -121,6 +165,7 @@
   height: 100%;
   overflow: hidden;
   flex: 1;
+  background: #0b0f17;
 }
 
 /* Top Segmented Tender Bar */
@@ -129,8 +174,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.65rem 1.25rem;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
   gap: 0.75rem;
 }
@@ -139,10 +184,10 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  background: var(--bg-main);
+  background: #090d16;
   padding: 0.25rem;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border: 1px solid #1e293b;
 }
 
 .payment-nav-tab {
@@ -155,7 +200,7 @@
   border-radius: var(--radius-md);
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: #94a3b8;
   font-size: 0.92rem;
   font-weight: 800;
   cursor: pointer;
@@ -166,8 +211,8 @@
 }
 
 .payment-nav-tab:hover {
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
+  background: #1e293b;
+  color: #ffffff;
 }
 
 .payment-nav-tab.active-cash {
@@ -195,15 +240,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: var(--bg-main);
-  border-bottom: 1px solid var(--border-color);
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
 }
 
 .payment-hero-label {
   font-size: 0.82rem;
   font-weight: 800;
-  color: var(--text-muted);
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -212,7 +257,7 @@
   font-family: var(--font-mono);
   font-size: 1.75rem;
   font-weight: 900;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .payment-main-content {
@@ -222,6 +267,7 @@
   flex-direction: column;
   overflow-y: auto;
   min-width: 0;
+  background: #0b0f17;
 }
 
 /* 2-Column Cash Payment Layout */
@@ -243,10 +289,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: var(--bg-main);
+  background: #0f172a;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
+  border: 1px solid #1e293b;
 }
 
 /* Authentic Color-Coded Czech Banknotes Rack */
@@ -286,10 +332,11 @@
   font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
 .banknote-watermark {
-  opacity: 0.35;
+  opacity: 0.45;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,73 +344,85 @@
 }
 
 .czech-banknote-card:hover .banknote-watermark {
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 /* 100 Kč: Emerald / Forest Green (Karel IV) */
 .banknote-100 {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.24) 100%);
-  border: 1.5px solid rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%), #0d1a18;
+  border: 1.5px solid #10b981;
+}
+.banknote-100 .banknote-watermark {
   color: #10b981;
 }
 .banknote-100.active-tender {
-  border-color: #10b981;
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+  border-color: #34d399;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
 }
 
 /* 200 Kč: Warm Orange / Terracotta (Jan Amos Komenský) */
 .banknote-200 {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(234, 88, 12, 0.24) 100%);
-  border: 1.5px solid rgba(249, 115, 22, 0.45);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.22) 0%, rgba(234, 88, 12, 0.35) 100%), #1d140e;
+  border: 1.5px solid #f97316;
+}
+.banknote-200 .banknote-watermark {
   color: #f97316;
 }
 .banknote-200.active-tender {
-  border-color: #f97316;
-  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+  border-color: #fb923c;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.5);
 }
 
 /* 500 Kč: Crimson Rose / Pink-Brown (Božena Němcová) */
 .banknote-500 {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(225, 29, 72, 0.24) 100%);
-  border: 1.5px solid rgba(244, 63, 94, 0.45);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.22) 0%, rgba(225, 29, 72, 0.35) 100%), #1f0f15;
+  border: 1.5px solid #f43f5e;
+}
+.banknote-500 .banknote-watermark {
   color: #f43f5e;
 }
 .banknote-500.active-tender {
-  border-color: #f43f5e;
-  box-shadow: 0 0 14px rgba(244, 63, 94, 0.45);
+  border-color: #fb7185;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
 }
 
 /* 1 000 Kč: Royal Violet / Purple (František Palacký) */
 .banknote-1000 {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(124, 58, 237, 0.24) 100%);
-  border: 1.5px solid rgba(139, 92, 246, 0.45);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(124, 58, 237, 0.35) 100%), #161026;
+  border: 1.5px solid #8b5cf6;
+}
+.banknote-1000 .banknote-watermark {
   color: #a78bfa;
 }
 .banknote-1000.active-tender {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 14px rgba(139, 92, 246, 0.45);
+  border-color: #c084fc;
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
 }
 
 /* 2 000 Kč: Olive Teal / Sage (Ema Destinnová) */
 .banknote-2000 {
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(13, 148, 136, 0.24) 100%);
-  border: 1.5px solid rgba(20, 184, 166, 0.45);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.22) 0%, rgba(13, 148, 136, 0.35) 100%), #0c1817;
+  border: 1.5px solid #14b8a6;
+}
+.banknote-2000 .banknote-watermark {
   color: #14b8a6;
 }
 .banknote-2000.active-tender {
-  border-color: #14b8a6;
-  box-shadow: 0 0 14px rgba(20, 184, 166, 0.45);
+  border-color: #2dd4bf;
+  box-shadow: 0 0 16px rgba(20, 184, 166, 0.5);
 }
 
 /* 5 000 Kč: Sapphire Blue / Navy (T. G. Masaryk) */
 .banknote-5000 {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.24) 100%);
-  border: 1.5px solid rgba(59, 130, 246, 0.45);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.22) 0%, rgba(37, 99, 235, 0.35) 100%), #0c1426;
+  border: 1.5px solid #3b82f6;
+}
+.banknote-5000 .banknote-watermark {
   color: #60a5fa;
 }
 .banknote-5000.active-tender {
-  border-color: #3b82f6;
-  box-shadow: 0 0 14px rgba(59, 130, 246, 0.45);
+  border-color: #60a5fa;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
 }
 
 /* Streamlined Czech Quick Coins Bar */
@@ -383,17 +442,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.18) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: var(--accent-amber);
+  background: #1e293b;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
   transition: all 0.15s ease;
   user-select: none;
   touch-action: manipulation;
 }
 
 .czech-coin-chip:hover {
-  background: rgba(245, 158, 11, 0.22);
-  border-color: var(--accent-amber);
+  background: #334155;
+  border-color: #f59e0b;
+  color: #fef3c7;
   transform: translateY(-1px);
 }
 
@@ -411,16 +471,16 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  background: rgba(244, 63, 94, 0.08);
-  border: 1px dashed var(--accent-rose);
-  color: var(--accent-rose);
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px dashed #f43f5e;
+  color: #f43f5e;
   transition: all 0.15s ease;
   user-select: none;
   touch-action: manipulation;
 }
 
 .czech-reset-chip:hover {
-  background: rgba(244, 63, 94, 0.18);
+  background: rgba(244, 63, 94, 0.22);
   transform: translateY(-1px);
 }
 
@@ -474,9 +534,9 @@
   height: 52px;
   font-size: 1.3rem;
   font-weight: 900;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -485,12 +545,13 @@
   transition: all 0.12s ease;
   user-select: none;
   touch-action: manipulation;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .side-num-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-focus);
+  background: #334155;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .side-num-btn:active {
@@ -498,9 +559,14 @@
 }
 
 .side-num-btn.key-action {
-  background: rgba(239, 68, 68, 0.08);
-  color: var(--accent-rose);
-  border-color: rgba(239, 68, 68, 0.25);
+  background: #182234;
+  color: #f43f5e;
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.side-num-btn.key-action:hover {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fb7185;
 }
 
 .side-num-btn.key-action:hover {
