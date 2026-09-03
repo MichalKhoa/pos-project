@@ -100,5 +100,6 @@ Run these verification commands before completing any task:
 5. **Serena & Memory Sync**:
    *Ensure domain memories in `.serena/memories/` match the latest state of the codebase.*
 
-6. **Git Hygiene**:
-   *Ensure no unrelated or foreign files are staged or committed.*
+6. **Git Hygiene & Autonomous Operations**:
+   - **Hygiene**: Ensure no unrelated, temporary, or foreign files are staged or committed.
+   - **Autonomous Commit & Push**: When prompted or instructed by the user to commit, save, or push (e.g. "commit changes", "commit and push", "commit", "push", or "/commit"), the agent MUST autonomously stage modified files (`git add`), write a clear Conventional Commit message, execute `git commit`, and run `git push origin <branch>` directly without asking for extra confirmation or stalling.
