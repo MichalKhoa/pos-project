@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
@@ -64,7 +64,9 @@ export default function Cart({
   clearedCartSnapshot = null,
   onRestoreClearedCart = null,
   onDismissClearedCart = null,
-  onOpenCashDrawer = null
+  onOpenCashDrawer = null,
+  parkedCartsCount = 0,
+  onOpenParkedModal = null
 }) {
   const { t } = useTranslation();
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -117,6 +119,30 @@ export default function Cart({
         </div>
 
         <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
+          {parkedCartsCount > 0 && (
+            <button
+              type="button"
+              className="clear-cart-btn"
+              style={{
+                background: 'rgba(59, 130, 246, 0.15)',
+                color: 'var(--accent-blue)',
+                borderColor: 'rgba(59, 130, 246, 0.35)',
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.8rem',
+                fontWeight: '800',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
+              onClick={() => onOpenParkedModal && onOpenParkedModal()}
+              title={t('parked_carts.restore_btn_title')}
+            >
+              <Clock size={13} style={{ color: 'var(--accent-blue)' }} />
+              <span>{t('parked_carts.restore_btn')} ({parkedCartsCount})</span>
+            </button>
+          )}
+
           {cartItems.length > 0 && (
             <>
               {/* Open Custom Discount Modal for Cart */}

@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ManualKeypad from '../components/ManualKeypad';
 import QuickPresetGrid from '../components/QuickPresetGrid';
 import Cart from '../components/Cart';
+import ParkedCartsDrawer from '../components/keypad/ParkedCartsDrawer';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { DEFAULT_STORE_CONFIG } from '../data/initialData';
 
@@ -349,6 +350,97 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(payButtons[0]);
 
       expect(onOpenPayment).toHaveBeenCalled();
+    });
+
+    it('renders parked carts restore button in Cart header when parkedCartsCount > 0', () => {
+      const onOpenParkedModal = vi.fn();
+      wrapWithLanguage(
+        <Cart
+          cartItems={[]}
+          parkedCartsCount={2}
+          onOpenParkedModal={onOpenParkedModal}
+          storeConfig={DEFAULT_STORE_CONFIG}
+        />
+      );
+
+      const restoreBadgeBtn = screen.getByRole('button', { name: /Obnovit \(2\)/i });
+      expect(restoreBadgeBtn).toBeInTheDocument();
+
+      fireEvent.click(restoreBadgeBtn);
+      expect(onOpenParkedModal).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('ParkedCartsDrawer & Localization', () => {
+    const mockParkedCarts = [
+      {
+        id: 'hold-1',
+        timeStr: '14:30',
+        note: 'Stůl 5',
+        totalAmount: 180,
+        itemCount: 2,
+        items: [{ id: '1', name: 'Pivo', price: 50, quantity: 2 }]
+      }
+    ];
+
+    it('renders localized drawer controls and opens modal with parked items', () => {
+      const onParkCart = vi.fn();
+      const onRestoreParkedCart = vi.fn();
+      const onDeleteParkedCart = vi.fn();
+      const onUpdateParkedCartNote = vi.fn();
+
+      wrapWithLanguage(
+        <ParkedCartsDrawer
+          hasCartItems={true}
+          parkedCarts={mockParkedCarts}
+          onParkCart={onParkCart}
+          onRestoreParkedCart={onRestoreParkedCart}
+          onDeleteParkedCart={onDeleteParkedCart}
+          onUpdateParkedCartNote={onUpdateParkedCartNote}
+        />
+      );
+
+      // Verify localized card header
+      expect(screen.getByText(/Odložené Nákupy/i)).toBeInTheDocument();
+
+      // Click Obnovit (1) to open modal
+      const openModalBtn = screen.getByRole('button', { name: /Obnovit \(1\)/i });
+      fireEvent.click(openModalBtn);
+
+      // Modal is visible
+      expect(screen.getByText(/Odložené nákupy \(1\)/i)).toBeInTheDocument();
+      expect(screen.getByText('Stůl 5')).toBeInTheDocument();
+      expect(screen.getByText(/180\.00 Kč/i)).toBeInTheDocument();
+
+      // Click Obnovit inside modal
+      const restoreBtn = screen.getByRole('button', { name: /^Obnovit$/i });
+      fireEvent.click(restoreBtn);
+      expect(onRestoreParkedCart).toHaveBeenCalledWith('hold-1');
+    });
+
+    it('requires 2 taps to delete a parked cart (safety confirmation)', () => {
+      const onDeleteParkedCart = vi.fn();
+
+      wrapWithLanguage(
+        <ParkedCartsDrawer
+          hasCartItems={false}
+          parkedCarts={mockParkedCarts}
+          onDeleteParkedCart={onDeleteParkedCart}
+          isOpen={true}
+        />
+      );
+
+      // First tap on delete
+      const deleteBtn = screen.getByTitle(/Smazat tento odložený nákup/i);
+      fireEvent.click(deleteBtn);
+
+      // Callback not called yet; confirmation prompt appears
+      expect(onDeleteParkedCart).not.toHaveBeenCalled();
+      expect(screen.getByText(/Opravdu smazat\?/i)).toBeInTheDocument();
+
+      // Second tap confirms deletion
+      fireEvent.click(screen.getByText(/Opravdu smazat\?/i));
+      expect(onDeleteParkedCart).toHaveBeenCalledWith('hold-1');
     });
   });
 });

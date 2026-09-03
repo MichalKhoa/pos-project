@@ -225,7 +225,7 @@ export function useCart() {
     setClearedCartSnapshot(null);
   }, []);
 
-  const parkCurrentCart = useCallback(() => {
+  const parkCurrentCart = useCallback((customNote = '') => {
     if (cartItems.length === 0) return null;
     const total = cartItems.reduce((sum, i) => {
       const disc = i.discountPercent || 0;
@@ -238,6 +238,7 @@ export function useCart() {
     const newHold = {
       id: `hold-${Date.now()}`,
       timeStr,
+      note: customNote || '',
       items: cartItems,
       cartDiscountPercent,
       itemMultiplier,
@@ -254,21 +255,53 @@ export function useCart() {
   }, [cartItems, cartDiscountPercent, itemMultiplier, dismissUndoToast]);
 
   const restoreParkedCart = useCallback((id) => {
-    let restored = null;
+    let result = { restored: null, autoParked: false };
     setParkedCarts(prev => {
       const target = prev.find(p => p.id === id);
       if (!target) return prev;
-      restored = target;
+      result.restored = target;
+
+      let remaining = prev.filter(p => p.id !== id);
+
+      // Seamless swap: auto-park active cart if it has items to prevent data loss
+      if (cartItems.length > 0) {
+        const total = cartItems.reduce((sum, i) => {
+          const disc = i.discountPercent || 0;
+          return sum + (parseFloat(i.price) * (1 - disc / 100) * i.quantity);
+        }, 0) * (1 - cartDiscountPercent / 100);
+
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+
+        const autoHold = {
+          id: `hold-${Date.now()}`,
+          timeStr,
+          note: '',
+          items: cartItems,
+          cartDiscountPercent,
+          itemMultiplier,
+          totalAmount: total,
+          itemCount: cartItems.reduce((sum, i) => sum + i.quantity, 0)
+        };
+
+        remaining = [autoHold, ...remaining];
+        result.autoParked = true;
+      }
+
       setCartItems(target.items);
       setCartDiscountPercent(target.cartDiscountPercent || 0);
       setItemMultiplier(target.itemMultiplier || 1);
-      return prev.filter(p => p.id !== id);
+      return remaining;
     });
-    return restored;
-  }, []);
+    return result;
+  }, [cartItems, cartDiscountPercent, itemMultiplier]);
 
   const deleteParkedCart = useCallback((id) => {
     setParkedCarts(prev => prev.filter(p => p.id !== id));
+  }, []);
+
+  const updateParkedCartNote = useCallback((id, note) => {
+    setParkedCarts(prev => prev.map(p => (p.id === id ? { ...p, note } : p)));
   }, []);
 
   return {
@@ -282,6 +315,7 @@ export function useCart() {
     parkCurrentCart,
     restoreParkedCart,
     deleteParkedCart,
+    updateParkedCartNote,
     addToCart,
     updateQuantity,
     updateItemDiscount,

@@ -11,7 +11,7 @@ React 19 single-page register application located in `/src`.
 - `StoreConfigContext.jsx`: Centralizes store configuration, live SQLite DB synchronization, `localStorage` caching, and cashier/manager `isAdminMode` gates without prop drilling (`useStoreConfig()`).
 
 ## Custom Hooks (`/src/hooks`)
-- `useCart.js`: Cart state management, line additions, item discounts, cart-level discounts, 4s undo toasts, 8s clear cart recovery snapshots, parked carts.
+- `useCart.js`: Cart state management, line additions, item discounts, cart-level discounts, 4s undo toasts, 8s clear cart recovery snapshots, parked carts (held tickets with zero-data-loss auto-swap on restore, custom customer labels/notes via `updateParkedCartNote`, localStorage persistence).
 - `useRegisterKeypad.js`: Numeric keypad buffer, decimal entry, multiplier state (+1x / -1x return mode), hotkey listeners (`0-9`, `-`, `ArrowUp/Down`, `*`, `Enter`, `Escape`).
 - `usePosAudio.js`: Web Audio API synthesized sounds (scan chime, sale completed chime, mute state).
 - `usePosCatalog.js`: Product categories and presets state, LocalStorage synchronization, and CRUD operations.

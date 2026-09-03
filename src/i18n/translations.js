@@ -37,6 +37,23 @@ export const translations = {
       refund_cash: "Vrátit Hotovost",
       refund_card: "Vrátit na Kartu"
     },
+    parked_carts: {
+      card_title: "Odložené Nákupy (Zákazníci)",
+      park_btn: "Odložit nákup",
+      park_btn_title: "Odložit aktuální nákup pro vyřízení jiného zákazníka",
+      restore_btn: "Obnovit",
+      restore_btn_title: "Obnovit odložený nákup",
+      modal_title: "Odložené nákupy",
+      empty: "Žádné odložené nákupy.",
+      cart_prefix: "Nákup #",
+      items_unit: "položek",
+      delete_title: "Smazat tento odložený nákup",
+      delete_confirm: "Opravdu smazat?",
+      note_placeholder: "Poznámka (např. Stůl 3, Pán v bundě)...",
+      save_note: "Uložit",
+      cancel: "Zrušit",
+      auto_parked_toast: "Předchozí nákup byl automaticky odložen"
+    },
     inspector: {
       title: "Úprava položky",
       quantity: "Množství (ks)",
@@ -513,6 +530,23 @@ export const translations = {
       refund_cash: "Hoàn Tiền Mặt",
       refund_card: "Hoàn Vào Thẻ"
     },
+    parked_carts: {
+      card_title: "Đơn hàng tạm giữ (Khách hàng)",
+      park_btn: "Tạm giữ đơn",
+      park_btn_title: "Tạm giữ đơn hiện tại để phục vụ khách khác",
+      restore_btn: "Khôi phục",
+      restore_btn_title: "Khôi phục đơn hàng đã tạm giữ",
+      modal_title: "Đơn hàng tạm giữ",
+      empty: "Không có đơn hàng nào được tạm giữ.",
+      cart_prefix: "Đơn #",
+      items_unit: "món",
+      delete_title: "Xóa đơn tạm giữ này",
+      delete_confirm: "Xác nhận xóa?",
+      note_placeholder: "Ghi chú (vd: Bàn 3, Khách áo khoác)...",
+      save_note: "Lưu",
+      cancel: "Hủy",
+      auto_parked_toast: "Đơn hàng trước đó đã được tự động tạm giữ"
+    },
     inspector: {
       title: "Chỉnh sửa món",
       quantity: "Số lượng",
@@ -988,6 +1022,23 @@ export const translations = {
       refund_customer: "↩️ REFUND TO CUSTOMER:",
       refund_cash: "Refund Cash",
       refund_card: "Refund to Card"
+    },
+    parked_carts: {
+      card_title: "Parked Carts (Customers)",
+      park_btn: "Park Cart",
+      park_btn_title: "Park current cart to serve another customer",
+      restore_btn: "Restore",
+      restore_btn_title: "Restore parked cart",
+      modal_title: "Parked Carts",
+      empty: "No parked carts.",
+      cart_prefix: "Cart #",
+      items_unit: "items",
+      delete_title: "Delete this parked cart",
+      delete_confirm: "Confirm delete?",
+      note_placeholder: "Note (e.g. Table 3, Blue jacket)...",
+      save_note: "Save",
+      cancel: "Cancel",
+      auto_parked_toast: "Previous cart was automatically parked"
     },
     inspector: {
       title: "Edit item",

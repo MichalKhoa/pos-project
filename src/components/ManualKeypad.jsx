@@ -18,6 +18,9 @@ export default function ManualKeypad({
   onParkCart,
   onRestoreParkedCart,
   onDeleteParkedCart,
+  onUpdateParkedCartNote,
+  isParkedModalOpen,
+  onParkedModalOpenChange,
   hasCartItems = false,
   salesHistory = [],
   onNavigateToHistory
@@ -240,6 +243,9 @@ export default function ManualKeypad({
         onParkCart={onParkCart}
         onRestoreParkedCart={onRestoreParkedCart}
         onDeleteParkedCart={onDeleteParkedCart}
+        onUpdateParkedCartNote={onUpdateParkedCartNote}
+        isOpen={isParkedModalOpen}
+        onOpenChange={onParkedModalOpenChange}
       />
 
       {/* ── CARD 3: SHIFT QUICK STATS MINI-WIDGET (Option D) ─────── */}
