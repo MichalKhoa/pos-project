@@ -6,6 +6,7 @@ import KeypadVatSelector from './keypad/KeypadVatSelector';
 import KeypadStepperBar from './keypad/KeypadStepperBar';
 import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
 import ShiftStatsWidget from './keypad/ShiftStatsWidget';
+import { soundFx } from '../utils/audio';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -23,7 +24,8 @@ export default function ManualKeypad({
   onParkedModalOpenChange,
   hasCartItems = false,
   salesHistory = [],
-  onNavigateToHistory
+  onNavigateToHistory,
+  onPrintDailySummary
 }) {
   const { t } = useTranslation();
   const [label, setLabel] = useState('');
@@ -38,6 +40,7 @@ export default function ManualKeypad({
 
   const triggerKeyAnimation = (key) => {
     setActiveKey(key);
+    soundFx.playKeypadClick();
     setTimeout(() => setActiveKey(null), 150);
   };
 
@@ -110,6 +113,7 @@ export default function ManualKeypad({
     if (setAmountStr) setAmountStr('');
     setLabel('');
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
+    soundFx.playScanChime();
     triggerKeyAnimation('ENTER');
   };
 
@@ -252,6 +256,7 @@ export default function ManualKeypad({
       <ShiftStatsWidget
         salesHistory={salesHistory}
         onNavigateToHistory={onNavigateToHistory}
+        onPrintDailySummary={onPrintDailySummary}
       />
     </div>
   );

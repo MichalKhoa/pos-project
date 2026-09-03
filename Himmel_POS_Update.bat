@@ -32,12 +32,12 @@ echo [3/5] Updating Python packages and auto-migrating database...
 cd /d "%~dp0backend"
 if exist "venv\Scripts\python.exe" (
     call .\venv\Scripts\python.exe -m pip install -r requirements.txt --quiet
-    call .\venv\Scripts\python.exe -c "from database import engine, Base; Base.metadata.create_all(bind=engine); print('Database schema OK')"
+    call .\venv\Scripts\python.exe migrations.py
 ) else (
     where python >nul 2>&1
     if !errorlevel! equ 0 (
         python -m pip install -r requirements.txt --quiet
-        python -c "from database import engine, Base; Base.metadata.create_all(bind=engine); print('Database schema OK')"
+        python migrations.py
     ) else (
         echo [WARNING] Python environment not found. Skipping python update step.
     )

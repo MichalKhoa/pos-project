@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getStorageItem, setStorageItem } from '../utils/storage';
+import { soundFx } from '../utils/audio';
 
 export function useCart() {
   const [cartItems, setCartItems] = useState([]);
@@ -170,6 +171,7 @@ export function useCart() {
       };
 
       triggerUndoToast('REMOVE', itemToRemove.name || 'Položka', currentSnapshot);
+      soundFx.playDeleteTone();
       return prev.filter((_, idx) => idx !== index);
     });
   }, [cartDiscountPercent, itemMultiplier, triggerUndoToast]);
@@ -180,12 +182,14 @@ export function useCart() {
     setCartItems(prevItems);
     setCartDiscountPercent(prevDisc);
     setItemMultiplier(prevMult);
+    soundFx.playSuccessChime();
     dismissUndoToast();
   }, [undoToast, dismissUndoToast]);
 
   const clearCart = useCallback(() => {
     setCartItems(prev => {
       if (prev.length > 0) {
+        soundFx.playDeleteTone();
         // Save snapshot for 8s clear cart recovery
         if (clearedTimerRef.current) clearTimeout(clearedTimerRef.current);
         
@@ -216,6 +220,7 @@ export function useCart() {
     setCartItems(prevItems);
     setCartDiscountPercent(prevDisc);
     setItemMultiplier(prevMult);
+    soundFx.playSuccessChime();
     
     if (clearedTimerRef.current) clearTimeout(clearedTimerRef.current);
     setClearedCartSnapshot(null);
@@ -252,6 +257,7 @@ export function useCart() {
     setCartDiscountPercent(0);
     setItemMultiplier(1);
     dismissUndoToast();
+    soundFx.playScanChime();
     return newHold;
   }, [cartItems, cartDiscountPercent, itemMultiplier, dismissUndoToast]);
 
@@ -292,12 +298,14 @@ export function useCart() {
       setCartItems(target.items);
       setCartDiscountPercent(target.cartDiscountPercent || 0);
       setItemMultiplier(target.itemMultiplier || 1);
+      soundFx.playSuccessChime();
       return remaining;
     });
     return result;
   }, [cartItems, cartDiscountPercent, itemMultiplier]);
 
   const deleteParkedCart = useCallback((id) => {
+    soundFx.playDeleteTone();
     setParkedCarts(prev => prev.filter(p => p.id !== id));
   }, []);
 

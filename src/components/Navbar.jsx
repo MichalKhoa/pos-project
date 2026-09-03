@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3 } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
@@ -15,7 +15,8 @@ export default function Navbar({
   onOpenShutdownModal,
   onOpenCalendarModal,
   onLockApp,
-  onOpenCashDrawer
+  onOpenCashDrawer,
+  onPrintDailySummary
 }) {
   const { t, language } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -326,6 +327,18 @@ export default function Navbar({
               <VolumeX size={15} style={{ color: 'var(--text-muted)' }} />
             )}
           </button>
+
+          {/* Print Daily Summary Slip Button */}
+          {onPrintDailySummary && (
+            <button
+              type="button"
+              className="nav-tool-btn"
+              onClick={onPrintDailySummary}
+              title={t('nav.print_daily_summary') || 'Vytisknout denní tržbu na tiskárnu a otevřít zásuvku'}
+            >
+              <Printer size={15} style={{ color: '#0284c7' }} />
+            </button>
+          )}
 
           {/* Quick Lock Icon Button */}
           <button

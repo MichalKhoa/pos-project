@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { soundFx } from '../utils/audio.js';
 
 export function usePosKeyboardShortcuts({
   isAppLocked,
@@ -11,8 +12,14 @@ export function usePosKeyboardShortcuts({
   paymentModalMethod,
   setPaymentModalMethod,
   handleAddToCart,
-  storeConfig
+  storeConfig,
+  presets = [],
+  onUnknownBarcode,
+  onBarcodeScanned
 }) {
+  const barcodeBufferRef = useRef('');
+  const lastCharTimeRef = useRef(0);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (isAppLocked) return;
@@ -24,6 +31,49 @@ export function usePosKeyboardShortcuts({
       }
 
       const key = e.key;
+      const now = Date.now();
+      const diff = now - lastCharTimeRef.current;
+      lastCharTimeRef.current = now;
+
+      // Hardware Barcode Scanner Detection (fast keystrokes < 70ms ending in Enter)
+      if (key === 'Enter') {
+        const buffer = barcodeBufferRef.current.trim();
+        barcodeBufferRef.current = '';
+
+        if (buffer.length >= 3 && diff < 100) {
+          e.preventDefault();
+          e.stopPropagation();
+          setKeypadAmount('');
+
+          const matchedPreset = (presets || []).find(p => {
+            if (!p || !p.barcode) return false;
+            const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
+            return codes.includes(buffer.toLowerCase());
+          });
+
+          if (matchedPreset) {
+            const qty = Math.max(1, Math.abs(itemMultiplier || 1));
+            handleAddToCart({ ...matchedPreset, quantity: qty });
+            soundFx.playScanChime();
+            if (itemMultiplier !== 1) setItemMultiplier(1);
+            if (onBarcodeScanned) onBarcodeScanned(matchedPreset, qty);
+          } else {
+            soundFx.playErrorChime();
+            if (onUnknownBarcode) onUnknownBarcode(buffer);
+          }
+          return;
+        }
+      }
+
+      // Check if this key is part of a rapid scanner burst
+      if (key && key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (diff <= 70 && barcodeBufferRef.current.length >= 1) {
+          e.preventDefault();
+          barcodeBufferRef.current += key;
+          return;
+        }
+        barcodeBufferRef.current = key;
+      }
 
       if (/^[0-9]$/.test(key)) {
         e.preventDefault();
@@ -114,5 +164,5 @@ export function usePosKeyboardShortcuts({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier]);
+  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, presets, onUnknownBarcode, onBarcodeScanned]);
 }

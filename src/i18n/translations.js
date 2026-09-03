@@ -14,6 +14,7 @@ export const translations = {
       not_sent: "Neodesláno",
       eet_off: "EET Vypnuto",
       open_drawer: "Otevřít zásuvku",
+      print_daily_summary: "Vytisknout denní tržbu a otevřít zásuvku",
       section_title: "Navigace"
     },
     cart: {
@@ -72,7 +73,10 @@ export const translations = {
       today_revenue: "Dnešní tržba celkem",
       cash: "Hotovost",
       card: "Kartou",
-      view_history: "Zobrazit dnešní účtenky"
+      view_history: "Zobrazit dnešní účtenky",
+      print_daily_summary: "Vytisknout denní tržbu",
+      print_summary_tooltip: "Vytisknout souhrn dnešních tržeb na pokladní tiskárnu a otevřít zásuvku",
+      print_success: "Denní tržba vytištěna na tiskárně"
     },
     keypad: {
       manual_title: "Ruční Zadání Částky",
@@ -135,7 +139,10 @@ export const translations = {
       exact: "Přesně",
       reset: "Vynulovat",
       coins: "Mince",
-      banknotes: "Bankovky",
+      banknotes: "České bankovky",
+      direct_tender: "Zákazník platí bankovkou",
+      add_banknotes: "Přidat bankovku (+)",
+      breakdown_coins: "Doporučené bankovky a mince",
       change_due: "Vrátit zákazníkovi",
       missing: "Chybí doplatit",
       complete_sale: "Dokončit prodej",
@@ -385,6 +392,12 @@ export const translations = {
       title: "Nastavení Pokladny & EET 2.0 Backend",
       tab_store: "Údaje prodejny",
       tab_layout: "Rozvržení & Zobrazení",
+      tab_hardware: "Tiskárna & Účtenka",
+      tab_terminal: "Platební Terminál",
+      tab_security: "Bezpečnost & PIN",
+      tab_system: "Zálohy & Systém",
+      tab_diagnostics: "Náhled & Diagnostika",
+      saved_toast: "Uloženo",
       backend_verifying: "Ověřování serveru...",
       backend_online: "Python Backend ONLINE (http://localhost:8000)",
       backend_offline: "Backend OFFLINE (Režim Simulace)",
@@ -496,6 +509,20 @@ export const translations = {
       new_price: "Nová cena",
       apply_discount: "Aplikovat slevu"
     },
+    scanner: {
+      unknown_barcode_title: "Neznámý čárový kód",
+      unknown_barcode_subtitle: "Zadejte název a cenu pro okamžité uložení a přidání do košíku",
+      scanned_code: "Naskenovaný kód",
+      item_name: "Název zboží",
+      item_name_placeholder: "např. Kofola 0.5L plech",
+      item_price: "Prodejní cena (Kč)",
+      vat_rate: "Sazba DPH",
+      category: "Kategorie",
+      save_and_add: "Uložit & do košíku",
+      cancel: "Zrušit",
+      err_name_required: "Zadejte název zboží",
+      err_price_invalid: "Zadejte platnou prodejní cenu"
+    },
     common: {
       save: "Uložit",
       cancel: "Zrušit",
@@ -521,6 +548,7 @@ export const translations = {
       not_sent: "Chưa gửi",
       eet_off: "Tắt EET",
       open_drawer: "Mở ngăn kéo",
+      print_daily_summary: "In tổng kết ngày & mở ngăn kéo",
       section_title: "Điều hướng"
     },
     cart: {
@@ -579,7 +607,10 @@ export const translations = {
       today_revenue: "Doanh thu hôm nay",
       cash: "Tiền mặt",
       card: "Thẻ",
-      view_history: "Xem hóa đơn hôm nay"
+      view_history: "Xem hóa đơn hôm nay",
+      print_daily_summary: "In tổng kết ngày",
+      print_summary_tooltip: "In tổng kết doanh thu hôm nay ra máy in nhiệt và mở ngăn kéo",
+      print_success: "Đã in tổng kết ngày ra máy in nhiệt"
     },
     keypad: {
       manual_title: "Nhập Số Tiền Thủ Công",
@@ -642,7 +673,10 @@ export const translations = {
       exact: "Vừa đủ",
       reset: "Đặt lại",
       coins: "Tiền xu",
-      banknotes: "Tiền giấy",
+      banknotes: "Tiền giấy Séc",
+      direct_tender: "Khách đưa tiền chẵn",
+      add_banknotes: "Thêm tiền giấy (+)",
+      breakdown_coins: "Chi tiết tiền thừa trả lại",
       change_due: "Tiền thối lại khách",
       missing: "Còn thiếu",
       complete_sale: "Hoàn tất bán hàng",
@@ -862,6 +896,12 @@ export const translations = {
       title: "Cài Đặt Máy Bán Hàng & Backend EET 2.0",
       tab_store: "Thông tin cửa hàng",
       tab_layout: "Giao diện & Bố cục",
+      tab_hardware: "Máy in & Hóa đơn",
+      tab_terminal: "Máy POS Quẹt Thẻ",
+      tab_security: "Bảo mật & Mã PIN",
+      tab_system: "Sao lưu & Hệ thống",
+      tab_diagnostics: "Xem trước & Chẩn đoán",
+      saved_toast: "Đã lưu",
       backend_verifying: "Đang kiểm tra kết nối...",
       backend_online: "Python Backend ONLINE (http://localhost:8000)",
       backend_offline: "Backend OFFLINE (Mô phỏng)",
@@ -1003,6 +1043,20 @@ export const translations = {
       saved_success: "Đã lưu tồn kho cho {name} thành công.",
       save_error: "Lỗi khi lưu tồn kho: {error}"
     },
+    scanner: {
+      unknown_barcode_title: "Mã vạch chưa có trong kho",
+      unknown_barcode_subtitle: "Nhập tên và giá để lưu vào danh mục và thêm vào giỏ ngay",
+      scanned_code: "Mã vừa quét",
+      item_name: "Tên mặt hàng",
+      item_name_placeholder: "ví dụ: Nước ngọt Kofola 0.5L",
+      item_price: "Giá bán (Kč)",
+      vat_rate: "Thuế suất VAT",
+      category: "Nhóm hàng",
+      save_and_add: "Lưu & thêm vào giỏ",
+      cancel: "Hủy bỏ",
+      err_name_required: "Vui lòng nhập tên mặt hàng",
+      err_price_invalid: "Vui lòng nhập giá bán hợp lệ"
+    },
     common: {
       save: "Lưu",
       cancel: "Hủy",
@@ -1028,6 +1082,7 @@ export const translations = {
       not_sent: "Unsent",
       eet_off: "EET Disabled",
       open_drawer: "Open Drawer",
+      print_daily_summary: "Print daily summary & open drawer",
       section_title: "Navigation"
     },
     cart: {
@@ -1086,7 +1141,10 @@ export const translations = {
       today_revenue: "Today's Total Revenue",
       cash: "Cash",
       card: "Card",
-      view_history: "View today's receipts"
+      view_history: "View today's receipts",
+      print_daily_summary: "Print Daily Summary",
+      print_summary_tooltip: "Print today's revenue summary on thermal printer and kick drawer",
+      print_success: "Daily summary printed on thermal printer"
     },
     keypad: {
       manual_title: "Manual Amount Entry",
@@ -1149,7 +1207,10 @@ export const translations = {
       exact: "Exact",
       reset: "Reset",
       coins: "Coins",
-      banknotes: "Banknotes",
+      banknotes: "Czech Banknotes",
+      direct_tender: "Direct Banknote Tender",
+      add_banknotes: "Add Banknote (+)",
+      breakdown_coins: "Recommended breakdown",
       change_due: "Change due to customer",
       missing: "Remaining balance",
       complete_sale: "Complete Sale",
@@ -1369,6 +1430,12 @@ export const translations = {
       title: "POS Register Settings & EET 2.0 Backend",
       tab_store: "Store Details",
       tab_layout: "Layout & Display",
+      tab_hardware: "Printer & Receipt",
+      tab_terminal: "Payment Terminal",
+      tab_security: "Security & PIN",
+      tab_system: "Backups & System",
+      tab_diagnostics: "Preview & Diagnostics",
+      saved_toast: "Saved",
       backend_verifying: "Verifying server...",
       backend_online: "Python Backend ONLINE (http://localhost:8000)",
       backend_offline: "Backend OFFLINE (Simulation)",
@@ -1509,6 +1576,20 @@ export const translations = {
       no_items: "No inventory items match the search criteria.",
       saved_success: "Stock levels for {name} saved successfully.",
       save_error: "Error saving stock levels: {error}"
+    },
+    scanner: {
+      unknown_barcode_title: "Unknown Barcode",
+      unknown_barcode_subtitle: "Enter item name and price for instant registration and cart addition",
+      scanned_code: "Scanned Barcode",
+      item_name: "Item Name",
+      item_name_placeholder: "e.g. Kofola 0.5L can",
+      item_price: "Selling Price (CZK)",
+      vat_rate: "VAT Rate",
+      category: "Category",
+      save_and_add: "Save & Add to Cart",
+      cancel: "Cancel",
+      err_name_required: "Please enter product name",
+      err_price_invalid: "Please enter a valid price"
     },
     common: {
       save: "Save",

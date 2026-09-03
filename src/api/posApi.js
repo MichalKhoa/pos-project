@@ -196,14 +196,16 @@ export async function updateSaleRefundStatusBackend(saleId, refundStatus, refund
 /**
  * Delete a single test sale transaction from backend SQLite DB (Admin Mode)
  */
-export async function deleteSaleBackend(saleId) {
+export async function deleteSaleBackend(saleId, pin = '') {
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Admin-Override': 'true'
+    };
+    if (pin) headers['X-Admin-PIN'] = pin;
     const res = await fetch(`${API_BASE_URL}/sales/${saleId}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Override': 'true'
-      }
+      headers
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -216,14 +218,16 @@ export async function deleteSaleBackend(saleId) {
 /**
  * Purge ALL test sales transactions from backend SQLite DB (Admin Mode)
  */
-export async function purgeAllSalesBackend() {
+export async function purgeAllSalesBackend(pin = '') {
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Admin-Override': 'true'
+    };
+    if (pin) headers['X-Admin-PIN'] = pin;
     const res = await fetch(`${API_BASE_URL}/sales/purge-all`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Override': 'true'
-      }
+      headers
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -341,6 +345,24 @@ export async function printReceiptBackend(saleData, storeConfig) {
     return await res.json();
   } catch (err) {
     console.warn('Physical hardware printer unavailable:', err);
+    return null;
+  }
+}
+
+/**
+ * Send print daily summary slip request to backend hardware thermal printer service
+ */
+export async function printDailySummaryBackend(summaryData, storeConfig, openDrawer = true) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-daily-summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ summaryData, storeConfig, openDrawer })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Daily summary thermal printing failed or backend offline:', err);
     return null;
   }
 }

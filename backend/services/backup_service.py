@@ -105,3 +105,96 @@ def get_backup_status() -> dict:
         "last_backup_filename": last_backup_file,
         "last_backup_timestamp": last_backup_time
     }
+
+
+def list_backups() -> list:
+    """Returns sorted list of available database backup ZIP files."""
+    pattern = os.path.join(BACKUPS_DIR, "pos_backup_*.zip")
+    files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
+    results = []
+    for f in files:
+        results.append({
+            "filename": os.path.basename(f),
+            "size_bytes": os.path.getsize(f),
+            "timestamp": datetime.fromtimestamp(os.path.getmtime(f)).isoformat()
+        })
+    return results
+
+
+def restore_database_from_backup(zip_filename: str) -> dict:
+    """
+    Restores database from a selected ZIP backup file.
+    1. Validates the target backup ZIP.
+    2. Extracts pos_store.db to temporary location and tests SQLite integrity.
+    3. Takes safety snapshot of active DB.
+    4. Replaces active DB and cleans up WAL/SHM.
+    """
+    safe_filename = os.path.basename(zip_filename)
+    zip_path = os.path.join(BACKUPS_DIR, safe_filename)
+    if not os.path.exists(zip_path) or not zipfile.is_zipfile(zip_path):
+        return {"status": "ERROR", "message": f"Záložní soubor {safe_filename} nebyl nalezen nebo je poškozen."}
+
+    temp_restore_db = os.path.join(BACKUPS_DIR, "temp_restore_check.db")
+    pre_restore_backup = None
+
+    try:
+        # 1. Extract and verify integrity
+        with zipfile.ZipFile(zip_path, "r") as zipf:
+            target_entry = None
+            for name in zipf.namelist():
+                if name.endswith(".db"):
+                    target_entry = name
+                    break
+            if not target_entry:
+                return {"status": "ERROR", "message": "Záložní archiv neobsahuje platný databázový soubor .db"}
+            with open(temp_restore_db, "wb") as f_out:
+                f_out.write(zipf.read(target_entry))
+
+        # Quick integrity test on extracted DB
+        test_conn = sqlite3.connect(temp_restore_db)
+        cursor = test_conn.cursor()
+        cursor.execute("PRAGMA quick_check")
+        res = cursor.fetchone()
+        test_conn.close()
+        if not res or res[0] != "ok":
+            if os.path.exists(temp_restore_db):
+                os.remove(temp_restore_db)
+            return {"status": "ERROR", "message": "Extrahovaná záloha neprošla kontrolou integrity SQLite."}
+
+        # 2. Take immediate safety backup of current active DB
+        if os.path.exists(DB_PATH):
+            pre_restore_backup = create_database_backup()
+
+        # 3. Close open connections and replace DB
+        from database import engine
+        engine.dispose()
+
+        import shutil
+        shutil.copy2(temp_restore_db, DB_PATH)
+        os.remove(temp_restore_db)
+
+        # Remove old WAL/SHM so restored DB starts clean
+        for ext in ["-wal", "-shm"]:
+            p = DB_PATH + ext
+            if os.path.exists(p):
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+
+        logger.info(f"Database successfully restored from {safe_filename}")
+        return {
+            "status": "SUCCESS",
+            "restored_from": safe_filename,
+            "safety_backup": pre_restore_backup.get("filename") if pre_restore_backup else None,
+            "message": f"Databáze byla úspěšně obnovena ze zálohy {safe_filename}."
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to restore database from {safe_filename}: {e}")
+        if os.path.exists(temp_restore_db):
+            try:
+                os.remove(temp_restore_db)
+            except Exception:
+                pass
+        return {"status": "ERROR", "message": f"Chyba při obnově databáze: {str(e)}"}

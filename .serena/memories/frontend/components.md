@@ -23,13 +23,14 @@ Directory: `/src/components`
 - `AnalyticsView.jsx`: Dedicated top-level analytics dashboard tab with financial KPI cards, time period selector, CSV export, and visual chart breakdowns. Uses `useSalesPeriodFilter`. Decomposed into `/src/components/history/`:
   - `SalesPeriodBar.jsx`: Period filters (Today, Yesterday, Week, Month, Year, Custom) with stepper navigation and calendar triggers.
   - `SalesAnalyticsCharts.jsx`: Visual POS dashboard featuring top 4 KPI cards (Gross, Netto/VAT, Receipts/AOV, Payments), Top 8 Best-Selling Products ranking (#1–#8 with volume bars), Hourly Rush-Hour chart (07:00–22:00 with peak rush highlight), visual multi-segment payment split bar (Cash vs Card vs QR), category sales volume bars, and official Czech VAT tax table (21%, 12%, 0%).
-- `SettingsView.jsx`: POS system configuration coordinator. Decomposed into modular domain subcomponents in `/src/components/settings/`:
-  - `StoreProfileSection.jsx`: Dedicated store information (corporate identity, street/city address, IČO/DIČ, default VAT, IBAN for QR payments, receipt footer, and register language).
-  - `LayoutSection.jsx`: Dedicated register layout & visual presentation (product grid columns 3-6/Auto, button size S/M/L, button style left-stripe/color-fill, showPresetVat toggle, cart position left/right, high-legibility mode, customer LCD display title & auto-sleep).
-  - `PrinterSection.jsx`: Thermal ESC/POS receipt printing (58mm vs 80mm), margin ruler test, auto-print toggles.
-  - `TerminalSection.jsx`: ČSOB Move 3500 terminal TCP IP/port/TID setup, ping connectivity test, and daily reconciliation.
-  - `SecuritySection.jsx`: Admin mode toggle, Admin PIN verification and update, cashier PIN, and inactivity auto-lock.
-  - `BackupSection.jsx`: JSON backup export/import, Litestream SQLite WAL replication monitor, and EET toggle.
+- `SettingsView.jsx`: POS system configuration coordinator with touchscreen-first Master-Detail sidebar layout (`.settings-view-container`), left 250px vertical touch rail (Store, Layout, Hardware, Terminal, Security, System, Diagnostics), right content pane standardized in a responsive 2-column grid (`.settings-grid-layout` with equal `.settings-grid-col`), and automated background saving (`saveConfigField` onBlur, `saveConfigBatch` onChange) with top-right green auto-save toast (`.settings-save-toast`). Decomposed into modular domain subcomponents in `/src/components/settings/`:
+  - `StoreProfileSection.jsx`: Dedicated store information in 2 columns (Left: corporate identity, street/city address, IČO/DIČ; Right: segmented default VAT 21%/12%/0%, IBAN for QR payments, and segmented language bar).
+  - `LayoutSection.jsx`: Dedicated register layout in 2 columns (Left: preset columns Auto/3/4/5/6, button size S/M/L, button style left-stripe/color-fill, showPresetVat toggle, catalog shortcut; Right: cart position left/right, high-legibility mode, customer LCD display title & auto-sleep).
+  - `PrinterSection.jsx`: Thermal ESC/POS receipt printing in 2 columns (Left: device selector with live connection badges; Right: 58mm vs 80mm segmented selector, auto-print switch, receipt footer, and test cash drawer release trigger).
+  - `TerminalSection.jsx`: Payment terminal mode in 2 columns (Left: Manual Mode vs Automated ČSOB / Ingenico Move 3500 selector + save trigger; Right: network IP/port/TID setup, ping test, and daily reconciliation).
+  - `SecuritySection.jsx`: Security controls in 2 columns (Left: Admin mode toggle card with status pill, Admin PIN change modal trigger; Right: cashier PIN, and inactivity auto-lock selector).
+  - `BackupSection.jsx`: System management in 2 columns (Left: JSON backup export/import, database reset; Right: automated Litestream replication status, system update checker, and EET 2.0 toggle card).
+  - `DiagnosticsSection.jsx`: Live receipt & hardware diagnostics in 2 columns (Left: realistic thermal paper receipt preview with store header, VAT, live QR Platba SPD image, footer, and test print/drawer release buttons; Right: hardware subsystem status checklist for backend, printer, drawer, terminal, LCD screen, and EET + shift sales summary with 1-tap thermal daily report).
 
 ## Core Register Components
 - `Cart.jsx`: Active shopping basket (420px width) with memoized totals (`calculateCartTotals`), active item selection, note badges, line quantity modifier, and parking slots. Decomposed into `/src/components/cart/`:
@@ -45,15 +46,27 @@ Directory: `/src/components`
   - `KeypadNumberGrid.jsx`: 4×4 animated numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), dedicated `±` return toggle, and custom product/return insertion button.
   - `KeypadVatSelector.jsx`: Czech VAT rate chips (21%, 12%, 0%) with sleek 36px touch height and tactile active-press scale responsiveness.
   - `ParkedCartsDrawer.jsx`: Park/Hold active cart, restore held orders, and cash drawer trigger.
-  - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, and quick link to Sales History.
-- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
+  - `ShiftStatsWidget.jsx`: Live mini-card displaying today's shift revenue, cash/card breakdown, receipt count, quick link to Sales History, and 1-tap "Vytisknout denní tržbu" thermal printer summary trigger.
+- `payment/CashPaymentPanel.jsx`: Cash checkout panel with authentic 6 color-coded Czech Banknote cards (100 green, 200 orange, 500 rose, 1000 violet, 2000 teal, 5000 navy), smart single-tap tender accumulation, 4 quick coins (5, 10, 20, 50 Kč), 3x4 numpad, giant hero change banner (2.5rem font, `VRÁTIT / TRẢ LẠI`), tactile audio clicks, and automated greedy coin/banknote breakdown assistant (`src/utils/currencyBreakdown.js`).
+- `Navbar.jsx`: Register top bar with clock, network/backend status, cart drawer toggle, lock button, 1-click thermal daily summary trigger, and view navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
 - `CalendarModal.jsx`, `TouchCalendarModal.jsx`, `TouchDateRangeModal.jsx`: Reusable calendar modals powered by `src/utils/calendarGrid.js` and `src/utils/czechHolidays.js`. (Unreferenced `DateKeypadModal.jsx` pruned).
+- `UnknownBarcodeModal.jsx`: Instant 5-second touch modal triggered when an unrecognized barcode is scanned at checkout. Allows quick registration (name, price, VAT, category) and direct insertion into active cart with multiplier without leaving sales screen.
 
 ## Active Custom Hooks in `/src/hooks/`
 - `useCart.js`: Active shopping cart state, discounts, `updateItemDetails`, and item modifiers.
 - `usePresetDragDrop.js`: Drag-and-drop preset ordering.
-- `usePosKeyboardShortcuts.js`: Hardware keyboard listener for fast numeric keypad checkout.
+- `usePosKeyboardShortcuts.js`: Hardware keyboard listener for fast numeric keypad checkout and global USB barcode scanner listener (<70ms burst detection, resolves EAN to presets, handles multiplier `qty * [scan]`, triggers UnknownBarcodeModal on unknown codes).
 - `usePosCatalog.js`: Product categories and presets state and CRUD.
 - `useOfflineSync.js`: EET offline queue check and sync handler.
 - `useAutoLock.js`: Touch/mouse/keyboard activity tracking and auto-lock.
 - `useSalesPeriodFilter.js`: Shared period range filtering for history and analytics.
+
+## Audio Engine & Touch Feedback (`/src/utils/audio.js`)
+- Synthesizes distinct procedural audio cues using HTML5 Web Audio API without audio asset loading:
+  - `playScanChime()`: Crisp rising tone (1800Hz -> 2400Hz) on item addition or barcode match.
+  - `playErrorChime()`: Low buzz warning (220Hz -> 160Hz sawtooth) on unknown barcode or failure.
+  - `playSuccessChime()`: Harmonious two-tone chime (880Hz / 1760Hz) on checkout completion, restore, or hold.
+  - `playCashChime()`: Multi-tone bell chime simulating physical cash drawer kick.
+  - `playDeleteTone()`: Descending sine drop (420Hz -> 140Hz) on item deletion or cart wipe.
+  - `playKeypadClick()`: Ultra-short tactile tick (1200Hz, 25ms) on keypad touches.
+- Mute toggle integrated in top navbar and persisted in `pos_sound_enabled` localStorage.

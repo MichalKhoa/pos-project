@@ -27,6 +27,8 @@ if [ ! -d "$SCRIPT_DIR/backend/venv" ]; then
 fi
 "$SCRIPT_DIR/backend/venv/bin/pip" install --upgrade pip >/dev/null 2>&1
 "$SCRIPT_DIR/backend/venv/bin/pip" install -r "$SCRIPT_DIR/backend/requirements.txt"
+echo "[INFO] Initializing database schema & applying migrations..."
+"$SCRIPT_DIR/backend/venv/bin/python" "$SCRIPT_DIR/backend/migrations.py"
 
 # 3. Setup Frontend Dependencies
 echo ""

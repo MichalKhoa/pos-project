@@ -12,6 +12,15 @@ Operational execution scripts, test suites, and environment setup.
 - `Himmel_POS_Service_Install.bat`: Native Windows Task auto-boot service manager (install/uninstall menu).
 - `Himmel_POS_Stop.bat`: Gracefully stops all POS processes and frees ports 8000 and 5173.
 - `Himmel_POS_Update.bat`: 1-Click Git pull, package update, and UI re-compiler.
+- **Linux Shell Scripts (`*.sh`)**:
+  - `himmel_pos.sh`: Standard Linux production launcher (builds UI bundle, starts FastAPI on port 8000, opens Chrome/Chromium).
+  - `himmel_pos_debug.sh`: Linux debug launcher with hot-reloading (`ENV=development`) on port 8000 and Vite dev server on port 5173.
+  - `himmel_pos_kiosk.sh`: Full-screen touch kiosk launcher via Chrome/Chromium `--kiosk`.
+  - `himmel_pos_mobile_launcher.sh`: Phone / LAN launcher displaying network IP addresses.
+  - `himmel_pos_enable_lan.sh`: Configures UFW firewall and local binding.
+  - `himmel_pos_stop.sh`: Linux service shutdown script (`pkill` backend, vite, litestream).
+  - `himmel_pos_update.sh`: Automated git pull on active branch, venv update, DB schema migration, and UI rebuild.
+  - `himmel_backend_settings.sh`: Launches Python pywebview desktop settings GUI.
 
 ## Manual Commands
 - Backend:

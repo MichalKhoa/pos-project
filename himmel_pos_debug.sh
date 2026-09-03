@@ -39,7 +39,9 @@ fi
 echo "[1/3] Launching Python FastAPI Backend terminal..."
 cd "$SCRIPT_DIR/backend" || exit 1
 source venv/bin/activate
-python3 main.py &
+echo "[INFO] Checking database migrations & schema changes..."
+python3 migrations.py
+ENV=development python3 main.py &
 BACKEND_PID=$!
 
 # 4. Launch Vite Web Dev server

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Save, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { CreditCard, Save, RefreshCw, CheckCircle, XCircle, Wifi, Smartphone } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function TerminalSection({
@@ -23,192 +23,259 @@ export default function TerminalSection({
   const { t } = useTranslation();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div className="table-card" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <CreditCard size={20} style={{ color: 'var(--accent-blue)' }} />
-            <span>{t('settings.csob_title')}</span>
-          </h3>
+    <div className="settings-grid-layout">
+      {/* 💳 LEFT COLUMN: Terminal Mode */}
+      <div className="settings-grid-col">
+        {/* 💳 Card 1: Režim platby kartou */}
+        <div className="settings-section-card">
+        <div className="settings-section-header">
+          <div>
+            <h3 className="settings-section-title">
+              <CreditCard size={19} style={{ color: 'var(--accent-blue)' }} />
+              <span>{t('settings.csob_title') || 'Platební terminál pro karty'}</span>
+            </h3>
+            <p className="settings-section-desc">
+              Zvolte, zda obsluha zadává částku na terminálu ručně, nebo pokladna odesílá částku automaticky přes síť.
+            </p>
+          </div>
+
           <span className="status-badge" style={{
-            background: termIp ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-            color: termIp ? 'var(--accent-emerald)' : 'var(--accent-amber)',
-            borderColor: termIp ? 'rgba(5, 150, 105, 0.3)' : 'rgba(245, 158, 11, 0.3)',
-            padding: '0.3rem 0.65rem',
-            fontSize: '0.75rem'
+            background: termEnabled ? 'rgba(5, 150, 105, 0.15)' : 'rgba(59, 130, 246, 0.12)',
+            color: termEnabled ? 'var(--accent-emerald)' : 'var(--accent-blue)',
+            border: 'none',
+            padding: '0.35rem 0.75rem',
+            fontSize: '0.8rem',
+            fontWeight: '800'
           }}>
-            {termIp ? `IP: ${termIp}:${termPort}` : 'Ruční zadání (Bez IP)'}
+            {termEnabled ? 'Automatický režim' : 'Ruční režim'}
           </span>
         </div>
 
-        <form onSubmit={onSaveTerminal} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-              {t('settings.csob_mode')}
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <button
-                type="button"
-                className="vat-btn"
-                style={{
-                  padding: '0.75rem',
-                  textAlign: 'left',
-                  background: !termEnabled ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-input)',
-                  borderColor: !termEnabled ? 'var(--accent-blue)' : 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.2rem'
-                }}
-                onClick={() => setTermEnabled(false)}
-              >
-                <span style={{ fontWeight: '800', fontSize: '0.85rem', color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
-                  {t('settings.csob_manual_mode')}
-                </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {t('settings.csob_manual_desc')}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="vat-btn"
-                style={{
-                  padding: '0.75rem',
-                  textAlign: 'left',
-                  background: termEnabled ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
-                  borderColor: termEnabled ? 'var(--accent-emerald)' : 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.2rem'
-                }}
-                onClick={() => setTermEnabled(true)}
-              >
-                <span style={{ fontWeight: '800', fontSize: '0.85rem', color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
-                  {t('settings.csob_auto_mode')}
-                </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {t('settings.csob_auto_desc')}
-                </span>
-              </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Manual mode card */}
+          <div
+            onClick={() => setTermEnabled(false)}
+            style={{
+              cursor: 'pointer',
+              padding: '1.15rem',
+              borderRadius: 'var(--radius-lg)',
+              border: `2px solid ${!termEnabled ? 'var(--accent-blue)' : 'var(--border-color)'}`,
+              background: !termEnabled ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-card)',
+              boxShadow: !termEnabled ? '0 2px 8px rgba(59, 130, 246, 0.15)' : 'none',
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.4rem',
+              userSelect: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Smartphone size={22} style={{ color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
+              <span style={{ fontWeight: '800', fontSize: '1rem', color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
+                {t('settings.csob_manual_mode') || 'Ruční zadání (Doporučeno)'}
+              </span>
             </div>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              Obsluha naťuká částku přímo do terminálu. Vhodné pro jakýkoliv platební terminál bez nutnosti propojení po síti.
+            </p>
           </div>
 
-          {termEnabled && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          {/* Automatic CSOB mode card */}
+          <div
+            onClick={() => setTermEnabled(true)}
+            style={{
+              cursor: 'pointer',
+              padding: '1.15rem',
+              borderRadius: 'var(--radius-lg)',
+              border: `2px solid ${termEnabled ? 'var(--accent-emerald)' : 'var(--border-color)'}`,
+              background: termEnabled ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card)',
+              boxShadow: termEnabled ? '0 2px 8px rgba(16, 185, 129, 0.15)' : 'none',
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.4rem',
+              userSelect: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Wifi size={22} style={{ color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
+              <span style={{ fontWeight: '800', fontSize: '1rem', color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
+                {t('settings.csob_auto_mode') || 'Automatický ČSOB terminál'}
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              Částka se automaticky přenese do terminálu Ingenico Move 3500 přes lokální Wi-Fi nebo ethernetovou síť.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <button
+        type="button"
+        className="pay-btn pay-btn-cash"
+        onClick={onSaveTerminal}
+        style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}
+      >
+        <Save size={18} />
+        <span>{termSaveSuccess ? 'Uloženo!' : 'Uložit nastavení terminálu'}</span>
+      </button>
+    </div>
+
+    {/* ⚙️ RIGHT COLUMN: CSOB Network Configuration or Manual Info */}
+    <div className="settings-grid-col">
+        {termEnabled ? (
+          <div className="settings-section-card">
+            <div className="settings-section-header">
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                  {t('settings.csob_ip')}
+                <h3 className="settings-section-title">
+                  <Wifi size={19} style={{ color: 'var(--accent-emerald)' }} />
+                  <span>Síťové nastavení terminálu ČSOB</span>
+                </h3>
+                <p className="settings-section-desc">
+                  Zadejte lokální IP adresu a port terminálu přidělené vaším routerem.
+                </p>
+              </div>
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-label">
+                {t('settings.csob_ip') || 'IP adresa terminálu v síti'}
+              </label>
+              <input
+                type="text"
+                className="settings-input"
+                placeholder="např. 192.168.1.150"
+                value={termIp}
+                onChange={e => setTermIp(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-form-grid">
+              <div className="settings-field">
+                <label className="settings-label">
+                  {t('settings.csob_port') || 'Komunikační port'}
                 </label>
                 <input
                   type="text"
-                  placeholder="např. 192.168.1.150"
-                  value={termIp}
-                  onChange={e => setTermIp(e.target.value)}
-                  style={{ width: '100%', padding: '0.55rem 0.75rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}
-                  required={termEnabled}
+                  className="settings-input"
+                  placeholder="8888"
+                  value={termPort}
+                  onChange={e => setTermPort(e.target.value)}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                    {t('settings.csob_port')}
-                  </label>
-                  <input
-                    type="text"
-                    value={termPort}
-                    onChange={e => setTermPort(e.target.value)}
-                    style={{ width: '100%', padding: '0.55rem 0.75rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'var(--font-mono)' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                    {t('settings.csob_tid')}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="TID terminálu"
-                    value={termId}
-                    onChange={e => setTermId(e.target.value)}
-                    style={{ width: '100%', padding: '0.55rem 0.75rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontWeight: '700' }}
-                  />
-                </div>
+              <div className="settings-field">
+                <label className="settings-label">
+                  {t('settings.csob_tid') || 'ID Terminálu (TID)'}
+                </label>
+                <input
+                  type="text"
+                  className="settings-input"
+                  placeholder="např. 12345678"
+                  value={termId}
+                  onChange={e => setTermId(e.target.value)}
+                />
               </div>
-
-              {/* Ping & Reconcile actions */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button
-                  type="button"
-                  className="nav-tab"
-                  onClick={onPing}
-                  disabled={pingLoading || !termIp}
-                  style={{ flex: 1, padding: '0.5rem', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '700' }}
-                >
-                  <RefreshCw size={14} className={pingLoading ? 'spin-icon' : ''} />
-                  <span>{pingLoading ? 'Testuji...' : t('settings.ping_test')}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="nav-tab"
-                  onClick={onReconcile}
-                  disabled={reconcileLoading || !termIp}
-                  style={{ flex: 1, padding: '0.5rem', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '700' }}
-                >
-                  <RefreshCw size={14} className={reconcileLoading ? 'spin-icon' : ''} />
-                  <span>{reconcileLoading ? 'Uzavírám...' : t('settings.reconcile')}</span>
-                </button>
-              </div>
-
-              {pingResult && (
-                <div style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.8rem',
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: pingResult.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  color: pingResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)'
-                }}>
-                  {pingResult.success ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                  <span>{pingResult.message || (pingResult.success ? 'Spojení navázáno' : 'Terminál neodpovídá')}</span>
-                </div>
-              )}
-
-              {reconcileResult && (
-                <div style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.8rem',
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: reconcileResult.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  color: reconcileResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)'
-                }}>
-                  {reconcileResult.success ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                  <span>{reconcileResult.message || (reconcileResult.success ? 'Uzávěrka úspěšná' : 'Chyba uzávěrky')}</span>
-                </div>
-              )}
             </div>
-          )}
 
-          <button
-            type="submit"
-            className="pay-btn pay-btn-cash"
-            style={{ height: '46px', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          >
-            <Save size={18} />
-            <span>{termSaveSuccess ? 'Uloženo!' : t('settings.save_terminal')}</span>
-          </button>
-        </form>
+            {/* Test Connection and Reconcile actions */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="key-btn"
+                onClick={onPing}
+                disabled={pingLoading}
+                style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+              >
+                <RefreshCw size={15} className={pingLoading ? 'spin-icon' : ''} />
+                <span>{pingLoading ? 'Testuji...' : 'Otestovat spojení (Ping)'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="key-btn"
+                onClick={onReconcile}
+                disabled={reconcileLoading}
+                style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+              >
+                <RefreshCw size={15} className={reconcileLoading ? 'spin-icon' : ''} />
+                <span>{reconcileLoading ? 'Uzavírám...' : 'Denní uzávěrka terminálu'}</span>
+              </button>
+            </div>
+
+            {/* Ping Result Banner */}
+            {pingResult && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '1rem',
+                background: pingResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                color: pingResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                border: `1px solid ${pingResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+              }}>
+                {pingResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                <span>{pingResult.message || (pingResult.success ? 'Terminál je dostupný na síti' : 'Terminál neodpovídá na zadané adrese')}</span>
+              </div>
+            )}
+
+            {/* Reconcile Result Banner */}
+            {reconcileResult && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginTop: '0.5rem',
+                background: reconcileResult.success ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                color: reconcileResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                border: `1px solid ${reconcileResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+              }}>
+                {reconcileResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                <span>{reconcileResult.message || (reconcileResult.success ? 'Denní finanční uzávěrka terminálu byla úspěšně provedena' : 'Chyba při provádění uzávěrky')}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="settings-section-card">
+            <div className="settings-section-header">
+              <div>
+                <h3 className="settings-section-title">
+                  <Smartphone size={19} style={{ color: 'var(--accent-blue)' }} />
+                  <span>Jak funguje ruční režim</span>
+                </h3>
+                <p className="settings-section-desc">
+                  Jednoduché a bezchybné řešení bez nutnosti síťového nastavování.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>1</div>
+                <div>Zákazník zvolí platbu kartou. Pokladna na obrazovce zobrazí přesnou částku k úhradě.</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>2</div>
+                <div>Obsluha zadá tuto částku do libovolného přenosného terminálu (ČSOB, SumUp, myPOS) a přiloží kartu.</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>3</div>
+                <div>Po úspěšném pípnutí terminálu klikne obsluha na pokladně na <strong>Dokončit platbu</strong>.</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

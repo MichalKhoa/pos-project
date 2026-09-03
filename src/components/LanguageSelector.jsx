@@ -40,7 +40,14 @@ function getFlagComponent(code) {
   }
 }
 
-export default function LanguageSelector({ value, onChange, compact = false, style = {}, buttonStyle = {} }) {
+export default function LanguageSelector({
+  value,
+  onChange,
+  variant = 'dropdown',
+  compact = false,
+  style = {},
+  buttonStyle = {}
+}) {
   const { language, setLanguage, languages } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -49,10 +56,9 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
   const currentLang = languages.find(l => l.code === activeLangCode) || languages[0];
 
   const handleSelect = (code) => {
+    setLanguage(code);
     if (onChange) {
       onChange(code);
-    } else {
-      setLanguage(code);
     }
     setIsOpen(false);
   };
@@ -67,6 +73,35 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // 🏁 Full-width segmented bar choice for touchscreen settings
+  if (variant === 'bar') {
+    return (
+      <div className="settings-segmented-group" style={{ width: '100%', ...style }}>
+        {languages.map(l => {
+          const isSelected = l.code === currentLang.code;
+          return (
+            <button
+              key={l.code}
+              type="button"
+              className={`settings-segmented-btn ${isSelected ? 'active' : ''}`}
+              style={{
+                minHeight: '46px',
+                fontSize: '0.92rem',
+                gap: '0.6rem',
+                padding: '0 1rem'
+              }}
+              onClick={() => handleSelect(l.code)}
+            >
+              {getFlagComponent(l.code)}
+              <span>{l.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // 🌐 Compact dropdown pill for navbars and mobile drawer
   return (
     <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block', ...style }}>
       <button
@@ -102,7 +137,7 @@ export default function LanguageSelector({ value, onChange, compact = false, sty
           style={{
             position: 'absolute',
             top: 'calc(100% + 4px)',
-            right: 0,
+            left: 0,
             zIndex: 999,
             minWidth: '190px',
             background: 'var(--bg-card)',

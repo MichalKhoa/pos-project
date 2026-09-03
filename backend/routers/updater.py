@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 import logging
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/update", tags=["System Updater"])
@@ -69,21 +69,26 @@ def get_update_status():
 
 
 @router.post("/apply")
-def apply_system_update():
+def apply_system_update(request: Request):
     """Spawns detached update process and prepares POS services for restart."""
-    script_path = os.path.join(REPO_DIR, "backend", "update_process.bat")
-    
-    if not os.path.exists(script_path):
+    # Security: Restrict remote Wi-Fi callers from terminating and updating POS processes
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost", "testclient"):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Update helper script (update_process.bat) missing."
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Aktualizace systému je zakázána přes vzdálenou síť Wi-Fi/LAN. Povoleno pouze z lokální pokladny."
         )
 
     logger.info("Cashier requested remote system update. Spawning detached updater...")
 
-    # Spawn detached Windows batch process
     try:
         if sys.platform == "win32":
+            script_path = os.path.join(REPO_DIR, "backend", "update_process.bat")
+            if not os.path.exists(script_path):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Update helper script (update_process.bat) missing."
+                )
             subprocess.Popen(
                 f'cmd /c start "" /min "{script_path}"',
                 shell=True,
@@ -91,12 +96,20 @@ def apply_system_update():
                 creationflags=subprocess.CREATE_NEW_CONSOLE
             )
         else:
+            script_path = os.path.join(REPO_DIR, "himmel_pos_update.sh")
+            if not os.path.exists(script_path):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Update helper script (himmel_pos_update.sh) missing."
+                )
             subprocess.Popen(["bash", script_path], cwd=REPO_DIR)
         
         return {
             "status": "UPDATE_INITIATED",
             "message": "Aktualizace byla zahájena. Pokladní systém se restartuje s nejnovější verzí."
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to spawn update script: {e}")
         raise HTTPException(

@@ -28,6 +28,8 @@ netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% equ 0 (
     echo [INFO] Backend is active on port 8000.
 ) else (
+    echo [INFO] Checking database migrations & schema changes...
+    "%PYTHON_EXE%" "%~dp0backend\migrations.py"
     echo [INFO] Starting Backend Server...
     start "VoltFlow POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
     timeout /t 2 /nobreak >nul 2>&1

@@ -34,6 +34,8 @@ cd "$SCRIPT_DIR/backend" || exit 1
 if [ -d "venv" ]; then
     source venv/bin/activate
 fi
+echo "[INFO] Checking database migrations & schema changes..."
+python3 migrations.py
 python3 main.py &
 BACKEND_PID=$!
 

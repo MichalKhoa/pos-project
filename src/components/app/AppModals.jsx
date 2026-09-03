@@ -9,6 +9,7 @@ import ShutdownModal from '../ShutdownModal';
 import LockScreenModal from '../LockScreenModal';
 import ToastUndo from '../ToastUndo';
 import CheckoutFlashBanner from '../CheckoutFlashBanner';
+import UnknownBarcodeModal from '../UnknownBarcodeModal';
 
 export default function AppModals({
   // Discount Modal
@@ -55,6 +56,13 @@ export default function AppModals({
   // Lock Screen Modal
   isAppLocked,
   onUnlockApp,
+
+  // Unknown Barcode Quick-Add Modal
+  unknownBarcode,
+  onCloseUnknownBarcode,
+  categories,
+  itemMultiplier,
+  onSaveAndAddUnknownBarcode,
 
   // Toast & Flash Banners
   undoToast,
@@ -138,6 +146,18 @@ export default function AppModals({
         <ShutdownModal
           pendingCount={pendingSyncCount}
           onClose={() => setShowShutdownModal(false)}
+        />
+      )}
+
+      {/* Unknown Barcode Quick-Add Modal */}
+      {unknownBarcode && (
+        <UnknownBarcodeModal
+          scannedBarcode={unknownBarcode}
+          categories={categories}
+          defaultVat={storeConfig?.defaultVat}
+          itemMultiplier={itemMultiplier}
+          onSaveAndAdd={onSaveAndAddUnknownBarcode}
+          onClose={onCloseUnknownBarcode}
         />
       )}
 

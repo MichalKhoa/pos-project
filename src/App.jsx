@@ -24,8 +24,10 @@ import {
   broadcastCustomerDisplay,
   deleteSaleBackend,
   purgeAllSalesBackend,
-  openCashDrawerBackend
+  openCashDrawerBackend,
+  printDailySummaryBackend
 } from './api/posApi';
+import { formatLocalDate } from './utils/dateUtils';
 import SalesHistoryView from './components/SalesHistoryView';
 import AnalyticsView from './components/AnalyticsView';
 import PresetsCatalogView from './components/PresetsCatalogView';
@@ -51,6 +53,7 @@ export default function App() {
   const [discountModalSelectedItem, setDiscountModalSelectedItem] = useState(null);
   const [historyDateFilter, setHistoryDateFilter] = useState(null);
   const [flashBanner, setFlashBanner] = useState(null);
+  const [unknownBarcode, setUnknownBarcode] = useState(null);
   const [mobilePosTab, setMobilePosTab] = useState('keypad');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
@@ -474,7 +477,20 @@ export default function App() {
     }
   }, [addToCart, itemMultiplier, setItemMultiplier]);
 
-  // Hook for hardware keyboard and numpad listeners
+  const handleSaveAndAddUnknownBarcode = useCallback(async (presetData, qty = 1) => {
+    await handleAddPreset(presetData);
+    handleAddToCart({
+      ...presetData,
+      quantity: qty
+    });
+    setUnknownBarcode(null);
+    setFlashBanner({
+      message: `✓ ${presetData.name} (${presetData.price} Kč)${qty > 1 ? ` ×${qty}` : ''}`,
+      type: 'success'
+    });
+  }, [handleAddPreset, handleAddToCart]);
+
+  // Hook for hardware keyboard, numpad and USB barcode scanner listeners
   usePosKeyboardShortcuts({
     isAppLocked,
     activeTab,
@@ -486,7 +502,15 @@ export default function App() {
     paymentModalMethod,
     setPaymentModalMethod,
     handleAddToCart,
-    storeConfig
+    storeConfig,
+    presets,
+    onUnknownBarcode: (code) => setUnknownBarcode(code),
+    onBarcodeScanned: (preset, qty) => {
+      setFlashBanner({
+        message: `✓ ${preset.name} (${preset.price} Kč)${qty > 1 ? ` ×${qty}` : ''}`,
+        type: 'success'
+      });
+    }
   });
 
   const handleOpenCustomDiscountModal = (item = null) => {
@@ -512,6 +536,57 @@ export default function App() {
       }
     }
   };
+
+  const handlePrintDailySummary = useCallback(async () => {
+    soundFx.playScanChime();
+    const todayStr = formatLocalDate(new Date());
+    const todaySales = salesHistory.filter(sale => {
+      const saleDate = sale.created_at || sale.timestamp || sale.date;
+      return saleDate && formatLocalDate(saleDate) === todayStr;
+    });
+
+    let revenue = 0;
+    let cash = 0;
+    let card = 0;
+
+    for (const s of todaySales) {
+      const total = parseFloat(s.total_amount !== undefined ? s.total_amount : s.total) || 0;
+      revenue += total;
+
+      if (s.cash_amount !== undefined || s.card_amount !== undefined) {
+        cash += parseFloat(s.cash_amount || 0);
+        card += parseFloat(s.card_amount || 0);
+      } else if (s.payment_method === 'cash') {
+        cash += total;
+      } else if (s.payment_method === 'card') {
+        card += total;
+      }
+    }
+
+    const summaryData = {
+      date: todayStr,
+      time: new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
+      totalRevenue: revenue,
+      cashAmount: cash,
+      cardAmount: card,
+      salesCount: todaySales.length
+    };
+
+    const res = await printDailySummaryBackend(summaryData, storeConfig || {}, true);
+    if (res && res.success) {
+      soundFx.playSuccessChime();
+      setFlashBanner({
+        message: `✓ Denní tržba vytištěna (${revenue.toFixed(0)} Kč)`,
+        type: 'success'
+      });
+    } else {
+      soundFx.playErrorChime();
+      setFlashBanner({
+        message: 'Tisk denního přehledu se nezdařil (tiskárna offline)',
+        type: 'error'
+      });
+    }
+  }, [salesHistory, storeConfig]);
 
   // Checkout flow
   const handleOpenPayment = (method) => {
@@ -628,6 +703,7 @@ export default function App() {
         onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
         onLockApp={() => setIsAppLocked(true)}
         onOpenCashDrawer={handleOpenCashDrawer}
+        onPrintDailySummary={handlePrintDailySummary}
       />
 
       {syncNotification && (
@@ -651,6 +727,7 @@ export default function App() {
                   setItemMultiplier={setItemMultiplier}
                   defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
                   onOpenCashDrawer={handleOpenCashDrawer}
+                  onPrintDailySummary={handlePrintDailySummary}
                   onApplyDiscount={handleApplyCartDiscount}
                   parkedCarts={parkedCarts}
                   onParkCart={parkCurrentCart}
@@ -833,6 +910,11 @@ export default function App() {
         setShowShutdownModal={setShowShutdownModal}
         isAppLocked={isAppLocked}
         onUnlockApp={unlockApp}
+        unknownBarcode={unknownBarcode}
+        onCloseUnknownBarcode={() => setUnknownBarcode(null)}
+        categories={categories}
+        itemMultiplier={itemMultiplier}
+        onSaveAndAddUnknownBarcode={handleSaveAndAddUnknownBarcode}
         undoToast={undoToast}
         onUndoLastAction={undoLastAction}
         onDismissUndoToast={dismissUndoToast}

@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { BarChart3, Banknote, CreditCard, Receipt, ArrowRight } from 'lucide-react';
+import { BarChart3, Banknote, CreditCard, Receipt, ArrowRight, Printer } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { formatLocalDate } from '../../utils/dateUtils';
 
 export default function ShiftStatsWidget({
   salesHistory = [],
-  onNavigateToHistory
+  onNavigateToHistory,
+  onPrintDailySummary
 }) {
   const { t } = useTranslation();
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
@@ -170,6 +171,34 @@ export default function ShiftStatsWidget({
           </div>
         </div>
       </div>
+
+      {/* 1-Click Thermal Daily Summary Slip */}
+      {onPrintDailySummary && (
+        <button
+          type="button"
+          onClick={onPrintDailySummary}
+          style={{
+            background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(2, 132, 199, 0.25) 100%)',
+            border: '1px solid rgba(2, 132, 199, 0.4)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.45rem 0.65rem',
+            fontSize: '0.78rem',
+            fontWeight: '800',
+            color: '#38bdf8',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.4rem',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: '0 2px 6px rgba(2, 132, 199, 0.12)'
+          }}
+          title={t('shift_stats.print_summary_tooltip') || 'Vytisknout souhrn dnešních tržeb na pokladní tiskárnu a otevřít zásuvku'}
+        >
+          <Printer size={14} />
+          <span>{t('shift_stats.print_daily_summary') || 'Vytisknout denní tržbu'}</span>
+        </button>
+      )}
 
       {/* Quick History Navigation Link */}
       {onNavigateToHistory && (

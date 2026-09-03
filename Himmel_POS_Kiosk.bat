@@ -25,6 +25,8 @@ if not exist "%~dp0dist\index.html" (
 REM 3. Check if backend is already running on port 8000
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if %errorlevel% neq 0 (
+    echo [INFO] Checking database migrations & schema changes...
+    "%PYTHON_EXE%" "%~dp0backend\migrations.py"
     echo Starting Himmel POS Backend Service...
     start "Himmel POS Backend" /min cmd /c "cd /d "%~dp0backend" && set ENV=production && "%PYTHON_EXE%" main.py"
     timeout /t 2 /nobreak >nul 2>&1

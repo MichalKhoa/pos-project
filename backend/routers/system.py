@@ -4,6 +4,7 @@ import subprocess
 import threading
 import logging
 from fastapi import APIRouter, Request, HTTPException, status
+from pydantic import BaseModel
 from database import DB_PATH
 
 logger = logging.getLogger("pos-system")
@@ -52,12 +53,45 @@ def get_system_backup_status():
 
 
 @router.post("/trigger-backup")
-def trigger_manual_backup():
+def trigger_manual_backup(request: Request):
     """Manual 1-click snapshot trigger from Settings UI."""
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost", "testclient"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Zálohování je povoleno pouze z lokální pokladny (localhost)."
+        )
     from services.backup_service import create_database_backup
     res = create_database_backup()
     if res.get("status") == "ERROR":
         raise HTTPException(status_code=500, detail=res.get("message"))
+    return res
+
+
+class RestoreRequest(BaseModel):
+    filename: str
+
+
+@router.get("/backups")
+def get_available_backups():
+    """Returns sorted list of available database backup ZIP archives."""
+    from services.backup_service import list_backups
+    return list_backups()
+
+
+@router.post("/restore")
+def restore_backup(payload: RestoreRequest, request: Request):
+    """Restores database from a selected ZIP backup archive with safety snapshot."""
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost", "testclient"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Obnova databáze je povolena pouze z lokální pokladny (localhost)."
+        )
+    from services.backup_service import restore_database_from_backup
+    res = restore_database_from_backup(payload.filename)
+    if res.get("status") == "ERROR":
+        raise HTTPException(status_code=400, detail=res.get("message"))
     return res
 
 

@@ -1,7 +1,8 @@
+import os
 import unittest
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 
 from main import app
@@ -60,7 +61,7 @@ class TestBackendHardening(unittest.TestCase):
 
     def test_sales_history_pagination_and_filtering(self):
         """Test GET /api/v1/sales pagination, date filtering, and X-Total-Count header."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         sale_ids = []
         for i in range(5):
             s_id = f"test_sale_{uuid.uuid4().hex[:8]}"
@@ -107,7 +108,7 @@ class TestBackendHardening(unittest.TestCase):
 
     def test_sales_stats_and_search_endpoints(self):
         """Test search, doc_type filter, daily stats and shift stats endpoints."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         today_str = now.strftime("%Y-%m-%d")
         sale_ids = []
         try:
@@ -169,5 +170,75 @@ class TestBackendHardening(unittest.TestCase):
             self.db.commit()
 
 
+    def test_security_sales_deletion_protection(self):
+        """Test that sale deletion requires valid PIN."""
+        test_sale_id = "test-sec-sale-01"
+        s = SaleModel(
+            id=test_sale_id,
+            receipt_number="2026-SEC01",
+            timestamp=datetime.now(timezone.utc),
+            total_amount=100.0,
+            payment_method="cash",
+            tax_summary={"total": 100.0}
+        )
+        self.db.add(s)
+        self.db.commit()
+
+        try:
+            # 1. Without PIN or override -> 401
+            res_no_auth = self.client.delete(f"/api/v1/sales/{test_sale_id}")
+            self.assertEqual(res_no_auth.status_code, 401)
+
+            # 2. With wrong PIN -> 401
+            res_wrong_pin = self.client.delete(f"/api/v1/sales/{test_sale_id}", headers={"X-Admin-PIN": "9999"})
+            self.assertEqual(res_wrong_pin.status_code, 401)
+
+            # 3. With correct default PIN '1234' -> 200
+            res_valid = self.client.delete(f"/api/v1/sales/{test_sale_id}", headers={"X-Admin-PIN": "1234"})
+            self.assertEqual(res_valid.status_code, 200)
+            self.assertEqual(res_valid.json()["status"], "DELETED")
+        finally:
+            self.db.query(SaleModel).filter(SaleModel.id == test_sale_id).delete()
+            self.db.commit()
+
+    def test_security_qr_spd_ignores_client_iban(self):
+        """Test that GET /api/v1/qr/spd generates QR code strictly from DB config and does not crash."""
+        res = self.client.get("/api/v1/qr/spd?amount=150.0&iban=CZ9999999999999999999999")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers["content-type"], "image/png")
+        self.assertGreater(len(res.content), 100)
+
+    def test_security_secret_key_anchored_in_data_dir(self):
+        """Verify SECRET_KEY_FILE is strictly inside backend/data directory."""
+        from services.security_utils import SECRET_KEY_FILE
+        self.assertTrue(SECRET_KEY_FILE.endswith(os.path.join("data", ".secret_key")))
+        self.assertTrue(os.path.isabs(SECRET_KEY_FILE))
+
+    def test_system_backup_list_and_restore(self):
+        """Test backup creation, listing, and restore endpoint."""
+        # 1. Trigger backup
+        res_backup = self.client.post("/api/v1/system/trigger-backup")
+        self.assertEqual(res_backup.status_code, 200)
+        backup_info = res_backup.json()
+        self.assertEqual(backup_info["status"], "SUCCESS")
+        filename = backup_info["filename"]
+
+        # 2. List backups
+        res_list = self.client.get("/api/v1/system/backups")
+        self.assertEqual(res_list.status_code, 200)
+        backups = res_list.json()
+        self.assertTrue(any(b["filename"] == filename for b in backups))
+
+        # 3. Test restore invalid file -> 400
+        res_bad = self.client.post("/api/v1/system/restore", json={"filename": "non_existent.zip"})
+        self.assertEqual(res_bad.status_code, 400)
+
+        # 4. Test restore valid file -> 200
+        res_restore = self.client.post("/api/v1/system/restore", json={"filename": filename})
+        self.assertEqual(res_restore.status_code, 200)
+        self.assertEqual(res_restore.json()["status"], "SUCCESS")
+
+
 if __name__ == "__main__":
     unittest.main()
+

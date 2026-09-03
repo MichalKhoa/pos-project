@@ -14,9 +14,10 @@ echo "[1/5] Stopping active POS services and app instances..."
 "$SCRIPT_DIR/himmel_pos_stop.sh" >/dev/null 2>&1
 
 # 2. Pull latest release changes from GitHub repository
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "master")
 echo ""
-echo "[2/5] Fetching latest release from GitHub (git pull origin master)..."
-git pull origin master
+echo "[2/5] Fetching latest release from GitHub (git pull origin $CURRENT_BRANCH)..."
+git pull origin "$CURRENT_BRANCH"
 if [ $? -ne 0 ]; then
     echo "[WARNING] Git pull failed or offline. Proceeding with local build..."
 fi
@@ -25,11 +26,12 @@ fi
 echo ""
 echo "[3/5] Updating Python packages & auto-migrating database..."
 cd "$SCRIPT_DIR/backend" || exit 1
-if [ -d "venv" ]; then
-    source venv/bin/activate
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
 fi
+source venv/bin/activate
 pip install -r requirements.txt --quiet
-python3 -c "from database import engine, Base; Base.metadata.create_all(bind=engine); print('Database schema OK')"
+python3 migrations.py
 
 # 4. Install npm packages & compile React frontend
 echo ""

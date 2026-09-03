@@ -54,20 +54,22 @@ def generate_spd_qr(
     Generates official Czech Banking Association (ČBA) Short Payment Descriptor (SPD) QR code PNG offline.
     Verifies merchant IBAN directly against server database configuration for maximum security.
     """
-    # Safely extract string parameters
-    target_iban = (iban if isinstance(iban, str) else "").strip()
+    # Safely extract query parameters (client IBAN is ignored for security)
     target_vs = vs if isinstance(vs, str) else ""
     target_ks = ks if isinstance(ks, str) else "0008"
     target_ss = ss if isinstance(ss, str) else ""
     target_msg = msg if isinstance(msg, str) else "Platba VoltFlow POS"
-    target_recipient = recipient if isinstance(recipient, str) else ""
+    target_recipient = recipient.strip() if isinstance(recipient, str) else ""
 
-    if not target_iban or target_iban.startswith("CZ000000"):
-        cfg = db.query(StoreConfigModel).first()
-        if cfg and cfg.bank_account_iban and not cfg.bank_account_iban.startswith("CZ000000"):
-            target_iban = cfg.bank_account_iban.strip()
-        else:
-            target_iban = "CZ6508000000001234567890"
+    # Security: Enforce merchant IBAN strictly from verified database StoreConfigModel (anti-hijacking)
+    cfg = db.query(StoreConfigModel).first()
+    if cfg and cfg.bank_account_iban and cfg.bank_account_iban.strip() and not cfg.bank_account_iban.startswith("CZ000000"):
+        target_iban = cfg.bank_account_iban.strip()
+    else:
+        target_iban = "CZ6508000000001234567890"
+
+    if not target_recipient and cfg and cfg.store_name:
+        target_recipient = cfg.store_name.strip()
 
     from services.qr_bank_service import CzechBankQRPaymentService
     service = CzechBankQRPaymentService(account_iban=target_iban)

@@ -10,13 +10,17 @@ SQLite persistence layer located at `backend/data/pos_store.db`.
 - `StoreConfigModel`: Store details (name, IČO, DIČ, address, `bank_account_iban`), customer display greeting/title (`customer_display_title`), auto-sleep settings (`customer_display_auto_sleep`, `customer_display_standby_delay`), `preset_grid_columns` ('auto', '3', '4', '5', '6'), `preset_density` ('compact', 'standard', 'large'), `preset_button_style` ('left-stripe', 'color-fill'), `show_preset_vat` (non-VAT merchant tile setting), EET config (certificate path, Fernet AES-256 encrypted password, environment, provozovna, pokladna), printer config, security lock config, ČSOB terminal settings.
 - `ReceiptSequenceModel`: Atomic yearly sequence counters (`year`, `last_seq`) ensuring duplicate-safe receipt numbers (`YYYY-XXXXXX`).
 
-## Dynamic Auto-Migration & Self-Healing (`/backend/database.py`)
-- **Dynamic Auto-Migration (`init_db_schema()`)**: Uses `sqlalchemy.inspect(engine)` on startup to compare Python models against physical SQLite tables. Automatically detects and executes `ALTER TABLE {table} ADD COLUMN {col} {type} DEFAULT ...` for any newly added model columns without manual migration lists.
+## Dynamic Auto-Migration & Self-Healing (`/backend/database.py`, `/backend/migrations.py`)
+- **Dynamic Auto-Migration (`run_schema_migrations()`)**: Compares SQLAlchemy `Base.metadata.tables` with physical SQLite `PRAGMA table_info`. Automatically detects and executes `ALTER TABLE {table} ADD COLUMN {col} {type} DEFAULT ...` for any newly added model columns.
+- **Standalone CLI & Script Integration**: `backend/migrations.py` provides `if __name__ == "__main__":` entry point. Executed automatically before starting backend across all Linux (`.sh`) and Windows (`.bat`) launcher and updater scripts.
 - **Directory Security**: Database housed in `backend/data/pos_store.db` with `0o700` restricted directory permissions and legacy DB path auto-migration.
 - **WAL & Concurrency**: Enabled `PRAGMA journal_mode = WAL;`, `PRAGMA foreign_keys = ON;`, `PRAGMA busy_timeout = 15000;`.
 - **Self-Healing**: Startup `PRAGMA quick_check;` and 15-minute periodic `PRAGMA wal_checkpoint(PASSIVE);` daemon.
 - **Atomic Transactions**: `atomic_transaction(db)` context manager wrapping checkout and stock deduction.
-- **Automated Backups**: SQLite online backup API (`sqlite3.Connection.backup()`), ZIP compression, and 30-day auto-purge in `backend/services/backup_service.py`.
+- **Automated Backups & Restore**:
+  - Backup creation via SQLite online backup API (`sqlite3.Connection.backup()`), ZIP compression, and 30-day auto-purge in `backend/services/backup_service.py`.
+  - Backup listing via `GET /api/v1/system/backups` (`list_backups()`).
+  - Safe 1-click restore via `POST /api/v1/system/restore` (`restore_database_from_backup()`) with SQLite `quick_check` integrity verification, connection engine reset, and automatic pre-restore safety snapshot. Restricted to loopback clients.
 
 ## Invariants & Calculations
 - Configuration is loaded directly from SQLite DB on startup (`GET /api/v1/config`) and synchronized to `localStorage`.

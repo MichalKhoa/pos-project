@@ -47,5 +47,29 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertEqual(reorder_res.status_code, 200)
         self.assertEqual(reorder_res.json()["status"], "SUCCESS")
 
+    def test_print_daily_summary_endpoint(self):
+        payload = {
+            "summaryData": {
+                "date": "03.09.2026",
+                "time": "21:00",
+                "totalRevenue": 1500.0,
+                "cashAmount": 1000.0,
+                "cardAmount": 500.0,
+                "salesCount": 10
+            },
+            "storeConfig": {
+                "storeName": "Test Shop",
+                "street": "Testovaci 1",
+                "city": "Praha"
+            },
+            "openDrawer": False
+        }
+        res = self.client.post("/api/v1/printer/print-daily-summary", json=payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data.get("success"))
+        self.assertIn(data.get("status"), ["PRINTED", "SIMULATED"])
+
 if __name__ == "__main__":
     unittest.main()
+

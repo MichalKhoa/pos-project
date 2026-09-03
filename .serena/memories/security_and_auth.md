@@ -17,10 +17,14 @@ Security practices, authentication workflows, cryptographic hashing, and PIN rec
 - Prevents PIN digits from leaking into underlying register inputs (`ManualKeypad.jsx`, `App.jsx`).
 
 ## 🛡️ Encryption, XSS & Transport Safety
-- **Secret Key Handling:** Fernet encryption derives key from `APP_SECRET_KEY` env var or auto-generates persistent 32-byte secret key in `.secret_key`.
+- **Secret Key Handling:** Fernet encryption derives key from `APP_SECRET_KEY` env var or auto-generates persistent 32-byte secret key in `backend/data/.secret_key` (`0o600` permissions), with automatic migration from legacy root paths.
+- **Wi-Fi / LAN Endpoint Hardening:**
+  - `DELETE /api/v1/sales/` and `DELETE /api/v1/sales/{id}`: Strictly restricted to loopback callers (`127.0.0.1`, `::1`); remote Wi-Fi callers are blocked with `403 Forbidden`. Requires `X-Admin-PIN` matching stored hashed PIN.
+  - `GET /api/v1/qr/spd`: Enforces merchant IBAN strictly from `StoreConfigModel` in database. Client-supplied query parameter overrides are disallowed to prevent payment hijacking.
+  - `POST /api/v1/update/apply` & `POST /api/v1/system/shutdown` & `POST /api/v1/system/trigger-backup`: Enforce loopback caller restriction.
+- **CORS Hardening:** Wildcard with credentials eliminated. Uses regex permitting only loopback (`localhost`, `127.0.0.1`) and RFC-1918 private LAN ranges (`192.168.*`, `10.*`, `172.16-31.*`).
 - **XSS Prevention:** `escapeHtml()` helper sanitizes all user-controlled catalog/store/receipt fields before rendering debug HTML print preview windows.
 - **Upload Hardening:** Certificate uploads (`.p12`/`.pfx`) restricted to max 2 MB.
-- **CORS Hardening:** Restricted to explicit HTTP methods and allowed headers.
 
 ## 🔑 PIN Recovery Mechanisms (PUK & Local Script)
 1. **Master Recovery Code (PUK):**

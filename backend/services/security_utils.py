@@ -6,13 +6,34 @@ from datetime import datetime, timezone
 from cryptography.fernet import Fernet
 
 logger = logging.getLogger(__name__)
-SECRET_KEY_FILE = ".secret_key"
+
+# Anchor secret key to protected backend/data directory (anti-CWD-drift)
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DATA_DIR = os.path.join(_BASE_DIR, "data")
+os.makedirs(_DATA_DIR, exist_ok=True)
+SECRET_KEY_FILE = os.path.join(_DATA_DIR, ".secret_key")
 
 
 def _get_fernet_key() -> bytes:
-    """Derive Fernet 32-byte key from APP_SECRET_KEY env var or auto-generated persistent key file."""
+    """Derive Fernet 32-byte key from APP_SECRET_KEY env var or auto-generated persistent key file in backend/data/."""
     secret = os.getenv("APP_SECRET_KEY")
     if not secret:
+        # Auto-migrate from legacy loose locations if present
+        if not os.path.exists(SECRET_KEY_FILE):
+            legacy_candidates = [
+                os.path.join(_BASE_DIR, ".secret_key"),
+                os.path.join(os.path.dirname(_BASE_DIR), ".secret_key"),
+            ]
+            for cand in legacy_candidates:
+                if os.path.exists(cand):
+                    try:
+                        import shutil
+                        shutil.move(cand, SECRET_KEY_FILE)
+                        logger.info(f"Migrated legacy secret key from {cand} to {SECRET_KEY_FILE}")
+                        break
+                    except Exception as e:
+                        logger.warning(f"Could not migrate legacy secret key {cand}: {e}")
+
         if os.path.exists(SECRET_KEY_FILE):
             try:
                 with open(SECRET_KEY_FILE, "r", encoding="utf-8") as f:
