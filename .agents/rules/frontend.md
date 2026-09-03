@@ -48,3 +48,18 @@ This document defines the strict UI/UX, styling, responsiveness, and architectur
 - **Linting**: Code MUST pass `npm run lint` (`oxlint`) with **0 errors and 0 warnings** before finalizing edits.
 - **Build Verification**: Project MUST build cleanly via `npm run build` (`vite build`).
 - **No Orphaned Imports**: Remove unused imports, variables, or props when refactoring.
+
+---
+
+## 6. Sizing, Overlap & Overflow Prevention
+
+- **Container Sizing Discipline**:
+  - In flex child containers, always set `min-width: 0` or `min-height: 0` so child text truncates or wraps cleanly without expanding parent flex bounds.
+  - Apply `text-overflow: ellipsis; overflow: hidden; white-space: nowrap` on variable-length labels and text fields (item names, order IDs, cashier notes).
+- **No Overlapping Elements**:
+  - Never use unchecked `position: absolute` that risks colliding with adjacent content during screen resize or locale changes.
+  - Modals, popups, and dropdown drawers MUST set `max-height: 90dvh` (or `85dvh`) with internal scroll containers (`overflow-y: auto`) and fixed, non-shrinking headers/footers (`flex-shrink: 0`).
+- **Viewport Invariants**:
+  - Ensure the full POS interface remains strictly bounded within `100dvh` without causing unwanted page-level horizontal or vertical scrollbars (`overflow-x: hidden`).
+- **Multi-Language Size Checks**:
+  - Always verify that longer strings in Czech or Vietnamese do not clip, wrap awkwardly, or push essential interactive controls off-screen.

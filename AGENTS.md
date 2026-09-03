@@ -25,6 +25,11 @@ Himmel POS (`pos-eet-himmel`) is a production touchscreen Point of Sale system.
 - **Touch Targets**: Minimum **40px–44px** height for all interactive buttons, chips, and keypad keys.
 - **No Text Wrapping**: All action buttons and chips must enforce `white-space: nowrap` and `flex-shrink: 0`.
 - **Fluid Layout**: Viewport must fit `100dvh` without unwanted horizontal page scrolling (`max-width: 100vw; overflow-x: hidden`).
+- **Sizing, Overlap & Overflow Prevention**:
+  - Always verify component bounds, container sizing, and flex/grid shrink behavior (`min-width: 0` on flex items, `overflow: hidden`, or controlled scroll `overflow-y: auto`).
+  - Prevent text/icon overlaps: enforce explicit spacing (`gap`), truncate long variable labels with `text-overflow: ellipsis`, and avoid unchecked absolute positioning.
+  - Modals and popups MUST enforce bounded `max-height: 90dvh` with scrollable body (`overflow-y: auto`) and non-shrinking headers/footers (`flex-shrink: 0`) to prevent clipping on compact touch monitors (1024x768, 1280x800).
+  - Multi-language length checks: Ensure longer strings in Czech or Vietnamese do not cause text overlaps or push buttons outside visible boundaries.
 
 ### Internationalization (i18n)
 - All user-visible strings MUST use `useTranslation()` (`t('key.path')`).
