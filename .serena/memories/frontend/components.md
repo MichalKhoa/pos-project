@@ -11,9 +11,9 @@ Directory: `/src/components`
   - `src/hooks/useAutoLock.js`: User activity tracking and register auto-lock.
 - `ReceiptModal.jsx`: Thermal and A4 receipt preview and reprint modal. HTML generator: `src/utils/receiptHtmlGenerator.js`.
 - `PresetsCatalogView.jsx`: Tile and category manager with color pickers and icon mappings.
-- `InventoryView.jsx`: Stock management with `useMemo` filters and inventory valuation. Subcomponents in `/src/components/inventory/`:
-  - `InventoryMetricsBar.jsx`: Stock valuation and health KPIs (Healthy/Low/Out of Stock).
-  - `InventoryStockTable.jsx`: Filterable data table with `+5`/`+10` adjustment buttons and barcode input.
+- `InventoryView.jsx`: Stock management with `useMemo` filters, touch preset decoupling (`presetFilter`: all/pinned/unpinned), and inventory valuation (`onTogglePin`). Subcomponents in `/src/components/inventory/`:
+  - `InventoryMetricsBar.jsx`: Stock valuation (retail and purchase cost) and health KPIs (Healthy/Low/Out of Stock).
+  - `InventoryStockTable.jsx`: Filterable data table with 1-tap 📌 pin toggle, preset filter tabs (All/Pinned/Warehouse), `+5`/`+10` adjustment buttons, cost price, and barcode input.
   - `StockKeypadModal.jsx`: Touch numeric pad for fast stock quantity adjustment.
 - `CustomerDisplayView.jsx`: Real-time LCD customer-facing display.
 - `SalesHistoryView.jsx`: Sales ledger for receipt lookup, search, reprint, refunds with 2-pane Master-Detail layout (`useSalesPeriodFilter`). Subcomponents in `/src/components/history/`:

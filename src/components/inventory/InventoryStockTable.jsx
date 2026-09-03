@@ -145,6 +145,8 @@ export default function InventoryStockTable({
 
               const isPinned = preset.showInPresets !== undefined ? !!preset.showInPresets : (preset.show_in_presets !== undefined ? !!preset.show_in_presets : true);
               const cost = preset.costPrice !== undefined ? preset.costPrice : (preset.cost_price !== undefined ? preset.cost_price : 0);
+              const isLow = currentTrack && currentStock <= currentMin;
+              const isOut = currentTrack && currentStock <= 0;
 
               return (
                 <tr key={preset.id} style={{ borderBottom: '1px solid var(--border-color)', background: isOut ? 'rgba(239, 68, 68, 0.05)' : isLow ? 'rgba(245, 158, 11, 0.05)' : 'transparent', transition: 'background 0.15s ease' }}>

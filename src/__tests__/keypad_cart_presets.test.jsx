@@ -5,6 +5,7 @@ import ManualKeypad from '../components/ManualKeypad';
 import QuickPresetGrid from '../components/QuickPresetGrid';
 import Cart from '../components/Cart';
 import ParkedCartsDrawer from '../components/keypad/ParkedCartsDrawer';
+import InventoryStockTable from '../components/inventory/InventoryStockTable.jsx';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { DEFAULT_STORE_CONFIG } from '../data/initialData';
 
@@ -443,4 +444,88 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       expect(onDeleteParkedCart).toHaveBeenCalledWith('hold-1');
     });
   });
+
+  describe('InventoryStockTable', () => {
+    const mockPresets = [
+      {
+        id: 'p-1',
+        name: 'Káva Espresso',
+        category: 'drinks',
+        price: 50,
+        costPrice: 20,
+        trackStock: true,
+        stockQuantity: 15,
+        minStockAlert: 5,
+        barcode: '111111',
+        showInPresets: true
+      },
+      {
+        id: 'p-2',
+        name: 'Croissant',
+        category: 'food',
+        price: 35,
+        costPrice: 15,
+        trackStock: true,
+        stockQuantity: 3,
+        minStockAlert: 5,
+        barcode: '222222',
+        showInPresets: false
+      },
+      {
+        id: 'p-3',
+        name: 'Čaj Bylinkový',
+        category: 'drinks',
+        price: 45,
+        trackStock: true,
+        stockQuantity: 0,
+        minStockAlert: 5,
+        barcode: '333333',
+        showInPresets: true
+      }
+    ];
+
+    it('renders inventory table with healthy, low, and out of stock badges without reference errors', () => {
+      const onTogglePin = vi.fn();
+      wrapWithLanguage(
+        <InventoryStockTable
+          searchTerm=""
+          setSearchTerm={() => {}}
+          selectedCategory="all"
+          setSelectedCategory={() => {}}
+          categories={[{ id: 'drinks', name: 'Nápoje' }, { id: 'food', name: 'Jídlo' }]}
+          showLowStockOnly={false}
+          setShowLowStockOnly={() => {}}
+          presetFilter="all"
+          setPresetFilter={() => {}}
+          onOpenAddModal={() => {}}
+          filteredPresets={mockPresets}
+          editingStock={{}}
+          handleStockChange={() => {}}
+          handleOpenStockKeypad={() => {}}
+          handleQuickAddStock={() => {}}
+          setEditingPresetTarget={() => {}}
+          handleSaveRow={() => {}}
+          isSaving={false}
+          categoryMap={{ drinks: 'Nápoje', food: 'Jídlo' }}
+          onTogglePin={onTogglePin}
+        />
+      );
+
+      // Verify item rows render
+      expect(screen.getByText('Káva Espresso')).toBeInTheDocument();
+      expect(screen.getByText('Croissant')).toBeInTheDocument();
+      expect(screen.getByText('Čaj Bylinkový')).toBeInTheDocument();
+
+      // Verify stock status badges
+      expect(screen.getByText('Skladem')).toBeInTheDocument();
+      expect(screen.getByText('Nízký stav')).toBeInTheDocument();
+      expect(screen.getByText('Vyprodáno')).toBeInTheDocument();
+
+      // Click pin toggle button on unpinned item
+      const unpinnedBtn = screen.getByTitle(/Připnout na pokladnu jako rychlou dlaždici/i);
+      fireEvent.click(unpinnedBtn);
+      expect(onTogglePin).toHaveBeenCalledWith('p-2');
+    });
+  });
 });
+
