@@ -210,22 +210,27 @@ export default function QuickPresetGrid({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
-          {/* Quick Product Search Bar */}
-          <div className="keypad-input-container" style={{ minWidth: '150px', flex: '1 1 180px', maxWidth: '240px', padding: '0 0.6rem', height: '38px', minHeight: '38px', boxSizing: 'border-box' }}>
-            <Search size={14} style={{ color: 'var(--text-muted)', marginRight: '6px', flexShrink: 0 }} />
+          {/* Dedicated Modern Product Search Bar */}
+          <div className="preset-search-bar">
+            <Search size={15} className="preset-search-icon" />
             <input
               type="text"
-              className="keypad-label-input"
+              className="preset-search-input"
               placeholder={t('presets.search')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              style={{ fontSize: '0.82rem', color: 'var(--text-primary)' }}
             />
+            {searchTerm && (
+              <span className="preset-search-badge">
+                {filteredPresets.length}
+              </span>
+            )}
             {searchTerm && (
               <button
                 type="button"
+                className="preset-search-clear"
                 onClick={() => setSearchTerm('')}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                title={t('common.clear') || 'Vymazat'}
               >
                 <X size={12} />
               </button>
@@ -348,6 +353,9 @@ export default function QuickPresetGrid({
         onManageCategories={handleOpenCategoryManager}
         onReorderCategories={onReorderCategories}
       />
+
+      {/* Light Separator between Categories and Presets */}
+      <div className="category-presets-separator" />
 
       {/* Edit Mode Control Bar with Category Management & Drag-to-Delete Trash Dropzone */}
       {isEditMode && (

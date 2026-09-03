@@ -690,6 +690,7 @@ input, textarea, [contenteditable="true"] {
   box-shadow: var(--shadow-card-elevated);
   padding: 0.85rem 1rem;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
