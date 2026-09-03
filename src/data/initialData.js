@@ -142,6 +142,7 @@ export const DEFAULT_STORE_CONFIG = {
   presetGridColumns: 'auto', // Grid density: 'auto', '3', '4', '5', '6' columns
   presetDensity: 'standard', // 'compact', 'standard', 'large'
   presetButtonStyle: 'left-stripe', // 'left-stripe', 'color-fill', 'modern-card', 'modern-glass'
+  cartItemStyle: 'elevated-card', // 'elevated-card', 'divided-row', 'rounded-tile'
   showPresetVat: true, // Show VAT percentage badge on preset buttons
   eetEnabled: true, // EET Ready mode indicator
   defaultLanguage: 'cs'

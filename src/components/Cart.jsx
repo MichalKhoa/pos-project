@@ -66,10 +66,19 @@ export default function Cart({
   onDismissClearedCart = null,
   onOpenCashDrawer = null,
   parkedCartsCount = 0,
-  onOpenParkedModal = null
+  onOpenParkedModal = null,
+  cartItemStyle = 'elevated-card'
 }) {
   const { t } = useTranslation();
   const [selectedItemId, setSelectedItemId] = useState(null);
+
+  const activeCartItemStyle = useMemo(() => {
+    try {
+      return localStorage.getItem('pos_cart_item_style') || cartItemStyle || 'elevated-card';
+    } catch {
+      return cartItemStyle || 'elevated-card';
+    }
+  }, [cartItemStyle]);
 
   const {
     cartDiscountAmount,
@@ -122,23 +131,11 @@ export default function Cart({
           {parkedCartsCount > 0 && (
             <button
               type="button"
-              className="clear-cart-btn"
-              style={{
-                background: 'rgba(59, 130, 246, 0.15)',
-                color: 'var(--accent-blue)',
-                borderColor: 'rgba(59, 130, 246, 0.35)',
-                padding: '0.35rem 0.65rem',
-                fontSize: '0.8rem',
-                fontWeight: '800',
-                whiteSpace: 'nowrap',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.3rem'
-              }}
+              className="clear-cart-btn btn-restore"
               onClick={() => onOpenParkedModal && onOpenParkedModal()}
               title={t('parked_carts.restore_btn_title')}
             >
-              <Clock size={13} style={{ color: 'var(--accent-blue)' }} />
+              <Clock size={13} style={{ flexShrink: 0 }} />
               <span>{t('parked_carts.restore_btn')} ({parkedCartsCount})</span>
             </button>
           )}
@@ -148,34 +145,24 @@ export default function Cart({
               {/* Open Custom Discount Modal for Cart */}
               <button
                 type="button"
-                className="clear-cart-btn"
-                style={{
-                  background: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
-                  color: cartDiscountPercent > 0 ? 'var(--accent-blue)' : 'var(--text-secondary)',
-                  borderColor: cartDiscountPercent > 0 ? 'rgba(37, 99, 235, 0.3)' : 'var(--border-color)',
-                  padding: '0.35rem 0.65rem',
-                  fontSize: '0.8rem',
-                  fontWeight: '800',
-                  whiteSpace: 'nowrap'
-                }}
+                className={`clear-cart-btn ${cartDiscountPercent > 0 ? 'btn-active-discount' : ''}`}
                 onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
                 title={t('cart.discount')}
               >
-                <Percent size={13} />
+                <Percent size={13} style={{ flexShrink: 0 }} />
                 <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount_short')}</span>
               </button>
 
               <button
                 type="button"
-                className="clear-cart-btn"
-                style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                className="clear-cart-btn btn-danger"
                 onClick={() => {
                   setSelectedItemId(null);
                   onClearCart();
                 }}
                 title={t('cart.clear')}
               >
-                <Trash2 size={13} />
+                <Trash2 size={13} style={{ flexShrink: 0 }} />
                 <span>{t('cart.clear')}</span>
               </button>
             </>
@@ -184,7 +171,7 @@ export default function Cart({
       </div>
 
       {/* Cart Items List */}
-      <div className="cart-items-container">
+      <div className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>
         {cartItems.length === 0 ? (
           <div className="empty-cart">
             {clearedCartSnapshot ? (
@@ -215,7 +202,7 @@ export default function Cart({
             return (
               <div
                 key={`${item.id}-${index}`}
-                className={`cart-item-card ${isSelected ? 'is-active' : ''}`}
+                className={`cart-item-card style-${activeCartItemStyle} ${isSelected ? 'is-active' : ''}`}
                 style={{
                   borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined,
                   background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined
@@ -398,12 +385,12 @@ export default function Cart({
             onClick={onOpenCashDrawer}
             title={t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}
             style={{
-              height: '44px',
-              fontSize: '0.86rem',
-              fontWeight: '900',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)',
-              color: '#f59e0b',
-              border: '1.5px solid rgba(245, 158, 11, 0.5)',
+              height: '42px',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              background: 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)',
+              color: 'var(--text-secondary)',
+              border: '1px solid color-mix(in srgb, var(--border-color) 75%, transparent)',
               borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'center',
@@ -411,12 +398,21 @@ export default function Cart({
               gap: '0.5rem',
               width: '100%',
               cursor: 'pointer',
-              boxShadow: '0 3px 12px rgba(245, 158, 11, 0.18)',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
               transition: 'all 0.15s ease',
-              marginTop: '0.35rem'
+              marginTop: '0.2rem',
+              touchAction: 'manipulation'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'color-mix(in srgb, var(--text-primary) 6%, transparent)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)';
+              e.currentTarget.style.color = 'var(--text-secondary)';
             }}
           >
-            <CashDrawerIcon size={18} color="#f59e0b" />
+            <CashDrawerIcon size={17} color="var(--accent-amber)" />
             <span>{t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}</span>
           </button>
         )}

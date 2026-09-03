@@ -785,6 +785,7 @@ export default function App() {
                   onOpenCashDrawer={handleOpenCashDrawer}
                   parkedCartsCount={parkedCarts.length}
                   onOpenParkedModal={() => setIsParkedModalOpen(true)}
+                  cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
                 />
               </div>
             </div>

@@ -366,6 +366,42 @@ export default function LayoutSection({
           </div>
         </div>
 
+        {/* Cart Item Style (Elevated Card vs Divided List vs Rounded Tile) */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.cart_item_style_label') || 'Vzhled položek v košíku'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {t('settings.cart_item_style_desc') || 'Vyberte vizuální styl a strukturu položek v košíku.'}
+            </span>
+          </div>
+
+          <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
+            {[
+              { id: 'elevated-card', label: '▍ ' + (t('settings.cart_item_style_elevated_card') || 'Moderní karta') },
+              { id: 'divided-row', label: '☰ ' + (t('settings.cart_item_style_divided_row') || 'Dělený seznam') },
+              { id: 'rounded-tile', label: '▢ ' + (t('settings.cart_item_style_rounded_tile') || 'Zaoblená dlaždice') }
+            ].map(st => (
+              <button
+                key={st.id}
+                type="button"
+                className={`settings-segmented-btn ${(config.cartItemStyle || 'elevated-card') === st.id ? 'active' : ''}`}
+                onClick={() => {
+                  handleUpdate({ cartItemStyle: st.id });
+                  try {
+                    localStorage.setItem('pos_cart_item_style', st.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                }}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* High-Legibility Mode */}
         <div className="settings-toggle-row">
           <div className="settings-toggle-label-wrap">
