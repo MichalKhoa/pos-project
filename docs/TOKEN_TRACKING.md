@@ -6,11 +6,16 @@ This guide documents the token tracking system for **Himmel POS**, including ins
 
 ## 1. Quick Architecture Overview
 
-- **Source of Data**: Antigravity agent transcripts stored locally in `~/.gemini/antigravity-cli/brain/` (Linux/macOS) or `%USERPROFILE%\.gemini\antigravity-cli\brain\` (Windows).
+- **Source of Data**: Antigravity agent transcripts stored locally in:
+  - **Linux / macOS**: `~/.gemini/antigravity-cli/brain/`
+  - **Windows**: `%USERPROFILE%\.gemini\antigravity\brain\` (and `conversations\*.db`)
+- **Scripts**:
+  - **Linux / macOS**: `python3 scripts/token_tracker.py <command>`
+  - **Windows**: `python scripts/token_tracker_win.py <command>` (or `scripts\token_tracker_win.bat <command>`)
 - **Commit Storage**: Attached to Git commit hashes via **Git Notes** (`refs/notes/tokens`).
   - Does *not* change commit hashes or dirty the git working tree.
   - Can be pushed/fetched across devices via git remote.
-- **Hook**: `.git/hooks/post-commit` automatically runs `scripts/token_tracker.py commit HEAD` on every commit.
+- **Hook**: `.git/hooks/post-commit` automatically records token metadata on every commit.
 
 ---
 
@@ -19,11 +24,14 @@ This guide documents the token tracking system for **Himmel POS**, including ins
 If you are an agent on a new or secondary machine working on this repository, run the following setup:
 
 ### Step 1: Install Post-Commit Hook
+For cross-platform compatibility (Linux, macOS, and Windows Git Bash):
 ```bash
 cat << 'HOOK_EOF' > .git/hooks/post-commit
 #!/usr/bin/env bash
-if [ -f "scripts/token_tracker.py" ]; then
-    python3 scripts/token_tracker.py commit HEAD
+if [ -f "scripts/token_tracker_win.py" ] && [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    python scripts/token_tracker_win.py commit HEAD
+elif [ -f "scripts/token_tracker.py" ]; then
+    python3 scripts/token_tracker.py commit HEAD || python scripts/token_tracker.py commit HEAD
 fi
 HOOK_EOF
 chmod +x .git/hooks/post-commit
