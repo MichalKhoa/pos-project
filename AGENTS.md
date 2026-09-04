@@ -35,10 +35,11 @@ Himmel POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 - User-visible text MUST use `useTranslation()` (`t('key.path')`).
 - Add all new strings across 3 languages in `src/i18n/translations.js`: `cs` (Czech), `vi` (Vietnamese), `en` (English).
 
-### Implementation Planning Discipline
-- **Mandatory Plan**: Create `implementation_plan.md` before multi-file/feature changes.
+### Implementation Planning Discipline & Anti-Looping
+- **Mandatory Plan & Intent Verification**: Create `implementation_plan.md` before multi-file/feature changes. Always stop and obtain explicit user plan approval to verify user intent before making code edits.
 - **Phased Subtasks**: Partition complex tasks into sequential numbered phases (Phase 1, 2, 3...).
-- **User Approval**: Get explicit user plan approval before code edits.
+- **Anti-Looping Circuit Breaker (Rule of Two)**: If any test, build, lint, or run fails **twice** with the same or related error, **STOP IMMEDIATELY**. Do not guess or attempt a 3rd speculative fix. Report the failure and ask for user clarification.
+- **Tool Burst Cap**: Never exceed 8 continuous tool operations without reporting progress and verifying intent.
 - **Autonomous Exception**: Serena memory updates (`.serena/memories/`), Codegraph queries/indexing, and requested git commit/push require NO approval or planning gates.
 - **Follow-Ups & Next Plans**: End every task/phase with targeted questions and 2–3 structured next plan options.
 
