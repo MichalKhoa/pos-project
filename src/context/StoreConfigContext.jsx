@@ -43,21 +43,34 @@ export function StoreConfigProvider({ children }) {
     document.documentElement.setAttribute('data-button-animation', animMode);
   }, [storeConfig?.buttonAnimationMode]);
 
-  // Sync with SQLite backend on initial mount
+  // Sync with SQLite backend on initial mount with retry loop for cold-start
   useEffect(() => {
     let isMounted = true;
-    fetchStoreConfigBackend()
-      .then((cfg) => {
-        if (isMounted && cfg && typeof cfg === 'object') {
-          setStoreConfig((prev) => ({ ...prev, ...cfg }));
-          setStorageItem('config', cfg);
-        }
-      })
-      .catch(() => {
-        // offline fallback
-      });
+    let attempts = 0;
+    const maxAttempts = 25; // 25 * 600ms = 15 seconds cold-start polling
+    let timerId = null;
+
+    const attemptSync = () => {
+      fetchStoreConfigBackend()
+        .then((cfg) => {
+          if (isMounted && cfg && typeof cfg === 'object') {
+            setStoreConfig((prev) => ({ ...prev, ...cfg }));
+            setStorageItem('config', cfg);
+          }
+        })
+        .catch(() => {
+          if (isMounted && attempts < maxAttempts) {
+            attempts += 1;
+            timerId = setTimeout(attemptSync, 600);
+          }
+        });
+    };
+
+    attemptSync();
+
     return () => {
       isMounted = false;
+      if (timerId) clearTimeout(timerId);
     };
   }, []);
 

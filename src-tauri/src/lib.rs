@@ -49,7 +49,16 @@ fn spawn_sidecar(app: &AppHandle, state: &AppState) -> Result<(), String> {
 fn kill_sidecar(state: &AppState) {
     if let Ok(mut lock) = state.child_process.lock() {
         if let Some(child) = lock.take() {
-            log::info!("Terminating pos-backend sidecar (PID: {})...", child.pid());
+            let pid = child.pid();
+            log::info!("Terminating pos-backend sidecar (PID: {})...", pid);
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                let _ = std::process::Command::new("taskkill")
+                    .args(["/F", "/T", "/PID", &pid.to_string()])
+                    .creation_flags(0x08000000) // CREATE_NO_WINDOW
+                    .output();
+            }
             let _ = child.kill();
         }
     }

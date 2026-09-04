@@ -42,6 +42,15 @@
     ],
     "externalBin": [
       "binaries/pos-backend"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "languages": [
+          "en-US",
+          "cs-CZ"
+        ],
+        "displayLanguageSelector": false
+      }
+    }
   }
 }

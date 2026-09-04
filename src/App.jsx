@@ -18,6 +18,7 @@ import { DEFAULT_STORE_CONFIG } from './data/initialData';
 import {
   createSaleBackend,
   fetchSalesHistoryBackend,
+  fetchBackendRoot,
   normalizeSale,
   updateSaleRefundStatusBackend,
   fetchStoreConfigBackend,
@@ -386,6 +387,28 @@ export default function App() {
 
     reloadBackendData(true);
 
+    // Cold-start readiness polling: probe backend until online to sync sales and config
+    let probeAttempts = 0;
+    const maxProbeAttempts = 25; // 25 * 600ms = 15s max polling
+    let probeTimer = null;
+
+    const probeBackendOnline = () => {
+      fetchBackendRoot().then((status) => {
+        if (status && status.online) {
+          reloadBackendData(true);
+        } else if (probeAttempts < maxProbeAttempts) {
+          probeAttempts += 1;
+          probeTimer = setTimeout(probeBackendOnline, 600);
+        }
+      }).catch(() => {
+        if (probeAttempts < maxProbeAttempts) {
+          probeAttempts += 1;
+          probeTimer = setTimeout(probeBackendOnline, 600);
+        }
+      });
+    };
+    probeTimer = setTimeout(probeBackendOnline, 600);
+
     const handleStorageChange = (e) => {
       if (!e.key || !e.newValue) return;
       try {
@@ -413,6 +436,7 @@ export default function App() {
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      if (probeTimer) clearTimeout(probeTimer);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };

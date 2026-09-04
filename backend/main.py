@@ -1,5 +1,12 @@
 import os
+import sys
 import logging
+
+# Ensure stdout and stderr exist in PyInstaller windowless (console=False) mode
+if getattr(sys, "stdout", None) is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if getattr(sys, "stderr", None) is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
 
 # Load environment variables from .env if present
 def _load_env_file():
@@ -205,7 +212,8 @@ async def serve_spa(full_path: str):
 if __name__ == "__main__":
     import os
     import uvicorn
-    host = os.getenv("HOST", "0.0.0.0")
+    default_host = "127.0.0.1" if IS_FROZEN else "0.0.0.0"
+    host = os.getenv("HOST", default_host)
     port = int(os.getenv("PORT", 8000))
     is_dev = os.getenv("ENV", "production").lower() == "development"
     backend_dir = os.path.dirname(os.path.abspath(__file__))
