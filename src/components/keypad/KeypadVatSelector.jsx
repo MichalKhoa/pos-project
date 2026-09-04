@@ -13,7 +13,7 @@ export default function KeypadVatSelector({
           type="button"
           className={`vat-btn vat-${rate} ${selectedVat === rate ? 'active' : ''} ${activeKey === `VAT_${rate}` ? 'active-press' : ''}`}
           onClick={() => setSelectedVat(rate)}
-          style={{ flex: 1, height: '28px' }}
+          style={{ flex: 1, height: '40px' }}
         >
           DPH {rate}%
         </button>

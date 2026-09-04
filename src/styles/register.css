@@ -7,7 +7,7 @@
 }
 
 .section-title {
-  font-size: 1rem;
+  font-size: 1.12rem;
   font-weight: 800;
   color: var(--text-primary);
   display: flex;
@@ -64,7 +64,7 @@
   border: none;
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 500;
   outline: none;
   padding: 0 0.25rem;
@@ -77,7 +77,7 @@
 }
 
 .preset-search-badge {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--accent-blue);
   background: color-mix(in srgb, var(--accent-blue) 14%, transparent);
@@ -136,7 +136,7 @@
   height: 44px;
   min-height: 44px;
   padding: 0 1.25rem;
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 700;
   white-space: nowrap;
   background: var(--bg-main);
@@ -285,7 +285,7 @@
   padding: 0.4rem 0.55rem 0.35rem 0.55rem;
 }
 .preset-grid.density-compact .preset-name {
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   line-height: 1.15;
 }
 .preset-grid.density-compact .preset-corner-icon svg {
@@ -293,10 +293,10 @@
   height: 14px;
 }
 .preset-grid.density-compact .preset-price {
-  font-size: 0.92rem;
+  font-size: 1.05rem;
 }
 .preset-grid.density-compact .preset-vat-text {
-  font-size: 0.65rem;
+  font-size: 0.78rem;
 }
 
 .preset-grid.density-standard {
@@ -317,17 +317,17 @@
   padding: 0.75rem 0.85rem;
 }
 .preset-grid.density-large .preset-name {
-  font-size: 1.16rem;
+  font-size: 1.28rem;
 }
 .preset-grid.density-large .preset-corner-icon svg {
   width: 22px;
   height: 22px;
 }
 .preset-grid.density-large .preset-price {
-  font-size: 1.18rem;
+  font-size: 1.32rem;
 }
 .preset-grid.density-large .preset-vat-text {
-  font-size: 0.78rem;
+  font-size: 0.9rem;
 }
 
 /* Simple Matte Preset Cards (No Top Stripe, 4 In-App Switchable Styles) */
@@ -446,7 +446,7 @@
   letter-spacing: -0.01em;
 }
 .preset-card.style-modern-card .preset-vat-text {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
   background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, transparent);
@@ -490,7 +490,7 @@
   color: var(--text-primary);
 }
 .preset-card.style-modern-glass .preset-vat-text {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
   background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 15%, transparent);
@@ -518,7 +518,7 @@
   right: 5px;
   background: #d97706;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.86rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 5px;
@@ -538,7 +538,7 @@
 }
 
 .preset-name {
-  font-size: 0.98rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.22;
@@ -590,7 +590,7 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--accent-amber);
   white-space: nowrap;
@@ -608,7 +608,7 @@
   border: 1.5px dashed rgba(244, 63, 94, 0.45);
   background: rgba(244, 63, 94, 0.06);
   color: #fda4af;
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 700;
   white-space: nowrap;
   cursor: default;
@@ -672,7 +672,7 @@
   color: #e9d5ff;
   border: 1px solid rgba(168, 85, 247, 0.4);
   border-radius: var(--radius-sm);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
@@ -698,7 +698,7 @@
   color: #000000;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
@@ -723,7 +723,7 @@
 
 .preset-price {
   font-family: var(--font-mono);
-  font-size: 1.02rem;
+  font-size: 1.16rem;
   font-weight: 800;
   color: var(--accent-emerald);
   line-height: 1.15;
@@ -731,7 +731,7 @@
 
 /* Seamless Bottom-Right Corner VAT Text (Subtle, No Box/Pill Wrapper) */
 .preset-vat-text {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
   opacity: 0.75;
@@ -779,7 +779,7 @@
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   width: 100%;
 }
 
@@ -791,7 +791,7 @@ select.input-field {
   border-radius: var(--radius-md);
   padding: 0 0.85rem;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 1.02rem;
   outline: none;
   transition: all 0.15s ease;
   box-sizing: border-box;
@@ -814,7 +814,7 @@ select.input-field:focus {
 
 .keypad-amount-display {
   font-family: var(--font-mono);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: var(--accent-emerald);
   background: var(--bg-input);
@@ -846,7 +846,7 @@ select.input-field:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.5rem;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -880,7 +880,7 @@ select.input-field:focus {
 }
 
 .quick-amounts-label {
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-muted);
   display: flex;
@@ -901,7 +901,7 @@ select.input-field:focus {
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -930,7 +930,7 @@ select.input-field:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
   transition: background-color 0.05s ease, border-color 0.05s ease;
@@ -993,7 +993,7 @@ select.input-field:focus {
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 1.05rem;
+  font-size: 1.18rem;
   font-weight: 900;
   user-select: none;
   cursor: default;
@@ -1025,7 +1025,7 @@ select.input-field:focus {
   width: 100%;
   min-height: 58px;
   height: 100%;
-  font-size: 1.55rem;
+  font-size: 1.75rem;
   font-weight: 900;
   font-family: var(--font-mono);
   background: var(--bg-card);
@@ -1106,7 +1106,7 @@ select.input-field:focus {
   color: var(--text-muted);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  font-size: 1.1rem;
+  font-size: 1.22rem;
   font-weight: 800;
   gap: 0.6rem;
   cursor: not-allowed;
@@ -1163,7 +1163,7 @@ select.input-field:focus {
 }
 
 .cart-title {
-  font-size: 1.1rem;
+  font-size: 1.22rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -1172,7 +1172,7 @@ select.input-field:focus {
 }
 
 .clear-cart-btn {
-  font-size: 0.84rem;
+  font-size: 0.94rem;
   font-weight: 800;
   color: var(--text-secondary);
   background: color-mix(in srgb, var(--text-primary) 3%, transparent);
@@ -1261,7 +1261,7 @@ select.input-field:focus {
   background: var(--accent-blue);
   color: #ffffff;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.84rem;
   font-weight: 800;
   padding: 0.15rem 0.55rem;
   display: inline-flex;
@@ -1413,7 +1413,7 @@ select.input-field:focus {
 }
 
 .cart-item-name-text {
-  font-size: 0.92rem;
+  font-size: 1.06rem;
   font-weight: 800;
   color: var(--text-primary);
   white-space: nowrap;
@@ -1488,7 +1488,7 @@ select.input-field:focus {
 
 .cart-stepper-num {
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 1.14rem;
   font-weight: 900;
   color: var(--text-primary);
   padding: 0 0.65rem;
@@ -1541,7 +1541,7 @@ select.input-field:focus {
 }
 
 .cart-item-unit-details {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   color: var(--text-muted);
   font-weight: 600;
   display: flex;
@@ -1558,13 +1558,13 @@ select.input-field:focus {
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 4px;
   padding: 1px 5px;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 800;
 }
 
 .cart-item-line-total-price {
   font-family: var(--font-mono);
-  font-size: 1.05rem;
+  font-size: 1.18rem;
   font-weight: 800;
   color: var(--accent-emerald);
   text-align: right;
@@ -1589,7 +1589,7 @@ select.input-field:focus {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1608,7 +1608,7 @@ select.input-field:focus {
   border: none;
   border-radius: var(--radius-sm);
   padding: 0.3rem 0.6rem;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1657,7 +1657,7 @@ select.input-field:focus {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.96rem;
   color: var(--text-secondary);
   min-width: 0;
 }
@@ -1688,7 +1688,7 @@ select.input-field:focus {
 }
 
 .total-hero-title {
-  font-size: 0.76rem;
+  font-size: 0.88rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1700,14 +1700,14 @@ select.input-field:focus {
 }
 
 .total-items-badge {
-  font-size: 0.74rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
 }
 
 .total-hero-amount {
   font-family: var(--font-mono);
-  font-size: 1.6rem;
+  font-size: 1.9rem;
   font-weight: 900;
   color: var(--accent-emerald);
   letter-spacing: -0.02em;
@@ -1734,7 +1734,7 @@ select.input-field:focus {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 1rem;
+  font-size: 1.14rem;
   font-weight: 900;
   border-radius: var(--radius-md);
   border: none;
@@ -1804,7 +1804,7 @@ select.input-field:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 1.02rem;
   font-weight: 700;
   cursor: pointer;
   transition: background-color 0.05s ease, border-color 0.05s ease;
@@ -1877,7 +1877,7 @@ select.input-field:focus {
 }
 
 .inspector-title {
-  font-size: 0.95rem;
+  font-size: 1.08rem;
   font-weight: 800;
   color: var(--text-primary);
   white-space: nowrap;
@@ -1886,7 +1886,7 @@ select.input-field:focus {
 }
 
 .inspector-subtitle {
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-weight: 700;
@@ -1926,7 +1926,7 @@ select.input-field:focus {
 }
 
 .inspector-section-label {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1948,7 +1948,7 @@ select.input-field:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -1994,7 +1994,7 @@ select.input-field:focus {
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 4px;
   padding: 1px 5px;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 600;
   max-width: 100%;
   overflow: hidden;

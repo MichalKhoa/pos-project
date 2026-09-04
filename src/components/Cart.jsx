@@ -186,7 +186,7 @@ function Cart({
                   <ShoppingCart size={28} />
                 </div>
                 <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{t('cart.empty')}</div>
-                <div style={{ fontSize: '0.8rem' }}>{t('cart.empty_sub')}</div>
+                <div style={{ fontSize: '0.92rem' }}>{t('cart.empty_sub')}</div>
               </>
             )}
           </div>
@@ -215,7 +215,7 @@ function Cart({
                   <div className="cart-item-name-group" style={{ flexWrap: 'wrap' }}>
                     <span className="cart-item-name-text">
                       {isItemReturn && (
-                        <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '900', marginRight: '5px' }}>
+                        <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.84rem', fontWeight: '900', marginRight: '5px' }}>
                           ↩️ VRATKA
                         </span>
                       )}

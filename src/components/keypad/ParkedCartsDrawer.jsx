@@ -70,7 +70,7 @@ export default function ParkedCartsDrawer({
         className="pos-card-box keypad-parked-box hold-cart-card-standalone"
       >
         <div style={{
-          fontSize: '0.7rem',
+          fontSize: '0.82rem',
           fontWeight: '800',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
@@ -92,7 +92,7 @@ export default function ParkedCartsDrawer({
             onClick={() => onParkCart && onParkCart()}
             style={{
               height: '42px',
-              fontSize: '0.84rem',
+              fontSize: '0.94rem',
               fontWeight: '800',
               background: hasCartItems
                 ? 'color-mix(in srgb, var(--accent-amber) 16%, transparent)'
@@ -125,7 +125,7 @@ export default function ParkedCartsDrawer({
             onClick={() => setModalOpen(true)}
             style={{
               height: '42px',
-              fontSize: '0.84rem',
+              fontSize: '0.94rem',
               fontWeight: '800',
               background: parkedCarts.length > 0
                 ? 'var(--accent-blue)'

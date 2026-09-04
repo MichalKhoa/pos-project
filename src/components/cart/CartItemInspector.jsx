@@ -154,7 +154,7 @@ export default function CartItemInspector({
                     width: '50px',
                     border: 'none',
                     background: 'transparent',
-                    fontSize: '1.05rem',
+                    fontSize: '1.16rem',
                     textAlign: 'center',
                     outline: 'none'
                   }}
@@ -225,7 +225,7 @@ export default function CartItemInspector({
                     height: '38px',
                     padding: '0 0.35rem',
                     textAlign: 'center',
-                    fontSize: '0.85rem',
+                    fontSize: '0.95rem',
                     fontWeight: '800',
                     fontFamily: 'var(--font-mono)'
                   }}
@@ -255,10 +255,10 @@ export default function CartItemInspector({
                   height: '38px',
                   fontFamily: 'var(--font-mono)',
                   fontWeight: '800',
-                  fontSize: '0.95rem'
+                  fontSize: '1.05rem'
                 }}
               />
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-muted)' }}>
                 Kč
               </span>
             </div>
@@ -277,7 +277,7 @@ export default function CartItemInspector({
               placeholder={t('inspector.note_placeholder') || 'např. Bez ledu, S sebou...'}
               value={noteText}
               onChange={(e) => handleNoteChange(e.target.value)}
-              style={{ height: '38px', fontSize: '0.85rem' }}
+              style={{ height: '38px', fontSize: '0.95rem' }}
             />
           </div>
 
@@ -292,12 +292,12 @@ export default function CartItemInspector({
             alignItems: 'center',
             marginTop: 'auto'
           }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-muted)' }}>
               Celkem za položku:
             </span>
             <span style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '1.15rem',
+              fontSize: '1.25rem',
               fontWeight: '900',
               color: 'var(--accent-emerald)'
             }}>
@@ -315,7 +315,7 @@ export default function CartItemInspector({
               width: '100%',
               height: '42px',
               justifyContent: 'center',
-              fontSize: '0.88rem',
+              fontSize: '0.96rem',
               fontWeight: '800',
               gap: '0.5rem'
             }}

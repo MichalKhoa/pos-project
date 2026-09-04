@@ -75,7 +75,7 @@ function ShiftStatsWidget({
         {/* Left: Title & Receipts Count */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
           <div style={{
-            fontSize: '0.78rem',
+            fontSize: '0.88rem',
             fontWeight: '900',
             color: 'var(--text-primary)',
             display: 'flex',
@@ -87,7 +87,7 @@ function ShiftStatsWidget({
           </div>
 
           <span style={{
-            fontSize: '0.72rem',
+            fontSize: '0.82rem',
             fontWeight: '800',
             color: 'var(--accent-blue)',
             background: 'rgba(59, 130, 246, 0.1)',
@@ -102,11 +102,11 @@ function ShiftStatsWidget({
         {/* Center: Total Revenue & Cash / Card Split */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.80rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               {t('shift_stats.revenue_short') || 'Tržba:'}
             </span>
             <span style={{
-              fontSize: '1.05rem',
+              fontSize: '1.16rem',
               fontWeight: '900',
               fontFamily: 'var(--font-mono)',
               color: 'var(--accent-emerald)'
@@ -115,7 +115,7 @@ function ShiftStatsWidget({
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.86rem', fontFamily: 'var(--font-mono)' }}>
             <span style={{
               display: 'flex',
               alignItems: 'center',
@@ -160,7 +160,7 @@ function ShiftStatsWidget({
                 height: '32px',
                 minHeight: '32px',
                 aspectRatio: 'auto',
-                fontSize: '0.75rem',
+                fontSize: '0.84rem',
                 fontWeight: '800',
                 display: 'flex',
                 alignItems: 'center',
@@ -207,7 +207,7 @@ function ShiftStatsWidget({
         title={isExpanded ? 'Sbalit přehled směny' : 'Rozbalit přehled směny'}
       >
         <div style={{
-          fontSize: '0.7rem',
+          fontSize: '0.82rem',
           fontWeight: '800',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
@@ -223,7 +223,7 @@ function ShiftStatsWidget({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           {!isExpanded && (
             <span style={{
-              fontSize: '0.78rem',
+              fontSize: '0.90rem',
               fontWeight: '900',
               fontFamily: 'var(--font-mono)',
               color: 'var(--accent-emerald)',
@@ -234,7 +234,7 @@ function ShiftStatsWidget({
           )}
 
           <span style={{
-            fontSize: '0.72rem',
+            fontSize: '0.82rem',
             fontWeight: '800',
             color: 'var(--accent-blue)',
             background: 'rgba(59, 130, 246, 0.1)',
@@ -269,11 +269,11 @@ function ShiftStatsWidget({
           padding: '0.5rem 0.65rem',
           gridColumn: 'span 2'
         }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.80rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
             {t('shift_stats.today_revenue') || 'Dnešní tržba celkem'}
           </div>
           <div style={{
-            fontSize: '1.25rem',
+            fontSize: '1.38rem',
             fontWeight: '900',
             fontFamily: 'var(--font-mono)',
             color: 'var(--accent-emerald)',
@@ -290,12 +290,12 @@ function ShiftStatsWidget({
           borderRadius: '10px',
           padding: '0.45rem 0.65rem'
         }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: '800', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <div style={{ fontSize: '0.80rem', fontWeight: '800', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <Banknote size={12} />
             <span>{t('shift_stats.cash') || 'Hotovost'}</span>
           </div>
           <div style={{
-            fontSize: '0.92rem',
+            fontSize: '1.02rem',
             fontWeight: '900',
             fontFamily: 'var(--font-mono)',
             color: 'var(--text-primary)',
@@ -312,12 +312,12 @@ function ShiftStatsWidget({
           borderRadius: '10px',
           padding: '0.45rem 0.65rem'
         }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: '800', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <div style={{ fontSize: '0.80rem', fontWeight: '800', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '3px' }}>
             <CreditCard size={12} />
             <span>{t('shift_stats.card') || 'Kartou'}</span>
           </div>
           <div style={{
-            fontSize: '0.92rem',
+            fontSize: '1.02rem',
             fontWeight: '900',
             fontFamily: 'var(--font-mono)',
             color: 'var(--text-primary)',
@@ -338,7 +338,7 @@ function ShiftStatsWidget({
             border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
             borderRadius: 'var(--radius-sm)',
             padding: '0.35rem 0.55rem',
-            fontSize: '0.74rem',
+            fontSize: '0.84rem',
             fontWeight: '800',
             color: 'var(--accent-blue)',
             display: 'flex',

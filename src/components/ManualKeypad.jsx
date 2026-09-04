@@ -134,14 +134,14 @@ export default function ManualKeypad({
           display: 'flex',
           alignItems: 'center',
           gap: '0.45rem',
-          height: '36px',
+          height: '40px',
           padding: '0 0.65rem',
           flexShrink: 0,
           background: 'var(--bg-main)',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)'
         }}>
-          <Calculator size={15} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
+          <Calculator size={16} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
           <input
             type="text"
             className="keypad-label-input"
@@ -155,7 +155,7 @@ export default function ManualKeypad({
               }
             }}
             style={{
-              fontSize: '0.85rem',
+              fontSize: '1.02rem',
               border: 'none',
               outline: 'none',
               background: 'transparent',
@@ -191,7 +191,7 @@ export default function ManualKeypad({
           {/* Header row: mode indicator & multiplier pill */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{
-              fontSize: '0.64rem',
+              fontSize: '0.80rem',
               fontWeight: '800',
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
@@ -204,7 +204,7 @@ export default function ManualKeypad({
 
             {itemMultiplier !== 1 && (
               <span style={{
-                fontSize: '0.64rem',
+                fontSize: '0.80rem',
                 fontWeight: '800',
                 color: 'var(--accent-amber)',
                 background: 'rgba(245,158,11,0.12)',
@@ -225,7 +225,7 @@ export default function ManualKeypad({
             marginTop: '1px'
           }}>
             <div style={{
-              fontSize: itemMultiplier !== 1 ? '1.25rem' : '1.5rem',
+              fontSize: itemMultiplier !== 1 ? '1.45rem' : '1.75rem',
               fontWeight: '900',
               fontFamily: 'var(--font-mono)',
               color: isReturn
@@ -282,7 +282,7 @@ export default function ManualKeypad({
           {/* Subtotal line */}
           {itemMultiplier !== 1 && hasValidAmount && (
             <div style={{
-              fontSize: '0.82rem',
+              fontSize: '0.95rem',
               fontWeight: '800',
               fontFamily: 'var(--font-mono)',
               color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
