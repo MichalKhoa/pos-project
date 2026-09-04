@@ -4,11 +4,25 @@ import sqlite3
 import zipfile
 import logging
 from datetime import datetime, timedelta
+import shutil
 from database import DB_PATH, BASE_DIR
+from paths import DATA_DIR
 
 logger = logging.getLogger("pos-backup-service")
-BACKUPS_DIR = os.path.join(BASE_DIR, "backups")
+BACKUPS_DIR = os.getenv("POS_BACKUPS_DIR") or os.path.join(DATA_DIR, "backups")
 os.makedirs(BACKUPS_DIR, exist_ok=True)
+
+# Auto-migrate legacy backups if stored in BASE_DIR
+legacy_backups_dir = os.path.join(BASE_DIR, "backups")
+if os.path.exists(legacy_backups_dir) and os.path.abspath(legacy_backups_dir) != os.path.abspath(BACKUPS_DIR):
+    for legacy_f in glob.glob(os.path.join(legacy_backups_dir, "pos_backup_*.zip")):
+        try:
+            dest_f = os.path.join(BACKUPS_DIR, os.path.basename(legacy_f))
+            if not os.path.exists(dest_f):
+                shutil.move(legacy_f, dest_f)
+                logger.info(f"Migrated legacy backup archive: {os.path.basename(legacy_f)}")
+        except Exception:
+            pass
 
 
 def create_database_backup() -> dict:

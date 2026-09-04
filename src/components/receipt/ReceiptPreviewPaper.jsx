@@ -70,14 +70,16 @@ export default function ReceiptPreviewPaper({
   // Live QR Code Generation
   const qrCodeDataUrl = useMemo(() => {
     if (qrType === 'spayd') {
-      const cleanIban = (storeConfig?.bankAccountIban || 'CZ6508000000001234567890').replace(/\s/g, '').toUpperCase();
-      const spaydPayload = `SPD*1.0*ACC:${cleanIban}*AM:${(saleData.totalAmount || 0).toFixed(2)}*CC:CZK*X-VS:${saleData.receiptNumber || '1'}*MSG:Himmel POS`;
+      const cleanIban = (storeConfig?.bankAccountIban || '').replace(/\s/g, '').toUpperCase();
+      if (!cleanIban || cleanIban === 'CZ6508000000001234567890') return null;
+      const storeMsg = (storeConfig?.storeName || 'VoltFlow POS').slice(0, 30);
+      const spaydPayload = `SPD*1.0*ACC:${cleanIban}*AM:${(saleData.totalAmount || 0).toFixed(2)}*CC:CZK*X-VS:${saleData.receiptNumber || '1'}*MSG:${storeMsg}`;
       return generateQrDataUrl(spaydPayload, 140);
     } else if (qrType === 'url' && storeConfig?.receiptQrCodeUrl) {
       return generateQrDataUrl(storeConfig.receiptQrCodeUrl, 140);
     }
     return null;
-  }, [qrType, storeConfig?.bankAccountIban, storeConfig?.receiptQrCodeUrl, saleData.totalAmount, saleData.receiptNumber]);
+  }, [qrType, storeConfig?.bankAccountIban, storeConfig?.receiptQrCodeUrl, storeConfig?.storeName, saleData.totalAmount, saleData.receiptNumber]);
 
   // Multi-line footer
   const footerRaw = storeConfig?.receiptFooterLines || storeConfig?.receiptFooter || 'Děkujeme za váš nákup!';
@@ -127,7 +129,7 @@ export default function ReceiptPreviewPaper({
             fontWeight: boldStore ? '900' : '600'
           }}
         >
-          {clean(storeConfig?.storeName || 'Himmel POS')}
+          {clean(storeConfig?.storeName || 'VoltFlow POS')}
         </div>
         <div style={{ fontSize: is58mm ? '0.74rem' : '0.84rem', color: '#444' }}>{clean(storeConfig?.street)}</div>
         <div style={{ fontSize: is58mm ? '0.74rem' : '0.84rem', color: '#444' }}>{clean(storeConfig?.city)}</div>
@@ -342,15 +344,11 @@ export default function ReceiptPreviewPaper({
         </>
       )}
 
-      {/* Fiscal EET Block */}
-      {renderSeparator('sep-eet')}
-      <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '0.62rem' : '0.68rem' }}>
-        {(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? (
-          <div style={{ fontWeight: '800', textTransform: 'uppercase', color: '#555555' }}>
-            Režim provozu: Běžný prodej bez EET
-          </div>
-        ) : (
-          <>
+      {/* Fiscal EET Block (only render when EET is enabled and signed) */}
+      {storeConfig?.eetEnabled && (fik || bkp || pkp) && (
+        <>
+          {renderSeparator('sep-eet')}
+          <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '0.62rem' : '0.68rem' }}>
             <div style={{ fontWeight: '900', textTransform: 'uppercase', marginBottom: '3px' }}>
               EET 2.0 ({fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})
             </div>
@@ -368,9 +366,9 @@ export default function ReceiptPreviewPaper({
                 Vystaveno ve zjednodušeném (neonline) režimu EET
               </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* QR Code */}
       {qrCodeDataUrl && (

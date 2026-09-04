@@ -1,6 +1,7 @@
-import React from 'react';
-import { HardDrive, Download, Upload, Trash2, Shield, RefreshCw, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { HardDrive, Download, Upload, Trash2, Shield, RefreshCw, CheckCircle, Database } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { fetchDatabaseBackupStatus, triggerDatabaseBackup } from '../../api/posApi.js';
 
 export default function BackupSection({
   config,
@@ -16,6 +17,34 @@ export default function BackupSection({
   onCheckUpdate
 }) {
   const { t } = useTranslation();
+  const [dbBackupStatus, setDbBackupStatus] = useState(null);
+  const [dbBackupLoading, setDbBackupLoading] = useState(false);
+  const [dbBackupMsg, setDbBackupMsg] = useState(null);
+
+  useEffect(() => {
+    fetchDatabaseBackupStatus().then(res => {
+      if (res && res.status === 'SUCCESS') setDbBackupStatus(res);
+    }).catch(() => {});
+  }, []);
+
+  const handleCreateDbBackup = async () => {
+    setDbBackupLoading(true);
+    setDbBackupMsg(null);
+    try {
+      const res = await triggerDatabaseBackup();
+      if (res && res.status === 'SUCCESS') {
+        setDbBackupMsg({ type: 'success', text: `Záloha vytvořena: ${res.filename} (${((res.size_bytes || 0) / 1024).toFixed(1)} KB)` });
+        const updated = await fetchDatabaseBackupStatus();
+        if (updated && updated.status === 'SUCCESS') setDbBackupStatus(updated);
+      } else {
+        setDbBackupMsg({ type: 'error', text: res?.message || 'Chyba při vytváření zálohy' });
+      }
+    } catch (err) {
+      setDbBackupMsg({ type: 'error', text: err.message });
+    } finally {
+      setDbBackupLoading(false);
+    }
+  };
 
   const handleUpdate = (updates) => {
     if (saveConfigBatch) {
@@ -40,7 +69,7 @@ export default function BackupSection({
               <span>Zálohování & Obnova Dat</span>
             </h3>
             <p className="settings-section-desc">
-              Uložte si kopii všech produktů, prodejů a nastavení do počítače nebo obnovte data ze zálohy.
+              Vytvářejte bezpečné online zálohy SQLite databáze a exportujte konfiguraci produktů.
             </p>
           </div>
         </div>
@@ -48,12 +77,23 @@ export default function BackupSection({
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             type="button"
+            className="pay-btn"
+            disabled={dbBackupLoading}
+            style={{ flex: 1, minWidth: '190px', height: '44px', fontSize: '0.85rem', background: 'var(--accent-emerald)', color: '#fff' }}
+            onClick={handleCreateDbBackup}
+          >
+            <Database size={16} />
+            <span>{dbBackupLoading ? 'Vytvářím zálohu...' : 'Vytvořit SQLite zálohu'}</span>
+          </button>
+
+          <button
+            type="button"
             className="pay-btn pay-btn-card"
             style={{ flex: 1, minWidth: '180px', height: '44px', fontSize: '0.85rem' }}
             onClick={onExportJSON}
           >
             <Download size={16} />
-            <span>Stáhnout zálohu (JSON)</span>
+            <span>Exportovat položky (JSON)</span>
           </button>
 
           <label
@@ -72,7 +112,7 @@ export default function BackupSection({
             }}
           >
             <Upload size={16} />
-            <span>Nahrát zálohu ze souboru</span>
+            <span>Nahrát JSON zálohu</span>
             <input
               type="file"
               accept=".json"
@@ -88,9 +128,29 @@ export default function BackupSection({
             onClick={onResetData}
           >
             <Trash2 size={16} />
-            <span>Resetovat data</span>
+            <span>Resetovat</span>
           </button>
         </div>
+
+        {dbBackupMsg && (
+          <div style={{
+            marginTop: '0.65rem',
+            padding: '0.45rem 0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.8rem',
+            background: dbBackupMsg.type === 'success' ? 'rgba(5, 150, 105, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            color: dbBackupMsg.type === 'success' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+            fontWeight: '600'
+          }}>
+            {dbBackupMsg.text}
+          </div>
+        )}
+
+        {dbBackupStatus?.last_backup_time && (
+          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+            Poslední SQLite záloha: <strong>{new Date(dbBackupStatus.last_backup_time).toLocaleString('cs-CZ')}</strong> ({dbBackupStatus.last_backup_file})
+          </div>
+        )}
 
         {/* Automatická ochrana databáze (Litestream) */}
         <div style={{ background: 'var(--bg-card)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
@@ -136,7 +196,7 @@ export default function BackupSection({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-              Nainstalovaná verze: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'Himmel POS 1.0.0'}</span>
+              Nainstalovaná verze: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}</span>
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
               Systém se automaticky udržuje v aktuálním stabilním stavu.

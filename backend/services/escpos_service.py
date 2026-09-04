@@ -389,22 +389,20 @@ class ESCPOSPrinterService:
                                     printer.text(f"{r_str:<8} {net_str:>13} {tax_str:>11} {gross_str:>13}\n")
                             printer.text(dash_line + "\n")
 
-                        # Fiscal / EET block
+                        # Fiscal / EET block (only print when EET was actively used)
                         fik = sale_data.get("fik") or sale_data.get("fik_code")
                         bkp = sale_data.get("bkp") or sale_data.get("bkp_code")
                         if fik:
                             printer.text(f"EET FIK: {fik}\n")
                         if bkp:
                             printer.text(f"EET BKP: {bkp}\n")
-                        if not fik and not bkp:
-                            printer.set(align='center')
-                            write_receipt_text(printer, "Režim provozu: Běžný prodej bez EET\n", strip_diacritics, encoding)
 
                         # Optional QR Code
-                        if qr_type == "spayd":
-                            clean_iban = (store_config.get('bankAccountIban') or 'CZ6508000000001234567890').replace(' ', '').upper()
+                        raw_iban = (store_config.get('bankAccountIban') or store_config.get('bank_account_iban') or '').replace(' ', '').upper()
+                        store_name = store_config.get('storeName') or store_config.get('store_name') or 'VoltFlow POS'
+                        if qr_type == "spayd" and raw_iban and raw_iban != 'CZ6508000000001234567890':
                             tot_czk = sale_data.get('totalAmount', 0)
-                            spayd_payload = f"SPD*1.0*ACC:{clean_iban}*AM:{tot_czk:.2f}*CC:CZK*X-VS:{receipt_num}*MSG:Himmel POS"
+                            spayd_payload = f"SPD*1.0*ACC:{raw_iban}*AM:{tot_czk:.2f}*CC:CZK*X-VS:{receipt_num}*MSG:{store_name}"
                             printer.set(align='center')
                             write_receipt_text(printer, "QR Platba (Převod na účet):\n", strip_diacritics, encoding)
                             try:
@@ -413,7 +411,7 @@ class ESCPOSPrinterService:
                             except Exception as qr_err:
                                 logger.debug(f"ESC/POS QR print note: {qr_err}")
                         elif qr_type == "url":
-                            qr_url = store_config.get("receiptQrCodeUrl")
+                            qr_url = store_config.get("receiptQrCodeUrl") or store_config.get("receipt_qr_code_url")
                             if qr_url:
                                 printer.set(align='center')
                                 try:

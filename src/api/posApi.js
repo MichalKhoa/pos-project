@@ -796,3 +796,71 @@ export async function broadcastCustomerDisplay(payload) {
   }
 }
 
+/**
+ * Fetch SQLite database backup metrics and last snapshot time
+ */
+export async function fetchDatabaseBackupStatus() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/system/backup-status`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch database backup status:', err);
+    return null;
+  }
+}
+
+/**
+ * Trigger immediate online SQLite database backup snapshot (.zip)
+ */
+export async function triggerDatabaseBackup() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/system/trigger-backup`, {
+      method: 'POST'
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to trigger database backup:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Fetch available database backup archive files
+ */
+export async function fetchDatabaseBackups() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/system/backups`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to list database backups:', err);
+    return [];
+  }
+}
+
+/**
+ * Restore SQLite database from selected backup archive
+ */
+export async function restoreDatabaseBackup(filename) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/system/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename })
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to restore database backup:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
