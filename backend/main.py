@@ -20,11 +20,11 @@ from database import engine, Base
 from migrations import run_schema_migrations
 from routers import sales, printer, display, payments, eet, catalog, updater, config, qr, system
 
+from paths import LOGS_DIR, get_dist_dir, IS_FROZEN, APP_DIR
 from logging.handlers import RotatingFileHandler
 
 # Configure rotating file logging (20MB x 30 files retention = 600MB history)
-logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
-os.makedirs(logs_dir, exist_ok=True)
+logs_dir = LOGS_DIR
 log_file = os.path.join(logs_dir, "pos_backend.log")
 
 file_handler = RotatingFileHandler(log_file, maxBytes=20 * 1024 * 1024, backupCount=30, encoding="utf-8")
@@ -147,7 +147,7 @@ mimetypes.add_type("text/css", ".css")
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
+dist_dir = get_dist_dir()
 assets_dir = os.path.join(dist_dir, "assets")
 
 # Ensure assets dir exists so mount does not fail
@@ -206,12 +206,16 @@ if __name__ == "__main__":
         "port": port,
         "reload": is_dev,
     }
-    if is_dev:
+    if is_dev and not IS_FROZEN:
         kwargs["reload_dirs"] = [
             os.path.join(backend_dir, "routers"),
             os.path.join(backend_dir, "services")
         ]
         kwargs["reload_includes"] = ["main.py", "database.py", "models.py"]
         
-    uvicorn.run("main:app", **kwargs)
+    if IS_FROZEN:
+        kwargs["reload"] = False
+        uvicorn.run(app, **kwargs)
+    else:
+        uvicorn.run("main:app", **kwargs)
 

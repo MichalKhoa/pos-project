@@ -13,8 +13,12 @@ logger = logging.getLogger("pos-eet-router")
 router = APIRouter(prefix="/api/v1/eet", tags=["EET 2.0 Fiscalization"])
 eet_service = CzechEETService()
 
-CERTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "certs")
-os.makedirs(CERTS_DIR, exist_ok=True)
+try:
+    from paths import CERTS_DIR
+except ImportError:
+    CERTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "certs")
+    os.makedirs(CERTS_DIR, exist_ok=True)
+
 
 
 @router.get("/status")

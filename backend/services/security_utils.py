@@ -7,11 +7,15 @@ from cryptography.fernet import Fernet
 
 logger = logging.getLogger(__name__)
 
-# Anchor secret key to protected backend/data directory (anti-CWD-drift)
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_DATA_DIR = os.path.join(_BASE_DIR, "data")
-os.makedirs(_DATA_DIR, exist_ok=True)
-SECRET_KEY_FILE = os.path.join(_DATA_DIR, ".secret_key")
+try:
+    from paths import DATA_DIR as _DATA_DIR, SECRET_KEY_FILE, APP_DIR as _BASE_DIR, ROOT_DIR
+except ImportError:
+    _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    _DATA_DIR = os.path.join(_BASE_DIR, "data")
+    os.makedirs(_DATA_DIR, exist_ok=True)
+    SECRET_KEY_FILE = os.path.join(_DATA_DIR, ".secret_key")
+    ROOT_DIR = os.path.dirname(_BASE_DIR)
+
 
 
 def _get_fernet_key() -> bytes:

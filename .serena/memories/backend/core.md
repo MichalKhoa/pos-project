@@ -3,9 +3,11 @@
 Python FastAPI backend structure located in `/backend`.
 
 ## Core Files
-- `main.py`: Application entry point with modern `lifespan` context manager, CORS middleware, router registration, and static asset serving.
+- `main.py`: Application entry point with modern `lifespan` context manager, CORS middleware, router registration, and static asset serving. Supports direct `app` instance execution for PyInstaller frozen mode.
+- `paths.py`: Centralized freeze-safe path resolution (`DATA_DIR`, `DB_PATH`, `LOGS_DIR`, `CERTS_DIR`, `get_dist_dir()`). Resolves persistent user data next to `sys.executable` when frozen.
+- `pos_backend.spec` & `build_standalone.py`: PyInstaller freeze automation for zero-dependency standalone backend packaging.
 - `migrations.py`: Schema migrations runner (`run_schema_migrations`) isolating dynamic column alterations and index migrations.
-- `database.py`: SQLAlchemy engine (SQLite WAL mode, `PRAGMA busy_timeout=15000`, `foreign_keys=ON`), session maker (`SessionLocal`), and `get_db()` dependency.
+- `database.py`: SQLAlchemy engine (SQLite WAL mode, `PRAGMA busy_timeout=15000`, `foreign_keys=ON`), session maker (`SessionLocal`), and `get_db()` dependency. Persistent `DATA_DIR` from `paths.py`.
 - `models.py`: Database tables (`SaleModel` with compound indexes on `timestamp` and `payment_method`, `SaleItemModel`, `StoreConfigModel`, `PresetModel`, `ReceiptSequenceModel`).
 
 ## Routers (`/backend/routers`)

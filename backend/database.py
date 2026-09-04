@@ -7,21 +7,19 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 logger = logging.getLogger("pos-database")
 
-# Ensure protected data directory exists
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-os.makedirs(DATA_DIR, exist_ok=True)
+from paths import DATA_DIR, DB_PATH, APP_DIR, ROOT_DIR
+
+BASE_DIR = APP_DIR
+
 try:
     os.chmod(DATA_DIR, 0o700)
 except Exception:
     pass
 
-DB_PATH = os.path.join(DATA_DIR, "pos_store.db")
-
 # Auto-migrate legacy DB file if present at root/backend level
 legacy_paths = [
-    os.path.join(BASE_DIR, "pos_store.db"),
-    os.path.join(os.path.dirname(BASE_DIR), "pos_store.db")
+    os.path.join(APP_DIR, "pos_store.db"),
+    os.path.join(ROOT_DIR, "pos_store.db")
 ]
 if not os.path.exists(DB_PATH):
     for leg_path in legacy_paths:
