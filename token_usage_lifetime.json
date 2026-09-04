@@ -1,14 +1,14 @@
 {
   "workspace": "C:\\Users\\micha\\Documents\\GitHub\\pos-project-himmel",
   "first_activity": "2026-07-28 19:54:57",
-  "last_activity": "2026-09-04 20:18:39",
+  "last_activity": "2026-09-04 20:36:10",
   "conversations": 58,
-  "total_model_calls": 12240,
-  "total_prompt_tokens": 2213637123,
-  "total_output_tokens": 5344595,
-  "total_tokens": 2218981718,
-  "est_flash_usd": 410.1958,
-  "est_sonnet_usd": 1640.7831,
-  "committed_calls": 26222,
+  "total_model_calls": 6429,
+  "total_prompt_tokens": 1156668127,
+  "total_output_tokens": 1878725,
+  "total_tokens": 1158546852,
+  "est_flash_usd": 210.908,
+  "est_sonnet_usd": 843.6319,
+  "committed_calls": 20443,
   "uncommitted_calls": 0
 }

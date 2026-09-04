@@ -228,10 +228,12 @@ def find_transcript_paths(conv_ids, custom_logs_dir=None):
             if chosen and chosen not in paths:
                 paths.append(chosen)
 
-        # Include any transcripts placed directly or in subfolders
-        for p in glob.glob(os.path.join(b_dir, "**", "transcript_full.jsonl"), recursive=True):
-            if p not in paths and os.path.getsize(p) > 0:
-                paths.append(p)
+    # Include any transcripts placed directly in custom_logs_dir or .agent_logs
+    for explicit_dir in [custom_logs_dir, os.path.join(get_repo_path(), ".agent_logs")]:
+        if explicit_dir and os.path.exists(explicit_dir):
+            for p in glob.glob(os.path.join(explicit_dir, "**", "transcript_full.jsonl"), recursive=True):
+                if p not in paths and os.path.getsize(p) > 0:
+                    paths.append(p)
 
     return paths
 
@@ -252,16 +254,20 @@ def load_all_conversation_turns(conv_ids, custom_logs_dir=None):
                     dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
                     ts = int(dt.timestamp())
 
+                    src = d.get("source")
+                    stype = d.get("type")
+
                     content_len = len(json.dumps(d.get("content", "")))
                     calls_len = len(json.dumps(d.get("tool_calls", "")))
                     think_len = len(json.dumps(d.get("thinking", "")))
                     step_chars = content_len + calls_len + think_len
 
-                    is_model = (d.get("source") == "MODEL" and (calls_len > 4 or think_len > 4 or content_len > 4))
-
-                    if is_model:
+                    # Only genuine model generations (PLANNER_RESPONSE) are LLM API invocations.
+                    # Tool results (VIEW_FILE, RUN_COMMAND, GENERIC, etc.) are tool outputs, NOT model calls.
+                    if src == "MODEL" and stype == "PLANNER_RESPONSE":
                         turn_in = BASE_SYSTEM_TOKENS + (cum_chars // 4)
-                        turn_out = step_chars // 4
+                        out_chars = calls_len + think_len + (content_len if d.get("content") else 0)
+                        turn_out = out_chars // 4
                         turns.append((ts, turn_in, turn_out))
 
                     cum_chars += step_chars

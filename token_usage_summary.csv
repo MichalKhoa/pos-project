@@ -1,27 +1,27 @@
 sha,date,calls,prompt_tokens,output_tokens,total_tokens,flash_usd,sonnet_usd,subject
 8644ec8,2026-07-28 15:15,511,78197228,280588,78477816,2.2102,59.3379,"feat: complete POS system with discounts, split payments, hardware backend, and EET 2.0 specs"
-0efce86,2026-07-29 00:44,367,21722691,195690,21918381,4.5625,18.2498,feat: integrate Python backend service with EET fiscalization and certificate management support
+0efce86,2026-07-29 00:44,189,11231071,70708,11301779,2.2446,8.9785,feat: integrate Python backend service with EET fiscalization and certificate management support
 5d0f6e9,2026-07-29 16:01,1153,139346339,530836,139877175,3.9477,106.2017,feat: Changes to the overall GUI
 22fef4c,2026-07-29 19:16,311,13582301,109120,13691421,0.402,11.2123,feat: Security and stability fixes
-f6f2edf,2026-07-29 20:06,146,2200208,52374,2252582,0.5842,2.3368,feat: security and stability implementation
+f6f2edf,2026-07-29 20:06,85,1287010,10056,1297066,0.2645,1.0582,feat: security and stability implementation
 2b37d05,2026-07-29 20:08,2,180483,193,180676,0.005,0.1301,feat: implement catalog and preset management router and initialize Serena project configuration
-41fed03,2026-07-29 20:10,49,1413072,16836,1429908,0.3122,1.2488,Merge remote-tracking branch 'origin/master'
-131c92b,2026-07-29 23:34,179,13538462,65964,13604426,2.6335,10.5341,feat: implement Litestream real-time database replication and add backend updater functionality
+41fed03,2026-07-29 20:10,25,714365,7026,721391,0.1523,0.609,Merge remote-tracking branch 'origin/master'
+131c92b,2026-07-29 23:34,100,7688809,38869,7727678,1.5009,6.0036,feat: implement Litestream real-time database replication and add backend updater functionality
 859e04b,2026-07-30 15:06,929,317666400,697389,318363789,8.8458,234.4156,feat: Security and stability fixes and preparation for card terminal
 68ecaa4,2026-07-30 16:20,108,2331879,49566,2381445,0.0783,2.3875,feat: Translation fixes
 0f31f7c,2026-07-31 23:03,1284,127546567,567113,128113680,3.6378,98.427,feat: multiple new features and fixes
 6f641e5,2026-08-01 23:18,134,5735371,64611,5799982,0.1753,5.0126,feat: Mobile version handling
-cb0daa5,2026-08-03 15:26,348,25672177,170128,25842305,5.1627,20.6508,feat: Email verification for QR payment
+cb0daa5,2026-08-03 15:26,180,13433788,32899,13466687,2.4911,9.9643,feat: Email verification for QR payment
 22bda01,2026-08-03 19:41,202,10212483,103561,10316044,0.3087,8.7532,feat: implement core POS frontend components and backend API services
-1eebba2,2026-08-03 23:28,737,129168320,321678,129489998,23.9722,95.8888,"feat: implement full-stack POS architecture including backend API, EET integration, and modular frontend components"
-7edf3cc,2026-08-04 02:08,1043,135616790,644432,136261222,26.3191,105.2763,"feat: implement foundational POS UI architecture, theme system, and core components"
-97e82c9,2026-08-04 17:56,107,30335396,54562,30389958,5.5512,22.2049,"feat: implement product management components including QuickPresetGrid, SalesHistoryView, and touch-enabled date modals"
-0d7bb91,2026-08-04 18:00,18,6156305,23827,6180132,1.1744,4.6976,feat: implement touch-friendly date range and calendar selection modal components
-c01213d,2026-08-04 18:01,57,835095,15297,850392,0.2045,0.8182,"feat: add UI components for presets, inventory, and transaction management modules"
-69f648f,2026-08-05 18:23,118,16653797,41126,16694923,3.0895,12.3578,feat: implement backend integration and authentication components for POS system
-7e03ba3,2026-08-07 20:46,338,21584073,124124,21708197,4.2697,17.0786,"feat: initialize backend service with FastAPI and implement full-stack POS UI components including checkout, settings, and navigation."
-c75ec71,2026-08-07 22:49,22,194577,5579,200156,0.0552,0.2209,feat: add GUI-based settings management tool with pywebview and persistence support
-f4c19bb,2026-08-08 18:08,67,940984,17107,958091,0.23,0.92,"feat: implement POS frontend UI, backend API routing, and global CSS theme system"
+1eebba2,2026-08-03 23:28,383,66773020,93363,66866383,12.1189,48.4754,"feat: implement full-stack POS architecture including backend API, EET integration, and modular frontend components"
+7edf3cc,2026-08-04 02:08,549,71654366,225601,71879967,13.4751,53.9003,"feat: implement foundational POS UI architecture, theme system, and core components"
+97e82c9,2026-08-04 17:56,59,16728020,30340,16758360,3.0621,12.2484,"feat: implement product management components including QuickPresetGrid, SalesHistoryView, and touch-enabled date modals"
+0d7bb91,2026-08-04 18:00,10,3412798,22803,3435601,0.687,2.7481,feat: implement touch-friendly date range and calendar selection modal components
+c01213d,2026-08-04 18:01,29,426510,3839,430349,0.0896,0.3583,"feat: add UI components for presets, inventory, and transaction management modules"
+69f648f,2026-08-05 18:23,74,9343855,9177,9353032,1.6813,6.7251,feat: implement backend integration and authentication components for POS system
+7e03ba3,2026-08-07 20:46,174,11179732,32645,11212377,2.0928,8.3714,"feat: initialize backend service with FastAPI and implement full-stack POS UI components including checkout, settings, and navigation."
+c75ec71,2026-08-07 22:49,12,107762,2937,110699,0.03,0.12,feat: add GUI-based settings management tool with pywebview and persistence support
+f4c19bb,2026-08-08 18:08,36,519946,5172,525118,0.111,0.4441,"feat: implement POS frontend UI, backend API routing, and global CSS theme system"
 9493260,2026-08-09 19:51,133,4367425,45915,4413340,0.1325,3.7678,fix(linux): align bash scripts with bat files and fix backend imports
 432051e,2026-08-09 20:01,103,7571490,28186,7599676,0.2143,5.7607,fix(build): ensure fresh UI bundle build on startup to include Sklad and new Navbar
 f62f0ee,2026-08-10 08:55,115,6046284,40899,6087183,0.1767,4.8761,"feat(windows): add winget auto-install, bypass & UI build to bat scripts"
@@ -29,30 +29,30 @@ f62f0ee,2026-08-10 08:55,115,6046284,40899,6087183,0.1767,4.8761,"feat(windows):
 a601fc3,2026-08-10 09:01,14,685230,5501,690731,0.0203,0.5656,fix(windows): quote start window titles and add Edge path fallback
 9ec164d,2026-08-10 09:03,13,723336,7092,730428,0.0218,0.6163,fix(windows): enclose PowerShell Write-Host URL strings in parentheses to fix Customer cmdlet parsing error
 be2a733,2026-08-10 11:31,1,58783,218,59001,0.0017,0.0447,"feat: Add Win32 ESC/POS raw printing, COM3 VFD display integration, receipt font/padding tuning, and backend sale deletion persistence"
-29eb769,2026-09-02 23:22,605,80505423,266988,80772411,15.1903,60.7611,feat(presets): redesign preset buttons and modal with live style switcher
-2801378,2026-09-02 23:36,228,78858292,122998,78981290,14.36,57.4401,feat(settings): separate store details and layout tabs
-fc7dfcc,2026-09-02 23:48,159,69751449,55978,69807427,12.5036,50.0144,feat(presets): tap-to-edit tiles and drag-to-delete dropzone
-6e6e3c2,2026-09-03 00:04,220,112743830,82438,112826268,20.1802,80.721,feat(categories): multi-line wrap and position reorder
-6c63797,2026-09-03 00:37,163,97479899,84003,97563902,17.4958,69.9834,feat(presets): studio modal with open price & icons
-9d8ae59,2026-09-03 01:35,114,77723203,63031,77786234,13.9351,55.7403,refactor(presets): unify modal styling & header actions
-ed8f4d7,2026-09-03 01:53,124,6722932,68191,6791123,1.4406,5.7625,fix(keypad): unify amount adding and return toggle
-dd63536,2026-09-03 02:03,141,15215101,59719,15274820,2.9056,11.6224,"refactor(keypad): enhance stepper arrows, restore return mode, shrink vat buttons"
-704235e,2026-09-03 02:20,332,37794500,196568,37991068,7.3984,29.5936,refactor(backend): isolate migrations and system router
-599c168,2026-09-03 02:20,3,619619,334,619953,0.1105,0.4418,refactor(backend): extract printer discovery service
+29eb769,2026-09-02 23:22,314,42068996,100842,42169838,7.7928,31.1713,feat(presets): redesign preset buttons and modal with live style switcher
+2801378,2026-09-02 23:36,118,40843832,49713,40893545,7.3851,29.5406,feat(settings): separate store details and layout tabs
+fc7dfcc,2026-09-02 23:48,82,35977007,18885,35995892,6.4118,25.6471,feat(presets): tap-to-edit tiles and drag-to-delete dropzone
+6e6e3c2,2026-09-03 00:04,113,57927750,29059,57956809,10.3187,41.275,feat(categories): multi-line wrap and position reorder
+6c63797,2026-09-03 00:37,84,50251946,34607,50286553,8.9867,35.9467,feat(presets): studio modal with open price & icons
+9d8ae59,2026-09-03 01:35,59,40244156,26230,40270386,7.1914,28.7656,refactor(presets): unify modal styling & header actions
+ed8f4d7,2026-09-03 01:53,64,3472591,25090,3497681,0.7061,2.8245,fix(keypad): unify amount adding and return toggle
+dd63536,2026-09-03 02:03,73,7887788,28351,7916139,1.4965,5.9862,"refactor(keypad): enhance stepper arrows, restore return mode, shrink vat buttons"
+704235e,2026-09-03 02:20,169,19252948,61454,19314402,3.6238,14.4951,refactor(backend): isolate migrations and system router
+599c168,2026-09-03 02:20,2,413085,221,413306,0.0736,0.2945,refactor(backend): extract printer discovery service
 3460ea2,2026-09-03 02:20,1,206774,230,207004,0.0373,0.1492,refactor(ui): deduplicate calendar utils and prune dead modal
-dfed704,2026-09-03 02:20,3,621355,331,621686,0.1108,0.443,refactor(ui): extract useSalesPeriodFilter hook
-188c5f5,2026-09-03 02:20,2,414812,239,415051,0.074,0.296,refactor(ui): extract receipt HTML generator
-fc541cf,2026-09-03 02:20,2,415369,299,415668,0.0743,0.2973,"refactor(app): modularize catalog, sync, and lock hooks"
-6125aa2,2026-09-03 02:20,2,415814,129,415943,0.0738,0.2951,docs(memories): sync architecture changes with serena
-eddba76,2026-09-03 02:45,418,25885465,203401,26088866,5.3251,21.3003,feat(cart): enhance parked carts drawer with quick restore and badge
-82b6648,2026-09-03 02:46,2,154275,184,154459,0.0279,0.1115,fix(sales): preserve line items on receipt history sync
-38611fd,2026-09-03 03:06,357,23012684,131174,23143858,4.5479,18.1916,feat: rebrand app to VoltFlow POS and update logo
-582bd5d,2026-09-03 03:13,144,9277140,66642,9343782,1.885,7.54,perf(sales): optimize receipt fetching and pagination
-6960c4e,2026-09-03 03:14,29,2863980,8520,2872500,0.5367,2.1469,docs(rules): add autonomous git commit and push rule
-29e1b71,2026-09-03 03:16,19,2027323,4927,2032250,0.3758,1.5032,"docs(rules): add frontend sizing, overlap, and overflow prevention rules"
-34063ee,2026-09-03 03:26,145,19352776,41686,19394462,3.5672,14.269,style(navbar): compact branding and color-coded EET badge
-2b4fdaf,2026-09-03 03:34,111,19772841,47708,19820549,3.6639,14.6555,"style(ui): elevate surface depth, tactile keypad keycaps, and grand total hero"
-5416893,2026-09-03 13:15,220,56515683,101265,56616948,10.3406,41.3625,docs: add security audit and future feature roadmap specifications
+dfed704,2026-09-03 02:20,2,414250,190,414440,0.0737,0.2949,refactor(ui): extract useSalesPeriodFilter hook
+188c5f5,2026-09-03 02:20,1,207476,99,207575,0.0369,0.1478,refactor(ui): extract receipt HTML generator
+fc541cf,2026-09-03 02:20,1,207793,82,207875,0.0369,0.1477,"refactor(app): modularize catalog, sync, and lock hooks"
+6125aa2,2026-09-03 02:20,1,207939,65,208004,0.0369,0.1476,docs(memories): sync architecture changes with serena
+eddba76,2026-09-03 02:45,216,13431625,68328,13499953,2.6236,10.4942,feat(cart): enhance parked carts drawer with quick restore and badge
+82b6648,2026-09-03 02:46,1,77198,62,77260,0.0138,0.0554,fix(sales): preserve line items on receipt history sync
+38611fd,2026-09-03 03:06,183,11725774,40689,11766463,2.2193,8.877,feat: rebrand app to VoltFlow POS and update logo
+582bd5d,2026-09-03 03:13,74,4783495,24908,4808403,0.9365,3.746,perf(sales): optimize receipt fetching and pagination
+6960c4e,2026-09-03 03:14,16,1582904,2542,1585446,0.2885,1.1541,docs(rules): add autonomous git commit and push rule
+29e1b71,2026-09-03 03:16,10,1067840,2054,1069894,0.1959,0.7836,"docs(rules): add frontend sizing, overlap, and overflow prevention rules"
+34063ee,2026-09-03 03:26,77,10305578,14124,10319702,1.8693,7.4773,style(navbar): compact branding and color-coded EET badge
+2b4fdaf,2026-09-03 03:34,58,10345404,16675,10362079,1.8859,7.5436,"style(ui): elevate surface depth, tactile keypad keycaps, and grand total hero"
+5416893,2026-09-03 13:15,118,30427137,38697,30465834,5.5079,22.0316,docs: add security audit and future feature roadmap specifications
 2c0dbfe,2026-09-03 13:15,1,221316,88,221404,0.006,0.1573,feat(db): integrate dynamic SQLite schema migrations into all launcher and updater scripts
 6c690e8,2026-09-03 13:15,3,664594,392,664986,0.0182,0.4744,"fix(security): resolve sales purge header bypass, QR IBAN spoofing, and CORS vulnerabilities"
 892d904,2026-09-03 13:15,2,443669,169,443838,0.0121,0.3153,"fix(stability): cap printer timeout, batch EET retries, frame GPE TCP stream, and add DB restore"
@@ -72,31 +72,31 @@ f3a8c5d,2026-09-03 15:01,48,27094601,19727,27114328,0.7426,19.3976,fix(presets):
 06bb1be,2026-09-03 15:38,218,148346295,170881,148517176,4.0844,107.1474,feat(settings): rework settings into touchscreen master-detail layout with auto-save
 fd85266,2026-09-03 15:45,43,33162760,13579,33176339,0.9057,23.5834,feat(settings): convert language selector to touch segmented bar choice
 6e4dc85,2026-09-03 16:14,192,158482295,83711,158566006,4.3339,112.9857,feat(settings): standardize tabs into 2-column grid and add diagnostics tab with live receipt preview
-d930b02,2026-09-03 18:39,416,163591597,152214,163743811,29.4038,117.6153,feat(ui): add customizable accent themes and navbar layout settings
-8b202d0,2026-09-03 18:40,6,2799149,507,2799656,0.4953,1.981,feat(navbar): implement Zenwood 3-island floating navbar with magnetic sliding pill
-3c86c25,2026-09-03 18:46,99,4911681,52119,4963800,1.0611,4.2445,merge: merge branch 'dev' into master
-4be001a,2026-09-03 18:53,68,1286194,16140,1302334,0.2872,1.1489,docs(rules): add planning and follow-up inquiry protocols
-40994be,2026-09-03 19:24,140,6911664,54201,6965865,1.4214,5.6857,feat(ui): add modern preset card styles and touch ergonomics
-b66497b,2026-09-03 19:35,105,10445558,37346,10482904,1.9811,7.9243,feat(ui): redesign search bar and add light category separator
-2366306,2026-09-03 20:07,352,70645274,163040,70808314,13.0626,52.2505,"feat(register): refine keypad layout, search bar, auxiliary widgets, and action dock"
-cfea893,2026-09-03 20:08,21,6022486,6160,6028646,1.0846,4.3383,docs(memory): sync frontend/components memory with keypad refinements
-d2d511d,2026-09-03 20:36,165,54663587,66645,54730232,9.8844,39.5375,"feat(cart): add selectable cart item styles, soften buttons, and expand steppers"
-d7314b7,2026-09-03 20:41,57,21102009,15944,21117953,3.779,15.1161,feat(keypad): separate auxiliary widgets into distinct bottom-docked card box
-862319c,2026-09-03 20:46,103,41178165,45916,41224081,7.4298,29.7193,feat(keypad): separate parked carts and shift stats and harmonize open price modal
-efbad8c,2026-09-03 20:56,169,7383994,51564,7435558,1.4948,5.9792,chore(rules): permit autonomous Serena & Codegraph access and fix project.yml
-e4e3845,2026-09-03 21:02,57,4397191,29025,4426216,0.8838,3.5354,chore(perf): compress rule and memory files in caveman format
-5846f97,2026-09-03 21:13,153,18626882,51376,18678258,3.4756,13.9026,fix(layout): harmonize navbar top spacing and tighten view paddings
-de93070,2026-09-03 21:24,157,28707709,70687,28778396,5.3248,21.2992,"feat(analytics): add side-by-side 30-day, 12-week, and 12-month comparative dashboard"
-28504c3,2026-09-03 21:24,14,3100366,5532,3105898,0.5672,2.2687,docs(memory): sync frontend components memory with MultiPeriodComparison
-23df69e,2026-09-03 21:45,371,118808507,178783,118987290,21.6104,86.4417,feat(inventory): decouple touchscreen presets from warehouse inventory with 1-tap pin and streamlined modal
-5b1f43b,2026-09-03 21:49,38,15817114,16072,15833186,2.848,11.3921,fix(inventory): define missing isLow and isOut variables in InventoryStockTable
-1cfa93f,2026-09-03 21:57,32,13902236,16231,13918467,2.5111,10.0445,"feat(inventory): add interactive column sorting for item name, pin status, stock, and min alert"
-9ab31f0,2026-09-03 22:06,78,36545968,55883,36601851,6.6508,26.6032,"feat(inventory): redesign compact metrics strip, sticky header, and dense table rows"
-ea925d1,2026-09-03 22:11,41,20869309,22160,20891469,3.7613,15.0453,refactor(inventory): remove oversized pay-btn class and compact toolbar and row buttons
-d2ec346,2026-09-03 22:19,203,118856092,106003,118962095,21.3459,85.3836,"feat(inventory): add 38px touch targets, CSV export/import with Excel UTF-8 BOM, and backend bulk upsert"
-f9d8de8,2026-09-03 22:24,112,74020142,51672,74071814,13.2398,52.9593,feat(inventory): add 1-click ESC/POS and browser barcode label printing with live SVG preview
-934b64c,2026-09-03 22:44,339,22082930,102429,22185359,4.2762,17.1049,"fix(launcher): resolve batch syntax errors, nested quotes, and pagehide shutdown"
-2c4f749,2026-09-04 08:43,4,444542,1358,445900,0.0834,0.3338,perf(touch): enlarge touch targets and streamline instant button responsiveness for touchscreens
+d930b02,2026-09-03 18:39,219,86086675,62356,86149031,15.4066,61.6264,feat(ui): add customizable accent themes and navbar layout settings
+8b202d0,2026-09-03 18:40,3,1399705,246,1399951,0.2476,0.9905,feat(navbar): implement Zenwood 3-island floating navbar with magnetic sliding pill
+3c86c25,2026-09-03 18:46,50,2461168,11757,2472925,0.4779,1.9115,merge: merge branch 'dev' into master
+4be001a,2026-09-03 18:53,37,717900,5202,723102,0.146,0.5841,docs(rules): add planning and follow-up inquiry protocols
+40994be,2026-09-03 19:24,73,3636324,15572,3651896,0.6993,2.7972,feat(ui): add modern preset card styles and touch ergonomics
+b66497b,2026-09-03 19:35,56,5601802,13762,5615564,1.0389,4.1557,feat(ui): redesign search bar and add light category separator
+2366306,2026-09-03 20:07,184,37021309,64621,37085930,6.7673,27.0693,"feat(register): refine keypad layout, search bar, auxiliary widgets, and action dock"
+cfea893,2026-09-03 20:08,12,3443787,3102,3446889,0.6186,2.4744,docs(memory): sync frontend/components memory with keypad refinements
+d2d511d,2026-09-03 20:36,86,28484132,24107,28508239,5.1107,20.4429,"feat(cart): add selectable cart item styles, soften buttons, and expand steppers"
+d7314b7,2026-09-03 20:41,30,11108549,7316,11115865,1.9853,7.9413,feat(keypad): separate auxiliary widgets into distinct bottom-docked card box
+862319c,2026-09-03 20:46,55,22007224,25191,22032415,3.9732,15.893,feat(keypad): separate parked carts and shift stats and harmonize open price modal
+efbad8c,2026-09-03 20:56,86,3754973,10567,3765540,0.7014,2.8058,chore(rules): permit autonomous Serena & Codegraph access and fix project.yml
+e4e3845,2026-09-03 21:02,30,2306441,10690,2317131,0.4466,1.7864,chore(perf): compress rule and memory files in caveman format
+5846f97,2026-09-03 21:13,80,9737228,17337,9754565,1.7812,7.1248,fix(layout): harmonize navbar top spacing and tighten view paddings
+de93070,2026-09-03 21:24,81,14794556,26608,14821164,2.7073,10.8293,"feat(analytics): add side-by-side 30-day, 12-week, and 12-month comparative dashboard"
+28504c3,2026-09-03 21:24,7,1549527,1305,1550832,0.278,1.112,docs(memory): sync frontend components memory with MultiPeriodComparison
+23df69e,2026-09-03 21:45,190,60682520,50016,60732536,10.8829,43.5314,feat(inventory): decouple touchscreen presets from warehouse inventory with 1-tap pin and streamlined modal
+5b1f43b,2026-09-03 21:49,19,7907508,4630,7912138,1.4111,5.6442,fix(inventory): define missing isLow and isOut variables in InventoryStockTable
+1cfa93f,2026-09-03 21:57,17,7375749,6430,7382179,1.3241,5.2964,"feat(inventory): add interactive column sorting for item name, pin status, stock, and min alert"
+9ab31f0,2026-09-03 22:06,40,18709824,20215,18730039,3.3734,13.4937,"feat(inventory): redesign compact metrics strip, sticky header, and dense table rows"
+ea925d1,2026-09-03 22:11,21,10681907,8149,10690056,1.9132,7.653,refactor(inventory): remove oversized pay-btn class and compact toolbar and row buttons
+d2ec346,2026-09-03 22:19,104,60836720,41175,60877895,10.8769,43.5075,"feat(inventory): add 38px touch targets, CSV export/import with Excel UTF-8 BOM, and backend bulk upsert"
+f9d8de8,2026-09-03 22:24,57,37637493,21958,37659451,6.716,26.8638,feat(inventory): add 1-click ESC/POS and browser barcode label printing with live SVG preview
+934b64c,2026-09-03 22:44,172,11525378,31362,11556740,2.149,8.5958,"fix(launcher): resolve batch syntax errors, nested quotes, and pagehide shutdown"
+2c4f749,2026-09-04 08:43,2,222341,1217,223558,0.0438,0.175,perf(touch): enlarge touch targets and streamline instant button responsiveness for touchscreens
 d2fa256,2026-09-04 08:55,167,173671852,75306,173747158,4.7443,123.5682,perf(keypad): enlarge keypad buttons and format number keys closer to square
 0c22579,2026-09-04 09:04,63,68938780,26183,68964963,1.8821,48.9946,perf(keypad): unify stepper multiplier sizing and harmonize add-to-cart buttons across register and modal
 e08f615,2026-09-04 09:15,99,112148211,46995,112195206,3.0631,79.7694,feat(layout): add slim shift summary widget option under presets column for small screens
@@ -106,17 +106,19 @@ a2388f3,2026-09-04 09:56,33,3250873,5914,3256787,0.0902,2.3806,build(vite): set 
 0a79587,2026-09-04 11:59,184,7474719,73603,7548322,0.2253,6.3737,"feat(telemetry): add token tracking utility, cross-device sync guide, and anti-looping rules"
 e4f1f92,2026-09-04 12:09,26,2225116,8018,2233134,0.0629,1.689,"docs(rules): enforce token discipline, codegraph discovery, and context shielding"
 29bfbeb,2026-09-04 15:53,3300,867120346,1369007,868489353,23.9855,631.8549,perf(ui): memoize register views and preset tiles to eliminate touch latency
-1f7a058,2026-09-04 18:16,233,11962041,76991,12039032,2.397,9.5881,"fix(build): resolve packaging errors, harden installers, and add hardware audit"
-3060ecd,2026-09-04 18:22,39,4068658,8514,4077172,0.749,2.9961,feat(desktop): configure NSIS installer icon and desktop shortcut
-638210a,2026-09-04 18:36,238,19556207,81677,19637884,3.7531,15.0123,"fix(desktop): fix Tauri backend connection, CORS origin regex, and API host resolution"
-fe567f8,2026-09-04 18:51,269,20466276,170448,20636724,4.2464,16.9854,feat(telemetry): add standalone windows token tracker and post-commit hook support
-53ab9ee,2026-09-04 18:58,38,5189701,6872,5196573,0.9405,3.7618,feat(ui): increase font sizes across register for improved legibility
-ea97b8c,2026-09-04 19:02,90,15123507,28971,15152478,2.7742,11.0966,docs(telemetry): refine post-commit hook shebang for Windows Git sh
-4ab7796,2026-09-04 19:19,223,47280016,72203,47352219,8.6039,34.4155,feat(updater): integrate Tauri v2 auto-updater and remote silent NSIS update script
-a2e2a30,2026-09-04 19:20,14,3733834,2577,3736411,0.6678,2.671,ci(release): include updater signatures and latest.json in windows release assets
-aa1dfd3,2026-09-04 19:29,46,12612746,7058,12619804,2.2495,8.9979,build(release): enable createUpdaterArtifacts and auto-load private signing key
-fc25cd2,2026-09-04 20:00,421,39689568,116711,39806279,7.433,29.7318,feat(ui): add app-wide font size toggle with receipt and customer display isolation
-8ea2a86,2026-09-04 20:06,68,8404818,21772,8426590,1.563,6.252,fix(startup): ensure start_pos.bat builds frontend and serves latest dist
-6e14f31,2026-09-04 20:09,26,3569735,3769,3573504,0.6433,2.5732,feat(scripts): add stop.bat shortcut and fix delay in Himmel_POS_Stop.bat
-a1dcf52,2026-09-04 20:11,17,2413235,5082,2418317,0.4444,1.7776,build(standalone): compile fresh frontend bundle before freezing standalone backend
-94fc9ad,2026-09-04 20:15,23,3401477,6434,3407911,0.6236,2.4946,build: auto-clean dist_standalone and build cache before PyInstaller freeze
+1f7a058,2026-09-04 18:16,122,6314716,30581,6345297,1.2276,4.9106,"fix(build): resolve packaging errors, harden installers, and add hardware audit"
+3060ecd,2026-09-04 18:22,20,2087198,2810,2090008,0.3784,1.5136,feat(desktop): configure NSIS installer icon and desktop shortcut
+638210a,2026-09-04 18:36,122,10025739,37194,10062933,1.9065,7.6261,"fix(desktop): fix Tauri backend connection, CORS origin regex, and API host resolution"
+fe567f8,2026-09-04 18:51,137,10463052,53927,10516979,2.0463,8.1854,feat(telemetry): add standalone windows token tracker and post-commit hook support
+53ab9ee,2026-09-04 18:58,20,2804637,2064,2806701,0.5021,2.0082,feat(ui): increase font sizes across register for improved legibility
+ea97b8c,2026-09-04 19:02,46,7741105,6929,7748034,1.3904,5.5614,docs(telemetry): refine post-commit hook shebang for Windows Git sh
+4ab7796,2026-09-04 19:19,118,24798985,27675,24826660,4.4746,17.8984,feat(updater): integrate Tauri v2 auto-updater and remote silent NSIS update script
+a2e2a30,2026-09-04 19:20,7,1867655,1097,1868752,0.3333,1.3332,ci(release): include updater signatures and latest.json in windows release assets
+aa1dfd3,2026-09-04 19:29,24,6581780,2658,6584438,1.17,4.68,build(release): enable createUpdaterArtifacts and auto-load private signing key
+fc25cd2,2026-09-04 20:00,216,20458386,31227,20489613,3.7229,14.8916,feat(ui): add app-wide font size toggle with receipt and customer display isolation
+8ea2a86,2026-09-04 20:06,34,4199770,7401,4207171,0.768,3.0719,fix(startup): ensure start_pos.bat builds frontend and serves latest dist
+6e14f31,2026-09-04 20:09,14,1920915,1762,1922677,0.3452,1.3807,feat(scripts): add stop.bat shortcut and fix delay in Himmel_POS_Stop.bat
+a1dcf52,2026-09-04 20:11,9,1275634,1352,1276986,0.2299,0.9196,build(standalone): compile fresh frontend bundle before freezing standalone backend
+94fc9ad,2026-09-04 20:15,12,1772096,2353,1774449,0.3212,1.2846,build: auto-clean dist_standalone and build cache before PyInstaller freeze
+5bbe5aa,2026-09-04 20:20,34,2923463,5165,2928628,0.5346,2.1385,feat(telemetry): update Flash pricing model to Gemini 3.5 - 3.8 rates
+cd5548a,2026-09-04 20:23,18,1668968,2701,1671669,0.3043,1.2171,docs(telemetry): track token usage export summaries for multi-device sync
