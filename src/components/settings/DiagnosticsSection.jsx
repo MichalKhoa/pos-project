@@ -120,7 +120,7 @@ export default function DiagnosticsSection({
     try {
       const res = await printReceiptBackend(sampleSale, config);
       soundFx.playSuccessChime();
-      setActionMessage({ type: 'success', text: res.message || 'Zkušební účtenka vytištěna.' });
+      setActionMessage({ type: 'success', text: res.message || t('settings.diag_test_print_success') || 'Zkušební účtenka vytištěna.' });
     } catch (err) {
       soundFx.playErrorChime?.();
       setActionMessage({ type: 'error', text: 'Tisk selhal: ' + (err.message || 'Neznámá chyba') });
@@ -136,7 +136,7 @@ export default function DiagnosticsSection({
     try {
       const res = await openCashDrawerBackend();
       soundFx.playCashChime();
-      setActionMessage({ type: 'success', text: res.message || 'Zásuvka byla otevřena.' });
+      setActionMessage({ type: 'success', text: res.message || t('settings.diag_drawer_open_success') || 'Zásuvka byla otevřena.' });
     } catch (err) {
       soundFx.playErrorChime?.();
       setActionMessage({ type: 'error', text: 'Zásuvku se nepodařilo otevřít: ' + (err.message || 'Chyba spojení') });
@@ -161,7 +161,7 @@ export default function DiagnosticsSection({
       };
       const res = await printDailySummaryBackend(summaryPayload, config, false);
       soundFx.playSuccessChime();
-      setActionMessage({ type: 'success', text: res.message || 'Denní uzávěrka vytištěna.' });
+      setActionMessage({ type: 'success', text: res.message || t('settings.diag_daily_summary_success') || 'Denní uzávěrka vytištěna.' });
     } catch (err) {
       soundFx.playErrorChime?.();
       setActionMessage({ type: 'error', text: 'Tisk uzávěrky selhal: ' + err.message });
@@ -406,7 +406,7 @@ export default function DiagnosticsSection({
                 <div className="diag-item-text">
                   <span className="diag-item-label">{t('settings.diag_printer_label') || 'Pokladní tiskárna'}</span>
                   <span className="diag-item-detail">
-                    {config.printerAddress || '/dev/usb/lp0'} • šířka {config.printerPaperWidth || '80'} mm ({config.printerInterface || 'USB'})
+                    {config.printerAddress || '/dev/usb/lp0'} • {t('settings.diag_printer_width') || 'šířka'} {config.printerPaperWidth || '80'} mm ({config.printerInterface || 'USB'})
                   </span>
                 </div>
               </div>
@@ -444,7 +444,7 @@ export default function DiagnosticsSection({
                   <span className="diag-item-detail">
                     {config.csobTerminalEnabled
                       ? `ČSOB / Ingenico (${config.csobTerminalIp || '192.168.1.X'}:${config.csobTerminalPort || '8888'})`
-                      : 'Ruční zadávání částky (Doporučeno)'}
+                      : (t('settings.diag_terminal_manual_detail') || 'Ruční zadávání částky (Doporučeno)')}
                   </span>
                 </div>
               </div>
@@ -480,7 +480,7 @@ export default function DiagnosticsSection({
                 <div className="diag-item-text">
                   <span className="diag-item-label">{t('settings.diag_eet_label') || 'Fiskální modul EET 2.0'}</span>
                   <span className="diag-item-detail">
-                    {config.eetEnabled ? `Provozní režim: ${config.eetEnvironment || 'playground'}` : 'Vypnuto (dobrovolná fiskalizace)'}
+                    {config.eetEnabled ? `${t('settings.diag_eet_mode') || 'Provozní režim'}: ${config.eetEnvironment || 'playground'}` : (t('settings.diag_eet_off_detail') || 'Vypnuto (dobrovolná fiskalizace)')}
                   </span>
                 </div>
               </div>
