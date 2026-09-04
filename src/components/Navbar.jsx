@@ -5,6 +5,7 @@ import { useTranslation } from '../i18n/LanguageContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
 import CashDrawerIcon from './CashDrawerIcon';
 import { soundFx } from '../utils/audio';
+import { getApiHost } from '../api/posApi';
 
 function Navbar({
   activeTab,
@@ -55,8 +56,8 @@ function Navbar({
     const checkLatency = async () => {
       const start = performance.now();
       try {
-        const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
-        const res = await fetch(`http://${host}:8000/`, { method: 'GET', cache: 'no-store' });
+        const host = getApiHost();
+        const res = await fetch(`http://${host}:8000/api/v1/status`, { method: 'GET', cache: 'no-store' });
         if (res.ok) {
           const end = performance.now();
           setLatency(Math.max(1, Math.round(end - start)));

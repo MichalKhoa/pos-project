@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingBag, CheckCircle2, Wifi, WifiOff, Sparkles } from 'lucide-react';
 import { generateQrDataUrl } from '../utils/qrCode.js';
+import { getApiHost } from '../api/posApi';
 
 export default function CustomerDisplayView({ storeConfig }) {
   const [displayState, setDisplayState] = useState({
@@ -64,7 +65,7 @@ export default function CustomerDisplayView({ storeConfig }) {
 
   // Determine WebSocket URL based on current browser host
   const getWsUrl = () => {
-    const host = window.location.hostname || 'localhost';
+    const host = getApiHost();
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${protocol}//${host}:8000/api/v1/ws/customer-display`;
   };

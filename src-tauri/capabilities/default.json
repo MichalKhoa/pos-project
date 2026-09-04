@@ -15,6 +15,10 @@
         {
           "name": "binaries/pos-backend",
           "sidecar": true
+        },
+        {
+          "name": "pos-backend",
+          "sidecar": true
         }
       ]
     },

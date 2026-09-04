@@ -26,7 +26,9 @@ fn spawn_sidecar(app: &AppHandle, state: &AppState) -> Result<(), String> {
     }
 
     log::info!("Spawning pos-backend sidecar...");
-    match app.shell().sidecar("pos-backend") {
+    let command_res = app.shell().sidecar("pos-backend")
+        .or_else(|_| app.shell().sidecar("binaries/pos-backend"));
+    match command_res {
         Ok(command) => match command.spawn() {
             Ok((_rx, child)) => {
                 log::info!("pos-backend sidecar spawned with PID: {}", child.pid());
@@ -110,13 +112,11 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
         .setup(move |app| {
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            app.handle().plugin(
+                tauri_plugin_log::Builder::default()
+                    .level(log::LevelFilter::Info)
+                    .build(),
+            )?;
 
             // Attempt to launch backend sidecar
             let handle = app.handle().clone();

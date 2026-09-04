@@ -1,4 +1,13 @@
-const API_HOST = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+export function getApiHost() {
+  if (typeof window === 'undefined') return '127.0.0.1';
+  const hostname = window.location.hostname;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === 'tauri.localhost') {
+    return '127.0.0.1';
+  }
+  return hostname;
+}
+
+const API_HOST = getApiHost();
 const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
 
 /**
@@ -6,7 +15,7 @@ const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
  */
 export async function fetchBackendRoot() {
   try {
-    const res = await fetch(`http://${API_HOST}:8000/api/v1/status`);
+    const res = await fetch(`${API_BASE_URL}/status`);
     if (!res.ok) return { online: false };
     const data = await res.json();
     return { online: true, ...data };
