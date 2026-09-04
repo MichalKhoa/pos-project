@@ -170,7 +170,16 @@ async def serve_spa(full_path: str):
     if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
         
-    file_path = os.path.normpath(os.path.join(dist_dir, full_path))
+    abs_dist = os.path.abspath(dist_dir)
+    file_path = os.path.abspath(os.path.join(dist_dir, full_path))
+
+    # Path traversal protection: ensure requested file is strictly inside dist_dir
+    try:
+        if os.path.commonpath([abs_dist, file_path]) != abs_dist:
+            raise HTTPException(status_code=403, detail="Access denied")
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
         media_type, _ = mimetypes.guess_type(file_path)
         return FileResponse(file_path, media_type=media_type)

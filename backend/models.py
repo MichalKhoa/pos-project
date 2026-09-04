@@ -69,7 +69,7 @@ class StoreConfigModel(Base):
     register_no = Column(String, default="Pokladna #01")
     default_vat = Column(Integer, default=21)
     receipt_footer = Column(String, default="Děkujeme za váš nákup!")
-    bank_account_iban = Column(String, default="CZ6508000000001234567890")
+    bank_account_iban = Column(String, default="")
     printer_interface = Column(String, default="USB") # 'USB', 'NETWORK', 'SERIAL'
     printer_address = Column(String, default="/dev/usb/lp0")
     printer_paper_width = Column(String, default="80") # '58' or '80' mm

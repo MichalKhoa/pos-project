@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
@@ -9,12 +9,16 @@ export default function QrPaymentPanel({
   onComplete
 }) {
   const { t } = useTranslation();
-  const rawIban = storeConfig?.bankAccountIban || "CZ6508000000001234567890";
-  const merchantIban = rawIban.replace(/\s/g, '').toUpperCase();
+  const rawIban = (storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || "").replace(/\s/g, '').toUpperCase();
+  const hasValidIban = rawIban && rawIban !== "CZ6508000000001234567890";
+  const merchantIban = hasValidIban ? rawIban : "";
   const varSymbol = useMemo(() => Date.now().toString().slice(-8), []);
-  const spdString = `SPD*1.0*ACC:${merchantIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba VoltFlow POS`;
-  const formattedIban = merchantIban.match(/.{1,4}/g)?.join(' ') || merchantIban;
-  const qrImageUrl = useMemo(() => generateQrDataUrl(spdString, 280), [spdString]);
+  const storeName = (storeConfig?.storeName || 'VoltFlow POS').slice(0, 30);
+  const spdString = hasValidIban
+    ? `SPD*1.0*ACC:${merchantIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${varSymbol}*MSG:Platba ${storeName}`
+    : '';
+  const formattedIban = hasValidIban ? (merchantIban.match(/.{1,4}/g)?.join(' ') || merchantIban) : 'Nenastaveno';
+  const qrImageUrl = useMemo(() => (hasValidIban && spdString ? generateQrDataUrl(spdString, 280) : null), [hasValidIban, spdString]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
@@ -35,15 +39,31 @@ export default function QrPaymentPanel({
           borderRadius: 'var(--radius-lg)',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          flexShrink: 0
+          flexShrink: 0,
+          width: '240px',
+          height: '240px',
+          boxSizing: 'border-box'
         }}>
-          <img
-            src={qrImageUrl}
-            alt="QR Platba SPD"
-            style={{ width: '240px', height: '240px', display: 'block' }}
-          />
+          {hasValidIban && qrImageUrl ? (
+            <img
+              src={qrImageUrl}
+              alt="QR Platba SPD"
+              style={{ width: '212px', height: '212px', display: 'block' }}
+            />
+          ) : (
+            <div style={{ padding: '1rem', textAlign: 'center' }}>
+              <AlertTriangle size={36} style={{ color: 'var(--accent-amber)', margin: '0 auto 0.5rem', display: 'block' }} />
+              <div style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--accent-rose)' }}>
+                Účet (IBAN) nenastaven
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.35rem', lineHeight: '1.3' }}>
+                Pro vygenerování platebního QR kódu zadejte IBAN v Nastavení prodejny.
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Structured Payment & Transfer Details Area */}

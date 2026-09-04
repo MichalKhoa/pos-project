@@ -264,27 +264,41 @@ export default function CustomerDisplayView({ storeConfig }) {
 
             {/* Robust offline QR code URL resolver */}
             {(() => {
-              const currentIban = storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || 'CZ6508000000001234567890';
-              const cleanIban = currentIban.replace(/\s/g, '').toUpperCase();
+              const currentIban = (displayState.payment?.iban || storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || '').replace(/\s/g, '').toUpperCase();
+              const hasValidIban = currentIban && currentIban !== 'CZ6508000000001234567890';
+              const cleanIban = hasValidIban ? currentIban : '';
               const vs = displayState.payment?.vs || '20260001';
-              const spdPayload = `SPD*1.0*ACC:${cleanIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${vs}*MSG:${encodeURIComponent('Platba ' + storeName)}`;
+              const spdPayload = hasValidIban
+                ? `SPD*1.0*ACC:${cleanIban}*AM:${Math.max(0, totalAmount).toFixed(2)}*CC:CZK*X-VS:${vs}*MSG:${encodeURIComponent('Platba ' + storeName)}`
+                : '';
               const rawUrl = displayState.payment?.qrImageUrl;
-              let finalQrUrl = generateQrDataUrl(spdPayload, 260);
+              let finalQrUrl = hasValidIban ? generateQrDataUrl(spdPayload, 260) : null;
 
               if (rawUrl && typeof rawUrl === 'string' && rawUrl.startsWith('data:image/')) {
                 finalQrUrl = rawUrl;
               }
 
-              const formattedIban = cleanIban.match(/.{1,4}/g)?.join(' ') || cleanIban;
+              const formattedIban = hasValidIban ? (cleanIban.match(/.{1,4}/g)?.join(' ') || cleanIban) : 'Nenastaveno';
 
               return (
                 <>
-                  <div className="cd-qr-frame">
-                    <img
-                      src={finalQrUrl}
-                      alt="QR Kód pro platbu"
-                      className="cd-qr-image"
-                    />
+                  <div className="cd-qr-frame" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '260px', width: '260px', margin: '0 auto' }}>
+                    {finalQrUrl ? (
+                      <img
+                        src={finalQrUrl}
+                        alt="QR Kód pro platbu"
+                        className="cd-qr-image"
+                      />
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '1rem', color: '#64748b' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#dc2626', marginBottom: '6px' }}>
+                          QR platba nedostupná
+                        </div>
+                        <div style={{ fontSize: '0.85rem' }}>
+                          Číslo bankovního účtu není nastaveno.
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="cd-qr-details-grid">

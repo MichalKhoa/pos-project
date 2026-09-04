@@ -190,9 +190,12 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
   // QR Code Generation
   let qrCodeDataUrl = null;
   if (qrType === 'spayd') {
-    const cleanIban = (storeConfig?.bankAccountIban || 'CZ6508000000001234567890').replace(/\s/g, '').toUpperCase();
-    const spaydPayload = `SPD*1.0*ACC:${cleanIban}*AM:${(saleData.totalAmount || 0).toFixed(2)}*CC:CZK*X-VS:${saleData.receiptNumber || '1'}*MSG:Himmel POS`;
-    qrCodeDataUrl = generateQrDataUrl(spaydPayload, 150);
+    const rawIban = (storeConfig?.bankAccountIban || '').replace(/\s/g, '').toUpperCase();
+    if (rawIban && rawIban !== 'CZ6508000000001234567890') {
+      const storeMsg = (storeConfig?.storeName || 'VoltFlow POS').slice(0, 30);
+      const spaydPayload = `SPD*1.0*ACC:${rawIban}*AM:${(saleData.totalAmount || 0).toFixed(2)}*CC:CZK*X-VS:${saleData.receiptNumber || '1'}*MSG:${storeMsg}`;
+      qrCodeDataUrl = generateQrDataUrl(spaydPayload, 150);
+    }
   } else if (qrType === 'url' && storeConfig?.receiptQrCodeUrl) {
     qrCodeDataUrl = generateQrDataUrl(storeConfig.receiptQrCodeUrl, 150);
   }
@@ -289,7 +292,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
 
             <div style="margin-top: 24px; border-top: 1px dashed #d1d5db; padding-top: 12px; font-size: 10px; color: #6b7280; display: flex; justify-content: space-between;">
               <div>
-                ${(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? 'Režim provozu: Běžný prodej bez EET' : `EET FIK: ${fik || 'N/A'} | BKP: ${bkp || 'N/A'}`}
+                ${(storeConfig?.eetEnabled && (fik || bkp || pkp)) ? `EET FIK: ${fik || 'N/A'} | BKP: ${bkp || 'N/A'}` : ''}
               </div>
               <div style="font-weight: ${boldFooter ? '700' : '400'};">${footerLinesHtml}</div>
             </div>
@@ -414,18 +417,16 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
             ${taxHtml}
           ` : ''}
 
-          ${sepDividerHtml}
-          <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; word-break: break-all;">
-            ${(saleData.eet_status === 'DISABLED' || storeConfig?.eetEnabled === false) ? `
-              <div class="bold">REŽIM PROVOZU: BĚŽNÝ PRODEJ BEZ EET</div>
-            ` : `
+          ${storeConfig?.eetEnabled && (fik || bkp || pkp) ? `
+            ${sepDividerHtml}
+            <div class="center" style="font-size: ${is58mm ? '7.5px' : '8.5px'}; word-break: break-all;">
               <div class="bold">EET 2.0 (${fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})</div>
               ${fik ? `<div>FIK: ${fik}</div>` : ''}
               ${bkp ? `<div>BKP: ${bkp}</div>` : ''}
               ${pkp && !fik ? `<div>PKP: ${pkp.slice(0, 32)}...</div>` : ''}
               ${!fik && (pkp || saleData.eet_status === 'OFFLINE_PENDING') ? `<div class="bold" style="margin-top:2px; color: #b45309;">Vystaveno ve zjednodušeném (neonline) režimu EET</div>` : ''}
-            `}
-          </div>
+            </div>
+          ` : ''}
 
           ${qrCodeDataUrl ? `
             <div class="center" style="margin-top: 6px;">

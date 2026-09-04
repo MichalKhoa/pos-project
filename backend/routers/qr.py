@@ -61,12 +61,12 @@ def generate_spd_qr(
     target_msg = msg if isinstance(msg, str) else "Platba VoltFlow POS"
     target_recipient = recipient.strip() if isinstance(recipient, str) else ""
 
-    # Security: Enforce merchant IBAN strictly from verified database StoreConfigModel (anti-hijacking)
     cfg = db.query(StoreConfigModel).first()
-    if cfg and cfg.bank_account_iban and cfg.bank_account_iban.strip() and not cfg.bank_account_iban.startswith("CZ000000"):
+    if cfg and cfg.bank_account_iban and cfg.bank_account_iban.strip() and not cfg.bank_account_iban.startswith("CZ000000") and cfg.bank_account_iban.strip() != "CZ6508000000001234567890":
         target_iban = cfg.bank_account_iban.strip()
     else:
-        target_iban = "CZ6508000000001234567890"
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Bankovní účet (IBAN) není v nastavení pokladny nakonfigurován.")
 
     if not target_recipient and cfg and cfg.store_name:
         target_recipient = cfg.store_name.strip()

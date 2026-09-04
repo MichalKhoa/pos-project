@@ -127,7 +127,7 @@ describe('Modals & Dialog Component Tests', () => {
           isOpen={true}
           totalAmount={520}
           initialMethod="qr"
-          storeConfig={DEFAULT_STORE_CONFIG}
+          storeConfig={{ ...DEFAULT_STORE_CONFIG, bankAccountIban: 'CZ0508000000001234567890' }}
           onClose={() => {}}
           onCompleteSale={onCompleteSale}
         />
@@ -148,6 +148,21 @@ describe('Modals & Dialog Component Tests', () => {
         tendered: 520,
         change: 0
       }));
+    });
+
+    it('displays warning when IBAN is unconfigured for QR payment', () => {
+      wrapWithLanguage(
+        <PaymentModal
+          isOpen={true}
+          totalAmount={520}
+          initialMethod="qr"
+          storeConfig={{ ...DEFAULT_STORE_CONFIG, bankAccountIban: '' }}
+          onClose={() => {}}
+          onCompleteSale={() => {}}
+        />
+      );
+
+      expect(screen.getByText(/Účet \(IBAN\) nenastaven/i)).toBeInTheDocument();
     });
   });
 

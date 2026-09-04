@@ -44,7 +44,8 @@ export default function PaymentModal({
   useEffect(() => {
     if (activeMethod === 'qr') {
       const vs = `${new Date().getFullYear()}${Math.floor(1000 + Math.random() * 9000)}`;
-      const iban = storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || 'CZ6508000000001234567890';
+      const rawIban = (storeConfig?.bankAccountIban || storeConfig?.bank_account_iban || storeConfig?.merchant_iban || '').replace(/\s/g, '').toUpperCase();
+      const iban = (rawIban && rawIban !== 'CZ6508000000001234567890') ? rawIban : '';
       broadcastCustomerDisplay({
         type: 'PAYMENT_PENDING',
         totalAmount,

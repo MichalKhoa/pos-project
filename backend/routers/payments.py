@@ -40,9 +40,15 @@ class TerminalPayRequest(BaseModel):
 
 
 @router.post("/generate-qr-string")
-def generate_qr_string(req: GenerateQRPayloadRequest):
+def generate_qr_string(req: GenerateQRPayloadRequest, db: Session = Depends(get_db)):
     """Generates Czech SPD format QR payload for banking app scanning."""
-    spd_string = qr_service.generate_qr_string(req.amount, req.variableSymbol, req.message)
+    cfg = db.query(StoreConfigModel).first()
+    merchant_iban = (cfg.bank_account_iban if cfg else "").replace(" ", "").upper()
+    if not merchant_iban or merchant_iban == "CZ6508000000001234567890":
+        raise HTTPException(status_code=400, detail="Bankovní účet (IBAN) není v nastavení pokladny nakonfigurován.")
+
+    service = CzechBankQRPaymentService(account_iban=merchant_iban)
+    spd_string = service.generate_qr_string(req.amount, req.variableSymbol, req.message)
     return {
         "status": "OK",
         "spd_string": spd_string,

@@ -103,7 +103,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "registerNo": config.register_no,
         "defaultVat": config.default_vat,
         "receiptFooter": config.receipt_footer,
-        "bankAccountIban": config.bank_account_iban or "CZ6508000000001234567890",
+        "bankAccountIban": (config.bank_account_iban or "").strip() if config.bank_account_iban != "CZ6508000000001234567890" else "",
         "printerInterface": config.printer_interface,
         "printerAddress": config.printer_address,
         "printerPaperWidth": config.printer_paper_width,
