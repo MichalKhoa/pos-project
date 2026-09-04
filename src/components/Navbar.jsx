@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useStoreConfig } from '../context/StoreConfigContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
 import CashDrawerIcon from './CashDrawerIcon';
 import { soundFx } from '../utils/audio';
@@ -20,6 +21,7 @@ function Navbar({
   onPrintDailySummary
 }) {
   const { t, language } = useTranslation();
+  const { fontSize, cycleFontSize } = useStoreConfig();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('pos_theme') || 'light';
@@ -315,6 +317,17 @@ function Navbar({
             title={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
           >
             {theme === 'light' ? <Moon size={15} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={15} style={{ color: 'var(--accent-amber)' }} />}
+          </button>
+
+          {/* Font Size Quick Cycle Button */}
+          <button
+            type="button"
+            className="nav-tool-btn nav-font-size-btn"
+            onClick={cycleFontSize}
+            title={`${t('nav.font_size_cycle') || 'Velikost písma'}: ${(fontSize || 'md').toUpperCase()}`}
+          >
+            <Type size={15} style={{ color: 'var(--accent-indigo)' }} />
+            <span className="nav-font-size-badge">{(fontSize || 'md').toUpperCase()}</span>
           </button>
 
           {/* Sound Effects Volume Mute Toggle */}

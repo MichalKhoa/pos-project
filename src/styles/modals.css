@@ -587,18 +587,18 @@
   color: #ffffff;
 }
 
-/* Thermal Receipt Preview */
+/* Thermal Receipt Preview - Fixed typography immune to UI font scale changes */
 .receipt-paper {
   background: #fffefc;
   color: #111111;
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.08);
   border-radius: 4px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.82rem;
+  font-size: 13.12px;
   line-height: 1.4;
   border: 1px solid #e2e8f0;
   position: relative;
-  padding: 1.5rem;
+  padding: 24px;
   width: 380px;
   max-width: 100%;
   margin: 0 auto;
@@ -607,12 +607,12 @@
 .receipt-header {
   text-align: center;
   border-bottom: 2px dashed #222222;
-  padding-bottom: 0.75rem;
-  margin-bottom: 0.75rem;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
 }
 
 .receipt-store-name {
-  font-size: 1.25rem;
+  font-size: 20px;
   font-weight: 900;
   text-transform: uppercase;
   color: #000000;
@@ -621,21 +621,21 @@
 .receipt-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0.6rem 0;
+  margin: 9.6px 0;
 }
 
 .receipt-table th {
   text-align: left;
-  padding: 0.3rem 0;
+  padding: 4.8px 0;
   border-bottom: 2px dashed #222222;
   font-weight: 900;
-  font-size: 0.78rem;
+  font-size: 12.48px;
   text-transform: uppercase;
   color: #000;
 }
 
 .receipt-table td {
-  padding: 0.3rem 0;
+  padding: 4.8px 0;
   border-bottom: 1px dotted #cccccc;
   vertical-align: top;
 }
@@ -643,18 +643,18 @@
 .receipt-total-row {
   border-top: 2px dashed #111111;
   border-bottom: 3px double #111111;
-  padding: 0.65rem 0;
-  margin: 0.65rem 0;
+  padding: 10.4px 0;
+  margin: 10.4px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.05rem;
+  font-size: 16.8px;
   font-weight: 900;
   background: rgba(0, 0, 0, 0.02);
 }
 
 .receipt-total-amount {
-  font-size: 1.35rem;
+  font-size: 21.6px;
   font-weight: 900;
   font-family: 'Courier New', Courier, monospace;
 }

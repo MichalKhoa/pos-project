@@ -273,6 +273,37 @@ body, .navbar, .modal-card, .table-card, .preset-card, .pos-col-left, .pos-col-c
 
 html {
   scrollbar-gutter: stable;
+  font-size: 16px;
+  transition: font-size 0.15s ease;
+}
+
+html[data-font-size='sm'] {
+  font-size: 14px;
+}
+
+html[data-font-size='md'] {
+  font-size: 16px;
+}
+
+html[data-font-size='lg'] {
+  font-size: 18px;
+}
+
+html[data-font-size='xl'] {
+  font-size: 20px;
+}
+
+/* Exempt receipt preview and printing from root font-size scaling to prevent character clumping */
+.receipt-paper,
+.printable-receipt,
+.thermal-receipt-paper {
+  font-size: 13.12px;
+}
+
+/* Exempt customer display screen from cashier register font-size scaling */
+.customer-display-root,
+.cd-standby-blackout {
+  font-size: 16px;
 }
 
 body {

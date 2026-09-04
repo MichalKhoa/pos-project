@@ -247,6 +247,25 @@ input, textarea, [contenteditable="true"] {
   color: var(--accent-rose);
 }
 
+.nav-font-size-btn {
+  position: relative;
+}
+
+.nav-font-size-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+  background: var(--accent-highlight, var(--accent-indigo));
+  color: #ffffff;
+  padding: 1px 3px;
+  border-radius: 4px;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+}
+
 /* Streamlined Clock & Date Chip */
 .nav-clock-chip {
   display: inline-flex;

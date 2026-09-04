@@ -22,6 +22,11 @@ export default function CustomerDisplayView({ storeConfig }) {
     storeConfigRef.current = storeConfig;
   }, [storeConfig]);
 
+  // Customer display has fixed independent root scale (16px) - completely separate from cashier toggle
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font-size', 'md');
+  }, []);
+
   // Request Screen WakeLock to keep display awake when connected
   const requestWakeLock = async () => {
     try {

@@ -368,6 +368,44 @@ export default function LayoutSection({
           </div>
         </div>
 
+        {/* App-wide Font Size & Text Scaling */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.font_size_title') || 'Velikost písma a zobrazení'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {t('settings.font_size_desc') || 'Globální škálování textu v celé aplikaci (pokladna, košík, přehledy).'}
+            </span>
+          </div>
+
+          <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
+            {[
+              { id: 'sm', label: t('settings.font_size_sm') || 'Malé (88%)' },
+              { id: 'md', label: t('settings.font_size_md') || 'Normální (100%)' },
+              { id: 'lg', label: t('settings.font_size_lg') || 'Velké (112%)' },
+              { id: 'xl', label: t('settings.font_size_xl') || 'Extra velké (125%)' }
+            ].map(sz => (
+              <button
+                key={sz.id}
+                type="button"
+                className={`settings-segmented-btn ${(config.fontSize || 'md') === sz.id ? 'active' : ''}`}
+                onClick={() => {
+                  handleUpdate({ fontSize: sz.id });
+                  try {
+                    localStorage.setItem('voltflow_font_size', sz.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                  document.documentElement.setAttribute('data-font-size', sz.id);
+                }}
+              >
+                {sz.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Cart Item Style (Elevated Card vs Divided List vs Rounded Tile) */}
         <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
           <div className="settings-toggle-label-wrap">

@@ -15,6 +15,7 @@ export const translations = {
       eet_off: "EET Vypnuto",
       open_drawer: "Otevřít zásuvku",
       print_daily_summary: "Vytisknout denní tržbu a otevřít zásuvku",
+      font_size_cycle: "Velikost písma",
       section_title: "Navigace"
     },
     cart: {
@@ -534,6 +535,12 @@ export const translations = {
       cart_position_desc: "Umístění účtenkového košíku v rozvržení pokladny.",
       cart_left: "Vlevo (Standard)",
       cart_right: "Vpravo",
+      font_size_title: "Velikost písma a zobrazení",
+      font_size_desc: "Globální nastavení velikosti textu v celé aplikaci (pokladna, košík, přehledy).",
+      font_size_sm: "Malé (88%)",
+      font_size_md: "Normální (100%)",
+      font_size_lg: "Velké (112%)",
+      font_size_xl: "Extra velké (125%)",
       high_legibility_label: "Vysoká čitelnost (High-Legibility Mode)",
       high_legibility_desc: "Zvětší dlaždice produktů o 25 %, ztuční ceny na 18pt+ pro snadný dotyk.",
       touch_animations_title: "Odezva tlačítek & Animace",
@@ -643,6 +650,7 @@ export const translations = {
       eet_off: "Tắt EET",
       open_drawer: "Mở ngăn kéo",
       print_daily_summary: "In tổng kết ngày & mở ngăn kéo",
+      font_size_cycle: "Cỡ chữ",
       section_title: "Điều hướng"
     },
     cart: {
@@ -1162,6 +1170,12 @@ export const translations = {
       cart_position_desc: "Vị trí của giỏ hóa đơn trên màn hình thu ngân.",
       cart_left: "Bên trái (Mặc định)",
       cart_right: "Bên phải",
+      font_size_title: "Cỡ chữ & Hiển thị",
+      font_size_desc: "Điều chỉnh kích thước phông chữ toàn bộ ứng dụng (thu ngân, giỏ hàng, lịch sử).",
+      font_size_sm: "Nhỏ (88%)",
+      font_size_md: "Chuẩn (100%)",
+      font_size_lg: "Lớn (112%)",
+      font_size_xl: "Rất lớn (125%)",
       high_legibility_label: "Chế độ chữ to & dễ đọc (High-Legibility)",
       high_legibility_desc: "Phóng to nút sản phẩm 25%, in đậm giá 18pt+ giúp dễ thao tác cảm ứng.",
       touch_animations_title: "Phản hồi nút & Hiệu ứng hoạt họa",
@@ -1271,6 +1285,7 @@ export const translations = {
       eet_off: "EET Disabled",
       open_drawer: "Open Drawer",
       print_daily_summary: "Print daily summary & open drawer",
+      font_size_cycle: "Font size",
       section_title: "Navigation"
     },
     cart: {
@@ -1790,6 +1805,12 @@ export const translations = {
       cart_position_desc: "Placement of the receipt cart on the register view.",
       cart_left: "Left (Default)",
       cart_right: "Right",
+      font_size_title: "Font Size & Display Scale",
+      font_size_desc: "Global text scale across the entire application (register, cart, reports).",
+      font_size_sm: "Small (88%)",
+      font_size_md: "Normal (100%)",
+      font_size_lg: "Large (112%)",
+      font_size_xl: "Extra Large (125%)",
       high_legibility_label: "High-legibility mode",
       high_legibility_desc: "Enlarges product tiles by 25% and bolds prices to 18pt+ for easy touch.",
       touch_animations_title: "Button Response & Animations",

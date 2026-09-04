@@ -98,7 +98,7 @@ export default function ReceiptPreviewPaper({
         width: paperWidth,
         maxWidth: '100%',
         padding: `${topFeedPadding}px ${is58mm ? '12px' : '18px'} ${bottomFeedPadding}px ${is58mm ? '12px' : '18px'}`,
-        fontSize: is58mm ? '0.78rem' : '0.94rem',
+        fontSize: is58mm ? '12.48px' : '15.04px',
         lineHeight: is58mm ? '1.28' : '1.38',
         boxSizing: 'border-box',
         transition: 'all 0.2s ease-in-out',
@@ -109,7 +109,7 @@ export default function ReceiptPreviewPaper({
       {storeConfig?.receiptCopies == 2 && (
         <div style={{
           textAlign: 'center',
-          fontSize: is58mm ? '0.65rem' : '0.74rem',
+          fontSize: is58mm ? '10.4px' : '11.84px',
           fontWeight: '900',
           letterSpacing: '1px',
           marginBottom: '6px',
@@ -125,23 +125,23 @@ export default function ReceiptPreviewPaper({
         <div
           className="receipt-store-name"
           style={{
-            fontSize: is58mm ? '1.15rem' : '1.4rem',
+            fontSize: is58mm ? '18.4px' : '22.4px',
             fontWeight: boldStore ? '900' : '600'
           }}
         >
           {clean(storeConfig?.storeName || 'VoltFlow POS')}
         </div>
-        <div style={{ fontSize: is58mm ? '0.74rem' : '0.84rem', color: '#444' }}>{clean(storeConfig?.street)}</div>
-        <div style={{ fontSize: is58mm ? '0.74rem' : '0.84rem', color: '#444' }}>{clean(storeConfig?.city)}</div>
-        <div style={{ marginTop: '2px', fontSize: is58mm ? '0.7rem' : '0.8rem', fontWeight: '700' }}>
+        <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.street)}</div>
+        <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.city)}</div>
+        <div style={{ marginTop: '2px', fontSize: is58mm ? '11.2px' : '12.8px', fontWeight: '700' }}>
           IČO: {clean(storeConfig?.ico)} | DIČ: {clean(storeConfig?.dic)} ({vatBadge})
         </div>
         {showContacts && (phone || email) && (
-          <div style={{ fontSize: is58mm ? '0.68rem' : '0.76rem', color: '#555', marginTop: '1px' }}>
+          <div style={{ fontSize: is58mm ? '10.88px' : '12.16px', color: '#555', marginTop: '1px' }}>
             {[phone && `Tel: ${phone}`, email && `Email: ${email}`].filter(Boolean).join(' • ')}
           </div>
         )}
-        <div style={{ fontSize: is58mm ? '0.68rem' : '0.76rem', color: '#666', marginTop: '2px' }}>
+        <div style={{ fontSize: is58mm ? '10.88px' : '12.16px', color: '#666', marginTop: '2px' }}>
           Provozovna: {storeConfig?.idProvozovny || '11'} | {clean(storeConfig?.registerNo || 'Pokladna #01')}
         </div>
 
@@ -150,7 +150,7 @@ export default function ReceiptPreviewPaper({
           <div style={{
             margin: '6px 0 4px 0',
             padding: '4px 8px',
-            fontSize: is58mm ? '0.72rem' : '0.82rem',
+            fontSize: is58mm ? '11.52px' : '13.12px',
             fontWeight: '700',
             textAlign: 'center',
             border: '1px dashed #64748b',
@@ -163,14 +163,14 @@ export default function ReceiptPreviewPaper({
 
         {/* Title rendering */}
         {titleStyle === 'framed' ? (
-          <div style={{ border: '1.5px solid #000', padding: '4px 6px', margin: '6px 0', fontSize: is58mm ? '0.74rem' : '0.88rem', fontWeight: '900', color: isRefund ? '#dc2626' : '#000' }}>
+          <div style={{ border: '1.5px solid #000', padding: '4px 6px', margin: '6px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900', color: isRefund ? '#dc2626' : '#000' }}>
             {clean(rawTitle)}
           </div>
         ) : titleStyle === 'banner' ? (
           <div
             className="receipt-divider-title"
             style={{
-              fontSize: is58mm ? '0.78rem' : '0.9rem',
+              fontSize: is58mm ? '12.48px' : '14.4px',
               color: isRefund ? '#dc2626' : '#000000',
               borderColor: isRefund ? '#dc2626' : '#222222',
               margin: '6px 0',
@@ -180,30 +180,30 @@ export default function ReceiptPreviewPaper({
             ══ {clean(rawTitle)} ══
           </div>
         ) : titleStyle === 'classic' ? (
-          <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '3px 0', margin: '6px 0', fontSize: is58mm ? '0.74rem' : '0.88rem', fontWeight: '900' }}>
+          <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '3px 0', margin: '6px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900' }}>
             {clean(rawTitle)}
           </div>
         ) : (
-          <div style={{ padding: '3px 0', margin: '4px 0', fontSize: is58mm ? '0.74rem' : '0.88rem', fontWeight: '900' }}>
+          <div style={{ padding: '3px 0', margin: '4px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900' }}>
             {clean(rawTitle)}
           </div>
         )}
 
         {isRefund && (saleData.originalReceiptNumber || saleData.original_receipt_number) && (
-          <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#dc2626', marginTop: '2px' }}>
+          <div style={{ fontSize: '11.2px', fontWeight: '800', color: '#dc2626', marginTop: '2px' }}>
             Původní doklad: #{saleData.originalReceiptNumber || saleData.original_receipt_number}
           </div>
         )}
         {isRefund && (saleData.refundReason || saleData.refund_reason) && (
-          <div style={{ fontSize: '0.7rem', color: '#444', fontStyle: 'italic', marginTop: '2px' }}>
+          <div style={{ fontSize: '11.2px', color: '#444', fontStyle: 'italic', marginTop: '2px' }}>
             Důvod vrácení: <em>{saleData.refundReason || saleData.refund_reason}</em>
           </div>
         )}
-        <div style={{ fontSize: is58mm ? '0.68rem' : '0.75rem', marginTop: '2px', color: '#555' }}>
+        <div style={{ fontSize: is58mm ? '10.88px' : '12px', marginTop: '2px', color: '#555' }}>
           Datum & čas: <b>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b>
         </div>
         {showCashier && (
-          <div style={{ fontSize: is58mm ? '0.65rem' : '0.72rem', color: '#555' }}>
+          <div style={{ fontSize: is58mm ? '10.4px' : '11.52px', color: '#555' }}>
             Obsluha: {cashierName}
           </div>
         )}
@@ -213,7 +213,7 @@ export default function ReceiptPreviewPaper({
 
       <table className="receipt-table" style={{ tableLayout: 'fixed', width: '100%' }}>
         <thead>
-          <tr style={{ fontSize: is58mm ? '0.68rem' : '0.78rem' }}>
+          <tr style={{ fontSize: is58mm ? '10.88px' : '12.48px' }}>
             <th style={{ width: '52%', textAlign: 'left' }}>Položka</th>
             <th style={{ width: '14%', textAlign: 'center' }}>Ks</th>
             <th style={{ width: '34%', textAlign: 'right' }}>Cena</th>
@@ -225,19 +225,19 @@ export default function ReceiptPreviewPaper({
             const unitPrice = item.price * (1 - itemDisc / 100);
             return (
               <tr key={idx}>
-                <td style={{ wordBreak: 'break-word', padding: itemDensity === 'compact' ? '0.2rem 0' : '0.35rem 0' }}>
+                <td style={{ wordBreak: 'break-word', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
                   <div className="receipt-item-title" style={{ fontWeight: boldItems ? '800' : '500' }}>
                     {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
                   </div>
                   {showSku && (item.barcode || item.sku) && (
-                    <div style={{ fontSize: '0.62rem', color: '#777' }}>Kód: {item.barcode || item.sku}</div>
+                    <div style={{ fontSize: '9.92px', color: '#777' }}>Kód: {item.barcode || item.sku}</div>
                   )}
                   {itemDensity === 'standard' && showVat && (
                     <div className="receipt-item-sub">DPH {item.vat}%</div>
                   )}
                 </td>
-                <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '0.2rem 0' : '0.35rem 0' }}>{item.quantity}</td>
-                <td style={{ textAlign: 'right', fontWeight: boldPrices ? '900' : '500', whiteSpace: 'nowrap', fontFamily: 'monospace', padding: itemDensity === 'compact' ? '0.2rem 0' : '0.35rem 0' }}>
+                <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>{item.quantity}</td>
+                <td style={{ textAlign: 'right', fontWeight: boldPrices ? '900' : '500', whiteSpace: 'nowrap', fontFamily: 'monospace', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
                   {(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč
                 </td>
               </tr>
@@ -258,7 +258,7 @@ export default function ReceiptPreviewPaper({
         <span className="receipt-total-amount">{(saleData.totalAmount || 0).toFixed(0)} Kč</span>
       </div>
 
-      <div style={{ fontSize: is58mm ? '0.72rem' : '0.8rem', margin: '0.4rem 0', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+      <div style={{ fontSize: is58mm ? '11.52px' : '12.8px', margin: '6.4px 0', display: 'flex', flexDirection: 'column', gap: '3.2px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span>Způsob úhrady:</span>
           <span style={{ fontWeight: '900', letterSpacing: '0.5px' }}>
@@ -267,7 +267,7 @@ export default function ReceiptPreviewPaper({
         </div>
 
         {saleData.paymentMethod === 'split' && saleData.splitDetails && (
-          <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', padding: '0.35rem 0.6rem', borderRadius: '4px', marginTop: '0.2rem', fontSize: '0.72rem' }}>
+          <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', padding: '5.6px 9.6px', borderRadius: '4px', marginTop: '3.2px', fontSize: '11.52px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>- Uhrazeno Hotově:</span>
               <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{(saleData.splitDetails.cash || 0).toFixed(0)} Kč</span>
@@ -297,10 +297,10 @@ export default function ReceiptPreviewPaper({
       {taxMatrixStyle !== 'none' && saleData.taxSummary && (
         <>
           {renderSeparator('sep-tax')}
-          <div style={{ fontSize: is58mm ? '0.68rem' : '0.75rem' }}>
+          <div style={{ fontSize: is58mm ? '10.88px' : '12px' }}>
             <div style={{ fontWeight: '900', textTransform: 'uppercase', marginBottom: '3px', letterSpacing: '0.4px' }}>Rekapitulace DPH:</div>
             {taxMatrixStyle === 'compact' || is58mm ? (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.4px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left', fontWeight: '800' }}>
                     <th style={{ textAlign: 'left' }}>Sazba</th>
@@ -319,7 +319,7 @@ export default function ReceiptPreviewPaper({
                 </tbody>
               </table>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.52px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px dashed #666', textAlign: 'left', fontWeight: '800' }}>
                     <th style={{ textAlign: 'left' }}>Sazba</th>
@@ -348,7 +348,7 @@ export default function ReceiptPreviewPaper({
       {storeConfig?.eetEnabled && (fik || bkp || pkp) && (
         <>
           {renderSeparator('sep-eet')}
-          <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '0.62rem' : '0.68rem' }}>
+          <div className="receipt-eet-box" style={{ wordBreak: 'break-all', fontSize: is58mm ? '9.92px' : '10.88px' }}>
             <div style={{ fontWeight: '900', textTransform: 'uppercase', marginBottom: '3px' }}>
               EET 2.0 ({fik ? 'Běžný online režim' : 'Zjednodušený neonline režim'})
             </div>
@@ -372,9 +372,9 @@ export default function ReceiptPreviewPaper({
 
       {/* QR Code */}
       {qrCodeDataUrl && (
-        <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '8px' }}>
           {renderSeparator('sep-qr')}
-          <div style={{ fontSize: is58mm ? '0.65rem' : '0.74rem', fontWeight: '800', marginBottom: '2px' }}>
+          <div style={{ fontSize: is58mm ? '10.4px' : '11.84px', fontWeight: '800', marginBottom: '2px' }}>
             {qrType === 'spayd' ? 'QR PLATBA (PŘEVOD NA ÚČET)' : 'ELEKTRONICKÁ ÚČTENKA'}
           </div>
           <img
@@ -387,14 +387,14 @@ export default function ReceiptPreviewPaper({
 
       {/* Custom Footer */}
       {renderSeparator('sep-foot')}
-      <div style={{ textAlign: 'center', marginTop: '0.4rem', paddingBottom: '0.2rem' }}>
-        <div style={{ fontSize: is58mm ? '0.72rem' : '0.82rem', fontWeight: boldFooter ? '800' : '600', fontStyle: 'italic' }}>
+      <div style={{ textAlign: 'center', marginTop: '6.4px', paddingBottom: '3.2px' }}>
+        <div style={{ fontSize: is58mm ? '11.52px' : '13.12px', fontWeight: boldFooter ? '800' : '600', fontStyle: 'italic' }}>
           {footerLines.map((l, i) => (
             <div key={i}>{clean(l)}</div>
           ))}
         </div>
         {showBranding && (
-          <div style={{ fontSize: '0.64rem', color: '#777', marginTop: '0.35rem' }}>
+          <div style={{ fontSize: '10.24px', color: '#777', marginTop: '5.6px' }}>
             Vystaveno v pokladním systému VoltFlow POS
           </div>
         )}
@@ -408,7 +408,7 @@ export default function ReceiptPreviewPaper({
           borderTop: '2px dashed #94a3b8',
           paddingTop: '6px',
           textAlign: 'center',
-          fontSize: is58mm ? '0.62rem' : '0.72rem',
+          fontSize: is58mm ? '9.92px' : '11.52px',
           fontWeight: '700',
           color: '#64748b',
           display: 'flex',

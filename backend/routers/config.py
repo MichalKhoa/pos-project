@@ -45,6 +45,7 @@ class StoreConfigSchema(BaseModel):
     directHardwarePrint: Optional[bool] = None
     defaultLanguage: Optional[str] = None
     cartPosition: Optional[str] = None
+    fontSize: Optional[str] = None
     customerDisplayTitle: Optional[str] = None
     customerDisplayAutoSleep: Optional[bool] = None
     customerDisplayStandbyDelay: Optional[int] = None

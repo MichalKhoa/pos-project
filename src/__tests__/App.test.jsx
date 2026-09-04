@@ -126,4 +126,32 @@ describe('App Shell & Navigation Regression Tests', () => {
       expect(screen.getAllByText(/Vítejte/i).length).toBeGreaterThanOrEqual(1);
     });
   });
+
+  it('cycles font size on navbar button click and sets data-font-size attribute', async () => {
+    renderAppWithProviders();
+
+    // Default font-size should be md
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
+
+    // Find navbar font size cycle button
+    const fontBtn = screen.getByTitle(/Velikost písma: MD/i);
+    expect(fontBtn).toBeInTheDocument();
+
+    // Cycle to LG
+    fireEvent.click(fontBtn);
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('lg');
+    expect(localStorage.getItem('voltflow_font_size')).toBe('lg');
+
+    // Cycle to XL
+    fireEvent.click(fontBtn);
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('xl');
+
+    // Cycle to SM
+    fireEvent.click(fontBtn);
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('sm');
+
+    // Cycle back to MD
+    fireEvent.click(fontBtn);
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
+  });
 });

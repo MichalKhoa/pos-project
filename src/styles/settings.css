@@ -456,15 +456,16 @@
   gap: 1.25rem;
 }
 
+/* Diagnostic Thermal Receipt Preview - Fixed typography immune to UI font scale changes */
 .thermal-receipt-paper {
   width: 100%;
   max-width: 330px;
   background: #ffffff;
   color: #111827;
   border-radius: 4px;
-  padding: 1.25rem 1.15rem;
+  padding: 20px 18px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.82rem;
+  font-size: 13.12px;
   line-height: 1.35;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
   box-sizing: border-box;
@@ -474,13 +475,13 @@
 
 .thermal-receipt-header {
   text-align: center;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px dashed #9ca3af;
 }
 
 .thermal-receipt-store-name {
-  font-size: 1.05rem;
+  font-size: 16.8px;
   font-weight: 900;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -489,23 +490,23 @@
 
 .thermal-receipt-divider {
   border-top: 1px dashed #9ca3af;
-  margin: 0.5rem 0;
+  margin: 8px 0;
 }
 
 .thermal-receipt-double-divider {
   border-top: 2px solid #111827;
-  margin: 0.5rem 0;
+  margin: 8px 0;
 }
 
 .thermal-receipt-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .thermal-receipt-total {
-  font-size: 1.1rem;
+  font-size: 17.6px;
   font-weight: 900;
   color: #000000;
 }
@@ -515,15 +516,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0.75rem 0;
-  gap: 0.35rem;
+  margin: 12px 0;
+  gap: 5.6px;
 }
 
 .thermal-receipt-footer {
   text-align: center;
-  font-size: 0.76rem;
-  margin-top: 0.65rem;
-  padding-top: 0.5rem;
+  font-size: 12.16px;
+  margin-top: 10.4px;
+  padding-top: 8px;
   border-top: 1px dashed #9ca3af;
   color: #4b5563;
 }

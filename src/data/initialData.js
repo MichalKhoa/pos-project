@@ -175,5 +175,6 @@ export const DEFAULT_STORE_CONFIG = {
   eetEnabled: true, // EET Ready mode indicator
   defaultLanguage: 'cs',
   buttonAnimationMode: 'instant', // 'instant' (default, no transform lag on touch) or 'animated'
-  shiftWidgetPosition: 'keypad' // 'keypad' (default, under keypad in left col) or 'bottom_presets' (slim bar under presets in center col)
+  shiftWidgetPosition: 'keypad', // 'keypad' (default, under keypad in left col) or 'bottom_presets' (slim bar under presets in center col)
+  fontSize: 'md' // 'sm' (14px), 'md' (16px), 'lg' (18px), 'xl' (20px)
 };

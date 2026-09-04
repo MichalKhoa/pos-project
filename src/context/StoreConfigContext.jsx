@@ -43,6 +43,24 @@ export function StoreConfigProvider({ children }) {
     document.documentElement.setAttribute('data-button-animation', animMode);
   }, [storeConfig?.buttonAnimationMode]);
 
+  // Sync font size to root element ('md' / 16px by default)
+  const currentFontSize = storeConfig?.fontSize || (() => {
+    try {
+      return localStorage.getItem('voltflow_font_size') || 'md';
+    } catch {
+      return 'md';
+    }
+  })();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font-size', currentFontSize);
+    try {
+      localStorage.setItem('voltflow_font_size', currentFontSize);
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [currentFontSize]);
+
   // Sync with SQLite backend on initial mount with retry loop for cold-start
   useEffect(() => {
     let isMounted = true;
@@ -89,13 +107,36 @@ export function StoreConfigProvider({ children }) {
     setIsAdminMode((prev) => !prev);
   }, []);
 
+  const setFontSize = useCallback((size) => {
+    const validSizes = ['sm', 'md', 'lg', 'xl'];
+    if (validSizes.includes(size)) {
+      document.documentElement.setAttribute('data-font-size', size);
+      try {
+        localStorage.setItem('voltflow_font_size', size);
+      } catch (e) {
+        console.warn(e);
+      }
+      updateStoreConfig({ fontSize: size });
+    }
+  }, [updateStoreConfig]);
+
+  const cycleFontSize = useCallback(() => {
+    const validSizes = ['sm', 'md', 'lg', 'xl'];
+    const currentIndex = validSizes.indexOf(currentFontSize);
+    const nextIndex = (currentIndex + 1) % validSizes.length;
+    setFontSize(validSizes[nextIndex]);
+  }, [currentFontSize, setFontSize]);
+
   const value = {
     storeConfig,
     setStoreConfig,
     updateStoreConfig,
     isAdminMode,
     setIsAdminMode,
-    toggleAdminMode
+    toggleAdminMode,
+    fontSize: currentFontSize,
+    setFontSize,
+    cycleFontSize
   };
 
   return (
