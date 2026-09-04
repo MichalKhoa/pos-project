@@ -402,6 +402,42 @@ export default function LayoutSection({
           </div>
         </div>
 
+        {/* Button Responsiveness & Animations (Touchscreen Performance Mode) */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.touch_animations_title') || 'Odezva tlačítek & Animace'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {t('settings.touch_animations_desc') || 'Okamžitá odezva bez zpoždění a pohybu je ideální pro dotykové notebooky a rychlý prodej.'}
+            </span>
+          </div>
+
+          <div className="settings-segmented-group">
+            {[
+              { id: 'instant', label: t('settings.touch_animations_instant') || '⚡ Okamžitá (Bez animací)' },
+              { id: 'animated', label: t('settings.touch_animations_animated') || '✨ Plynulé animace' }
+            ].map(m => (
+              <button
+                key={m.id}
+                type="button"
+                className={`settings-segmented-btn ${(config.buttonAnimationMode || 'instant') === m.id ? 'active' : ''}`}
+                onClick={() => {
+                  handleUpdate({ buttonAnimationMode: m.id });
+                  try {
+                    localStorage.setItem('voltflow_button_animation_mode', m.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                  document.documentElement.setAttribute('data-button-animation', m.id);
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* High-Legibility Mode */}
         <div className="settings-toggle-row">
           <div className="settings-toggle-label-wrap">

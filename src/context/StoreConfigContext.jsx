@@ -31,6 +31,18 @@ export function StoreConfigProvider({ children }) {
     document.documentElement.setAttribute('data-accent', accent);
   }, [storeConfig?.highlightColor]);
 
+  // Sync button animation mode to root element ('instant' by default for touchscreens)
+  useEffect(() => {
+    const animMode = storeConfig?.buttonAnimationMode || (() => {
+      try {
+        return localStorage.getItem('voltflow_button_animation_mode') || 'instant';
+      } catch {
+        return 'instant';
+      }
+    })();
+    document.documentElement.setAttribute('data-button-animation', animMode);
+  }, [storeConfig?.buttonAnimationMode]);
+
   // Sync with SQLite backend on initial mount
   useEffect(() => {
     let isMounted = true;

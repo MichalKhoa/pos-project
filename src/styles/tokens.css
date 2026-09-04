@@ -198,9 +198,15 @@ body, .navbar, .modal-card, .table-card, .preset-card, .pos-col-left, .pos-col-c
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-/* Touch feedback for touchscreen buttons */
+/* Touch feedback for touchscreen buttons - Instant brightness tint with zero scale jitter */
 .preset-card:active, .nav-tab:active, .category-chip:active {
-  transform: scale(0.95) !important;
+  filter: brightness(0.92);
+}
+
+[data-button-animation="animated"] .preset-card:active,
+[data-button-animation="animated"] .nav-tab:active,
+[data-button-animation="animated"] .category-chip:active {
+  transform: scale(0.97);
 }
 
 /* Latency & Server Connection Pill */
@@ -291,11 +297,15 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
-  transition: all 0.15s ease-in-out;
+  transition: background-color 0.05s ease, border-color 0.05s ease, color 0.05s ease, opacity 0.05s ease;
 }
 
 button:active {
-  transform: scale(0.97);
+  filter: brightness(0.92);
+}
+
+[data-button-animation="animated"] button:active {
+  transform: scale(0.98);
 }
 
 input, select, textarea {

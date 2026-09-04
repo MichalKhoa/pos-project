@@ -145,5 +145,6 @@ export const DEFAULT_STORE_CONFIG = {
   cartItemStyle: 'elevated-card', // 'elevated-card', 'divided-row', 'rounded-tile'
   showPresetVat: true, // Show VAT percentage badge on preset buttons
   eetEnabled: true, // EET Ready mode indicator
-  defaultLanguage: 'cs'
+  defaultLanguage: 'cs',
+  buttonAnimationMode: 'instant' // 'instant' (default, no transform lag on touch) or 'animated'
 };
