@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Lock, Unlock, KeyRound } from 'lucide-react';
+import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function SecuritySection({
   config,
@@ -9,6 +10,7 @@ export default function SecuritySection({
   onToggleAdminMode,
   onOpenPinChange
 }) {
+  const { t } = useTranslation();
 
   const handleUpdate = (updates) => {
     if (saveConfigBatch) {
@@ -29,10 +31,10 @@ export default function SecuritySection({
           <div>
             <h3 className="settings-section-title" style={{ color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
               {isAdminMode ? <Unlock size={20} style={{ color: 'var(--accent-amber)' }} /> : <Lock size={20} style={{ color: 'var(--text-muted)' }} />}
-              <span>Režim správce pokladny</span>
+              <span>{t('settings.security_admin_mode_title') || 'Režim správce pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
-              Umožňuje přístup k mazání prodejů, systémové konfiguraci a pokročilé správě.
+              {t('settings.security_admin_mode_desc') || 'Umožňuje přístup k mazání prodejů, systémové konfiguraci a pokročilé správě.'}
             </p>
           </div>
 
@@ -43,15 +45,15 @@ export default function SecuritySection({
             fontWeight: '800',
             fontSize: '0.8rem'
           }}>
-            {isAdminMode ? 'Správce Aktivní' : 'Uzamčeno'}
+            {isAdminMode ? (t('settings.security_admin_active') || 'Správce Aktivní') : (t('settings.security_locked') || 'Uzamčeno')}
           </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.4', maxWidth: '520px' }}>
             {isAdminMode
-              ? 'Správcovský režim je zapnutý. Pokladní aplikace má plná oprávnění k mazání záznamů a systémovým zásahům.'
-              : 'Pro aktivaci režimu správce budete vyzváni k zadání 4místného bezpečnostního kódu Admin PIN.'}
+              ? (t('settings.security_admin_active_desc') || 'Správcovský režim je zapnutý. Pokladní aplikace má plná oprávnění k mazání záznamů a systémovým zásahům.')
+              : (t('settings.security_admin_inactive_desc') || 'Pro aktivaci režimu správce budete vyzváni k zadání 4místného bezpečnostního kódu Admin PIN.')}
           </p>
 
           <button
@@ -69,7 +71,7 @@ export default function SecuritySection({
             onClick={onToggleAdminMode}
           >
             {isAdminMode ? <Unlock size={18} /> : <Lock size={18} />}
-            <span>{isAdminMode ? 'Ukončit Režim Správce' : 'Aktivovat Režim Správce'}</span>
+            <span>{isAdminMode ? (t('settings.security_admin_exit') || 'Ukončit Režim Správce') : (t('settings.security_admin_enter') || 'Aktivovat Režim Správce')}</span>
           </button>
         </div>
       </div>
@@ -80,10 +82,10 @@ export default function SecuritySection({
           <div>
             <h3 className="settings-section-title">
               <KeyRound size={19} style={{ color: 'var(--accent-amber)' }} />
-              <span>Správa kódu Admin PIN</span>
+              <span>{t('settings.security_pin_title') || 'Správa kódu Admin PIN'}</span>
             </h3>
             <p className="settings-section-desc">
-              Ochranný kód bránící nepovolaným osobám v přístupu do pokročilých nastavení.
+              {t('settings.security_pin_desc') || 'Ochranný kód bránící nepovolaným osobám v přístupu do pokročilých nastavení.'}
             </p>
           </div>
         </div>
@@ -91,10 +93,10 @@ export default function SecuritySection({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-              Stav Admin PIN: <span style={{ fontFamily: 'monospace', letterSpacing: '3px', color: 'var(--accent-amber)' }}>••••</span>
+              {t('settings.security_pin_status') || 'Stav Admin PIN:'} <span style={{ fontFamily: 'monospace', letterSpacing: '3px', color: 'var(--accent-amber)' }}>••••</span>
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Výchozí kód z výroby je 1234. Pro vyšší bezpečnost doporučujeme kód změnit.
+              {t('settings.security_pin_note') || 'Výchozí kód z výroby je 1234. Pro vyšší bezpečnost doporučujeme kód změnit.'}
             </div>
           </div>
 
@@ -113,7 +115,7 @@ export default function SecuritySection({
             onClick={onOpenPinChange}
           >
             <Lock size={16} />
-            <span>Změnit kód Admin PIN</span>
+            <span>{t('settings.security_change_pin_btn') || 'Změnit kód Admin PIN'}</span>
           </button>
         </div>
       </div>
@@ -127,10 +129,10 @@ export default function SecuritySection({
           <div>
             <h3 className="settings-section-title">
               <Shield size={19} style={{ color: 'var(--accent-blue)' }} />
-              <span>Zabezpečení a Uzamčení Pokladny</span>
+              <span>{t('settings.security_lock_title') || 'Zabezpečení a Uzamčení Pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
-              Nastavte automatické zamykání obrazovky, když se pokladna nepoužívá.
+              {t('settings.security_lock_desc') || 'Nastavte automatické zamykání obrazovky, když se pokladna nepoužívá.'}
             </p>
           </div>
         </div>
@@ -138,7 +140,7 @@ export default function SecuritySection({
         <div className="settings-form-grid">
           <div className="settings-field">
             <label className="settings-label">
-              PIN kód obsluhy pokladny (4–8 číslic)
+              {t('settings.security_cashier_pin_label') || 'PIN kód obsluhy pokladny (4–8 číslic)'}
             </label>
             <input
               type="password"
@@ -153,17 +155,17 @@ export default function SecuritySection({
 
           <div className="settings-field">
             <label className="settings-label">
-              Automatické uzamčení při nečinnosti
+              {t('settings.security_autolock_label') || 'Automatické uzamčení při nečinnosti'}
             </label>
             <select
               className="settings-input"
               value={config.autoLockMinutes !== undefined ? config.autoLockMinutes : 15}
               onChange={e => handleUpdate({ autoLockMinutes: parseInt(e.target.value, 10) })}
             >
-              <option value={15}>Po 15 minutách nečinnosti (Doporučeno)</option>
-              <option value={5}>Po 5 minutách nečinnosti</option>
-              <option value={30}>Po 30 minutách nečinnosti</option>
-              <option value={0}>Vypnuto (Pouze ruční zamknutí tlačítkem)</option>
+              <option value={15}>{t('settings.security_autolock_15') || 'Po 15 minutách nečinnosti (Doporučeno)'}</option>
+              <option value={5}>{t('settings.security_autolock_5') || 'Po 5 minutách nečinnosti'}</option>
+              <option value={30}>{t('settings.security_autolock_30') || 'Po 30 minutách nečinnosti'}</option>
+              <option value={0}>{t('settings.security_autolock_never') || 'Vypnuto (Pouze ruční zamknutí tlačítkem)'}</option>
             </select>
           </div>
         </div>

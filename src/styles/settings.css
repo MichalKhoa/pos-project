@@ -325,6 +325,97 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
+.settings-segmented-group.compact {
+  padding: 2px;
+  height: 32px;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+.settings-segmented-group.compact .settings-segmented-btn,
+.settings-segmented-btn.compact {
+  min-height: unset;
+  height: 26px;
+  padding: 0 0.65rem;
+  font-size: 0.76rem;
+  line-height: 1;
+}
+
+/* Receipt Preview Scenario Toolbar */
+.receipt-preview-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.receipt-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.receipt-preview-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+}
+
+.receipt-preview-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.receipt-preview-chip {
+  height: 26px;
+  padding: 0 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.receipt-preview-chip:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.receipt-preview-chip.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+}
+
+.receipt-preview-chip.active-danger {
+  background: var(--accent-rose, #ef4444);
+  color: #ffffff;
+  border-color: var(--accent-rose, #ef4444);
+}
+
+
 /* Toggle Switch Row */
 .settings-toggle-row {
   display: flex;

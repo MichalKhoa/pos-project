@@ -80,6 +80,8 @@ class StoreConfigSchema(BaseModel):
     receiptTaxMatrixStyle: Optional[str] = None
     receiptQrCodeType: Optional[str] = None
     receiptQrCodeUrl: Optional[str] = None
+    receiptShowLogo: Optional[bool] = None
+    receiptLogoBase64: Optional[str] = None
     receiptCustomHeader: Optional[str] = None
     receiptFooterLines: Optional[str] = None
     receiptShowBranding: Optional[bool] = None
@@ -152,8 +154,10 @@ def get_store_config(db: Session = Depends(get_db)):
         "receiptShowItemVat": getattr(config, 'receipt_show_item_vat', True) if getattr(config, 'receipt_show_item_vat', None) is not None else True,
         "receiptShowItemDiscount": getattr(config, 'receipt_show_item_discount', True) if getattr(config, 'receipt_show_item_discount', None) is not None else True,
         "receiptTaxMatrixStyle": getattr(config, 'receipt_tax_matrix_style', "detailed") or "detailed",
-        "receiptQrCodeType": getattr(config, 'receipt_qr_code_type', "spayd") or "spayd",
+        "receiptQrCodeType": getattr(config, 'receipt_qr_code_type', "none") or "none",
         "receiptQrCodeUrl": getattr(config, 'receipt_qr_code_url', "") or "",
+        "receiptShowLogo": getattr(config, 'receipt_show_logo', False) if getattr(config, 'receipt_show_logo', None) is not None else False,
+        "receiptLogoBase64": getattr(config, 'receipt_logo_base64', "") or "",
         "receiptCustomHeader": getattr(config, 'receipt_custom_header', "") or "",
         "receiptFooterLines": getattr(config, 'receipt_footer_lines', "Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.") or "Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.",
         "receiptShowBranding": getattr(config, 'receipt_show_branding', True) if getattr(config, 'receipt_show_branding', None) is not None else True,
@@ -229,6 +233,8 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.receiptTaxMatrixStyle is not None: config.receipt_tax_matrix_style = data.receiptTaxMatrixStyle
     if data.receiptQrCodeType is not None: config.receipt_qr_code_type = data.receiptQrCodeType
     if data.receiptQrCodeUrl is not None: config.receipt_qr_code_url = data.receiptQrCodeUrl
+    if data.receiptShowLogo is not None: config.receipt_show_logo = data.receiptShowLogo
+    if data.receiptLogoBase64 is not None: config.receipt_logo_base64 = data.receiptLogoBase64
     if data.receiptCustomHeader is not None: config.receipt_custom_header = data.receiptCustomHeader
     if data.receiptFooterLines is not None: config.receipt_footer_lines = data.receiptFooterLines
     if data.receiptShowBranding is not None: config.receipt_show_branding = data.receiptShowBranding

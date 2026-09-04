@@ -280,14 +280,14 @@ export default function SettingsView({
   };
 
   const SUBTABS = [
-    { id: 'store', icon: Store, title: t('settings.tab_store') || 'Údaje prodejny', heading: 'Nastavení prodejny a provozovny', subtitle: 'Firma, IČO, adresa, DPH a IBAN' },
-    { id: 'layout', icon: Layout, title: t('settings.tab_layout') || 'Rozvržení & Zobrazení', heading: 'Rozvržení a vzhled pokladny', subtitle: 'Tlačítka sortimentu, košík, LCD' },
-    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Periferie', heading: 'Pokladní tiskárna a periferie', subtitle: 'ESC/POS tiskárna a pokladní zásuvka' },
-    { id: 'receipt', icon: Receipt, title: t('settings.tab_receipt') || 'Účtenka & Vzhled', heading: 'Vzhled a formátování účtenky', subtitle: 'Oddělovače, písmo, okraje a QR' },
-    { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: 'Platební terminál', subtitle: 'ČSOB terminál a ruční režim' },
-    { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: 'Zabezpečení a PIN kód', subtitle: 'Správce, PIN kód a zamykání' },
-    { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: 'Zálohování a systémová správa', subtitle: 'Export/import dat, aktualizace a EET' },
-    { id: 'diagnostics', icon: Activity, title: t('settings.tab_diagnostics') || 'Náhled & Diagnostika', heading: 'Živý náhled účtenky a diagnostika', subtitle: 'Reálná účtenka, kontrola periferií a tržba' },
+    { id: 'store', icon: Store, title: t('settings.tab_store') || 'Údaje prodejny', heading: t('settings.tab_store_heading') || 'Nastavení prodejny a provozovny', subtitle: t('settings.tab_store_sub') || 'Firma, IČO, adresa, DPH a IBAN' },
+    { id: 'layout', icon: Layout, title: t('settings.tab_layout') || 'Rozvržení & Zobrazení', heading: t('settings.tab_layout_heading') || 'Rozvržení a vzhled pokladny', subtitle: t('settings.tab_layout_sub') || 'Tlačítka sortimentu, košík, LCD' },
+    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Periferie', heading: t('settings.tab_hardware_heading') || 'Pokladní tiskárna a periferie', subtitle: t('settings.tab_hardware_sub') || 'ESC/POS tiskárna a pokladní zásuvka' },
+    { id: 'receipt', icon: Receipt, title: t('settings.tab_receipt') || 'Účtenka & Vzhled', heading: t('settings.tab_receipt_heading') || 'Vzhled a formátování účtenky', subtitle: t('settings.tab_receipt_sub') || 'Oddělovače, písmo, okraje a logo' },
+    { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: t('settings.tab_terminal_heading') || 'Platební terminál', subtitle: t('settings.tab_terminal_sub') || 'ČSOB terminál a ruční režim' },
+    { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: t('settings.tab_security_heading') || 'Zabezpečení a PIN kód', subtitle: t('settings.tab_security_sub') || 'Správce, PIN kód a zamykání' },
+    { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: t('settings.tab_system_heading') || 'Zálohování a systémová správa', subtitle: t('settings.tab_system_sub') || 'Export/import dat, aktualizace a EET' },
+    { id: 'diagnostics', icon: Activity, title: t('settings.tab_diagnostics') || 'Náhled & Diagnostika', heading: t('settings.tab_diagnostics_heading') || 'Živý náhled účtenky a diagnostika', subtitle: t('settings.tab_diagnostics_sub') || 'Reálná účtenka, kontrola periferií a tržba' },
   ];
 
   const currentTabObj = SUBTABS.find(t => t.id === activeSubTab) || SUBTABS[0];
@@ -302,7 +302,7 @@ export default function SettingsView({
             <span>{t('settings.title') || 'Nastavení'}</span>
           </div>
           <div className="settings-sidebar-desc">
-            Konfigurace prodejny a periferií
+            {t('settings.sidebar_desc') || 'Konfigurace prodejny a periferií'}
           </div>
         </div>
 

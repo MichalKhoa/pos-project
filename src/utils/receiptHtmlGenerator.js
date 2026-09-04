@@ -53,9 +53,11 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
   const showVat = storeConfig?.receiptShowItemVat !== false;
   const showDisc = storeConfig?.receiptShowItemDiscount !== false;
   const taxMatrixStyle = storeConfig?.receiptTaxMatrixStyle || 'detailed';
-  const qrType = storeConfig?.receiptQrCodeType || 'spayd';
+  const qrType = storeConfig?.receiptQrCodeType || 'none';
   const showBranding = storeConfig?.receiptShowBranding !== false;
   const showCashier = storeConfig?.receiptShowCashier !== false;
+  const showLogo = Boolean(storeConfig?.receiptShowLogo);
+  const logoBase64 = storeConfig?.receiptLogoBase64 || '';
 
   const isRefund = saleData.isRefund || saleData.is_refund || (saleData.totalAmount !== undefined && saleData.totalAmount < 0) || (saleData.grandTotal !== undefined && saleData.grandTotal < 0);
   const origNumber = escapeHtml(saleData.originalReceiptNumber || saleData.original_receipt_number);
@@ -75,6 +77,8 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
   const phone = escapeHtml(storeConfig?.receiptStorePhone || '');
   const email = escapeHtml(storeConfig?.receiptStoreEmail || '');
   const cashierName = escapeHtml(saleData.cashier || saleData.cashierName || 'Pokladní');
+  const customHeader = escapeHtml(storeConfig?.receiptCustomHeader || '');
+
 
   const sepDividerHtml = (sepStyle === 'stars')
     ? `<div style="${getSeparatorCss(sepStyle, sepSpacing)}">★ ★ ★ ★ ★ ★ ★</div>`
@@ -354,6 +358,11 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
       </head>
       <body>
         <div class="receipt-box">
+          ${showLogo && logoBase64 ? `
+            <div class="center" style="margin-bottom: 6px;">
+              <img src="${logoBase64}" alt="Logo" style="max-width: ${is58mm ? '140px' : '180px'}; max-height: 60px; object-fit: contain; filter: grayscale(100%); margin: 0 auto; display: block;" />
+            </div>
+          ` : ''}
           <div class="center" style="font-size: ${is58mm ? '13px' : '17px'}; font-weight: ${boldStore ? '900' : '600'}; text-transform: uppercase; letter-spacing: 0.5px;">${storeName}</div>
           <div class="center" style="font-size: ${is58mm ? '9px' : '11.5px'}; color: #333;">${street}</div>
           <div class="center" style="font-size: ${is58mm ? '9px' : '11.5px'}; color: #333;">${city}</div>
@@ -364,8 +373,14 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
             </div>
           ` : ''}
           <div class="center" style="font-size: ${is58mm ? '8px' : '9.5px'}; color: #555; margin-top: 2px;">Provozovna: ${idProvozovny} | ${registerNo}</div>
+          ${customHeader ? `
+            <div class="center bold" style="margin: 4px 0; padding: 3px 6px; font-size: ${is58mm ? '8.5px' : '10.5px'}; border: 1px dashed #64748b; border-radius: 2px; background: rgba(0,0,0,0.03);">
+              ${customHeader}
+            </div>
+          ` : ''}
 
           ${titleBoxHtml}
+
 
           ${isRefund && origNumber ? `<div class="center bold" style="font-size: ${is58mm ? '8.5px' : '10.5px'}; color: #dc2626;">Původní doklad č.: #${origNumber}</div>` : ''}
           ${isRefund && reasonText ? `<div class="center" style="font-size: ${is58mm ? '8.5px' : '10.5px'}; font-style: italic;">Důvod: ${reasonText}</div>` : ''}

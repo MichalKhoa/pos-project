@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Printer, RefreshCw, Receipt, DollarSign, CheckCircle } from 'lucide-react';
 import { openCashDrawerBackend } from '../../api/posApi.js';
 import { soundFx } from '../../utils/audio.js';
+import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function PrinterSection({
   config,
@@ -11,6 +12,7 @@ export default function PrinterSection({
   scanningPrinters = false,
   onScanPrinters
 }) {
+  const { t } = useTranslation();
   const [drawerTesting, setDrawerTesting] = useState(false);
   const [drawerMessage, setDrawerMessage] = useState(null);
 
@@ -29,10 +31,10 @@ export default function PrinterSection({
     soundFx.playCashChime();
     try {
       await openCashDrawerBackend();
-      setDrawerMessage('Signál pro otevření zásuvky byl úspěšně odeslán.');
+      setDrawerMessage(t('settings.drawer_success') || 'Signál pro otevření zásuvky byl úspěšně odeslán.');
       setTimeout(() => setDrawerMessage(null), 3500);
     } catch {
-      setDrawerMessage('Zásuvku se nepodařilo otevřít přes tiskárnu.');
+      setDrawerMessage(t('settings.drawer_error') || 'Zásuvku se nepodařilo otevřít přes tiskárnu.');
     } finally {
       setDrawerTesting(false);
     }
@@ -50,10 +52,10 @@ export default function PrinterSection({
           <div>
             <h3 className="settings-section-title">
               <Printer size={19} style={{ color: 'var(--accent-blue)' }} />
-              <span>Pokladní tiskárna účtenek (ESC/POS)</span>
+              <span>{t('settings.printer_title') || 'Pokladní tiskárna účtenek (ESC/POS)'}</span>
             </h3>
             <p className="settings-section-desc">
-              Výběr připojené USB nebo síťové termotiskárny pro tisk účtenek a bonů.
+              {t('settings.printer_desc') || 'Výběr připojené USB nebo síťové termotiskárny pro tisk účtenek a bonů.'}
             </p>
           </div>
 
@@ -65,13 +67,13 @@ export default function PrinterSection({
             style={{ height: '36px', padding: '0 0.85rem', fontSize: '0.82rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
             <RefreshCw size={14} className={scanningPrinters ? 'spin-icon' : ''} />
-            <span>{scanningPrinters ? 'Hledám...' : 'Vyhledat tiskárny'}</span>
+            <span>{scanningPrinters ? (t('settings.printer_searching') || 'Hledám...') : (t('settings.printer_search_btn') || 'Vyhledat tiskárny')}</span>
           </button>
         </div>
 
         <div className="settings-field">
           <label className="settings-label">
-            Aktivní tiskové zařízení
+            {t('settings.printer_active_device') || 'Aktivní tiskové zařízení'}
           </label>
           <select
             className="settings-input"
@@ -95,7 +97,7 @@ export default function PrinterSection({
           </select>
           {currentDev && (
             <span style={{ fontSize: '0.78rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
-              Stav tiskárny: {currentDev.status === 'CONNECTED' ? 'Připojeno a připraveno k tisku' : 'Virtuální / offline náhled'}
+              {currentDev.status === 'CONNECTED' ? (t('settings.printer_status_connected') || 'Připojeno a připraveno k tisku') : (t('settings.printer_status_virtual') || 'Virtuální / offline náhled')}
             </span>
           )}
         </div>
@@ -110,10 +112,10 @@ export default function PrinterSection({
             <div>
               <h3 className="settings-section-title">
                 <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
-                <span>Kotouček & Vzhled Účtenky</span>
+                <span>{t('settings.tab_receipt') || 'Kotouček & Vzhled Účtenky'}</span>
               </h3>
               <p className="settings-section-desc">
-                Základní formát papíru a odkaz do vizuálního editoru účtenky.
+                {t('settings.tab_receipt_sub') || 'Základní formát papíru a odkaz do vizuálního editoru účtenky.'}
               </p>
             </div>
           </div>
@@ -122,17 +124,17 @@ export default function PrinterSection({
           <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
             <div className="settings-toggle-label-wrap">
               <span className="settings-toggle-title">
-                Šířka papírové role tiskárny
+                {t('settings.printer_paper_width_label') || 'Šířka papírové role tiskárny'}
               </span>
               <span className="settings-toggle-subtitle">
-                Standardní pokladní kotouček má šířku 80 mm (48 znaků na řádek).
+                {t('settings.printer_paper_width_desc') || 'Standardní pokladní kotouček má šířku 80 mm (48 znaků na řádek).'}
               </span>
             </div>
 
             <div className="settings-segmented-group">
               {[
-                { val: '80', label: '80 mm (Standard)' },
-                { val: '58', label: '58 mm (Úzká)' }
+                { val: '80', label: t('settings.printer_width_80_std') || '80 mm (Standard)' },
+                { val: '58', label: t('settings.printer_width_58_narrow') || '58 mm (Úzká)' }
               ].map(w => (
                 <button
                   key={w.val}
@@ -148,10 +150,10 @@ export default function PrinterSection({
 
           <div style={{ padding: '0.85rem 1rem', background: 'rgba(59, 130, 246, 0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(59, 130, 246, 0.2)', marginTop: '0.85rem' }}>
             <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-blue)', marginBottom: '0.2rem' }}>
-              Kompletní přizpůsobení účtenky
+              {t('settings.printer_customization_notice_title') || 'Kompletní přizpůsobení účtenky'}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Pro nastavení oddělovačů, písma, horního/dolního okraje, kontaktů, QR platby a živého náhledu přepněte v levém menu do záložky <strong>Účtenka & Vzhled</strong>.
+              {t('settings.printer_customization_notice_desc') || 'Pro nastavení oddělovačů, loga, písma, kontaktů a živého náhledu přepněte v levém menu do záložky Účtenka & Vzhled.'}
             </div>
           </div>
         </div>
@@ -162,10 +164,10 @@ export default function PrinterSection({
           <div>
             <h3 className="settings-section-title">
               <DollarSign size={19} style={{ color: 'var(--accent-emerald)' }} />
-              <span>Pokladní zásuvka na peníze</span>
+              <span>{t('settings.drawer_title') || 'Pokladní zásuvka na peníze'}</span>
             </h3>
             <p className="settings-section-desc">
-              Zásuvka připojená kabelem RJ11 do tiskárny se automaticky otevírá při platbě hotovostí.
+              {t('settings.drawer_desc') || 'Zásuvka připojená kabelem RJ11 do tiskárny se automaticky otevírá při platbě hotovostí.'}
             </p>
           </div>
         </div>
@@ -173,10 +175,10 @@ export default function PrinterSection({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-              Test elektrického impulsu zásuvky
+              {t('settings.drawer_test_title') || 'Test elektrického impulsu zásuvky'}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Ověřte, zda tiskárna dokáže elektromagneticky uvolnit západku zásuvky.
+              {t('settings.drawer_test_desc') || 'Ověřte, zda tiskárna dokáže elektromagneticky uvolnit západku zásuvky.'}
             </div>
           </div>
 
@@ -195,7 +197,7 @@ export default function PrinterSection({
             disabled={drawerTesting}
           >
             <DollarSign size={16} />
-            <span>{drawerTesting ? 'Otevírám...' : 'Vyzkoušet otevření zásuvky'}</span>
+            <span>{drawerTesting ? (t('settings.drawer_opening') || 'Otevírám...') : (t('settings.drawer_test_btn') || 'Vyzkoušet otevření zásuvky')}</span>
           </button>
         </div>
 

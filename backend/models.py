@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean, Index
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean, Index, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -145,8 +145,10 @@ class StoreConfigModel(Base):
     receipt_show_item_vat = Column(Boolean, default=True)
     receipt_show_item_discount = Column(Boolean, default=True)
     receipt_tax_matrix_style = Column(String, default="detailed")
-    receipt_qr_code_type = Column(String, default="spayd")
+    receipt_qr_code_type = Column(String, default="none")
     receipt_qr_code_url = Column(String, default="")
+    receipt_show_logo = Column(Boolean, default=False)
+    receipt_logo_base64 = Column(Text, default="")
     receipt_custom_header = Column(String, default="")
     receipt_footer_lines = Column(String, default="Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.")
     receipt_show_branding = Column(Boolean, default=True)

@@ -593,7 +593,7 @@
   color: #111111;
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.08);
   border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
   font-size: 13.12px;
   line-height: 1.4;
   border: 1px solid #e2e8f0;
@@ -613,7 +613,6 @@
 
 .receipt-store-name {
   font-size: 20px;
-  font-weight: 900;
   text-transform: uppercase;
   color: #000000;
 }
@@ -649,15 +648,14 @@
   justify-content: space-between;
   align-items: center;
   font-size: 16.8px;
-  font-weight: 900;
   background: rgba(0, 0, 0, 0.02);
 }
 
 .receipt-total-amount {
   font-size: 21.6px;
-  font-weight: 900;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
 }
+
 
 /* Discount & Cash Input Keypads in Modals */
 .cash-numpad-container {

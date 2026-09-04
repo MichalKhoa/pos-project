@@ -8,7 +8,9 @@ export default function ReceiptPreviewPaper({
   resolvedItems,
   is58mm,
   width,
-  style
+  style,
+  copyIndex = 1,
+  forceQrDemo = false
 }) {
   const isRefund = saleData.isRefund || saleData.is_refund;
   const fik = saleData.fik || saleData.pok || saleData.fik_code;
@@ -39,9 +41,11 @@ export default function ReceiptPreviewPaper({
   const showVat = storeConfig?.receiptShowItemVat !== false;
   const showDisc = storeConfig?.receiptShowItemDiscount !== false;
   const taxMatrixStyle = storeConfig?.receiptTaxMatrixStyle || 'detailed';
-  const qrType = storeConfig?.receiptQrCodeType || 'spayd';
+  const qrType = storeConfig?.receiptQrCodeType || 'none';
   const showBranding = storeConfig?.receiptShowBranding !== false;
   const showCashier = storeConfig?.receiptShowCashier !== false;
+  const showLogo = Boolean(storeConfig?.receiptShowLogo);
+  const logoBase64 = storeConfig?.receiptLogoBase64 || '';
 
   const customHeader = clean(storeConfig?.receiptCustomHeader || '');
   const vatStatus = storeConfig?.receiptVatPayerStatus || 'payer';
@@ -71,15 +75,19 @@ export default function ReceiptPreviewPaper({
   const qrCodeDataUrl = useMemo(() => {
     if (qrType === 'spayd') {
       const cleanIban = (storeConfig?.bankAccountIban || '').replace(/\s/g, '').toUpperCase();
-      if (!cleanIban || cleanIban === 'CZ6508000000001234567890') return null;
+      const validIban = (cleanIban && cleanIban !== 'CZ6508000000001234567890') ? cleanIban : (forceQrDemo ? 'CZ6508000000001234567890' : null);
+      if (!validIban) return null;
       const storeMsg = (storeConfig?.storeName || 'VoltFlow POS').slice(0, 30);
-      const spaydPayload = `SPD*1.0*ACC:${cleanIban}*AM:${(saleData.totalAmount || 0).toFixed(2)}*CC:CZK*X-VS:${saleData.receiptNumber || '1'}*MSG:${storeMsg}`;
+      const spaydPayload = `SPD*1.0*ACC:${validIban}*AM:${(saleData.totalAmount || 0).toFixed(2)}*CC:CZK*X-VS:${saleData.receiptNumber || '1'}*MSG:${storeMsg}`;
       return generateQrDataUrl(spaydPayload, 140);
-    } else if (qrType === 'url' && storeConfig?.receiptQrCodeUrl) {
-      return generateQrDataUrl(storeConfig.receiptQrCodeUrl, 140);
+    } else if (qrType === 'url') {
+      const targetUrl = storeConfig?.receiptQrCodeUrl || (forceQrDemo ? 'https://voltflow.pos' : '');
+      if (targetUrl) {
+        return generateQrDataUrl(targetUrl, 140);
+      }
     }
     return null;
-  }, [qrType, storeConfig?.bankAccountIban, storeConfig?.receiptQrCodeUrl, storeConfig?.storeName, saleData.totalAmount, saleData.receiptNumber]);
+  }, [qrType, storeConfig?.bankAccountIban, storeConfig?.receiptQrCodeUrl, storeConfig?.storeName, saleData.totalAmount, saleData.receiptNumber, forceQrDemo]);
 
   // Multi-line footer
   const footerRaw = storeConfig?.receiptFooterLines || storeConfig?.receiptFooter || 'Děkujeme za váš nákup!';
@@ -113,24 +121,44 @@ export default function ReceiptPreviewPaper({
           fontWeight: '900',
           letterSpacing: '1px',
           marginBottom: '6px',
-          color: '#475569',
-          borderBottom: '1px dashed #cbd5e1',
+          color: copyIndex === 2 ? '#b45309' : '#475569',
+          borderBottom: `1px dashed ${copyIndex === 2 ? '#f59e0b' : '#cbd5e1'}`,
           paddingBottom: '4px'
         }}>
-          *** ÚČTENKA PRO ZÁKAZNÍKA (Kopie 1/2) ***
+          {copyIndex === 2 ? '*** KOPIE PRO OBCHODNÍKA (Kopie 2/2) ***' : '*** ÚČTENKA PRO ZÁKAZNÍKA (Kopie 1/2) ***'}
         </div>
       )}
 
+
       <div className="receipt-header" style={{ textAlign: 'center' }}>
+        {showLogo && logoBase64 && (
+          <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+            <img
+              src={logoBase64}
+              alt="Store Logo"
+              style={{
+                maxWidth: is58mm ? '160px' : '220px',
+                maxHeight: '75px',
+                objectFit: 'contain',
+                filter: 'grayscale(100%) contrast(140%)',
+                margin: '0 auto',
+                display: 'block'
+              }}
+            />
+          </div>
+        )}
         <div
           className="receipt-store-name"
           style={{
             fontSize: is58mm ? '18.4px' : '22.4px',
-            fontWeight: boldStore ? '900' : '600'
+            fontWeight: boldStore ? '900' : '400',
+            letterSpacing: boldStore ? '0.5px' : 'normal',
+            textShadow: boldStore ? '0.35px 0 0 currentColor' : 'none'
           }}
         >
           {clean(storeConfig?.storeName || 'VoltFlow POS')}
         </div>
+
         <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.street)}</div>
         <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.city)}</div>
         <div style={{ marginTop: '2px', fontSize: is58mm ? '11.2px' : '12.8px', fontWeight: '700' }}>
@@ -226,7 +254,14 @@ export default function ReceiptPreviewPaper({
             return (
               <tr key={idx}>
                 <td style={{ wordBreak: 'break-word', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
-                  <div className="receipt-item-title" style={{ fontWeight: boldItems ? '800' : '500' }}>
+                  <div
+                    className="receipt-item-title"
+                    style={{
+                      fontWeight: boldItems ? '900' : '400',
+                      color: boldItems ? '#000000' : '#222222',
+                      textShadow: boldItems ? '0.3px 0 0 currentColor' : 'none'
+                    }}
+                  >
                     {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
                   </div>
                   {showSku && (item.barcode || item.sku) && (
@@ -237,7 +272,15 @@ export default function ReceiptPreviewPaper({
                   )}
                 </td>
                 <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>{item.quantity}</td>
-                <td style={{ textAlign: 'right', fontWeight: boldPrices ? '900' : '500', whiteSpace: 'nowrap', fontFamily: 'monospace', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
+                <td style={{
+                  textAlign: 'right',
+                  fontWeight: boldPrices ? '900' : '400',
+                  color: boldPrices ? '#000000' : '#222222',
+                  textShadow: boldPrices ? '0.3px 0 0 currentColor' : 'none',
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'monospace',
+                  padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0'
+                }}>
                   {(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč
                 </td>
               </tr>
@@ -251,12 +294,22 @@ export default function ReceiptPreviewPaper({
         className="receipt-total-row"
         style={{
           color: isRefund ? '#dc2626' : '#000000',
-          fontWeight: boldTotal ? '900' : '700'
+          fontWeight: boldTotal ? '900' : '500',
+          textShadow: boldTotal ? '0.35px 0 0 currentColor' : 'none'
         }}
       >
         <span>CELKEM K {isRefund ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
-        <span className="receipt-total-amount">{(saleData.totalAmount || 0).toFixed(0)} Kč</span>
+        <span
+          className="receipt-total-amount"
+          style={{
+            fontWeight: boldTotal ? '900' : '500',
+            textShadow: boldTotal ? '0.35px 0 0 currentColor' : 'none'
+          }}
+        >
+          {(saleData.totalAmount || 0).toFixed(0)} Kč
+        </span>
       </div>
+
 
       <div style={{ fontSize: is58mm ? '11.52px' : '12.8px', margin: '6.4px 0', display: 'flex', flexDirection: 'column', gap: '3.2px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -388,7 +441,13 @@ export default function ReceiptPreviewPaper({
       {/* Custom Footer */}
       {renderSeparator('sep-foot')}
       <div style={{ textAlign: 'center', marginTop: '6.4px', paddingBottom: '3.2px' }}>
-        <div style={{ fontSize: is58mm ? '11.52px' : '13.12px', fontWeight: boldFooter ? '800' : '600', fontStyle: 'italic' }}>
+        <div style={{
+          fontSize: is58mm ? '11.52px' : '13.12px',
+          fontWeight: boldFooter ? '900' : '400',
+          color: boldFooter ? '#000000' : '#444444',
+          textShadow: boldFooter ? '0.3px 0 0 currentColor' : 'none',
+          fontStyle: 'italic'
+        }}>
           {footerLines.map((l, i) => (
             <div key={i}>{clean(l)}</div>
           ))}
@@ -399,6 +458,7 @@ export default function ReceiptPreviewPaper({
           </div>
         )}
       </div>
+
 
       {/* Paper Cutter Indicator & Margin Feed */}
       <div

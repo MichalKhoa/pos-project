@@ -50,6 +50,41 @@ def get_receipt_separator(style: str, width: int) -> str:
     return "-" * width
 
 
+def print_receipt_logo(printer, logo_base64: str, is_58mm: bool):
+    """Prints monochrome raster store logo via python-escpos image command."""
+    if not logo_base64 or not hasattr(printer, 'image'):
+        return
+    try:
+        import base64
+        import io
+        from PIL import Image
+
+        raw_b64 = logo_base64.split(",", 1)[1] if "," in logo_base64 else logo_base64
+        img_bytes = base64.b64decode(raw_b64)
+        pil_img = Image.open(io.BytesIO(img_bytes))
+
+        # Handle transparency: composite onto white background
+        if pil_img.mode in ('RGBA', 'LA') or (pil_img.mode == 'P' and 'transparency' in pil_img.info):
+            alpha = pil_img.convert('RGBA')
+            bg = Image.new('RGBA', alpha.size, (255, 255, 255, 255))
+            bg.paste(alpha, mask=alpha.split()[3])
+            pil_img = bg.convert('RGB')
+        else:
+            pil_img = pil_img.convert('RGB')
+
+        max_dots = 320 if is_58mm else 420
+        if pil_img.width > max_dots:
+            scale = max_dots / pil_img.width
+            new_h = max(1, int(pil_img.height * scale))
+            pil_img = pil_img.resize((max_dots, new_h), Image.Resampling.LANCZOS)
+
+        bw_img = pil_img.convert('1')
+        printer.set(align='center')
+        printer.image(bw_img, center=True)
+    except Exception as img_err:
+        logger.warning(f"Failed to print receipt logo image: {img_err}")
+
+
 def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encoding: str = "CP852"):
     """
     Safely writes Czech text to ESC/POS thermal printer with CP852/CP1250 encoding,
@@ -131,9 +166,13 @@ class ESCPOSPrinterService:
             show_vat = bool(store_config.get("receiptShowItemVat", True))
             show_disc = bool(store_config.get("receiptShowItemDiscount", True))
             tax_matrix_style = store_config.get("receiptTaxMatrixStyle", "detailed")
-            qr_type = store_config.get("receiptQrCodeType", "spayd")
+            qr_type = store_config.get("receiptQrCodeType", "none")
+            show_logo = bool(store_config.get("receiptShowLogo", False))
+            logo_base64 = str(store_config.get("receiptLogoBase64", "") or "").strip()
             show_branding = bool(store_config.get("receiptShowBranding", True))
             show_cashier = bool(store_config.get("receiptShowCashier", True))
+            custom_header = str(store_config.get("receiptCustomHeader") or store_config.get("receipt_custom_header") or "").strip()
+
 
             # 1. Attempt physical ESC/POS Hardware Connection if interface is configured
             printer = None
@@ -205,6 +244,10 @@ class ESCPOSPrinterService:
                             write_receipt_text(printer, "*** KOPIE PRO OBCHODNÍKA ***\n", strip_diacritics, encoding)
                             printer.text(separator + "\n")
 
+                        # Store Logo (if enabled)
+                        if show_logo and logo_base64:
+                            print_receipt_logo(printer, logo_base64, is_58mm)
+
                         # Store Header
                         printer.set(align='center', font='a', width=2 if bold_store else 1, height=2 if bold_store else 1, bold=bold_store)
                         write_receipt_text(printer, f"{store_config.get('storeName', 'VoltFlow POS')}\n", strip_diacritics, encoding)
@@ -235,7 +278,10 @@ class ESCPOSPrinterService:
                         reg_no = store_config.get('registerNo') or 'Pokladna #01'
                         prov_no = store_config.get('idProvozovny') or '11'
                         write_receipt_text(printer, f"Provozovna: {prov_no} | {reg_no}\n", strip_diacritics, encoding)
+                        if custom_header:
+                            write_receipt_text(printer, f"{custom_header}\n", strip_diacritics, encoding)
                         printer.text(separator + "\n")
+
 
                         # Document Title & Timestamp
                         raw_title = f"STORNO DOKLAD č. {receipt_num}" if is_refund else f"DAŇOVÝ DOKLAD č. {receipt_num}"
@@ -462,6 +508,8 @@ class ESCPOSPrinterService:
             # Simulation fallback when physical printer is not connected
             print(separator)
             print(f"--- PHYSICAL ESC/POS {paper_width}mm PRINT SIMULATION ---")
+            if show_logo and logo_base64:
+                print("[LOGO: Store Graphical Logo]")
             print(f"Store: {store_config.get('storeName')}")
             print(f"Receipt #: {sale_data.get('receiptNumber')}")
             print(f"Paper Width: {paper_width} mm ({line_width} chars/line)")
@@ -470,7 +518,6 @@ class ESCPOSPrinterService:
             print(f"Total Amount: {sale_data.get('totalAmount')} Kč")
             print(f"Payment Method: {sale_data.get('paymentMethod')}")
             print(separator)
-            return {"success": True, "physical": False, "status": "SIMULATED"}
             return {"success": True, "physical": False, "status": "SIMULATED"}
 
         except Exception as e:
