@@ -110,5 +110,5 @@ if not "!EDGE_EXE!"=="" (
 )
 
 echo [SUCCESS] VoltFlow POS running!
-echo To stop all services: VoltFlow_POS_Stop.bat
+echo To stop all services: scripts\tools\Himmel_POS_Stop.bat
 echo.

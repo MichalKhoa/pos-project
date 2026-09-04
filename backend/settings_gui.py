@@ -22,15 +22,19 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "pywebview"])
     import webview
 
-# Import DB setup
+# Import DB setup and paths
 try:
     from database import SessionLocal, engine
     from models import StoreConfigModel, Base
+    from paths import DB_PATH, CERTS_DIR, LOGS_DIR
     Base.metadata.create_all(bind=engine)
 except Exception as e:
     print(f"Database initialization warning: {e}")
     SessionLocal = None
     StoreConfigModel = None
+    DB_PATH = str(BACKEND_DIR / "data" / "pos_store.db")
+    CERTS_DIR = str(BACKEND_DIR / "certs")
+    LOGS_DIR = str(BACKEND_DIR / "logs")
 
 ENV_PATH = BACKEND_DIR / ".env"
 ENV_EXAMPLE_PATH = BACKEND_DIR / ".env.example"
@@ -254,8 +258,8 @@ class SettingsAPI:
         if not filename.lower().endswith((".p12", ".pfx")):
             return {"success": False, "message": "Soubor musí mít příponu .p12 nebo .pfx"}
 
-        certs_dir = BACKEND_DIR / "certs"
-        certs_dir.mkdir(exist_ok=True)
+        certs_dir = Path(CERTS_DIR)
+        certs_dir.mkdir(parents=True, exist_ok=True)
         dest_path = certs_dir / filename
 
         try:
@@ -334,12 +338,15 @@ class SettingsAPI:
     def trigger_backup(self) -> dict:
         """Create a manual timestamped backup of pos_store.db."""
         try:
-            db_file = PROJECT_ROOT / "pos_store.db"
+            db_file = Path(DB_PATH)
             if not db_file.exists():
-                db_file = BACKEND_DIR / "pos_store.db"
+                for fallback in [PROJECT_ROOT / "pos_store.db", BACKEND_DIR / "pos_store.db"]:
+                    if fallback.exists():
+                        db_file = fallback
+                        break
 
             if not db_file.exists():
-                return {"success": False, "message": "pos_store.db file not found"}
+                return {"success": False, "message": f"pos_store.db file not found (checked {DB_PATH})"}
 
             backups_dir = BACKEND_DIR / "backups"
             backups_dir.mkdir(exist_ok=True)
@@ -356,6 +363,8 @@ class SettingsAPI:
     def get_logs(self) -> dict:
         """Read last 100 lines of app log files."""
         log_files = [
+            Path(LOGS_DIR) / "app.log",
+            Path(LOGS_DIR) / "backend.log",
             BACKEND_DIR / "logs" / "app.log",
             BACKEND_DIR / "logs" / "backend.log"
         ]
@@ -370,7 +379,7 @@ class SettingsAPI:
                     lines.append(f"Error reading {log_path.name}: {e}\n")
 
         if not lines:
-            return {"logs": "No log files found in backend/logs/"}
+            return {"logs": f"No log files found in {LOGS_DIR} or backend/logs/"}
 
         return {"logs": "".join(lines)}
 
@@ -380,7 +389,7 @@ def main():
     html_path = BACKEND_DIR / "settings_ui" / "index.html"
 
     window = webview.create_window(
-        title="Himmel POS — Backend Settings",
+        title="VoltFlow POS — Backend Settings",
         url=str(html_path.resolve()),
         js_api=api,
         width=1000,

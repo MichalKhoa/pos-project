@@ -109,4 +109,4 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
     fi
 fi
 
-echo "[SUCCESS] VoltFlow POS running. To stop: ./himmel_pos_stop.sh"
+echo "[SUCCESS] VoltFlow POS running. To stop: ./scripts/tools/himmel_pos_stop.sh"

@@ -9,7 +9,9 @@ timeout /t 2 /nobreak >nul
 
 :: 2. Stop running services
 cd /d "%~dp0.."
-call "%~dp0..\Himmel_POS_Service_Stop.bat" >nul 2>&1
+if exist "%~dp0..\scripts\tools\Himmel_POS_Stop.bat" (
+    call "%~dp0..\scripts\tools\Himmel_POS_Stop.bat" >nul 2>&1
+)
 
 :: 3. Pull latest code from git master
 echo Fetching and pulling latest release...
@@ -33,7 +35,7 @@ schtasks /query /tn "HimmelPOSBackend" >nul 2>&1
 if %errorlevel% equ 0 (
     schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
 ) else (
-    start "" "%~dp0..\Himmel_POS.bat"
+    start "" "%~dp0..\start.bat"
 )
 
 echo Update Complete!

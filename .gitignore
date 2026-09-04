@@ -27,7 +27,8 @@ wheels/
 # ==========================================
 dist/
 dist-electron/
-build/
+/build/
+!scripts/build/
 backend/build/
 backend/dist_standalone/
 out/

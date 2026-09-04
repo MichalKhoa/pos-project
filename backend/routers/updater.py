@@ -96,8 +96,12 @@ def apply_system_update(request: Request):
                 creationflags=subprocess.CREATE_NEW_CONSOLE
             )
         else:
-            script_path = os.path.join(REPO_DIR, "himmel_pos_update.sh")
-            if not os.path.exists(script_path):
+            candidates = [
+                os.path.join(REPO_DIR, "scripts", "tools", "himmel_pos_update.sh"),
+                os.path.join(REPO_DIR, "himmel_pos_update.sh"),
+            ]
+            script_path = next((p for p in candidates if os.path.exists(p)), None)
+            if not script_path:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Update helper script (himmel_pos_update.sh) missing."

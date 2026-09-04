@@ -6,7 +6,7 @@ echo   Building VoltFlow POS Native Windows Installer (Tauri v2)
 echo ========================================================
 echo.
 
-cd /d "%~dp0"
+cd /d "%~dp0..\.."
 
 REM 0. Verify Prerequisites
 echo [0/4] Checking build environment...
@@ -26,8 +26,8 @@ if !errorlevel! neq 0 (
 )
 
 set "PYTHON_EXE=python"
-if exist "%~dp0backend\venv\Scripts\python.exe" (
-    set "PYTHON_EXE=%~dp0backend\venv\Scripts\python.exe"
+if exist "%~dp0..\..\backend\venv\Scripts\python.exe" (
+    set "PYTHON_EXE=%~dp0..\..\backend\venv\Scripts\python.exe"
 )
 "%PYTHON_EXE%" --version >nul 2>&1
 if !errorlevel! neq 0 (
@@ -50,7 +50,7 @@ REM 2. Freeze Backend Executable
 echo.
 echo [2/4] Freezing standalone Python backend...
 set "PYINSTALLER_ONEFILE=1"
-"%PYTHON_EXE%" "%~dp0backend\build_standalone.py"
+"%PYTHON_EXE%" "%~dp0..\..\backend\build_standalone.py"
 if !errorlevel! neq 0 (
     echo [ERROR] PyInstaller freeze failed!
     pause
@@ -60,7 +60,7 @@ if !errorlevel! neq 0 (
 REM 3. Stage Tauri Sidecar Binary
 echo.
 echo [3/4] Staging sidecar binary for Tauri...
-"%PYTHON_EXE%" "%~dp0scripts\prepare_sidecar.py"
+"%PYTHON_EXE%" "%~dp0..\..\scripts\prepare_sidecar.py"
 if !errorlevel! neq 0 (
     echo [ERROR] Sidecar staging failed!
     pause

@@ -74,20 +74,13 @@ build_windows_release.bat
 
 ### Mode 2: Standalone Web POS (Zero-Dependency Launcher)
 Runs the standalone frozen PyInstaller backend on port `8000` and opens the browser:
-- **Windows**: Double-click `start_pos.bat` (or `VoltFlow_POS.bat`)
-- **Linux**: Execute `./start_pos.sh` (or `./himmel_pos.sh`)
+- **Windows**: Double-click `start.bat` (or `start_pos.bat`)
+- **Linux**: Execute `./start.sh` (or `./start_pos.sh`)
 
-### Mode 3: Developer Mode (Live Hot Reload)
-Run frontend and backend in separate terminal processes:
-```bash
-# Terminal 1: Backend
-cd backend
-source venv/bin/activate   # or .\venv\Scripts\activate on Windows
-python main.py
-
-# Terminal 2: Frontend
-npm run dev
-```
+### Mode 3: Developer / Debug Mode (Live Hot Reload)
+One command to run both Vite dev server (:5173) and FastAPI backend (:8000) with hot reloading and clean Ctrl+C shutdown:
+- **Linux / macOS**: `./debug.sh`
+- **Windows**: `debug.bat`
 
 ---
 
@@ -115,12 +108,13 @@ pos-project-himmel/
 │   ├── capabilities/default.json  # Tauri v2 security capabilities
 │   └── tauri.conf.json            # Desktop window & bundle configuration
 ├── scripts/
+│   ├── build/                     # Standalone & release build scripts (Linux/Windows)
+│   ├── tools/                     # Auxiliary scripts (kiosk, LAN, updater, stop, nssm)
 │   └── prepare_sidecar.py         # Stages backend binary for Tauri bundling
-├── build_standalone.sh            # Builds standalone bundle on Linux
-├── build_standalone.bat           # Builds standalone bundle on Windows
-├── build_windows_release.bat      # Generates Windows NSIS setup.exe installer
-├── start_pos.sh                   # Linux production launcher
-├── start_pos.bat                  # Windows production launcher
+├── install.sh / install.bat       # One-click project setup
+├── start.sh / start.bat           # Production launcher (:8000)
+├── debug.sh / debug.bat           # Hot-reload debug launcher (Vite :5173 + FastAPI :8000)
+├── backend_settings.sh / .bat     # Backend settings GUI (.env, DB, EET certs, hardware)
 ├── .github/workflows/             # GitHub Actions CI for Windows installers
 └── docs/                          # Detailed architecture guides & specifications
 ```
@@ -131,15 +125,15 @@ pos-project-himmel/
 
 ### 1. Build Standalone Backend
 Freezes the backend into a standalone executable containing all dependencies:
-- **Linux**: `./build_standalone.sh`
-- **Windows**: `build_standalone.bat`
+- **Linux**: `./scripts/build/build_standalone.sh`
+- **Windows**: `scripts\build\build_standalone.bat`
 
 Output: `backend/dist_standalone/pos-backend-standalone` and staged into `src-tauri/binaries/`.
 
 ### 2. Build Windows Release Installer
 To generate a production `.exe` NSIS installer for Windows POS terminals:
 ```cmd
-build_windows_release.bat
+scripts\build\build_windows_release.bat
 ```
 Output:
 - `src-tauri\target\release\bundle\nsis\VoltFlow-POS-Setup.exe`

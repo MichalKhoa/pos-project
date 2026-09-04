@@ -2,7 +2,8 @@
 # Himmel POS — Automated App Updater (Linux)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR" || exit 1
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT" || exit 1
 
 echo "========================================================"
 echo "  Updating Himmel POS to Latest Version from GitHub"
@@ -25,7 +26,7 @@ fi
 # 3. Update Python virtual environment & database schema
 echo ""
 echo "[3/5] Updating Python packages & auto-migrating database..."
-cd "$SCRIPT_DIR/backend" || exit 1
+cd "$REPO_ROOT/backend" || exit 1
 if [ ! -d "venv" ]; then
     python3 -m venv venv
 fi
@@ -36,17 +37,15 @@ python3 migrations.py
 # 4. Install npm packages & compile React frontend
 echo ""
 echo "[4/5] Building latest React touchscreen UI bundle..."
-cd "$SCRIPT_DIR" || exit 1
+cd "$REPO_ROOT" || exit 1
 npm install --no-audit --no-fund
 npm run build
 
 # 5. Restart Register Application
-echo ""
-echo "[5/5] Restarting Himmel POS..."
 echo ""
 echo "========================================================"
 echo "  ✅ HIMMEL POS UPDATE COMPLETED SUCCESSFULLY!"
 echo "========================================================"
 echo ""
 
-exec "$SCRIPT_DIR/himmel_pos.sh"
+exec "$REPO_ROOT/start.sh"

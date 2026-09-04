@@ -79,12 +79,13 @@ pos-project-himmel/
 │   ├── capabilities/        # Desktop capabilities (shell, process permissions)
 │   └── tauri.conf.json      # Window settings, bundle config, externalBin
 ├── scripts/
+│   ├── build/               # Standalone and release build scripts (Linux & Windows)
+│   ├── tools/               # Auxiliary scripts (kiosk, update, LAN setup, stop, nssm)
 │   └── prepare_sidecar.py   # Stages pos-backend-<target-triple> for Tauri
-├── build_standalone.sh      # Linux standalone bundle packaging
-├── build_standalone.bat     # Windows standalone bundle packaging
-├── build_windows_release.bat # 1-Click native Windows release installer script
-├── start_pos.sh             # Unified Linux production launcher
-├── start_pos.bat            # Unified Windows production launcher
+├── install.sh / install.bat # One-click project setup (venv, pip, DB migrations, npm, build)
+├── start.sh / start.bat     # Unified production launcher (:8000)
+├── debug.sh / debug.bat     # Hot-reload debug launcher (Vite :5173 + FastAPI :8000)
+├── backend_settings.sh / .bat # Backend settings GUI (.env, DB, EET certs, hardware)
 ├── .agents/rules/           # Antigravity rule definitions
 └── .serena/memories/        # Serena domain memory index
 ```

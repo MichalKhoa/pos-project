@@ -3,7 +3,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT"
 
 echo "========================================================"
 echo "  Building VoltFlow POS Standalone Bundle (Linux)..."
@@ -16,18 +17,18 @@ npm run build
 
 # 2. Run PyInstaller
 echo "[2/2] Freezing Python backend..."
-if [ -x "$SCRIPT_DIR/backend/venv/bin/python" ]; then
-    "$SCRIPT_DIR/backend/venv/bin/python" "$SCRIPT_DIR/backend/build_standalone.py"
+if [ -x "$REPO_ROOT/backend/venv/bin/python" ]; then
+    "$REPO_ROOT/backend/venv/bin/python" "$REPO_ROOT/backend/build_standalone.py"
 else
-    python3 "$SCRIPT_DIR/backend/build_standalone.py"
+    python3 "$REPO_ROOT/backend/build_standalone.py"
 fi
 
 # 3. Stage Tauri Sidecar
 echo "[3/3] Staging Tauri sidecar..."
-if [ -x "$SCRIPT_DIR/backend/venv/bin/python" ]; then
-    "$SCRIPT_DIR/backend/venv/bin/python" "$SCRIPT_DIR/scripts/prepare_sidecar.py"
+if [ -x "$REPO_ROOT/backend/venv/bin/python" ]; then
+    "$REPO_ROOT/backend/venv/bin/python" "$REPO_ROOT/scripts/prepare_sidecar.py"
 else
-    python3 "$SCRIPT_DIR/scripts/prepare_sidecar.py"
+    python3 "$REPO_ROOT/scripts/prepare_sidecar.py"
 fi
 
 echo "[SUCCESS] Standalone backend and Tauri sidecar ready!"
