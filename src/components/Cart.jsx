@@ -52,7 +52,7 @@ function ClearedCartBanner({ snapshot, onRestore }) {
   );
 }
 
-export default function Cart({
+function Cart({
   cartItems,
   onUpdateQty,
   onUpdateItemDetails,
@@ -420,3 +420,5 @@ export default function Cart({
     </div>
   );
 }
+
+export default React.memo(Cart);

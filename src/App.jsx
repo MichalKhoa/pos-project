@@ -182,7 +182,7 @@ export default function App() {
   const [refundTargetSale, setRefundTargetSale] = useState(null);
 
   // Open Cash Drawer Handler
-  const handleOpenCashDrawer = async () => {
+  const handleOpenCashDrawer = useCallback(async () => {
     soundFx.playCashChime();
     setFlashBanner({
       type: 'info',
@@ -208,12 +208,12 @@ export default function App() {
       });
     }
     setTimeout(() => setFlashBanner(null), 3000);
-  };
+  }, []);
 
   // Admin Mode & Test Sales Management
-  const handleToggleAdminMode = () => {
-    setIsAdminMode(!isAdminMode);
-  };
+  const handleToggleAdminMode = useCallback(() => {
+    setIsAdminMode(prev => !prev);
+  }, []);
 
   const handleDeleteSale = async (saleId) => {
     if (window.confirm('Opravdu chcete smazat tento testovací prodej? Tržby se okamžitě přepočítají.')) {
@@ -528,10 +528,10 @@ export default function App() {
     }
   });
 
-  const handleOpenCustomDiscountModal = (item = null) => {
+  const handleOpenCustomDiscountModal = useCallback((item = null) => {
     setDiscountModalSelectedItem(item);
     setIsDiscountModalOpen(true);
-  };
+  }, []);
 
   const handleApplyCustomDiscount = ({ type, value, scope, targetItem }) => {
     if (scope === 'ITEM' && targetItem) {
@@ -604,10 +604,10 @@ export default function App() {
   }, [salesHistory, storeConfig]);
 
   // Checkout flow
-  const handleOpenPayment = (method) => {
+  const handleOpenPayment = useCallback((method) => {
     if (cartItems.length === 0) return;
     setPaymentModalMethod(method);
-  };
+  }, [cartItems.length]);
 
   const handleCompleteSale = ({ paymentMethod, splitDetails, tenderedAmount, changeDue }) => {
     soundFx.playSuccessChime();
@@ -700,6 +700,13 @@ export default function App() {
     }
   };
 
+  const handleOpenSyncModal = useCallback(() => setShowSyncModal(true), [setShowSyncModal]);
+  const handleOpenShutdownModal = useCallback(() => setShowShutdownModal(true), []);
+  const handleOpenCalendarModal = useCallback(() => setIsCalendarModalOpen(true), []);
+  const handleLockApp = useCallback(() => setIsAppLocked(true), [setIsAppLocked]);
+  const handleOpenParkedModal = useCallback(() => setIsParkedModalOpen(true), []);
+  const handleClearKeypadAmount = useCallback(() => setKeypadAmount(''), []);
+
   if (isCustomerDisplayMode) {
     return <CustomerDisplayView storeConfig={storeConfig} />;
   }
@@ -713,10 +720,10 @@ export default function App() {
         isAdminMode={isAdminMode}
         onToggleAdminMode={handleToggleAdminMode}
         pendingCount={pendingSyncCount}
-        onOpenSyncModal={() => setShowSyncModal(true)}
-        onOpenShutdownModal={() => setShowShutdownModal(true)}
-        onOpenCalendarModal={() => setIsCalendarModalOpen(true)}
-        onLockApp={() => setIsAppLocked(true)}
+        onOpenSyncModal={handleOpenSyncModal}
+        onOpenShutdownModal={handleOpenShutdownModal}
+        onOpenCalendarModal={handleOpenCalendarModal}
+        onLockApp={handleLockApp}
         onOpenCashDrawer={handleOpenCashDrawer}
         onPrintDailySummary={handlePrintDailySummary}
       />
@@ -775,7 +782,7 @@ export default function App() {
                       onDeletePreset={handleDeletePreset}
                       onReorderPresets={handleReorderPresets}
                       keypadAmount={keypadAmount}
-                      onClearKeypadAmount={() => setKeypadAmount('')}
+                      onClearKeypadAmount={handleClearKeypadAmount}
                       isAdminMode={isAdminMode}
                       storeConfig={storeConfig}
                     />
@@ -807,7 +814,7 @@ export default function App() {
                   onDismissClearedCart={dismissClearedCartSnapshot}
                   onOpenCashDrawer={handleOpenCashDrawer}
                   parkedCartsCount={parkedCarts.length}
-                  onOpenParkedModal={() => setIsParkedModalOpen(true)}
+                  onOpenParkedModal={handleOpenParkedModal}
                   cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
                 />
               </div>

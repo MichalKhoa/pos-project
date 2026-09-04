@@ -2,7 +2,7 @@ import React from 'react';
 import { Edit3 } from 'lucide-react';
 import { getPresetIconComponent } from '../../utils/presetIcons';
 
-export default function PresetTileCard({
+function PresetTileCard({
   preset,
   index,
   isEditMode,
@@ -95,3 +95,32 @@ export default function PresetTileCard({
     </button>
   );
 }
+
+function arePresetCardPropsEqual(prevProps, nextProps) {
+  if (prevProps.isEditMode !== nextProps.isEditMode) return false;
+  if (prevProps.itemMultiplier !== nextProps.itemMultiplier) return false;
+  if (prevProps.isDraggingThis !== nextProps.isDraggingThis) return false;
+  if (prevProps.isDragOverThis !== nextProps.isDragOverThis) return false;
+  if (prevProps.buttonStyle !== nextProps.buttonStyle) return false;
+  if (prevProps.index !== nextProps.index) return false;
+  if (prevProps.onClick !== nextProps.onClick) return false;
+  if (prevProps.storeConfig?.presetButtonStyle !== nextProps.storeConfig?.presetButtonStyle) return false;
+  if (prevProps.storeConfig?.showPresetVat !== nextProps.storeConfig?.showPresetVat) return false;
+
+  const p1 = prevProps.preset;
+  const p2 = nextProps.preset;
+  if (p1 === p2) return true;
+  if (!p1 || !p2) return false;
+  return (
+    p1.id === p2.id &&
+    p1.name === p2.name &&
+    p1.price === p2.price &&
+    p1.isOpenPrice === p2.isOpenPrice &&
+    p1.vat === p2.vat &&
+    p1.color === p2.color &&
+    p1.icon === p2.icon &&
+    p1.imageUrl === p2.imageUrl
+  );
+}
+
+export default React.memo(PresetTileCard, arePresetCardPropsEqual);

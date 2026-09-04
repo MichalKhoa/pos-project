@@ -6,7 +6,7 @@ import LanguageSelector from './LanguageSelector.jsx';
 import CashDrawerIcon from './CashDrawerIcon';
 import { soundFx } from '../utils/audio';
 
-export default function Navbar({
+function Navbar({
   activeTab,
   setActiveTab,
   storeConfig,
@@ -402,5 +402,7 @@ export default function Navbar({
     </header>
   );
 }
+
+export default React.memo(Navbar);
 
 

@@ -3,7 +3,7 @@ import { BarChart3, Banknote, CreditCard, Printer, ChevronDown, ChevronUp } from
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { formatLocalDate } from '../../utils/dateUtils';
 
-export default function ShiftStatsWidget({
+function ShiftStatsWidget({
   salesHistory = [],
   onPrintDailySummary,
   variant = 'card'
@@ -361,3 +361,5 @@ export default function ShiftStatsWidget({
     </div>
   );
 }
+
+export default React.memo(ShiftStatsWidget);

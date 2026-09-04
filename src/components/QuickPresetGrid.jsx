@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Plus, Layers, Check, Edit3, Search, X, FolderPlus, Trash2 } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -9,7 +9,7 @@ import CategoryFilterBar from './presets/CategoryFilterBar.jsx';
 import PresetTileCard from './presets/PresetTileCard.jsx';
 import OpenPriceModal from './presets/OpenPriceModal.jsx';
 
-export default function QuickPresetGrid({
+function QuickPresetGrid({
   presets,
   categories = DEFAULT_CATEGORIES,
   itemMultiplier = 1,
@@ -127,16 +127,28 @@ export default function QuickPresetGrid({
     }
   };
 
-  const handleCardClick = (preset) => {
+  const keypadAmountRef = useRef(keypadAmount);
+  keypadAmountRef.current = keypadAmount;
+
+  const itemMultiplierRef = useRef(itemMultiplier);
+  itemMultiplierRef.current = itemMultiplier;
+
+  const isEditModeRef = useRef(isEditMode);
+  isEditModeRef.current = isEditMode;
+
+  const handleCardClick = useCallback((preset) => {
     if (isDraggingRef.current) return;
-    if (isEditMode) {
+    if (isEditModeRef.current) {
       setEditingPreset(preset);
       setActiveModal('edit');
       return;
     }
 
-    const isReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
-    const parsedKeypad = parseFloat(keypadAmount);
+    const currentKeypad = keypadAmountRef.current;
+    const currentMultiplier = itemMultiplierRef.current;
+
+    const isReturn = (currentMultiplier < 0) || Boolean(currentKeypad && currentKeypad.startsWith('-'));
+    const parsedKeypad = parseFloat(currentKeypad);
     const hasNumericKeypad = !isNaN(parsedKeypad) && parsedKeypad !== 0;
 
     if (hasNumericKeypad) {
@@ -144,17 +156,17 @@ export default function QuickPresetGrid({
       onAddToCart({
         ...preset,
         price: customPrice,
-        quantity: Math.max(1, Math.abs(itemMultiplier || 1))
+        quantity: Math.max(1, Math.abs(currentMultiplier || 1))
       });
       if (onClearKeypadAmount) onClearKeypadAmount();
-      if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
+      if (setItemMultiplier && currentMultiplier !== 1) setItemMultiplier(1);
       return;
     }
 
     if (preset.isGeneralPreset || preset.price === 0 || preset.price === '0' || !preset.price) {
       setOpenPriceTarget(preset);
       setEnteredOpenPrice('');
-      setOpenPriceQty(Math.max(1, Math.abs(itemMultiplier || 1)));
+      setOpenPriceQty(Math.max(1, Math.abs(currentMultiplier || 1)));
       return;
     }
 
@@ -162,14 +174,14 @@ export default function QuickPresetGrid({
     onAddToCart({
       ...preset,
       price: unitPrice,
-      quantity: Math.max(1, Math.abs(itemMultiplier || 1))
+      quantity: Math.max(1, Math.abs(currentMultiplier || 1))
     });
 
     if (onClearKeypadAmount && isReturn) onClearKeypadAmount();
-    if (setItemMultiplier && itemMultiplier !== 1) {
+    if (setItemMultiplier && currentMultiplier !== 1) {
       setItemMultiplier(1);
     }
-  };
+  }, [onAddToCart, onClearKeypadAmount, setItemMultiplier, isDraggingRef]);
 
   const handleOpenPriceSubmit = (e) => {
     e.preventDefault();
@@ -482,3 +494,5 @@ export default function QuickPresetGrid({
     </div>
   );
 }
+
+export default React.memo(QuickPresetGrid);
