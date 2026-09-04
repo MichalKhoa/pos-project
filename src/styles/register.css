@@ -964,17 +964,36 @@ select.input-field:focus {
   font-weight: 800;
 }
 
+.keypad-stepper-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.keypad-stepper-bar .key-btn,
+.keypad-stepper-bar .multiplier-badge {
+  flex: 1;
+  height: 42px;
+  min-height: 42px;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  aspect-ratio: auto !important;
+}
+
 .multiplier-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 46px;
+  height: 42px;
+  min-height: 42px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 900;
   user-select: none;
   cursor: default;

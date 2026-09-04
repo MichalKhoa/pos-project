@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, X, ChevronUp, ChevronDown, Check, Delete } from 'lucide-react';
+import { Tag, X, ChevronUp, ChevronDown, Delete, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { soundFx } from '../../utils/audio.js';
 
@@ -223,13 +223,13 @@ export default function OpenPriceModal({
             )}
           </div>
 
-          {/* ── Sleek 38px Quantity Stepper (Matches Main Keypad) ── */}
+          {/* ── Sleek 42px Quantity Stepper (Matches Main Keypad) ── */}
           <div
             className="keypad-stepper-bar"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.4rem',
+              gap: '0.45rem',
               width: '100%',
               boxSizing: 'border-box'
             }}
@@ -239,35 +239,40 @@ export default function OpenPriceModal({
               className="key-btn"
               onClick={handleStepDown}
               style={{
-                flex: 1.3,
-                height: '38px',
+                flex: 1,
+                height: '42px',
+                minHeight: '42px',
+                aspectRatio: 'auto',
                 background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: '#ffffff',
                 border: 'none',
-                fontSize: '0.92rem',
+                fontSize: '0.96rem',
                 fontWeight: '900',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '0.3rem',
+                gap: '0.35rem',
                 borderRadius: 'var(--radius-md)',
                 boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
                 cursor: 'pointer'
               }}
               title="Snížit množství (−1 / Vratka)"
             >
-              <ChevronDown size={18} strokeWidth={2.5} />
+              <ChevronDown size={19} strokeWidth={2.5} />
               <span>-1</span>
             </button>
 
             <div
               className={`multiplier-badge ${isReturn ? 'has-return' : (openPriceQty > 1 ? 'has-multiplier' : '')}`}
               style={{
-                flex: 0.8,
-                height: '38px',
-                fontSize: '0.95rem',
+                flex: 1,
+                height: '42px',
+                minHeight: '42px',
+                aspectRatio: 'auto',
+                fontSize: '1.05rem',
                 letterSpacing: '0.02em',
-                padding: '0 0.25rem'
+                padding: '0 0.5rem',
+                borderRadius: 'var(--radius-md)'
               }}
             >
               {isReturn ? `↩️ ${openPriceQty}×` : `${openPriceQty}×`}
@@ -278,24 +283,26 @@ export default function OpenPriceModal({
               className="key-btn"
               onClick={handleStepUp}
               style={{
-                flex: 1.3,
-                height: '38px',
+                flex: 1,
+                height: '42px',
+                minHeight: '42px',
+                aspectRatio: 'auto',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: '#ffffff',
                 border: 'none',
-                fontSize: '0.92rem',
+                fontSize: '0.96rem',
                 fontWeight: '900',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '0.3rem',
+                gap: '0.35rem',
                 borderRadius: 'var(--radius-md)',
                 boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
                 cursor: 'pointer'
               }}
               title="Zvýšit množství (+1)"
             >
-              <ChevronUp size={18} strokeWidth={2.5} />
+              <ChevronUp size={19} strokeWidth={2.5} />
               <span>+1</span>
             </button>
           </div>
@@ -418,9 +425,11 @@ export default function OpenPriceModal({
               style={{
                 flex: 1,
                 justifyContent: 'center',
-                height: '50px',
-                fontSize: '0.92rem',
-                fontWeight: '700'
+                height: '52px',
+                minHeight: '52px',
+                fontSize: '0.95rem',
+                fontWeight: '700',
+                borderRadius: 'var(--radius-md)'
               }}
               onClick={onClose}
             >
@@ -428,21 +437,33 @@ export default function OpenPriceModal({
             </button>
             <button
               type="submit"
-              className="pay-btn pay-btn-cash"
+              className={`key-btn key-enter ${hasValidAmount ? 'key-enter-active' : ''}`}
               style={{
-                flex: 1.6,
-                height: '50px',
-                fontSize: '0.96rem',
+                flex: 1.8,
+                height: '52px',
+                minHeight: '52px',
+                aspectRatio: 'auto',
+                fontSize: '1.05rem',
                 fontWeight: '800',
                 gap: '0.5rem',
-                background: isReturn ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined,
-                borderColor: isReturn ? '#ef4444' : undefined,
-                boxShadow: isReturn ? '0 4px 14px rgba(239, 68, 68, 0.35)' : undefined
+                background: isReturn && hasValidAmount
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : undefined,
+                borderColor: isReturn && hasValidAmount
+                  ? '#ef4444'
+                  : undefined,
+                boxShadow: isReturn && hasValidAmount
+                  ? '0 4px 14px rgba(239, 68, 68, 0.35)'
+                  : undefined
               }}
               disabled={!hasValidAmount}
             >
-              <Check size={19} />
-              <span>{isReturn ? 'Vrátit zboží (Vratka)' : t('keypad.add_to_cart')}</span>
+              <PlusCircle size={22} />
+              <span>
+                {isReturn
+                  ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
+                  : t('keypad.add_to_cart')}
+              </span>
             </button>
           </div>
         </form>

@@ -135,18 +135,34 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="nav-tab"
-              style={{ flex: 1, justifyContent: 'center', height: '50px', fontSize: '0.92rem' }}
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                height: '52px',
+                minHeight: '52px',
+                fontSize: '0.95rem',
+                fontWeight: '700',
+                borderRadius: 'var(--radius-md)'
+              }}
               onClick={onClose}
             >
               {t('common.cancel')}
             </button>
             <button
               type="button"
-              className="pay-btn pay-btn-cash"
-              style={{ flex: 1.5, height: '50px', fontSize: '0.96rem', gap: '0.5rem' }}
+              className="key-btn key-enter key-enter-active"
+              style={{
+                flex: 1.5,
+                height: '52px',
+                minHeight: '52px',
+                aspectRatio: 'auto',
+                fontSize: '1.05rem',
+                fontWeight: '800',
+                gap: '0.5rem'
+              }}
               onClick={onConfirm}
             >
-              <Check size={19} />
+              <Check size={20} />
               <span>Uložit stav</span>
             </button>
           </div>

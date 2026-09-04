@@ -50,23 +50,25 @@ export default function KeypadStepperBar({
         aria-label="Snížit množství (-1)"
         title="Snížit množství (−1 / Vratka)"
         style={{
-          flex: 1.3,
-          height: '38px',
+          flex: 1,
+          height: '42px',
+          minHeight: '42px',
+          aspectRatio: 'auto',
           background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
           color: '#ffffff',
           border: 'none',
-          fontSize: '0.92rem',
+          fontSize: '0.96rem',
           fontWeight: '900',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.3rem',
+          gap: '0.35rem',
           borderRadius: 'var(--radius-md)',
           boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
           cursor: 'pointer'
         }}
       >
-        <ChevronDown size={18} strokeWidth={2.5} />
+        <ChevronDown size={19} strokeWidth={2.5} />
         <span>-1</span>
       </button>
 
@@ -74,11 +76,14 @@ export default function KeypadStepperBar({
       <div
         className={`multiplier-badge ${isReturn ? 'has-return' : (itemMultiplier > 1 ? 'has-multiplier' : '')}`}
         style={{
-          flex: 0.8,
-          height: '38px',
-          fontSize: '0.95rem',
+          flex: 1,
+          height: '42px',
+          minHeight: '42px',
+          aspectRatio: 'auto',
+          fontSize: '1.05rem',
           letterSpacing: '0.02em',
-          padding: '0 0.25rem'
+          padding: '0 0.5rem',
+          borderRadius: 'var(--radius-md)'
         }}
       >
         {isReturn ? `↩️ ${itemMultiplier}×` : `${itemMultiplier}×`}
@@ -92,23 +97,25 @@ export default function KeypadStepperBar({
         aria-label="Zvýšit množství (+1)"
         title="Zvýšit množství (+1)"
         style={{
-          flex: 1.3,
-          height: '38px',
+          flex: 1,
+          height: '42px',
+          minHeight: '42px',
+          aspectRatio: 'auto',
           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
           color: '#ffffff',
           border: 'none',
-          fontSize: '0.92rem',
+          fontSize: '0.96rem',
           fontWeight: '900',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.3rem',
+          gap: '0.35rem',
           borderRadius: 'var(--radius-md)',
           boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
           cursor: 'pointer'
         }}
       >
-        <ChevronUp size={18} strokeWidth={2.5} />
+        <ChevronUp size={19} strokeWidth={2.5} />
         <span>+1</span>
       </button>
     </div>
