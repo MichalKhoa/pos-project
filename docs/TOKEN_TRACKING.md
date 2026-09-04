@@ -27,11 +27,11 @@ If you are an agent on a new or secondary machine working on this repository, ru
 For cross-platform compatibility (Linux, macOS, and Windows Git Bash):
 ```bash
 cat << 'HOOK_EOF' > .git/hooks/post-commit
-#!/usr/bin/env bash
-if [ -f "scripts/token_tracker_win.py" ] && [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+#!/bin/sh
+if [ -f "scripts/token_tracker_win.py" ]; then
     python scripts/token_tracker_win.py commit HEAD
 elif [ -f "scripts/token_tracker.py" ]; then
-    python3 scripts/token_tracker.py commit HEAD || python scripts/token_tracker.py commit HEAD
+    python3 scripts/token_tracker.py commit HEAD 2>/dev/null || python scripts/token_tracker.py commit HEAD
 fi
 HOOK_EOF
 chmod +x .git/hooks/post-commit
