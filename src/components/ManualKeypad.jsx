@@ -25,7 +25,8 @@ export default function ManualKeypad({
   hasCartItems = false,
   salesHistory = [],
   onNavigateToHistory,
-  onPrintDailySummary
+  onPrintDailySummary,
+  shiftWidgetPosition = 'keypad'
 }) {
   const { t } = useTranslation();
   const [label, setLabel] = useState('');
@@ -380,11 +381,13 @@ export default function ManualKeypad({
         />
 
         {/* Shift Quick Stats Mini-Widget Card */}
-        <ShiftStatsWidget
-          salesHistory={salesHistory}
-          onNavigateToHistory={onNavigateToHistory}
-          onPrintDailySummary={onPrintDailySummary}
-        />
+        {shiftWidgetPosition !== 'bottom_presets' && (
+          <ShiftStatsWidget
+            salesHistory={salesHistory}
+            onNavigateToHistory={onNavigateToHistory}
+            onPrintDailySummary={onPrintDailySummary}
+          />
+        )}
       </div>
     </div>
   );

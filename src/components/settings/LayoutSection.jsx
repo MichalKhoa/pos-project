@@ -438,6 +438,41 @@ export default function LayoutSection({
           </div>
         </div>
 
+        {/* Shift Summary Widget Placement */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.shift_widget_position_title') || 'Umístění přehledu směny'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {t('settings.shift_widget_position_desc') || 'Umístění widgetu denního přehledu tržeb a rychlé uzávěrky.'}
+            </span>
+          </div>
+
+          <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
+            {[
+              { id: 'keypad', label: t('settings.shift_widget_pos_keypad') || 'Pod klávesnicí' },
+              { id: 'bottom_presets', label: t('settings.shift_widget_pos_presets') || 'Lišta pod sortimentem (14" LCD)' }
+            ].map(pos => (
+              <button
+                key={pos.id}
+                type="button"
+                className={`settings-segmented-btn ${(config.shiftWidgetPosition || 'keypad') === pos.id ? 'active' : ''}`}
+                onClick={() => {
+                  handleUpdate({ shiftWidgetPosition: pos.id });
+                  try {
+                    localStorage.setItem('voltflow_shift_widget_position', pos.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                }}
+              >
+                {pos.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* High-Legibility Mode */}
         <div className="settings-toggle-row">
           <div className="settings-toggle-label-wrap">

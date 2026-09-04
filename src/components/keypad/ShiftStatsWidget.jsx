@@ -6,7 +6,8 @@ import { formatLocalDate } from '../../utils/dateUtils';
 export default function ShiftStatsWidget({
   salesHistory = [],
   onNavigateToHistory,
-  onPrintDailySummary
+  onPrintDailySummary,
+  variant = 'card'
 }) {
   const { t } = useTranslation();
   const todayStr = useMemo(() => formatLocalDate(new Date()), []);
@@ -53,6 +54,164 @@ export default function ShiftStatsWidget({
   }, [salesHistory, todayStr]);
 
   const [isExpanded, setIsExpanded] = useState(true);
+
+  // ── SLIM LONG HORIZONTAL BAR VARIANT ──
+  if (variant === 'slim') {
+    return (
+      <div
+        className="shift-stats-slim"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0.45rem 0.85rem',
+          minHeight: '42px',
+          gap: '0.65rem',
+          borderRadius: 'var(--radius-lg)',
+          background: 'var(--bg-card-hover)',
+          border: '1px solid var(--border-color)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          flexShrink: 0,
+          boxSizing: 'border-box',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {/* Left: Title & Receipts Count */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+          <div style={{
+            fontSize: '0.78rem',
+            fontWeight: '900',
+            color: 'var(--text-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}>
+            <BarChart3 size={15} style={{ color: 'var(--accent-blue)' }} />
+            <span>{t('shift_stats.title') || 'Směna dnes'}</span>
+          </div>
+
+          <span style={{
+            fontSize: '0.72rem',
+            fontWeight: '800',
+            color: 'var(--accent-blue)',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            padding: '2px 7px',
+            borderRadius: '999px'
+          }}>
+            {todaySalesCount} {t('shift_stats.receipts') || 'účtenek'}
+          </span>
+        </div>
+
+        {/* Center: Total Revenue & Cash / Card Split */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Tržba:
+            </span>
+            <span style={{
+              fontSize: '1.05rem',
+              fontWeight: '900',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--accent-emerald)'
+            }}>
+              {todayRevenue.toLocaleString('cs-CZ')} Kč
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>
+            <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              padding: '2px 6px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              color: 'var(--accent-emerald)',
+              fontWeight: '800'
+            }}>
+              <Banknote size={13} />
+              <span>{todayCash.toLocaleString('cs-CZ')} Kč</span>
+            </span>
+
+            <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              padding: '2px 6px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+              color: 'var(--accent-blue)',
+              fontWeight: '800'
+            }}>
+              <CreditCard size={13} />
+              <span>{todayCard.toLocaleString('cs-CZ')} Kč</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Quick Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+          {onPrintDailySummary && (
+            <button
+              type="button"
+              onClick={onPrintDailySummary}
+              className="key-btn"
+              style={{
+                padding: '0 0.6rem',
+                height: '32px',
+                minHeight: '32px',
+                aspectRatio: 'auto',
+                fontSize: '0.78rem',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'color-mix(in srgb, var(--accent-blue) 12%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
+                color: 'var(--accent-blue)',
+                cursor: 'pointer'
+              }}
+              title={t('shift_stats.print_summary_tooltip') || 'Vytisknout denní uzávěrku'}
+            >
+              <Printer size={13} />
+              <span>{t('shift_stats.print_daily_summary') || 'Denní uzávěrka'}</span>
+            </button>
+          )}
+
+          {onNavigateToHistory && (
+            <button
+              type="button"
+              onClick={() => onNavigateToHistory(todayStr)}
+              className="key-btn"
+              style={{
+                padding: '0 0.6rem',
+                height: '32px',
+                minHeight: '32px',
+                aspectRatio: 'auto',
+                fontSize: '0.78rem',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                borderRadius: 'var(--radius-md)',
+                cursor: 'pointer'
+              }}
+              title="Otevřít historii prodejů"
+            >
+              <Receipt size={13} />
+              <span>{t('shift_stats.view_history') || 'Historie'}</span>
+              <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

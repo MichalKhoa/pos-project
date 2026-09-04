@@ -146,5 +146,6 @@ export const DEFAULT_STORE_CONFIG = {
   showPresetVat: true, // Show VAT percentage badge on preset buttons
   eetEnabled: true, // EET Ready mode indicator
   defaultLanguage: 'cs',
-  buttonAnimationMode: 'instant' // 'instant' (default, no transform lag on touch) or 'animated'
+  buttonAnimationMode: 'instant', // 'instant' (default, no transform lag on touch) or 'animated'
+  shiftWidgetPosition: 'keypad' // 'keypad' (default, under keypad in left col) or 'bottom_presets' (slim bar under presets in center col)
 };

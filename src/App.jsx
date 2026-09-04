@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
 import Cart from './components/Cart';
+import ShiftStatsWidget from './components/keypad/ShiftStatsWidget';
 import AppModals from './components/app/AppModals';
 import SyncNotificationBanner from './components/SyncNotificationBanner';
 import { useCart } from './hooks/useCart';
@@ -732,29 +733,43 @@ export default function App() {
                     setHistoryDateFilter(dateStr);
                     setActiveTab('history');
                   }}
+                  shiftWidgetPosition={storeConfig?.shiftWidgetPosition || 'keypad'}
                 />
               </div>
 
               <div className={`pos-col-center${isMobile && mobilePosTab !== 'products' ? ' mobile-hidden' : ''}`}>
-                <QuickPresetGrid
-                  presets={presets}
-                  categories={categories}
-                  itemMultiplier={itemMultiplier}
-                  setItemMultiplier={setItemMultiplier}
-                  onAddCategory={handleAddCategory}
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                  onReorderCategories={handleReorderCategories}
-                  onAddToCart={handleAddToCart}
-                  onAddPreset={handleAddPreset}
-                  onUpdatePreset={handleUpdatePreset}
-                  onDeletePreset={handleDeletePreset}
-                  onReorderPresets={handleReorderPresets}
-                  keypadAmount={keypadAmount}
-                  onClearKeypadAmount={() => setKeypadAmount('')}
-                  isAdminMode={isAdminMode}
-                  storeConfig={storeConfig}
-                />
+                <div className="pos-presets-scroll-wrapper">
+                  <QuickPresetGrid
+                    presets={presets}
+                    categories={categories}
+                    itemMultiplier={itemMultiplier}
+                    setItemMultiplier={setItemMultiplier}
+                    onAddCategory={handleAddCategory}
+                    onEditCategory={handleEditCategory}
+                    onDeleteCategory={handleDeleteCategory}
+                    onReorderCategories={handleReorderCategories}
+                    onAddToCart={handleAddToCart}
+                    onAddPreset={handleAddPreset}
+                    onUpdatePreset={handleUpdatePreset}
+                    onDeletePreset={handleDeletePreset}
+                    onReorderPresets={handleReorderPresets}
+                    keypadAmount={keypadAmount}
+                    onClearKeypadAmount={() => setKeypadAmount('')}
+                    isAdminMode={isAdminMode}
+                    storeConfig={storeConfig}
+                  />
+                </div>
+                {storeConfig?.shiftWidgetPosition === 'bottom_presets' && (
+                  <ShiftStatsWidget
+                    variant="slim"
+                    salesHistory={salesHistory}
+                    onNavigateToHistory={(dateStr) => {
+                      setHistoryDateFilter(dateStr);
+                      setActiveTab('history');
+                    }}
+                    onPrintDailySummary={handlePrintDailySummary}
+                  />
+                )}
               </div>
 
               <div className={`pos-col-right${isMobile && mobilePosTab !== 'cart' ? ' mobile-hidden' : ''}`}>

@@ -739,13 +739,21 @@ input, textarea, [contenteditable="true"] {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card-elevated);
   padding: 0.85rem 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.pos-presets-scroll-wrapper {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  box-sizing: border-box;
-  min-width: 0;
 }
 
 /* Right Column: Live Cart */
