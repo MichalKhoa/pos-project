@@ -47,7 +47,7 @@ Directory: `/src/components`
   - `KeypadNumberGrid.jsx`: 4×4 numeric touch grid (`7-8-9-⌫`, `4-5-6-C`, `1-2-3-,`, `0-00-±-×`), `±` return toggle, custom product/return button.
   - `KeypadVatSelector.jsx`: Czech VAT chips (21%, 12%, 0%) with 36px touch height.
   - `ParkedCartsDrawer.jsx`: Standalone floating card (`.pos-card-box.keypad-parked-box`) holding active carts and restoring parked orders.
-  - `ShiftStatsWidget.jsx`: Collapsible floating card (`.pos-card-box.keypad-stats-box`, header tap collapses to 34px preview) with shift revenue, cash/card split, receipt count, link to History, 1-tap thermal daily report trigger.
+  - `ShiftStatsWidget.jsx`: Floating card (`.pos-card-box`: variant `'card'` for left column under keypad, variant `'slim'` for center column under presets as an independent card box) with shift revenue, cash/card split, receipt count, and compact 1-tap thermal daily report trigger.
 - `inventory/`:
   - `InventoryMetricsBar.jsx`: Top KPI pill strip (tracked items, valuation, low stock filter chip, out-of-stock badge, CSV export/import triggers, 4px docked health bar).
   - `InventoryStockTable.jsx`: Sticky-header inventory table with 38px touch targets, column sorting, 1-tap pin/unpin to register, stock numpad modal trigger, quick +5/+10/+50 adds, barcode editor.

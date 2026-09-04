@@ -194,7 +194,7 @@
 }
 
 /* Smooth theme transition */
-body, .navbar, .modal-card, .table-card, .preset-card, .pos-col-left, .pos-col-center, .pos-col-right {
+body, .navbar, .modal-card, .table-card, .preset-card, .pos-col-left, .pos-col-center, .pos-col-right, .pos-presets-box {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 

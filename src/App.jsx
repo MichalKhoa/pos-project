@@ -729,44 +729,38 @@ export default function App() {
                   onParkedModalOpenChange={setIsParkedModalOpen}
                   hasCartItems={cartItems.length > 0}
                   salesHistory={salesHistory}
-                  onNavigateToHistory={(dateStr) => {
-                    setHistoryDateFilter(dateStr);
-                    setActiveTab('history');
-                  }}
                   shiftWidgetPosition={storeConfig?.shiftWidgetPosition || 'keypad'}
                 />
               </div>
 
               <div className={`pos-col-center${isMobile && mobilePosTab !== 'products' ? ' mobile-hidden' : ''}`}>
-                <div className="pos-presets-scroll-wrapper">
-                  <QuickPresetGrid
-                    presets={presets}
-                    categories={categories}
-                    itemMultiplier={itemMultiplier}
-                    setItemMultiplier={setItemMultiplier}
-                    onAddCategory={handleAddCategory}
-                    onEditCategory={handleEditCategory}
-                    onDeleteCategory={handleDeleteCategory}
-                    onReorderCategories={handleReorderCategories}
-                    onAddToCart={handleAddToCart}
-                    onAddPreset={handleAddPreset}
-                    onUpdatePreset={handleUpdatePreset}
-                    onDeletePreset={handleDeletePreset}
-                    onReorderPresets={handleReorderPresets}
-                    keypadAmount={keypadAmount}
-                    onClearKeypadAmount={() => setKeypadAmount('')}
-                    isAdminMode={isAdminMode}
-                    storeConfig={storeConfig}
-                  />
+                <div className="pos-card-box pos-presets-box">
+                  <div className="pos-presets-scroll-wrapper">
+                    <QuickPresetGrid
+                      presets={presets}
+                      categories={categories}
+                      itemMultiplier={itemMultiplier}
+                      setItemMultiplier={setItemMultiplier}
+                      onAddCategory={handleAddCategory}
+                      onEditCategory={handleEditCategory}
+                      onDeleteCategory={handleDeleteCategory}
+                      onReorderCategories={handleReorderCategories}
+                      onAddToCart={handleAddToCart}
+                      onAddPreset={handleAddPreset}
+                      onUpdatePreset={handleUpdatePreset}
+                      onDeletePreset={handleDeletePreset}
+                      onReorderPresets={handleReorderPresets}
+                      keypadAmount={keypadAmount}
+                      onClearKeypadAmount={() => setKeypadAmount('')}
+                      isAdminMode={isAdminMode}
+                      storeConfig={storeConfig}
+                    />
+                  </div>
                 </div>
                 {storeConfig?.shiftWidgetPosition === 'bottom_presets' && (
                   <ShiftStatsWidget
                     variant="slim"
                     salesHistory={salesHistory}
-                    onNavigateToHistory={(dateStr) => {
-                      setHistoryDateFilter(dateStr);
-                      setActiveTab('history');
-                    }}
                     onPrintDailySummary={handlePrintDailySummary}
                   />
                 )}

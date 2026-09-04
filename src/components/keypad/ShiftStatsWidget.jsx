@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { BarChart3, Banknote, CreditCard, Receipt, ArrowRight, Printer, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, Banknote, CreditCard, Printer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { formatLocalDate } from '../../utils/dateUtils';
 
 export default function ShiftStatsWidget({
   salesHistory = [],
-  onNavigateToHistory,
   onPrintDailySummary,
   variant = 'card'
 }) {
@@ -59,18 +58,14 @@ export default function ShiftStatsWidget({
   if (variant === 'slim') {
     return (
       <div
-        className="shift-stats-slim"
+        className="pos-card-box shift-stats-slim"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0.45rem 0.85rem',
-          minHeight: '42px',
+          padding: '0.5rem 0.85rem',
+          minHeight: '48px',
           gap: '0.65rem',
-          borderRadius: 'var(--radius-lg)',
-          background: 'var(--bg-card-hover)',
-          border: '1px solid var(--border-color)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           flexShrink: 0,
           boxSizing: 'border-box',
           overflowX: 'auto',
@@ -108,7 +103,7 @@ export default function ShiftStatsWidget({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
             <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Tržba:
+              {t('shift_stats.revenue_short') || 'Tržba:'}
             </span>
             <span style={{
               fontSize: '1.05rem',
@@ -154,61 +149,37 @@ export default function ShiftStatsWidget({
         </div>
 
         {/* Right: Quick Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-          {onPrintDailySummary && (
+        {onPrintDailySummary && (
+          <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <button
               type="button"
               onClick={onPrintDailySummary}
               className="key-btn"
               style={{
-                padding: '0 0.6rem',
+                padding: '0 0.55rem',
                 height: '32px',
                 minHeight: '32px',
                 aspectRatio: 'auto',
-                fontSize: '0.78rem',
+                fontSize: '0.75rem',
                 fontWeight: '800',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.35rem',
+                gap: '0.3rem',
                 borderRadius: 'var(--radius-md)',
                 background: 'color-mix(in srgb, var(--accent-blue) 12%, transparent)',
                 border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
                 color: 'var(--accent-blue)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
               title={t('shift_stats.print_summary_tooltip') || 'Vytisknout denní uzávěrku'}
             >
               <Printer size={13} />
               <span>{t('shift_stats.print_daily_summary') || 'Denní uzávěrka'}</span>
             </button>
-          )}
-
-          {onNavigateToHistory && (
-            <button
-              type="button"
-              onClick={() => onNavigateToHistory(todayStr)}
-              className="key-btn"
-              style={{
-                padding: '0 0.6rem',
-                height: '32px',
-                minHeight: '32px',
-                aspectRatio: 'auto',
-                fontSize: '0.78rem',
-                fontWeight: '800',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                borderRadius: 'var(--radius-md)',
-                cursor: 'pointer'
-              }}
-              title="Otevřít historii prodejů"
-            >
-              <Receipt size={13} />
-              <span>{t('shift_stats.view_history') || 'Historie'}</span>
-              <ArrowRight size={13} />
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -366,14 +337,14 @@ export default function ShiftStatsWidget({
             background: 'color-mix(in srgb, var(--accent-blue) 12%, transparent)',
             border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
             borderRadius: 'var(--radius-sm)',
-            padding: '0.45rem 0.65rem',
-            fontSize: '0.78rem',
+            padding: '0.35rem 0.55rem',
+            fontSize: '0.74rem',
             fontWeight: '800',
             color: 'var(--accent-blue)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.4rem',
+            gap: '0.35rem',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
             marginTop: '0.1rem',
@@ -381,44 +352,8 @@ export default function ShiftStatsWidget({
           }}
           title={t('shift_stats.print_summary_tooltip') || 'Vytisknout souhrn dnešních tržeb na pokladní tiskárnu a otevřít zásuvku'}
         >
-          <Printer size={14} />
+          <Printer size={13} />
           <span>{t('shift_stats.print_daily_summary') || 'Vytisknout denní tržbu'}</span>
-        </button>
-      )}
-
-      {/* Quick History Navigation Link */}
-      {onNavigateToHistory && (
-        <button
-          type="button"
-          onClick={() => onNavigateToHistory(todayStr)}
-          style={{
-            background: 'transparent',
-            border: '1px dashed var(--border-color)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '0.4rem 0.65rem',
-            fontSize: '0.75rem',
-            fontWeight: '700',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.35rem',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'var(--accent-blue)';
-            e.currentTarget.style.color = 'var(--accent-blue)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-color)';
-            e.currentTarget.style.color = 'var(--text-secondary)';
-          }}
-          title="Otevřít historii prodejů dnešního dne"
-        >
-          <Receipt size={13} />
-          <span>{t('shift_stats.view_history') || 'Zobrazit dnešní účtenky'}</span>
-          <ArrowRight size={13} />
         </button>
       )}
         </>

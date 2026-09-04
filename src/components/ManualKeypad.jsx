@@ -24,7 +24,6 @@ export default function ManualKeypad({
   onParkedModalOpenChange,
   hasCartItems = false,
   salesHistory = [],
-  onNavigateToHistory,
   onPrintDailySummary,
   shiftWidgetPosition = 'keypad'
 }) {
@@ -384,7 +383,6 @@ export default function ManualKeypad({
         {shiftWidgetPosition !== 'bottom_presets' && (
           <ShiftStatsWidget
             salesHistory={salesHistory}
-            onNavigateToHistory={onNavigateToHistory}
             onPrintDailySummary={onPrintDailySummary}
           />
         )}

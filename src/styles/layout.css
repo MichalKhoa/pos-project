@@ -731,20 +731,30 @@ input, textarea, [contenteditable="true"] {
   flex-shrink: 0;
 }
 
-/* Center Column: Quick Presets Grid */
+/* Center Column: Quick Presets Grid Column */
 .pos-col-center {
   flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card-elevated);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.pos-presets-box {
+  flex: 1;
+  min-height: 0;
   padding: 0.85rem 1rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
   box-sizing: border-box;
-  min-width: 0;
 }
 
 .pos-presets-scroll-wrapper {
@@ -829,8 +839,11 @@ input, textarea, [contenteditable="true"] {
     min-width: 300px;
   }
   .pos-col-center {
+    padding: 0;
+    gap: 0.55rem;
+  }
+  .pos-presets-box {
     padding: 0.65rem;
-    gap: 0.65rem;
   }
 }
 
@@ -886,6 +899,11 @@ input, textarea, [contenteditable="true"] {
   }
 
   .pos-col-center {
+    padding: 0;
+    gap: 0.45rem;
+  }
+
+  .pos-presets-box {
     padding: 0.65rem;
   }
 
