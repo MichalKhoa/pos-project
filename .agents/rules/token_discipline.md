@@ -1,5 +1,11 @@
 # Token Discipline & Cost Control Rules — Himmel POS
 
+> [!CAUTION]
+> ## 🚨 ZERO-TOLERANCE RULES
+> 1. **MANDATORY `tokless` PIPING**: Never run test, lint, build, or large command output without `| tokless`.
+> 2. **LOW-COST SUBAGENTS FIRST**: Multi-file exploration, documentation lookup, log parsing, or diagnostic tests MUST be delegated to `invoke_subagent` with `Model: "flash_lite"`. The main thread only receives a 2–3 line summary.
+> 3. **NO FULL FILE DUMPS**: Inspecting files >200 lines requires `context-mode` or sliced `view_file`.
+
 These rules are mandatory for all AI agents working on this codebase to prevent runaway token spend and context bloat.
 
 ---

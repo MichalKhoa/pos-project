@@ -1,5 +1,11 @@
 # VoltFlow POS — Agent Instructions & Engineering Guidelines
 
+> [!CAUTION]
+> ## 🚨 CRITICAL EXECUTION CONSTRAINTS (ZERO TOLERANCE)
+> 1. **MANDATORY `tokless` PIPING**: NEVER execute raw heavy terminal commands (`npm test`, `npm run lint`, `npm run build`, `python -m unittest`, `pytest`, `cargo test/build`, etc.) without piping through `tokless`. A PreToolUse hook will intercept and force `| tokless`.
+> 2. **SUBAGENT DELEGATION FIRST**: For exploratory searches spanning >2 files, log dumps, or diagnostic scans, you MUST delegate to a low-cost subagent (`invoke_subagent` with `Model: "flash_lite"` or `"flash"`). Never dump raw search noise into the primary conversation.
+> 3. **SURGICAL CONTEXT SHIELDING**: Files >200 lines MUST be inspected via `context-mode` (`ctx_execute_file`) or tightly sliced `view_file` (`StartLine`/`EndLine`). Never load full multi-KB files into context.
+
 ## 1. Project Overview & Architecture
 VoltFlow POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 - **Desktop Shell**: Tauri v2 (`src-tauri/`), native Rust wrapper, system tray integration, sidecar process lifecycle, and dual-screen customer display support.
