@@ -34,11 +34,23 @@ if !errorlevel! neq 0 (
     exit /b !errorlevel!
 )
 
+REM 3. Stage Tauri Sidecar
+echo.
+echo [3/3] Staging Tauri sidecar...
+"%PYTHON_EXE%" "%~dp0scripts\prepare_sidecar.py"
+if !errorlevel! neq 0 (
+    echo [ERROR] Sidecar preparation failed!
+    pause
+    exit /b !errorlevel!
+)
+
 echo.
 echo ========================================================
-echo   SUCCESS: Standalone executable created!
+echo   SUCCESS: Standalone executable and Tauri sidecar created!
 echo   Location: backend\dist_standalone\pos-backend\pos-backend.exe
-echo   To launch: start_pos.bat
+echo   Sidecar:  src-tauri\binaries\
+echo   To launch web:   start_pos.bat
+echo   To launch Tauri: npm run tauri dev
 echo ========================================================
 echo.
 pause

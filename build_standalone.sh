@@ -22,4 +22,12 @@ else
     python3 "$SCRIPT_DIR/backend/build_standalone.py"
 fi
 
-echo "[SUCCESS] Standalone backend built in backend/dist_standalone/pos-backend"
+# 3. Stage Tauri Sidecar
+echo "[3/3] Staging Tauri sidecar..."
+if [ -x "$SCRIPT_DIR/backend/venv/bin/python" ]; then
+    "$SCRIPT_DIR/backend/venv/bin/python" "$SCRIPT_DIR/scripts/prepare_sidecar.py"
+else
+    python3 "$SCRIPT_DIR/scripts/prepare_sidecar.py"
+fi
+
+echo "[SUCCESS] Standalone backend and Tauri sidecar ready!"

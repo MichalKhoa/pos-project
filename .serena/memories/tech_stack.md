@@ -13,6 +13,12 @@
 - Cryptography: `pycryptodome`, `cryptography` (PKCS#12 certificate parsing & RSA signing).
 - Fiscal & Networking: `requests` (SOAP HTTP POST), `python-escpos` (thermal printers).
 
+## Desktop & Native Shell
+- Tauri v2 (`src-tauri/`): Native Rust desktop wrapper for Linux & Windows.
+- Capabilities & plugins: `tauri-plugin-shell`, `tauri-plugin-process`, `tauri-plugin-log`.
+- PyInstaller sidecar: Standalone backend packaging (`backend/dist_standalone/pos-backend-standalone`) bundled as `pos-backend-<target-triple>`.
+- System tray integration, auto-health polling, and clean child process shutdown.
+
 ## Quality Assurance & Testing
 - Unit testing: `vitest` (`npm run test`) for financial calculations and invariants.
 - Linter: `oxlint` (`npm run lint`) enforcing 0-warning policy.

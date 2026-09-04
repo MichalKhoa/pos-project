@@ -1,0 +1,23 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions for Himmel POS",
+  "windows": [
+    "main",
+    "customer-display"
+  ],
+  "permissions": [
+    "core:default",
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/pos-backend",
+          "sidecar": true
+        }
+      ]
+    },
+    "process:default"
+  ]
+}

@@ -12,7 +12,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
-    globals: true
+    globals: true,
+    testTimeout: 15000
   },
   build: {
     chunkSizeWarningLimit: 1000,

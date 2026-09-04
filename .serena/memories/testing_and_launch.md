@@ -21,6 +21,10 @@ Operational execution scripts, test suites, and environment setup.
   - `himmel_pos_stop.sh`: Linux service shutdown script (`pkill` backend, vite, litestream).
   - `himmel_pos_update.sh`: Automated git pull on active branch, venv update, DB schema migration, and UI rebuild.
   - `himmel_backend_settings.sh`: Launches Python pywebview desktop settings GUI.
+- **Tauri Native Shell**:
+  - `scripts/prepare_sidecar.py`: Builds PyInstaller standalone binary and stages it to `src-tauri/binaries/pos-backend-<target-triple>`.
+  - `npm run tauri dev`: Launches desktop app in development mode with hot reload.
+  - `npm run tauri build`: Compiles production native desktop bundle / installer.
 
 ## Manual Commands
 - Backend:

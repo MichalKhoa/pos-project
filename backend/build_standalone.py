@@ -45,15 +45,24 @@ def run_pyinstaller():
 def verify_output():
     """Verify built binary exists and is executable."""
     exe_name = "pos-backend.exe" if sys.platform == "win32" else "pos-backend"
-    target_bin = os.path.join(DIST_STANDALONE, "pos-backend", exe_name)
-    if not os.path.exists(target_bin):
-        raise FileNotFoundError(f"Expected standalone binary not found at: {target_bin}")
+    standalone_name = "pos-backend-standalone.exe" if sys.platform == "win32" else "pos-backend-standalone"
+    onedir_bin = os.path.join(DIST_STANDALONE, "pos-backend", exe_name)
+    onefile_bin = os.path.join(DIST_STANDALONE, standalone_name)
+
+    if os.path.exists(onefile_bin):
+        target_bin = onefile_bin
+        bundle_info = "Single-file executable"
+    elif os.path.exists(onedir_bin):
+        target_bin = onedir_bin
+        bundle_info = os.path.join(DIST_STANDALONE, "pos-backend")
+    else:
+        raise FileNotFoundError(f"Expected standalone binary not found at: {onefile_bin} or {onedir_bin}")
 
     size_mb = os.path.getsize(target_bin) / (1024 * 1024)
     print(f"\n========================================================")
     print(f" SUCCESS: Standalone backend built successfully!")
     print(f" Binary location: {target_bin} ({size_mb:.2f} MB)")
-    print(f" Bundle folder:   {os.path.join(DIST_STANDALONE, 'pos-backend')}")
+    print(f" Bundle target:   {bundle_info}")
     print(f"========================================================\n")
     return target_bin
 
