@@ -12,11 +12,11 @@ echo "========================================================"
 echo ""
 
 # 1. Compile frontend
-echo "[1/2] Building frontend UI bundle..."
+echo "[1/3] Building frontend UI bundle..."
 npm run build
 
 # 2. Run PyInstaller
-echo "[2/2] Freezing Python backend..."
+echo "[2/3] Freezing Python backend..."
 if [ -x "$REPO_ROOT/backend/venv/bin/python" ]; then
     "$REPO_ROOT/backend/venv/bin/python" "$REPO_ROOT/backend/build_standalone.py"
 else

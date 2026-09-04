@@ -64,13 +64,17 @@ fn kill_sidecar(state: &AppState) {
     }
 }
 
+fn do_restart_backend(app: &AppHandle, state: &AppState) -> Result<String, String> {
+    log::info!("Restart backend command received.");
+    kill_sidecar(state);
+    std::thread::sleep(Duration::from_millis(1000));
+    spawn_sidecar(app, state)?;
+    Ok("Backend restarted successfully".into())
+}
+
 #[tauri::command]
 fn restart_backend(app: AppHandle, state: State<'_, AppState>) -> Result<String, String> {
-    log::info!("Restart backend command received.");
-    kill_sidecar(&state);
-    std::thread::sleep(Duration::from_millis(1000));
-    spawn_sidecar(&app, &state)?;
-    Ok("Backend restarted successfully".into())
+    do_restart_backend(&app, &state)
 }
 
 #[tauri::command]
@@ -143,7 +147,7 @@ pub fn run() {
                         }
                     }
                     "restart" => {
-                        let _ = restart_backend(tray_handle.clone(), State::from(&state_for_tray));
+                        let _ = do_restart_backend(&tray_handle, &state_for_tray);
                     }
                     "exit" => {
                         kill_sidecar(&state_for_tray);

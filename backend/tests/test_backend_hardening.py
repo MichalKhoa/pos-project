@@ -203,10 +203,20 @@ class TestBackendHardening(unittest.TestCase):
 
     def test_security_qr_spd_ignores_client_iban(self):
         """Test that GET /api/v1/qr/spd generates QR code strictly from DB config and does not crash."""
-        res = self.client.get("/api/v1/qr/spd?amount=150.0&iban=CZ9999999999999999999999")
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.headers["content-type"], "image/png")
-        self.assertGreater(len(res.content), 100)
+        cfg = self.db.query(StoreConfigModel).first()
+        old_iban = cfg.bank_account_iban if cfg else ""
+        try:
+            if cfg:
+                cfg.bank_account_iban = "CZ0508000000001987456789"
+                self.db.commit()
+            res = self.client.get("/api/v1/qr/spd?amount=150.0&iban=CZ9999999999999999999999")
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.headers["content-type"], "image/png")
+            self.assertGreater(len(res.content), 100)
+        finally:
+            if cfg:
+                cfg.bank_account_iban = old_iban
+                self.db.commit()
 
     def test_security_secret_key_anchored_in_data_dir(self):
         """Verify SECRET_KEY_FILE is strictly inside backend/data directory."""

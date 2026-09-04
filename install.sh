@@ -16,9 +16,20 @@ if ! command -v python3 &>/dev/null; then
     exit 1
 fi
 
-if ! command -v npm &>/dev/null; then
-    echo "[ERROR] npm not found. Please install Node.js (LTS)."
+if ! python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" &>/dev/null; then
+    echo "[ERROR] Python 3.10+ is required."
     exit 1
+fi
+
+if ! command -v npm &>/dev/null; then
+    echo "[ERROR] npm not found. Please install Node.js (LTS 18+)."
+    exit 1
+fi
+
+if command -v ss &>/dev/null && ss -tulpn | grep -q ":8000 "; then
+    echo "[WARNING] Port 8000 is already in use by another service."
+elif command -v netstat &>/dev/null && netstat -tuln | grep -q ":8000 "; then
+    echo "[WARNING] Port 8000 is already in use by another service."
 fi
 
 # 2. Setup Python virtual environment

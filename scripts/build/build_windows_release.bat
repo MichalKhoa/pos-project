@@ -36,6 +36,27 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 
+"%PYTHON_EXE%" -c "import PyInstaller" >nul 2>&1
+if !errorlevel! neq 0 (
+    echo [INFO] PyInstaller not detected. Installing PyInstaller...
+    "%PYTHON_EXE%" -m pip install pyinstaller
+    if !errorlevel! neq 0 (
+        echo [ERROR] Failed to install PyInstaller.
+        pause
+        exit /b !errorlevel!
+    )
+)
+
+if not exist "node_modules\.bin\tauri.cmd" (
+    echo [INFO] Installing Node.js dependencies and Tauri CLI...
+    call npm install
+    if !errorlevel! neq 0 (
+        echo [ERROR] Failed to install Node.js dependencies.
+        pause
+        exit /b !errorlevel!
+    )
+)
+
 REM 1. Compile Frontend UI
 echo.
 echo [1/4] Compiling React frontend bundle...

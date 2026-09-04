@@ -21,13 +21,25 @@ def ensure_frontend_built():
     index_html = os.path.join(DIST_UI_DIR, "index.html")
     if not os.path.exists(index_html):
         print("[BUILD] dist/index.html not found. Running npm run build...")
-        subprocess.run(["npm", "run", "build"], cwd=ROOT_DIR, check=True)
+        npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
+        subprocess.run([npm_cmd, "run", "build"], cwd=ROOT_DIR, check=True)
     else:
         print(f"[OK] Found compiled frontend at: {DIST_UI_DIR}")
 
 
 def run_pyinstaller():
     """Execute PyInstaller to freeze backend."""
+    # Preflight: ensure PyInstaller is installed in current Python environment
+    try:
+        import PyInstaller  # noqa: F401
+    except ImportError:
+        print(
+            "\n[ERROR] PyInstaller is not installed in the active Python environment.\n"
+            f"Please run: {sys.executable} -m pip install pyinstaller\n",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     print("[BUILD] Freezing backend with PyInstaller...")
     cmd = [
         sys.executable,

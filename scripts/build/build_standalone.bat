@@ -9,22 +9,48 @@ echo.
 cd /d "%~dp0..\.."
 
 REM 1. Compile frontend
-echo [1/2] Building frontend UI bundle...
+echo [1/3] Building frontend UI bundle...
 where npm >nul 2>&1
-if !errorlevel! equ 0 (
-    call npm run build
-) else (
-    echo [ERROR] npm is required to build the frontend.
+if !errorlevel! neq 0 (
+    echo [ERROR] npm is required to build the frontend. Please install Node.js.
     pause
     exit /b 1
 )
 
+if not exist "node_modules\" (
+    echo [INFO] Installing Node.js dependencies...
+    call npm install
+    if !errorlevel! neq 0 (
+        echo [ERROR] Failed to install Node.js dependencies.
+        pause
+        exit /b !errorlevel!
+    )
+)
+
+call npm run build
+if !errorlevel! neq 0 (
+    echo [ERROR] Frontend build failed!
+    pause
+    exit /b !errorlevel!
+)
+
 REM 2. Run PyInstaller via Python
 echo.
-echo [2/2] Freezing Python backend...
+echo [2/3] Freezing Python backend...
 set "PYTHON_EXE=python"
 if exist "%~dp0..\..\backend\venv\Scripts\python.exe" (
     set "PYTHON_EXE=%~dp0..\..\backend\venv\Scripts\python.exe"
+)
+
+"%PYTHON_EXE%" -c "import PyInstaller" >nul 2>&1
+if !errorlevel! neq 0 (
+    echo [INFO] PyInstaller not detected. Installing PyInstaller...
+    "%PYTHON_EXE%" -m pip install pyinstaller
+    if !errorlevel! neq 0 (
+        echo [ERROR] Failed to install PyInstaller.
+        pause
+        exit /b !errorlevel!
+    )
 )
 
 "%PYTHON_EXE%" "%~dp0..\..\backend\build_standalone.py"
