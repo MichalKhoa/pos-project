@@ -92,8 +92,11 @@ REM 4. Build Tauri Native Release Bundle (NSIS / MSI + Updater Signatures)
 echo.
 echo [4/4] Building Tauri Windows desktop installer...
 
-if "%TAURI_SIGNING_PRIVATE_KEY_PATH%"=="" (
+if "%TAURI_SIGNING_PRIVATE_KEY%"=="" (
     if exist "%USERPROFILE%\.tauri\voltflow.key" (
+        for /f "usebackq delims=" %%k in ("%USERPROFILE%\.tauri\voltflow.key") do (
+            set "TAURI_SIGNING_PRIVATE_KEY=%%k"
+        )
         set "TAURI_SIGNING_PRIVATE_KEY_PATH=%USERPROFILE%\.tauri\voltflow.key"
         if "%TAURI_SIGNING_PRIVATE_KEY_PASSWORD%"=="" set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=voltflowpos"
         echo [INFO] Detected Tauri signing key: %USERPROFILE%\.tauri\voltflow.key
@@ -119,4 +122,4 @@ echo   src-tauri\target\release\bundle\nsis\
 echo   src-tauri\target\release\bundle\msi\
 echo.
 echo ========================================================
-pause
+if "%CI%"=="" if "%NON_INTERACTIVE%"=="" pause
