@@ -122,6 +122,36 @@ class StoreConfigModel(Base):
     # Show/Hide VAT Rate on Preset Tiles (Useful for non-VAT retailers)
     show_preset_vat = Column(Boolean, default=True)
 
+    # Receipt Overhaul Customization Fields
+    receipt_top_margin = Column(Integer, default=1)
+    receipt_bottom_margin = Column(Integer, default=3)
+    receipt_copies = Column(Integer, default=1)
+    receipt_encoding = Column(String, default="CP852")
+    strip_diacritics = Column(Boolean, default=False)
+    receipt_separator_style = Column(String, default="dashed")
+    receipt_separator_spacing = Column(String, default="standard")
+    receipt_title_style = Column(String, default="banner")
+    receipt_bold_store_name = Column(Boolean, default=True)
+    receipt_bold_item_names = Column(Boolean, default=True)
+    receipt_bold_prices = Column(Boolean, default=True)
+    receipt_bold_total = Column(Boolean, default=True)
+    receipt_bold_footer = Column(Boolean, default=False)
+    receipt_show_store_contact = Column(Boolean, default=True)
+    receipt_store_phone = Column(String, default="")
+    receipt_store_email = Column(String, default="")
+    receipt_vat_payer_status = Column(String, default="payer")
+    receipt_item_density = Column(String, default="standard")
+    receipt_show_item_sku = Column(Boolean, default=False)
+    receipt_show_item_vat = Column(Boolean, default=True)
+    receipt_show_item_discount = Column(Boolean, default=True)
+    receipt_tax_matrix_style = Column(String, default="detailed")
+    receipt_qr_code_type = Column(String, default="spayd")
+    receipt_qr_code_url = Column(String, default="")
+    receipt_custom_header = Column(String, default="")
+    receipt_footer_lines = Column(String, default="Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.")
+    receipt_show_branding = Column(Boolean, default=True)
+    receipt_show_cashier = Column(Boolean, default=True)
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret

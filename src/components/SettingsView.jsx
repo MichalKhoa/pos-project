@@ -8,7 +8,8 @@ import {
   Shield,
   HardDrive,
   Check,
-  Activity
+  Activity,
+  Receipt
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -27,6 +28,7 @@ import AdminPinModal from './AdminPinModal.jsx';
 import StoreProfileSection from './settings/StoreProfileSection.jsx';
 import LayoutSection from './settings/LayoutSection.jsx';
 import PrinterSection from './settings/PrinterSection.jsx';
+import ReceiptSection from './settings/ReceiptSection.jsx';
 import TerminalSection from './settings/TerminalSection.jsx';
 import SecuritySection from './settings/SecuritySection.jsx';
 import BackupSection from './settings/BackupSection.jsx';
@@ -280,7 +282,8 @@ export default function SettingsView({
   const SUBTABS = [
     { id: 'store', icon: Store, title: t('settings.tab_store') || 'Údaje prodejny', heading: 'Nastavení prodejny a provozovny', subtitle: 'Firma, IČO, adresa, DPH a IBAN' },
     { id: 'layout', icon: Layout, title: t('settings.tab_layout') || 'Rozvržení & Zobrazení', heading: 'Rozvržení a vzhled pokladny', subtitle: 'Tlačítka sortimentu, košík, LCD' },
-    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Účtenka', heading: 'Pokladní tiskárna a periferie', subtitle: 'ESC/POS tiskárna a pokladní zásuvka' },
+    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Periferie', heading: 'Pokladní tiskárna a periferie', subtitle: 'ESC/POS tiskárna a pokladní zásuvka' },
+    { id: 'receipt', icon: Receipt, title: t('settings.tab_receipt') || 'Účtenka & Vzhled', heading: 'Vzhled a formátování účtenky', subtitle: 'Oddělovače, písmo, okraje a QR' },
     { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: 'Platební terminál', subtitle: 'ČSOB terminál a ruční režim' },
     { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: 'Zabezpečení a PIN kód', subtitle: 'Správce, PIN kód a zamykání' },
     { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: 'Zálohování a systémová správa', subtitle: 'Export/import dat, aktualizace a EET' },
@@ -406,6 +409,14 @@ export default function SettingsView({
               printerDevices={printerDevices}
               scanningPrinters={scanningPrinters}
               onScanPrinters={handleScanPrinters}
+            />
+          )}
+
+          {activeSubTab === 'receipt' && (
+            <ReceiptSection
+              config={config}
+              setConfig={setConfig}
+              saveConfigBatch={saveConfigBatch}
             />
           )}
 

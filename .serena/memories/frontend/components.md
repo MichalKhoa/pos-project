@@ -27,7 +27,8 @@ Directory: `/src/components`
 - `SettingsView.jsx`: Master-Detail sidebar (`.settings-view-container`), left 250px vertical rail, right 2-column grid (`.settings-grid-layout`), auto-save (`saveConfigField` onBlur, `saveConfigBatch` onChange) with toast (`.settings-save-toast`). Subcomponents in `/src/components/settings/`:
   - `StoreProfileSection.jsx`: Left: identity, address, IČO/DIČ. Right: default VAT 21%/12%/0%, IBAN for QR, language bar.
   - `LayoutSection.jsx`: Left: preset columns Auto/3/4/5/6, button size S/M/L, style left-stripe/color-fill/modern-card/modern-glass, showPresetVat toggle, catalog shortcut. Right: cart position left/right, cart item style elevated-card/divided-row/rounded-tile, high-legibility mode, button animation mode (instant vs animated), customer LCD title & auto-sleep.
-  - `PrinterSection.jsx`: Left: device selector + live badges. Right: 58mm vs 80mm selector, auto-print switch, receipt footer, test cash drawer kick.
+  - `PrinterSection.jsx`: Left: device selector + live badges. Right: 58mm vs 80mm selector, auto-print switch, drawer kick pulse, drawer status. Links to ReceiptSection for design.
+  - `ReceiptSection.jsx`: Dedicated receipt customizer with 5 cards (Oddělovače & Písmo, Hlavička & Údaje, Položky & DPH, Okraje & Kódování, QR & Patička) and sticky live thermal paper preview (`ReceiptPreviewPaper.jsx`) with 80mm/58mm switch and test print trigger.
   - `TerminalSection.jsx`: Left: Manual vs Automated ČSOB/Ingenico Move 3500 selector. Right: network IP/port/TID, ping test, daily reconciliation.
   - `SecuritySection.jsx`: Left: Admin mode toggle card, Admin PIN modal trigger. Right: cashier PIN, inactivity auto-lock selector.
   - `BackupSection.jsx`: Left: JSON backup export/import, database reset. Right: Litestream replication status, update checker, EET 2.0 toggle.

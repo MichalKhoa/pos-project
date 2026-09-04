@@ -54,6 +54,36 @@ class StoreConfigSchema(BaseModel):
     presetButtonStyle: Optional[str] = None
     showPresetVat: Optional[bool] = None
 
+    # Receipt Customization
+    receiptTopMargin: Optional[int] = None
+    receiptBottomMargin: Optional[int] = None
+    receiptCopies: Optional[int] = None
+    receiptEncoding: Optional[str] = None
+    stripDiacritics: Optional[bool] = None
+    receiptSeparatorStyle: Optional[str] = None
+    receiptSeparatorSpacing: Optional[str] = None
+    receiptTitleStyle: Optional[str] = None
+    receiptBoldStoreName: Optional[bool] = None
+    receiptBoldItemNames: Optional[bool] = None
+    receiptBoldPrices: Optional[bool] = None
+    receiptBoldTotal: Optional[bool] = None
+    receiptBoldFooter: Optional[bool] = None
+    receiptShowStoreContact: Optional[bool] = None
+    receiptStorePhone: Optional[str] = None
+    receiptStoreEmail: Optional[str] = None
+    receiptVatPayerStatus: Optional[str] = None
+    receiptItemDensity: Optional[str] = None
+    receiptShowItemSku: Optional[bool] = None
+    receiptShowItemVat: Optional[bool] = None
+    receiptShowItemDiscount: Optional[bool] = None
+    receiptTaxMatrixStyle: Optional[str] = None
+    receiptQrCodeType: Optional[str] = None
+    receiptQrCodeUrl: Optional[str] = None
+    receiptCustomHeader: Optional[str] = None
+    receiptFooterLines: Optional[str] = None
+    receiptShowBranding: Optional[bool] = None
+    receiptShowCashier: Optional[bool] = None
+
 
 @router.get("")
 def get_store_config(db: Session = Depends(get_db)):
@@ -97,7 +127,36 @@ def get_store_config(db: Session = Depends(get_db)):
         "customerDisplayTitle": getattr(config, 'customer_display_title', "Vítejte u nás") or "Vítejte u nás",
         "customerDisplayAutoSleep": getattr(config, 'customer_display_auto_sleep', True) if getattr(config, 'customer_display_auto_sleep', None) is not None else True,
         "customerDisplayStandbyDelay": getattr(config, 'customer_display_standby_delay', 10) or 10,
-        "showPresetVat": getattr(config, 'show_preset_vat', True) if getattr(config, 'show_preset_vat', None) is not None else True
+        "showPresetVat": getattr(config, 'show_preset_vat', True) if getattr(config, 'show_preset_vat', None) is not None else True,
+        # Receipt Overhaul Fields
+        "receiptTopMargin": getattr(config, 'receipt_top_margin', 1) if getattr(config, 'receipt_top_margin', None) is not None else 1,
+        "receiptBottomMargin": getattr(config, 'receipt_bottom_margin', 3) if getattr(config, 'receipt_bottom_margin', None) is not None else 3,
+        "receiptCopies": getattr(config, 'receipt_copies', 1) if getattr(config, 'receipt_copies', None) is not None else 1,
+        "receiptEncoding": getattr(config, 'receipt_encoding', "CP852") or "CP852",
+        "stripDiacritics": getattr(config, 'strip_diacritics', False) if getattr(config, 'strip_diacritics', None) is not None else False,
+        "receiptSeparatorStyle": getattr(config, 'receipt_separator_style', "dashed") or "dashed",
+        "receiptSeparatorSpacing": getattr(config, 'receipt_separator_spacing', "standard") or "standard",
+        "receiptTitleStyle": getattr(config, 'receipt_title_style', "banner") or "banner",
+        "receiptBoldStoreName": getattr(config, 'receipt_bold_store_name', True) if getattr(config, 'receipt_bold_store_name', None) is not None else True,
+        "receiptBoldItemNames": getattr(config, 'receipt_bold_item_names', True) if getattr(config, 'receipt_bold_item_names', None) is not None else True,
+        "receiptBoldPrices": getattr(config, 'receipt_bold_prices', True) if getattr(config, 'receipt_bold_prices', None) is not None else True,
+        "receiptBoldTotal": getattr(config, 'receipt_bold_total', True) if getattr(config, 'receipt_bold_total', None) is not None else True,
+        "receiptBoldFooter": getattr(config, 'receipt_bold_footer', False) if getattr(config, 'receipt_bold_footer', None) is not None else False,
+        "receiptShowStoreContact": getattr(config, 'receipt_show_store_contact', True) if getattr(config, 'receipt_show_store_contact', None) is not None else True,
+        "receiptStorePhone": getattr(config, 'receipt_store_phone', "") or "",
+        "receiptStoreEmail": getattr(config, 'receipt_store_email', "") or "",
+        "receiptVatPayerStatus": getattr(config, 'receipt_vat_payer_status', "payer") or "payer",
+        "receiptItemDensity": getattr(config, 'receipt_item_density', "standard") or "standard",
+        "receiptShowItemSku": getattr(config, 'receipt_show_item_sku', False) if getattr(config, 'receipt_show_item_sku', None) is not None else False,
+        "receiptShowItemVat": getattr(config, 'receipt_show_item_vat', True) if getattr(config, 'receipt_show_item_vat', None) is not None else True,
+        "receiptShowItemDiscount": getattr(config, 'receipt_show_item_discount', True) if getattr(config, 'receipt_show_item_discount', None) is not None else True,
+        "receiptTaxMatrixStyle": getattr(config, 'receipt_tax_matrix_style', "detailed") or "detailed",
+        "receiptQrCodeType": getattr(config, 'receipt_qr_code_type', "spayd") or "spayd",
+        "receiptQrCodeUrl": getattr(config, 'receipt_qr_code_url', "") or "",
+        "receiptCustomHeader": getattr(config, 'receipt_custom_header', "") or "",
+        "receiptFooterLines": getattr(config, 'receipt_footer_lines', "Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.") or "Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.",
+        "receiptShowBranding": getattr(config, 'receipt_show_branding', True) if getattr(config, 'receipt_show_branding', None) is not None else True,
+        "receiptShowCashier": getattr(config, 'receipt_show_cashier', True) if getattr(config, 'receipt_show_cashier', None) is not None else True
     }
 
 
@@ -144,6 +203,35 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.defaultLanguage is not None: config.default_language = data.defaultLanguage
     if data.cartPosition is not None: config.cart_position = data.cartPosition
     if data.showPresetVat is not None: config.show_preset_vat = data.showPresetVat
+    # Receipt Overhaul Fields
+    if data.receiptTopMargin is not None: config.receipt_top_margin = data.receiptTopMargin
+    if data.receiptBottomMargin is not None: config.receipt_bottom_margin = data.receiptBottomMargin
+    if data.receiptCopies is not None: config.receipt_copies = data.receiptCopies
+    if data.receiptEncoding is not None: config.receipt_encoding = data.receiptEncoding
+    if data.stripDiacritics is not None: config.strip_diacritics = data.stripDiacritics
+    if data.receiptSeparatorStyle is not None: config.receipt_separator_style = data.receiptSeparatorStyle
+    if data.receiptSeparatorSpacing is not None: config.receipt_separator_spacing = data.receiptSeparatorSpacing
+    if data.receiptTitleStyle is not None: config.receipt_title_style = data.receiptTitleStyle
+    if data.receiptBoldStoreName is not None: config.receipt_bold_store_name = data.receiptBoldStoreName
+    if data.receiptBoldItemNames is not None: config.receipt_bold_item_names = data.receiptBoldItemNames
+    if data.receiptBoldPrices is not None: config.receipt_bold_prices = data.receiptBoldPrices
+    if data.receiptBoldTotal is not None: config.receipt_bold_total = data.receiptBoldTotal
+    if data.receiptBoldFooter is not None: config.receipt_bold_footer = data.receiptBoldFooter
+    if data.receiptShowStoreContact is not None: config.receipt_show_store_contact = data.receiptShowStoreContact
+    if data.receiptStorePhone is not None: config.receipt_store_phone = data.receiptStorePhone
+    if data.receiptStoreEmail is not None: config.receipt_store_email = data.receiptStoreEmail
+    if data.receiptVatPayerStatus is not None: config.receipt_vat_payer_status = data.receiptVatPayerStatus
+    if data.receiptItemDensity is not None: config.receipt_item_density = data.receiptItemDensity
+    if data.receiptShowItemSku is not None: config.receipt_show_item_sku = data.receiptShowItemSku
+    if data.receiptShowItemVat is not None: config.receipt_show_item_vat = data.receiptShowItemVat
+    if data.receiptShowItemDiscount is not None: config.receipt_show_item_discount = data.receiptShowItemDiscount
+    if data.receiptTaxMatrixStyle is not None: config.receipt_tax_matrix_style = data.receiptTaxMatrixStyle
+    if data.receiptQrCodeType is not None: config.receipt_qr_code_type = data.receiptQrCodeType
+    if data.receiptQrCodeUrl is not None: config.receipt_qr_code_url = data.receiptQrCodeUrl
+    if data.receiptCustomHeader is not None: config.receipt_custom_header = data.receiptCustomHeader
+    if data.receiptFooterLines is not None: config.receipt_footer_lines = data.receiptFooterLines
+    if data.receiptShowBranding is not None: config.receipt_show_branding = data.receiptShowBranding
+    if data.receiptShowCashier is not None: config.receipt_show_cashier = data.receiptShowCashier
 
     db.commit()
     db.refresh(config)

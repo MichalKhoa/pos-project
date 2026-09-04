@@ -598,9 +598,9 @@
   line-height: 1.4;
   border: 1px solid #e2e8f0;
   position: relative;
-  overflow: hidden;
   padding: 1.5rem;
-  width: 320px;
+  width: 380px;
+  max-width: 100%;
   margin: 0 auto;
 }
 

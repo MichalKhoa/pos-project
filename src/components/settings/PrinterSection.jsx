@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Printer, RefreshCw, Receipt, DollarSign, CheckCircle } from 'lucide-react';
-import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { openCashDrawerBackend } from '../../api/posApi.js';
 import { soundFx } from '../../utils/audio.js';
 
@@ -12,7 +11,6 @@ export default function PrinterSection({
   scanningPrinters = false,
   onScanPrinters
 }) {
-  const { t } = useTranslation();
   const [drawerTesting, setDrawerTesting] = useState(false);
   const [drawerMessage, setDrawerMessage] = useState(null);
 
@@ -108,82 +106,55 @@ export default function PrinterSection({
       <div className="settings-grid-col">
         {/* 📄 Card 2: Formátování a parametry tisku */}
         <div className="settings-section-card">
-        <div className="settings-section-header">
-          <div>
-            <h3 className="settings-section-title">
-              <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
-              <span>Parametry účtenky & Tisk</span>
-            </h3>
-            <p className="settings-section-desc">
-              Šířka papírové role a automatický tisk po zaplacení nákupu.
-            </p>
-          </div>
-        </div>
-
-        {/* Paper Width */}
-        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
-          <div className="settings-toggle-label-wrap">
-            <span className="settings-toggle-title">
-              Šířka papírové role tiskárny
-            </span>
-            <span className="settings-toggle-subtitle">
-              Standardní pokladní kotouček má šířku 80 mm (48 znaků na řádek).
-            </span>
+          <div className="settings-section-header">
+            <div>
+              <h3 className="settings-section-title">
+                <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
+                <span>Kotouček & Vzhled Účtenky</span>
+              </h3>
+              <p className="settings-section-desc">
+                Základní formát papíru a odkaz do vizuálního editoru účtenky.
+              </p>
+            </div>
           </div>
 
-          <div className="settings-segmented-group">
-            {[
-              { val: '80', label: '80 mm (Standard)' },
-              { val: '58', label: '58 mm (Úzká)' }
-            ].map(w => (
-              <button
-                key={w.val}
-                type="button"
-                className={`settings-segmented-btn ${(config.printerPaperWidth || '80') === w.val ? 'active' : ''}`}
-                onClick={() => handleUpdate({ printerPaperWidth: w.val })}
-              >
-                {w.label}
-              </button>
-            ))}
+          {/* Paper Width */}
+          <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+            <div className="settings-toggle-label-wrap">
+              <span className="settings-toggle-title">
+                Šířka papírové role tiskárny
+              </span>
+              <span className="settings-toggle-subtitle">
+                Standardní pokladní kotouček má šířku 80 mm (48 znaků na řádek).
+              </span>
+            </div>
+
+            <div className="settings-segmented-group">
+              {[
+                { val: '80', label: '80 mm (Standard)' },
+                { val: '58', label: '58 mm (Úzká)' }
+              ].map(w => (
+                <button
+                  key={w.val}
+                  type="button"
+                  className={`settings-segmented-btn ${(config.printerPaperWidth || '80') === w.val ? 'active' : ''}`}
+                  onClick={() => handleUpdate({ printerPaperWidth: w.val })}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ padding: '0.85rem 1rem', background: 'rgba(59, 130, 246, 0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(59, 130, 246, 0.2)', marginTop: '0.85rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-blue)', marginBottom: '0.2rem' }}>
+              Kompletní přizpůsobení účtenky
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              Pro nastavení oddělovačů, písma, horního/dolního okraje, kontaktů, QR platby a živého náhledu přepněte v levém menu do záložky <strong>Účtenka & Vzhled</strong>.
+            </div>
           </div>
         </div>
-
-        {/* Auto Print */}
-        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
-          <div className="settings-toggle-label-wrap">
-            <span className="settings-toggle-title">
-              Automaticky tisknout účtenku po zaplacení
-            </span>
-            <span className="settings-toggle-subtitle">
-              Při dokončení prodeje ihned vytiskne účtenku bez nutnosti klikat na tlačítko Tisk.
-            </span>
-          </div>
-
-          <label className="settings-switch-toggle">
-            <input
-              type="checkbox"
-              checked={config.autoPrintReceipt !== false}
-              onChange={e => handleUpdate({ autoPrintReceipt: e.target.checked })}
-            />
-            <span className="settings-switch-slider" />
-          </label>
-        </div>
-
-        {/* Receipt Footer */}
-        <div className="settings-field">
-          <label className="settings-label">
-            {t('settings.receipt_footer') || 'Text v patičce účtenky'}
-          </label>
-          <input
-            type="text"
-            className="settings-input"
-            value={config.receiptFooter || ''}
-            placeholder="Děkujeme za váš nákup a těšíme se na další návštěvu!"
-            onChange={e => setConfig({ ...config, receiptFooter: e.target.value })}
-            onBlur={e => handleUpdate({ receiptFooter: e.target.value })}
-          />
-        </div>
-      </div>
 
       {/* 💵 Card 3: Pokladní zásuvka (Cash Drawer) */}
       <div className="settings-section-card">
