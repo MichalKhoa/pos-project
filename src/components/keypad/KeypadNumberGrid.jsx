@@ -36,7 +36,7 @@ export default function KeypadNumberGrid({
         onClick={() => onKeyPress('BACK')}
         title="Backspace"
       >
-        <Delete size={20} />
+        <Delete size={22} />
       </button>
 
       {/* Row 2: 4 5 6 C */}
@@ -102,7 +102,7 @@ export default function KeypadNumberGrid({
         style={{
           color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
           fontWeight: '900',
-          fontSize: '1.25rem',
+          fontSize: '1.45rem',
           background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
           borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
         }}
@@ -132,8 +132,8 @@ export default function KeypadNumberGrid({
         }}
         style={{
           color: itemMultiplier > 1 ? '#fff' : 'var(--accent-amber)',
-          fontWeight: '800',
-          fontSize: '1.25rem',
+          fontWeight: '900',
+          fontSize: '1.45rem',
           background: itemMultiplier > 1 ? 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)' : undefined
         }}
         title="Násobit"
@@ -147,7 +147,9 @@ export default function KeypadNumberGrid({
         className={`key-btn key-enter ${hasValidAmount ? 'key-enter-active' : ''} ${activeKey === 'ENTER' ? 'active-press' : ''}`}
         style={{
           gridColumn: 'span 4',
-          minHeight: '48px',
+          minHeight: '52px',
+          height: '52px',
+          aspectRatio: 'auto',
           background: isReturn && hasValidAmount
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
             : undefined,
@@ -161,7 +163,7 @@ export default function KeypadNumberGrid({
         onClick={onAddCustomItem}
         disabled={!hasValidAmount}
       >
-        <PlusCircle size={20} />
+        <PlusCircle size={22} />
         <span>
           {!hasValidAmount
             ? t('keypad.enter_amount')

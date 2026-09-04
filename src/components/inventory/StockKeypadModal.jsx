@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, X, Check } from 'lucide-react';
+import { Package, X, Check, Delete } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function StockKeypadModal({
@@ -20,7 +20,7 @@ export default function StockKeypadModal({
         onClick={e => e.stopPropagation()}
         style={{
           width: '92vw',
-          maxWidth: '400px',
+          maxWidth: '430px',
           background: 'var(--bg-card)',
           borderRadius: 'var(--radius-xl)',
           border: '1.5px solid var(--border-color)',
@@ -56,13 +56,12 @@ export default function StockKeypadModal({
           </div>
 
           {/* Touch Numpad */}
-          <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+          <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.45rem' }}>
             {['7', '8', '9'].map(num => (
               <button
                 key={num}
                 type="button"
                 className="key-btn"
-                style={{ height: '52px', aspectRatio: 'auto' }}
                 onClick={() => setStockKeypadValue(prev => prev === '0' ? num : prev.length < 6 ? prev + num : prev)}
               >
                 {num}
@@ -71,10 +70,9 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn key-action"
-              style={{ height: '52px', aspectRatio: 'auto' }}
               onClick={() => setStockKeypadValue(prev => prev.length > 1 ? prev.slice(0, -1) : '0')}
             >
-              ⌫
+              <Delete size={22} />
             </button>
 
             {['4', '5', '6'].map(num => (
@@ -82,7 +80,6 @@ export default function StockKeypadModal({
                 key={num}
                 type="button"
                 className="key-btn"
-                style={{ height: '52px', aspectRatio: 'auto' }}
                 onClick={() => setStockKeypadValue(prev => prev === '0' ? num : prev.length < 6 ? prev + num : prev)}
               >
                 {num}
@@ -91,7 +88,7 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn key-action"
-              style={{ height: '52px', fontSize: '0.9rem', fontWeight: '700', aspectRatio: 'auto' }}
+              style={{ fontSize: '1.15rem', fontWeight: '900' }}
               onClick={() => setStockKeypadValue('0')}
             >
               C
@@ -102,7 +99,6 @@ export default function StockKeypadModal({
                 key={num}
                 type="button"
                 className="key-btn"
-                style={{ height: '52px', aspectRatio: 'auto' }}
                 onClick={() => setStockKeypadValue(prev => prev === '0' ? num : prev.length < 6 ? prev + num : prev)}
               >
                 {num}
@@ -111,7 +107,7 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn"
-              style={{ height: '52px', aspectRatio: 'auto', fontWeight: '800' }}
+              style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--accent-blue)' }}
               onClick={() => setStockKeypadValue(prev => (parseInt(prev || '0', 10) + 10).toString())}
             >
               +10
@@ -120,7 +116,7 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn"
-              style={{ height: '52px', gridColumn: 'span 2', aspectRatio: 'auto' }}
+              style={{ gridColumn: 'span 2', aspectRatio: 'auto', minHeight: '62px' }}
               onClick={() => setStockKeypadValue(prev => prev === '0' ? '0' : prev.length < 6 ? prev + '0' : prev)}
             >
               0
@@ -128,18 +124,18 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn"
-              style={{ height: '52px', gridColumn: 'span 2', aspectRatio: 'auto' }}
+              style={{ gridColumn: 'span 2', aspectRatio: 'auto', minHeight: '62px' }}
               onClick={() => setStockKeypadValue(prev => prev === '0' ? '0' : prev.length < 6 ? prev + '00' : prev)}
             >
               00
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.85rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.65rem' }}>
             <button
               type="button"
               className="nav-tab"
-              style={{ flex: 1, justifyContent: 'center', height: '48px' }}
+              style={{ flex: 1, justifyContent: 'center', height: '50px', fontSize: '0.92rem' }}
               onClick={onClose}
             >
               {t('common.cancel')}
@@ -147,10 +143,10 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="pay-btn pay-btn-cash"
-              style={{ flex: 1.5, height: '48px' }}
+              style={{ flex: 1.5, height: '50px', fontSize: '0.96rem', gap: '0.5rem' }}
               onClick={onConfirm}
             >
-              <Check size={18} />
+              <Check size={19} />
               <span>Uložit stav</span>
             </button>
           </div>

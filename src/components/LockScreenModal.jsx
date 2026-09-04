@@ -242,7 +242,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
                   key={num}
                   type="button"
                   className="key-btn"
-                  style={{ height: '54px', fontSize: '1.35rem', fontWeight: '800' }}
+                  style={{ height: '66px', fontSize: '1.5rem', fontWeight: '900' }}
                   onClick={() => handleNumClick(num)}
                 >
                   {num}
@@ -251,7 +251,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
               <button
                 type="button"
                 className="key-btn key-action"
-                style={{ height: '54px', fontSize: '0.9rem', fontWeight: '700' }}
+                style={{ height: '66px', fontSize: '1.15rem', fontWeight: '800' }}
                 onClick={handleClear}
               >
                 C
@@ -259,7 +259,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
               <button
                 type="button"
                 className="key-btn"
-                style={{ height: '54px', fontSize: '1.35rem', fontWeight: '800' }}
+                style={{ height: '66px', fontSize: '1.5rem', fontWeight: '900' }}
                 onClick={() => handleNumClick('0')}
               >
                 0
@@ -267,7 +267,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
               <button
                 type="button"
                 className="key-btn key-action"
-                style={{ height: '54px' }}
+                style={{ height: '66px', fontSize: '1.3rem', fontWeight: '800' }}
                 onClick={handleBackspace}
               >
                 ⌫

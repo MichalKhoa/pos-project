@@ -93,7 +93,7 @@ export default function OpenPriceModal({
         onClick={e => e.stopPropagation()}
         style={{
           width: '92vw',
-          maxWidth: '380px',
+          maxWidth: '430px',
           background: 'var(--bg-card)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-color)',
@@ -308,7 +308,6 @@ export default function OpenPriceModal({
                 key={num}
                 type="button"
                 className="key-btn"
-                style={{ height: '44px', aspectRatio: 'auto' }}
                 onClick={() => handleDigit(num)}
               >
                 {num}
@@ -317,11 +316,10 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn key-action"
-              style={{ height: '44px', aspectRatio: 'auto' }}
               onClick={handleBackspace}
               title="Backspace"
             >
-              <Delete size={18} />
+              <Delete size={22} />
             </button>
 
             {/* Row 2: 4 5 6 C */}
@@ -330,7 +328,6 @@ export default function OpenPriceModal({
                 key={num}
                 type="button"
                 className="key-btn"
-                style={{ height: '44px', aspectRatio: 'auto' }}
                 onClick={() => handleDigit(num)}
               >
                 {num}
@@ -339,7 +336,7 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn key-action"
-              style={{ height: '44px', fontSize: '0.92rem', fontWeight: '800', aspectRatio: 'auto' }}
+              style={{ fontSize: '1.15rem', fontWeight: '900' }}
               onClick={handleClear}
               title="Smazat vše (Clear)"
             >
@@ -352,7 +349,6 @@ export default function OpenPriceModal({
                 key={num}
                 type="button"
                 className="key-btn"
-                style={{ height: '44px', aspectRatio: 'auto' }}
                 onClick={() => handleDigit(num)}
               >
                 {num}
@@ -361,7 +357,7 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn"
-              style={{ height: '44px', fontSize: '1.3rem', fontWeight: '800', color: 'var(--accent-blue)', aspectRatio: 'auto' }}
+              style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-blue)' }}
               onClick={handleComma}
               title="Čárka"
             >
@@ -372,7 +368,6 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn"
-              style={{ height: '44px', aspectRatio: 'auto' }}
               onClick={() => handleDigit('0')}
             >
               0
@@ -380,7 +375,6 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn"
-              style={{ height: '44px', aspectRatio: 'auto' }}
               onClick={handleDoubleZero}
             >
               00
@@ -389,13 +383,11 @@ export default function OpenPriceModal({
               type="button"
               className={`key-btn ${isReturn ? 'active-return' : ''}`}
               style={{
-                height: '44px',
-                fontSize: '1.2rem',
+                fontSize: '1.45rem',
                 fontWeight: '900',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
                 background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
-                borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined,
-                aspectRatio: 'auto'
+                borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
               }}
               onClick={handleToggleSign}
               title="Změnit znaménko (± Vratka)"
@@ -406,12 +398,10 @@ export default function OpenPriceModal({
               type="button"
               className="key-btn key-action"
               style={{
-                height: '44px',
-                fontSize: '1.2rem',
-                fontWeight: '800',
+                fontSize: '1.45rem',
+                fontWeight: '900',
                 color: openPriceQty > 1 ? '#fff' : 'var(--accent-amber)',
-                background: openPriceQty > 1 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : undefined,
-                aspectRatio: 'auto'
+                background: openPriceQty > 1 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : undefined
               }}
               onClick={handleStepUp}
               title="Zvýšit množství (×)"
@@ -421,15 +411,15 @@ export default function OpenPriceModal({
           </div>
 
           {/* ── Action Buttons Row ── */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.35rem' }}>
+          <div style={{ display: 'flex', gap: '0.55rem', marginTop: '0.45rem' }}>
             <button
               type="button"
               className="nav-tab"
               style={{
                 flex: 1,
                 justifyContent: 'center',
-                height: '44px',
-                fontSize: '0.86rem',
+                height: '50px',
+                fontSize: '0.92rem',
                 fontWeight: '700'
               }}
               onClick={onClose}
@@ -441,17 +431,17 @@ export default function OpenPriceModal({
               className="pay-btn pay-btn-cash"
               style={{
                 flex: 1.6,
-                height: '44px',
-                fontSize: '0.88rem',
+                height: '50px',
+                fontSize: '0.96rem',
                 fontWeight: '800',
-                gap: '0.45rem',
+                gap: '0.5rem',
                 background: isReturn ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined,
                 borderColor: isReturn ? '#ef4444' : undefined,
                 boxShadow: isReturn ? '0 4px 14px rgba(239, 68, 68, 0.35)' : undefined
               }}
               disabled={!hasValidAmount}
             >
-              <Check size={17} />
+              <Check size={19} />
               <span>{isReturn ? 'Vrátit zboží (Vratka)' : t('keypad.add_to_cart')}</span>
             </button>
           </div>
