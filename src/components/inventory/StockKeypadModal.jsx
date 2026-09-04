@@ -1,6 +1,7 @@
 import React from 'react';
 import { Package, X, Check, Delete } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
 
 export default function StockKeypadModal({
   stockKeypadTarget,
@@ -10,6 +11,11 @@ export default function StockKeypadModal({
   onConfirm
 }) {
   const { t } = useTranslation();
+
+  const backspaceHoldHandlers = useHoldBackspace({
+    onBackspace: () => setStockKeypadValue(prev => prev.length > 1 ? prev.slice(0, -1) : '0'),
+    onClear: () => setStockKeypadValue('0')
+  });
 
   if (!stockKeypadTarget) return null;
 
@@ -70,7 +76,7 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn key-action"
-              onClick={() => setStockKeypadValue(prev => prev.length > 1 ? prev.slice(0, -1) : '0')}
+              {...backspaceHoldHandlers}
             >
               <Delete size={22} />
             </button>

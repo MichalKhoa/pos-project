@@ -1,6 +1,7 @@
 import React from 'react';
 import { Delete, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
 
 export default function KeypadNumberGrid({
   activeKey,
@@ -16,6 +17,11 @@ export default function KeypadNumberGrid({
   const { t } = useTranslation();
 
   const isReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
+
+  const backspaceHoldHandlers = useHoldBackspace({
+    onBackspace: () => onKeyPress('BACK'),
+    onClear: () => onKeyPress('CLEAR'),
+  });
 
   return (
     <div className="keypad-grid">
@@ -33,7 +39,7 @@ export default function KeypadNumberGrid({
       <button
         type="button"
         className={`key-btn key-action ${activeKey === 'BACK' ? 'active-press' : ''}`}
-        onClick={() => onKeyPress('BACK')}
+        {...backspaceHoldHandlers}
         title="Backspace"
       >
         <Delete size={22} />

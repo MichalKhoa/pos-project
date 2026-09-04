@@ -7,6 +7,7 @@ import KeypadStepperBar from './keypad/KeypadStepperBar';
 import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
 import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 import { soundFx } from '../utils/audio';
+import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -116,6 +117,12 @@ export default function ManualKeypad({
     soundFx.playScanChime();
     triggerKeyAnimation('ENTER');
   };
+
+  const inlineBackspaceHandlers = useHoldBackspace({
+    onBackspace: () => handleKeyPress('BACK'),
+    onClear: () => handleKeyPress('CLEAR'),
+    disabled: !amountStr && itemMultiplier === 1
+  });
 
   return (
     <div
@@ -242,7 +249,7 @@ export default function ManualKeypad({
             {/* Inline Backspace button (Subtle & Borderless) */}
             <button
               type="button"
-              onClick={() => handleKeyPress('BACK')}
+              {...inlineBackspaceHandlers}
               disabled={!amountStr && itemMultiplier === 1}
               style={{
                 width: '34px',

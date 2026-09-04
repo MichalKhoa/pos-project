@@ -2,6 +2,7 @@ import React from 'react';
 import { Tag, X, ChevronUp, ChevronDown, Delete, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { soundFx } from '../../utils/audio.js';
+import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
 
 export default function OpenPriceModal({
   openPriceTarget,
@@ -13,8 +14,6 @@ export default function OpenPriceModal({
   onSubmit
 }) {
   const { t } = useTranslation();
-
-  if (!openPriceTarget) return null;
 
   const handleStepDown = () => {
     soundFx.playKeypadClick();
@@ -85,6 +84,19 @@ export default function OpenPriceModal({
 
   const isReturn = openPriceQty < 0 || Boolean(enteredOpenPrice && enteredOpenPrice.startsWith('-'));
   const hasValidAmount = Boolean(enteredOpenPrice && !isNaN(parseFloat(enteredOpenPrice)) && parseFloat(enteredOpenPrice) > 0);
+
+  const backspaceHoldHandlers = useHoldBackspace({
+    onBackspace: handleBackspace,
+    onClear: handleClear,
+  });
+
+  const inlineBackspaceHandlers = useHoldBackspace({
+    onBackspace: handleBackspace,
+    onClear: handleClear,
+    disabled: !enteredOpenPrice
+  });
+
+  if (!openPriceTarget) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1100 }}>
@@ -185,7 +197,7 @@ export default function OpenPriceModal({
               {/* Inline Backspace button (Subtle & Borderless) */}
               <button
                 type="button"
-                onClick={handleBackspace}
+                {...inlineBackspaceHandlers}
                 disabled={!enteredOpenPrice}
                 style={{
                   width: '34px',
@@ -323,7 +335,7 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn key-action"
-              onClick={handleBackspace}
+              {...backspaceHoldHandlers}
               title="Backspace"
             >
               <Delete size={22} />
