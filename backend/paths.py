@@ -75,16 +75,13 @@ SECRET_KEY_FILE = os.path.join(DATA_DIR, ".secret_key")
 
 def get_dist_dir() -> str:
     """Find compiled React frontend dist directory across dev and frozen environments."""
-    # 1. Bundled in PyInstaller package
-    bundled = os.path.join(BUNDLE_DIR, "dist")
-    if os.path.exists(bundled) and os.path.isfile(os.path.join(bundled, "index.html")):
-        return bundled
-    # 2. Alongside executable
-    adjacent = os.path.join(APP_DIR, "dist")
-    if os.path.exists(adjacent) and os.path.isfile(os.path.join(adjacent, "index.html")):
-        return adjacent
-    # 3. Standard dev layout (pos-eet-himmel/dist)
-    dev_dist = os.path.join(ROOT_DIR, "dist")
-    if os.path.exists(dev_dist):
-        return dev_dist
-    return bundled
+    candidates = [
+        os.path.join(ROOT_DIR, "dist"),
+        os.path.abspath(os.path.join(APP_DIR, "..", "..", "dist")),
+        os.path.join(APP_DIR, "dist"),
+        os.path.join(BUNDLE_DIR, "dist")
+    ]
+    valid = [c for c in candidates if os.path.isdir(c) and os.path.isfile(os.path.join(c, "index.html"))]
+    if valid:
+        return max(valid, key=lambda c: os.path.getmtime(os.path.join(c, "index.html")))
+    return os.path.join(BUNDLE_DIR, "dist")

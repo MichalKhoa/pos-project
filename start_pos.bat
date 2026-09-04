@@ -8,17 +8,25 @@ echo.
 
 cd /d "%~dp0"
 
-REM 1. Ensure frontend UI is built
-if not exist "%~dp0dist\index.html" (
-    echo [INFO] Frontend build missing. Building UI bundle...
-    where npm >nul 2>&1
-    if !errorlevel! equ 0 (
-        call npm run build
-    ) else (
+REM 1. Ensure frontend UI is built and synced
+where npm >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [INFO] Building latest frontend UI bundle...
+    call npm run build
+) else (
+    if not exist "%~dp0dist\index.html" (
         echo [ERROR] npm is required to build the frontend.
         pause
         exit /b 1
     )
+)
+
+REM Sync built assets to standalone distribution if present
+if exist "%~dp0backend\dist_standalone\pos-backend\_internal\dist" (
+    xcopy /E /I /Y /Q "%~dp0dist" "%~dp0backend\dist_standalone\pos-backend\_internal\dist" >nul 2>&1
+)
+if exist "%~dp0backend\dist_standalone\pos-backend\dist" (
+    xcopy /E /I /Y /Q "%~dp0dist" "%~dp0backend\dist_standalone\pos-backend\dist" >nul 2>&1
 )
 
 REM 2. Check if backend is already listening on port 8000
@@ -28,14 +36,11 @@ if %errorlevel% equ 0 (
     goto :BACKEND_READY
 )
 
-REM 3. Resolve launch target (Standalone binary > Virtual Environment > System Python)
+REM 3. Resolve launch target (Virtual Environment > System Python > Standalone binary)
 set "STANDALONE_EXE=%~dp0backend\dist_standalone\pos-backend\pos-backend.exe"
 set "VENV_PYTHON=%~dp0backend\venv\Scripts\python.exe"
 
-if exist "%STANDALONE_EXE%" (
-    echo [INFO] Launching standalone backend binary...
-    start "VoltFlow POS Backend" /min "%STANDALONE_EXE%"
-) else if exist "%VENV_PYTHON%" (
+if exist "%VENV_PYTHON%" (
     echo [INFO] Launching backend via Python virtual environment...
     "%VENV_PYTHON%" "%~dp0backend\migrations.py" >nul 2>&1
     start "VoltFlow POS Backend" /min /D "%~dp0backend" "%VENV_PYTHON%" main.py
@@ -45,9 +50,12 @@ if exist "%STANDALONE_EXE%" (
         echo [INFO] Launching backend via system Python...
         python "%~dp0backend\migrations.py" >nul 2>&1
         start "VoltFlow POS Backend" /min /D "%~dp0backend" python main.py
+    ) else if exist "%STANDALONE_EXE%" (
+        echo [INFO] Launching standalone backend binary...
+        start "VoltFlow POS Backend" /min "%STANDALONE_EXE%"
     ) else (
-        echo [ERROR] Neither standalone executable nor Python found.
-        echo Please run build_standalone.bat or install Python.
+        echo [ERROR] Neither Python nor standalone executable found.
+        echo Please run install.bat or install Python.
         pause
         exit /b 1
     )
