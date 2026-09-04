@@ -1,1 +1,1 @@
-{"commit": "6c63797327fc366890dbe9bddea26899890b98fe", "timestamp": 1788388637, "model_calls": 163, "prompt_tokens": 97479899, "output_tokens": 84003, "total_tokens": 97563902, "est_flash_usd": 2.6754, "est_sonnet_usd": 69.9834}
+{"commit": "6c63797327fc366890dbe9bddea26899890b98fe", "timestamp": 1788388637, "model_calls": 163, "prompt_tokens": 97479899, "output_tokens": 84003, "total_tokens": 97563902, "est_flash_usd": 17.4958, "est_sonnet_usd": 69.9834}
