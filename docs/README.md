@@ -20,11 +20,10 @@ docs/
 │   ├── markdown/                      # Converted Markdown EET documentation
 │   └── convert_pdf_to_md.py           # Converter script for incoming Ministry PDF documents
 ├── csob_docs/                         # ČSOB Business Connector technical specifications
+├── ROADMAP.md                         # Master product & technical roadmap
 ├── plans/                             # Architecture & Implementation Roadmaps
-│   ├── DONE_DATABASE_SAFETY_PLAN.md   # SQLite schema auto-migrations & safety invariants
-│   ├── DONE_EET_HARDENING_PLAN.md     # EET 2.0 cryptographic signing & SOAP dispatch
-│   ├── DONE_INVENTORY_IMPLEMENTATION_PLAN.md # Inventory ledger & stock tracking
-│   └── DONE_STABILITY_AND_QUALITY_PLAN.md    # Test coverage & touch ergonomics standards
+│   ├── ROADMAP_REGISTER_UI_AND_QUICK_ACTIONS.md # Keypad bottom action dock specs
+│   └── archive/                       # Archived completed milestones & plans
 └── TOKEN_TRACKING.md                  # Development telemetry & token optimization guide
 ```
 
