@@ -22,7 +22,8 @@ REM 2. Close command prompt terminals by window title
 taskkill /T /F /FI "WINDOWTITLE eq VoltFlow POS*" >nul 2>&1
 taskkill /T /F /FI "WINDOWTITLE eq Himmel POS*" >nul 2>&1
 
-REM 3. Terminate Litestream & POS browser app windows
+REM 3. Terminate Litestream, pos-backend binary & POS browser app windows
+taskkill /F /IM pos-backend.exe >nul 2>&1
 taskkill /F /IM litestream.exe >nul 2>&1
 taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq *VoltFlow*" >nul 2>&1
 taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq *Himmel*" >nul 2>&1
