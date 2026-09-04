@@ -147,8 +147,8 @@ export default function KeypadNumberGrid({
         className={`key-btn key-enter ${hasValidAmount ? 'key-enter-active' : ''} ${activeKey === 'ENTER' ? 'active-press' : ''}`}
         style={{
           gridColumn: 'span 4',
-          minHeight: '52px',
-          height: '52px',
+          minHeight: '62px',
+          height: '62px',
           aspectRatio: 'auto',
           background: isReturn && hasValidAmount
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'

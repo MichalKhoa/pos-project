@@ -1099,8 +1099,8 @@ select.input-field:focus {
 
 .key-btn.key-enter {
   grid-column: span 4;
-  height: 52px;
-  min-height: 52px;
+  height: 62px;
+  min-height: 62px;
   aspect-ratio: auto;
   background: var(--bg-input);
   color: var(--text-muted);
