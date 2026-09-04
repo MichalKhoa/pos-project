@@ -41,6 +41,11 @@ VoltFlow POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 ### Context & Token Optimization
 - **Complexity Profiling**: Before executing any multi-file feature request, run `codegraph_explore` to map the blast radius. If the task spans multiple backend routers and frontend components, you must generate a phased `implementation_plan.md`, log the state handoff into `.serena/memories/`, and explicitly instruct the user to open a fresh conversation for Phase 1.
 - **The 50% Rule (Context Cap)**: Monitor the conversation length. If the chat history or context window feels heavily loaded, you must pause immediately, summarize the active state into a Serena memory, and prompt the user to execute `/clear` before continuing.
+- **Subagent Tiering & Model Routing**: Delegate isolated side-tasks via `invoke_subagent` to conserve main chat context and token spend:
+  - `Model: "flash_lite"`: Mechanical tasks, running verification scripts, quick config/doc lookups, log filtering. Zero thinking overhead.
+  - `Model: "flash"`: Targeted code exploration, locating references across 1–2 folders, drafting isolated unit tests.
+  - `Model: "pro"` or `inherit`: Architecture planning, multi-module refactoring, tough debugging.
+  - Subagent results MUST return caveman-compressed summaries to prevent parent context bloat.
 - **Ban Unscoped Searches**: Never run blanket grep or file searches across the entire repository. If a symbol is missing from `codegraph_explore`, restrict any subsequent terminal searches strictly to the relevant subdirectory (e.g., `backend/services/` or `src/components/`).
 - **MCP Server Pruning**: Keep only the Serena and Codegraph MCP servers active by default. Ensure no unnecessary tool schemas are bloating the system prompt during routine edits.
 
