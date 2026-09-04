@@ -23,6 +23,13 @@ def ensure_frontend_built():
     subprocess.run([npm_cmd, "run", "build"], cwd=ROOT_DIR, check=True)
 
 
+def clean_previous_builds():
+    """Wipe prior build and standalone distribution folders to prevent stale assets."""
+    print("[BUILD] Cleaning previous build artifacts...")
+    shutil.rmtree(DIST_STANDALONE, ignore_errors=True)
+    shutil.rmtree(BUILD_DIR, ignore_errors=True)
+
+
 def run_pyinstaller():
     """Execute PyInstaller to freeze backend."""
     # Preflight: ensure PyInstaller is installed in current Python environment
@@ -77,6 +84,7 @@ def verify_output():
 
 def main():
     try:
+        clean_previous_builds()
         ensure_frontend_built()
         run_pyinstaller()
         verify_output()
