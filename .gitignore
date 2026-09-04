@@ -96,6 +96,7 @@ pnpm-debug.log*
 .serena/project.local.yml
 .antigravity/
 .gemini/
+.claude/
 
 # ==========================================
 # IDEs & Text Editors

@@ -23,7 +23,7 @@ VoltFlow POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 - **Reuse First**: Check `src/utils/`, `src/hooks/` (`useCart`, `useRegisterKeypad`, `useTauri`), `backend/services/`, `src/api/posApi.js` before writing code.
 - **Surgical Edits**: Touch only task-required files. Preserve comments + docstrings.
 - **Clean Orphans**: Remove unused imports, variables, props introduced by changes.
-- **Token Discipline**: Follow `.agents/rules/token_discipline.md`. Call `codegraph_explore` first, shield context with `context-mode` for >200-line files, slice reads with `StartLine`/`EndLine`, and prompt `/clear` after commits.
+- **Token Discipline**: Follow [`.agents/rules/token_discipline.md`](.agents/rules/token_discipline.md) and [`docs/TOKEN_SAVING_MEASURES.md`](docs/TOKEN_SAVING_MEASURES.md). Call `codegraph_explore` first, shield context with `context-mode` for >200-line files, slice reads with `StartLine`/`EndLine`, and prompt `/clear` after commits.
 
 ### Financial Precision & Invariants
 - **Currency**: Never use raw binary float. Use `roundCZK` (frontend) and `Decimal` (backend) with 2 decimals.

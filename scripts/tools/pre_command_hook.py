@@ -1,11 +1,11 @@
-﻿import sys
+import sys
 import json
 import re
 
 """
 PreToolUse Hook for Antigravity:
-Enforces `| tokless` on test/lint/build/heavy diagnostic commands.
-If missing, automatically rewrites the CommandLine via overwrite or forces tokless.
+1. Rewrites `git diff` and `git log` commands to `rtk git diff` / `rtk git log` for compact output.
+2. Enforces `| tokless` on test/lint/build/heavy diagnostic commands.
 """
 
 HEAVY_COMMAND_PATTERNS = [
@@ -28,6 +28,15 @@ def should_enforce_tokless(cmd: str) -> bool:
             return True
     return False
 
+def rewrite_git_command(cmd: str) -> str | None:
+    cmd_clean = cmd.strip()
+    if cmd_clean.startswith("rtk "):
+        return None
+    pattern = r"(^|[;&|]\s*)git\s+(diff|log)\b"
+    if re.search(pattern, cmd_clean, re.IGNORECASE):
+        return re.sub(pattern, r"\g<1>rtk git \2", cmd_clean, flags=re.IGNORECASE)
+    return None
+
 def main():
     try:
         raw_input = sys.stdin.read()
@@ -42,17 +51,30 @@ def main():
 
         if tool_name == "run_command":
             cmd = args.get("CommandLine", "")
-            if cmd and should_enforce_tokless(cmd):
-                piped_cmd = f"{cmd.rstrip()} | tokless"
-                output = {
-                    "decision": "allow",
-                    "overwrite": {
-                        "CommandLine": piped_cmd
-                    },
-                    "reason": f"Enforced tokless piping to prevent context bloat: {piped_cmd}"
-                }
-                print(json.dumps(output))
-                return
+            if cmd:
+                rewritten_git = rewrite_git_command(cmd)
+                if rewritten_git:
+                    output = {
+                        "decision": "allow",
+                        "overwrite": {
+                            "CommandLine": rewritten_git
+                        },
+                        "reason": f"Rewrote git command to RTK to filter output: {rewritten_git}"
+                    }
+                    print(json.dumps(output))
+                    return
+
+                if should_enforce_tokless(cmd):
+                    piped_cmd = f"{cmd.rstrip()} | tokless"
+                    output = {
+                        "decision": "allow",
+                        "overwrite": {
+                            "CommandLine": piped_cmd
+                        },
+                        "reason": f"Enforced tokless piping to prevent context bloat: {piped_cmd}"
+                    }
+                    print(json.dumps(output))
+                    return
 
         print(json.dumps({"decision": "allow"}))
     except Exception as e:

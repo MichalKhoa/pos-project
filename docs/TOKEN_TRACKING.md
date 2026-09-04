@@ -1,6 +1,6 @@
 # Token Usage & Cloud Cost Tracking Guide
 
-This guide documents the token tracking system for **Himmel POS**, including instructions for syncing across multiple devices or instructing an agent on another machine.
+This guide documents the token tracking system for **Himmel POS**, including instructions for syncing across multiple devices or instructing an agent on another machine. For active measures preventing token bloat during development, see [Token Optimization & Context Shielding Measures](TOKEN_SAVING_MEASURES.md).
 
 ---
 

@@ -171,3 +171,5 @@ python -m unittest discover -s backend/tests -p "test_*.py"
 - [Real-Time QR Payment Bank Email Listener Guide](docs/guides/REALTIME_QR_EMAIL_VERIFICATION_GUIDE.md)
 - [Database Safety & Auto-Migration System](docs/plans/DONE_DATABASE_SAFETY_PLAN.md)
 - [EET 2.0 Legal & Cryptographic Specifications](docs/README.md)
+- [Token Optimization & Context Shielding Measures](docs/TOKEN_SAVING_MEASURES.md)
+- [Token Usage & Cloud Cost Tracking Guide](docs/TOKEN_TRACKING.md)
