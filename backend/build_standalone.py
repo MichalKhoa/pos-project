@@ -17,14 +17,10 @@ BUILD_DIR = os.path.join(BASE_DIR, "build")
 
 
 def ensure_frontend_built():
-    """Ensure React frontend is built into dist/ before bundling."""
-    index_html = os.path.join(DIST_UI_DIR, "index.html")
-    if not os.path.exists(index_html):
-        print("[BUILD] dist/index.html not found. Running npm run build...")
-        npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
-        subprocess.run([npm_cmd, "run", "build"], cwd=ROOT_DIR, check=True)
-    else:
-        print(f"[OK] Found compiled frontend at: {DIST_UI_DIR}")
+    """Ensure React frontend is freshly built into dist/ before bundling."""
+    print("[BUILD] Compiling fresh React frontend bundle...")
+    npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
+    subprocess.run([npm_cmd, "run", "build"], cwd=ROOT_DIR, check=True)
 
 
 def run_pyinstaller():
