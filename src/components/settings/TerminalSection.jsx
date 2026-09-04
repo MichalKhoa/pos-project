@@ -35,7 +35,7 @@ export default function TerminalSection({
               <span>{t('settings.csob_title') || 'Platební terminál pro karty'}</span>
             </h3>
             <p className="settings-section-desc">
-              Zvolte, zda obsluha zadává částku na terminálu ručně, nebo pokladna odesílá částku automaticky přes síť.
+              {t('settings.terminal_header_desc') || 'Zvolte, zda obsluha zadává částku na terminálu ručně, nebo pokladna odesílá částku automaticky přes síť.'}
             </p>
           </div>
 
@@ -47,7 +47,7 @@ export default function TerminalSection({
             fontSize: '0.8rem',
             fontWeight: '800'
           }}>
-            {termEnabled ? 'Automatický režim' : 'Ruční režim'}
+            {termEnabled ? t('settings.terminal_mode_auto') || 'Automatický režim' : t('settings.terminal_mode_manual') || 'Ruční režim'}
           </span>
         </div>
 
@@ -76,7 +76,7 @@ export default function TerminalSection({
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-              Obsluha naťuká částku přímo do terminálu. Vhodné pro jakýkoliv platební terminál bez nutnosti propojení po síti.
+              {t('settings.csob_manual_desc') || 'Obsluha naťuká částku přímo do terminálu. Vhodné pro jakýkoliv platební terminál bez nutnosti propojení po síti.'}
             </p>
           </div>
 
@@ -104,7 +104,7 @@ export default function TerminalSection({
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-              Částka se automaticky přenese do terminálu Ingenico Move 3500 přes lokální Wi-Fi nebo ethernetovou síť.
+              {t('settings.csob_auto_desc') || 'Částka se automaticky přenese do terminálu Ingenico Move 3500 přes lokální Wi-Fi nebo ethernetovou síť.'}
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function TerminalSection({
         style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}
       >
         <Save size={18} />
-        <span>{termSaveSuccess ? 'Uloženo!' : 'Uložit nastavení terminálu'}</span>
+        <span>{termSaveSuccess ? t('settings.saved_toast') || 'Uloženo!' : t('settings.save_terminal') || 'Uložit nastavení terminálu'}</span>
       </button>
     </div>
 
@@ -130,10 +130,10 @@ export default function TerminalSection({
               <div>
                 <h3 className="settings-section-title">
                   <Wifi size={19} style={{ color: 'var(--accent-emerald)' }} />
-                  <span>Síťové nastavení terminálu ČSOB</span>
+                  <span>{t('settings.terminal_network_title') || 'Síťové nastavení terminálu ČSOB'}</span>
                 </h3>
                 <p className="settings-section-desc">
-                  Zadejte lokální IP adresu a port terminálu přidělené vaším routerem.
+                  {t('settings.terminal_network_desc') || 'Zadejte lokální IP adresu a port terminálu přidělené vaším routerem.'}
                 </p>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function TerminalSection({
                 style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
               >
                 <RefreshCw size={15} className={pingLoading ? 'spin-icon' : ''} />
-                <span>{pingLoading ? 'Testuji...' : 'Otestovat spojení (Ping)'}</span>
+                <span>{pingLoading ? t('settings.terminal_ping_testing') || 'Testuji...' : t('settings.ping_test') || 'Otestovat spojení (Ping)'}</span>
               </button>
 
               <button
@@ -200,7 +200,7 @@ export default function TerminalSection({
                 style={{ flex: 1, minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
               >
                 <RefreshCw size={15} className={reconcileLoading ? 'spin-icon' : ''} />
-                <span>{reconcileLoading ? 'Uzavírám...' : 'Denní uzávěrka terminálu'}</span>
+                <span>{reconcileLoading ? t('settings.terminal_reconciling') || 'Uzavírám...' : t('settings.reconcile') || 'Denní uzávěrka terminálu'}</span>
               </button>
             </div>
 
@@ -220,7 +220,7 @@ export default function TerminalSection({
                 border: `1px solid ${pingResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
               }}>
                 {pingResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                <span>{pingResult.message || (pingResult.success ? 'Terminál je dostupný na síti' : 'Terminál neodpovídá na zadané adrese')}</span>
+                <span>{pingResult.message || (pingResult.success ? t('settings.terminal_ping_ok') || 'Terminál je dostupný na síti' : t('settings.terminal_ping_fail') || 'Terminál neodpovídá na zadané adrese')}</span>
               </div>
             )}
 
@@ -240,7 +240,7 @@ export default function TerminalSection({
                 border: `1px solid ${reconcileResult.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
               }}>
                 {reconcileResult.success ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                <span>{reconcileResult.message || (reconcileResult.success ? 'Denní finanční uzávěrka terminálu byla úspěšně provedena' : 'Chyba při provádění uzávěrky')}</span>
+                <span>{reconcileResult.message || (reconcileResult.success ? t('settings.terminal_reconcile_ok') || 'Denní finanční uzávěrka terminálu byla úspěšně provedena' : t('settings.terminal_reconcile_fail') || 'Chyba při provádění uzávěrky')}</span>
               </div>
             )}
           </div>
@@ -250,10 +250,10 @@ export default function TerminalSection({
               <div>
                 <h3 className="settings-section-title">
                   <Smartphone size={19} style={{ color: 'var(--accent-blue)' }} />
-                  <span>Jak funguje ruční režim</span>
+                  <span>{t('settings.terminal_manual_guide_title') || 'Jak funguje ruční režim'}</span>
                 </h3>
                 <p className="settings-section-desc">
-                  Jednoduché a bezchybné řešení bez nutnosti síťového nastavování.
+                  {t('settings.terminal_manual_guide_desc') || 'Jednoduché a bezchybné řešení bez nutnosti síťového nastavování.'}
                 </p>
               </div>
             </div>
@@ -261,17 +261,17 @@ export default function TerminalSection({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
               <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>1</div>
-                <div>Zákazník zvolí platbu kartou. Pokladna na obrazovce zobrazí přesnou částku k úhradě.</div>
+                <div>{t('settings.terminal_manual_step1') || 'Zákazník zvolí platbu kartou. Pokladna na obrazovce zobrazí přesnou částku k úhradě.'}</div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>2</div>
-                <div>Obsluha zadá tuto částku do libovolného přenosného terminálu (ČSOB, SumUp, myPOS) a přiloží kartu.</div>
+                <div>{t('settings.terminal_manual_step2') || 'Obsluha zadá tuto částku do libovolného přenosného terminálu (ČSOB, SumUp, myPOS) a přiloží kartu.'}</div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>3</div>
-                <div>Po úspěšném pípnutí terminálu klikne obsluha na pokladně na <strong>Dokončit platbu</strong>.</div>
+                <div>{t('settings.terminal_manual_step3') || 'Po úspěšném pípnutí terminálu klikne obsluha na pokladně na '}<strong>Dokončit platbu</strong>.</div>
               </div>
             </div>
           </div>

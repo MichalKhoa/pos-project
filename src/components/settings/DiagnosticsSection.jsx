@@ -21,10 +21,12 @@ import {
   fetchBackendRoot
 } from '../../api/posApi.js';
 import { useTauri } from '../../hooks/useTauri.js';
+import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function DiagnosticsSection({
   config = {}
 }) {
+  const { t } = useTranslation();
   // Diagnostics state
   const [latency, setLatency] = useState(null);
   const [backendOnline, setBackendOnline] = useState(true);
@@ -45,7 +47,7 @@ export default function DiagnosticsSection({
       const res = await restartBackend();
       if (res.success) {
         soundFx.playSuccessChime?.();
-        setActionMessage({ type: 'success', text: 'Backend server byl restartován.' });
+        setActionMessage({ type: 'success', text: t('settings.backend_restart_success') || 'Backend server byl restartován.' });
         setTimeout(() => checkHealth(), 1500);
       } else {
         soundFx.playErrorChime?.();
@@ -178,10 +180,10 @@ export default function DiagnosticsSection({
             <div>
               <h3 className="settings-section-title">
                 <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
-                <span>Živý náhled účtenky</span>
+                <span>{t('settings.diag_preview_title') || 'Živý náhled účtenky'}</span>
               </h3>
               <p className="settings-section-desc">
-                Reálná vizualizace hlavičky, DPH a patičky podle aktuální konfigurace.
+                {t('settings.diag_preview_desc') || 'Reálná vizualizace hlavičky, DPH a patičky podle aktuální konfigurace.'}
               </p>
             </div>
           </div>
@@ -298,7 +300,7 @@ export default function DiagnosticsSection({
                 disabled={printLoading}
               >
                 <Printer size={17} />
-                <span>{printLoading ? 'Tisknu...' : 'Vytisknout test'}</span>
+                <span>{printLoading ? t('settings.diag_printing') || 'Tisknu...' : t('settings.diag_print_btn') || 'Vytisknout test'}</span>
               </button>
 
               <button
@@ -309,7 +311,7 @@ export default function DiagnosticsSection({
                 disabled={drawerLoading}
               >
                 <Coins size={17} />
-                <span>{drawerLoading ? 'Otevírám...' : 'Test zásuvky'}</span>
+                <span>{drawerLoading ? t('settings.diag_drawer_opening') || 'Otevírám...' : t('settings.diag_drawer_btn') || 'Test zásuvky'}</span>
               </button>
             </div>
 
@@ -342,10 +344,10 @@ export default function DiagnosticsSection({
             <div>
               <h3 className="settings-section-title">
                 <CheckCircle2 size={19} style={{ color: 'var(--accent-emerald)' }} />
-                <span>Stav periferií & Diagnostika</span>
+                <span>{t('settings.diag_peripherals_title') || 'Stav periferií & Diagnostika'}</span>
               </h3>
               <p className="settings-section-desc">
-                Přehled všech připojených pokladních modulů a komunikačních kanálů.
+                {t('settings.diag_peripherals_desc') || 'Přehled všech připojených pokladních modulů a komunikačních kanálů.'}
               </p>
             </div>
 
@@ -357,7 +359,7 @@ export default function DiagnosticsSection({
               disabled={checkingBackend}
             >
               <RefreshCw size={14} className={checkingBackend ? 'spin-icon' : ''} />
-              <span>Ověřit stav</span>
+              <span>{t('settings.diag_check_btn') || 'Ověřit stav'}</span>
             </button>
           </div>
 
@@ -369,7 +371,7 @@ export default function DiagnosticsSection({
                   <HardDrive size={18} style={{ color: backendOnline ? 'var(--accent-emerald)' : 'var(--accent-red)' }} />
                 </div>
                 <div className="diag-item-text">
-                  <span className="diag-item-label">Python REST Backend</span>
+                  <span className="diag-item-label">{t('settings.diag_backend_label') || 'Python REST Backend'}</span>
                   <span className="diag-item-detail">
                     {backendOnline ? `FastAPI 3.10+ • port 8000 (${latency !== null ? `${latency} ms` : '< 1 ms'})` : 'Server nedostupný (simulace)'}
                   </span>
@@ -402,14 +404,14 @@ export default function DiagnosticsSection({
                   <Printer size={18} style={{ color: 'var(--accent-blue)' }} />
                 </div>
                 <div className="diag-item-text">
-                  <span className="diag-item-label">Pokladní tiskárna</span>
+                  <span className="diag-item-label">{t('settings.diag_printer_label') || 'Pokladní tiskárna'}</span>
                   <span className="diag-item-detail">
                     {config.printerAddress || '/dev/usb/lp0'} • šířka {config.printerPaperWidth || '80'} mm ({config.printerInterface || 'USB'})
                   </span>
                 </div>
               </div>
               <span className="diag-pill diag-pill-success">
-                PŘIPOJENO
+                {t('settings.diag_status_connected') || 'PŘIPOJENO'}
               </span>
             </div>
 
@@ -420,14 +422,14 @@ export default function DiagnosticsSection({
                   <Coins size={18} style={{ color: 'var(--accent-amber)' }} />
                 </div>
                 <div className="diag-item-text">
-                  <span className="diag-item-label">Pokladní zásuvka (RJ11)</span>
+                  <span className="diag-item-label">{t('settings.diag_drawer_label') || 'Pokladní zásuvka (RJ11)'}</span>
                   <span className="diag-item-detail">
-                    Impuls 24V přes tiskárnu ESC/POS (pin 2/5)
+                    {t('settings.diag_drawer_detail') || 'Impuls 24V přes tiskárnu ESC/POS (pin 2/5)'}
                   </span>
                 </div>
               </div>
               <span className="diag-pill diag-pill-success">
-                PŘIPRAVENO
+                {t('settings.diag_status_ready') || 'PŘIPRAVENO'}
               </span>
             </div>
 
@@ -438,7 +440,7 @@ export default function DiagnosticsSection({
                   <CreditCard size={18} style={{ color: 'var(--accent-purple)' }} />
                 </div>
                 <div className="diag-item-text">
-                  <span className="diag-item-label">Platební terminál</span>
+                  <span className="diag-item-label">{t('settings.diag_terminal_label') || 'Platební terminál'}</span>
                   <span className="diag-item-detail">
                     {config.csobTerminalEnabled
                       ? `ČSOB / Ingenico (${config.csobTerminalIp || '192.168.1.X'}:${config.csobTerminalPort || '8888'})`
@@ -447,7 +449,7 @@ export default function DiagnosticsSection({
                 </div>
               </div>
               <span className={`diag-pill ${config.csobTerminalEnabled ? 'diag-pill-success' : 'diag-pill-neutral'}`}>
-                {config.csobTerminalEnabled ? 'ČSOB TCP' : 'RUČNÍ'}
+                {config.csobTerminalEnabled ? 'ČSOB TCP' : t('settings.terminal_mode_manual') || 'RUČNÍ'}
               </span>
             </div>
 
@@ -458,14 +460,14 @@ export default function DiagnosticsSection({
                   <Tv size={18} style={{ color: 'var(--accent-emerald)' }} />
                 </div>
                 <div className="diag-item-text">
-                  <span className="diag-item-label">Zákaznický LCD displej</span>
+                  <span className="diag-item-label">{t('settings.diag_display_label') || 'Zákaznický LCD displej'}</span>
                   <span className="diag-item-detail">
-                    WebSocket kanál (/api/v1/ws/customer-display)
+                    {t('settings.diag_display_detail') || 'WebSocket kanál (/api/v1/ws/customer-display)'}
                   </span>
                 </div>
               </div>
               <span className="diag-pill diag-pill-success">
-                AKTIVNÍ
+                {t('settings.diag_status_active') || 'AKTIVNÍ'}
               </span>
             </div>
 
@@ -476,14 +478,14 @@ export default function DiagnosticsSection({
                   <ShieldCheck size={18} style={{ color: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
                 </div>
                 <div className="diag-item-text">
-                  <span className="diag-item-label">Fiskální modul EET 2.0</span>
+                  <span className="diag-item-label">{t('settings.diag_eet_label') || 'Fiskální modul EET 2.0'}</span>
                   <span className="diag-item-detail">
                     {config.eetEnabled ? `Provozní režim: ${config.eetEnvironment || 'playground'}` : 'Vypnuto (dobrovolná fiskalizace)'}
                   </span>
                 </div>
               </div>
               <span className={`diag-pill ${config.eetEnabled ? 'diag-pill-success' : 'diag-pill-neutral'}`}>
-                {config.eetEnabled ? 'ZAPNUTO' : 'VYPNUTO'}
+                {config.eetEnabled ? t('settings.diag_status_on') || 'ZAPNUTO' : t('settings.diag_status_off') || 'VYPNUTO'}
               </span>
             </div>
           </div>
@@ -495,10 +497,10 @@ export default function DiagnosticsSection({
             <div>
               <h3 className="settings-section-title">
                 <Clock size={19} style={{ color: 'var(--accent-blue)' }} />
-                <span>Denní přehled směny</span>
+                <span>{t('settings.diag_shift_title') || 'Denní přehled směny'}</span>
               </h3>
               <p className="settings-section-desc">
-                Souhrn dnešních plateb a možnost vytisknout denní uzávěrku na tiskárnu.
+                {t('settings.diag_shift_desc') || 'Souhrn dnešních plateb a možnost vytisknout denní uzávěrku na tiskárnu.'}
               </p>
             </div>
           </div>
@@ -513,21 +515,21 @@ export default function DiagnosticsSection({
               }}
             >
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Dnešní tržba</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_gross') || 'Dnešní tržba'}</span>
                 <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-primary)', marginTop: '2px' }}>
                   {shiftData?.totalGross !== undefined ? `${shiftData.totalGross.toFixed(0)} Kč` : '0 Kč'}
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Hotovost</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_cash') || 'Hotovost'}</span>
                 <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--accent-emerald)', marginTop: '2px' }}>
                   {shiftData?.cashTotal !== undefined ? `${shiftData.cashTotal.toFixed(0)} Kč` : '0 Kč'}
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Karta / QR</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_card_qr') || 'Karta / QR'}</span>
                 <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--accent-purple)', marginTop: '2px' }}>
                   {shiftData ? `${((shiftData.cardTotal || 0) + (shiftData.qrTotal || 0)).toFixed(0)} Kč` : '0 Kč'}
                 </div>
@@ -542,7 +544,7 @@ export default function DiagnosticsSection({
               disabled={summaryLoading}
             >
               <Printer size={17} />
-              <span>{summaryLoading ? 'Tisknu uzávěrku...' : 'Vytisknout denní uzávěrku'}</span>
+              <span>{summaryLoading ? t('settings.diag_shift_printing') || 'Tisknu uzávěrku...' : t('settings.diag_shift_print_btn') || 'Vytisknout denní uzávěrku'}</span>
             </button>
           </div>
         </div>

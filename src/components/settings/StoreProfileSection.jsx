@@ -35,7 +35,7 @@ export default function StoreProfileSection({
               <span>{t('settings.store_info') || 'Identifikační údaje prodejny'}</span>
             </h3>
             <p className="settings-section-desc">
-              Údaje tištěné v záhlaví účtenky pro zákazníky a finanční kontrolu.
+              {t('settings.store_profile_desc') || 'Údaje tištěné v záhlaví účtenky pro zákazníky a finanční kontrolu.'}
             </p>
           </div>
         </div>
@@ -91,10 +91,10 @@ export default function StoreProfileSection({
           <div>
             <h3 className="settings-section-title">
               <MapPin size={19} style={{ color: 'var(--accent-emerald)' }} />
-              <span>Adresa provozovny</span>
+              <span>{t('settings.store_address_title') || 'Adresa provozovny'}</span>
             </h3>
             <p className="settings-section-desc">
-              Fyzická adresa obchodu uváděná na daňových dokladech.
+              {t('settings.store_address_desc') || 'Fyzická adresa obchodu uváděná na daňových dokladech.'}
             </p>
           </div>
         </div>
@@ -139,10 +139,10 @@ export default function StoreProfileSection({
           <div>
             <h3 className="settings-section-title">
               <Receipt size={19} style={{ color: 'var(--accent-amber)' }} />
-              <span>Finance & Výchozí DPH</span>
+              <span>{t('settings.store_finance_title') || 'Finance & Výchozí DPH'}</span>
             </h3>
             <p className="settings-section-desc">
-              Nastavení základní sazby DPH pro nové položky a bankovní účet pro QR platby.
+              {t('settings.store_finance_desc') || 'Nastavení základní sazby DPH pro nové položky a bankovní účet pro QR platby.'}
             </p>
           </div>
         </div>
@@ -153,9 +153,9 @@ export default function StoreProfileSection({
           </label>
           <div className="settings-segmented-group" style={{ width: '100%' }}>
             {[
-              { val: 21, label: '21 % (Základní)' },
-              { val: 12, label: '12 % (Snížená potraviny)' },
-              { val: 0, label: '0 % (Neplátce / Osvobozeno)' }
+              { val: 21, label: t('settings.store_vat_21') || '21 % (Základní)' },
+              { val: 12, label: t('settings.store_vat_12') || '12 % (Snížená potraviny)' },
+              { val: 0, label: t('settings.store_vat_0') || '0 % (Neplátce / Osvobozeno)' }
             ].map(vat => (
               <button
                 key={vat.val}
@@ -189,7 +189,7 @@ export default function StoreProfileSection({
             style={{ fontFamily: 'var(--font-mono)' }}
           />
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Z tohoto účtu se automaticky generují QR kódy na zákaznickém displeji pro okamžitou platbu mobilem.
+            {t('settings.store_iban_desc') || 'Z tohoto účtu se automaticky generují QR kódy na zákaznickém displeji pro okamžitou platbu mobilem.'}
           </span>
         </div>
       </div>
@@ -203,7 +203,7 @@ export default function StoreProfileSection({
               <span>{t('settings.default_language') || 'Jazyk pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
-              Přepíná jazyk pro celou pokladnu, účtenky i zákaznický displej.
+              {t('settings.store_lang_desc') || 'Přepíná jazyk pro celou pokladnu, účtenky i zákaznický displej.'}
             </p>
           </div>
         </div>

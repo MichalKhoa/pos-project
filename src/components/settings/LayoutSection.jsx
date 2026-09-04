@@ -25,9 +25,9 @@ export default function LayoutSection({
   ];
 
   const NAVBAR_STYLES = [
-    { id: 'standard', name: t('settings.navbar_style_standard') || 'Klasická lišta', desc: 'Plná šířka s plynulým rozostřením' },
-    { id: 'floating', name: t('settings.navbar_style_floating') || 'Plovoucí ostrov', desc: 'Zaoblený dock odsazený od okrajů' },
-    { id: 'slim', name: t('settings.navbar_style_slim') || 'Kompaktní lišta', desc: 'Výška 46px s plynule se rozpínajícím podsvíceným paprskem' }
+    { id: 'standard', name: t('settings.navbar_style_standard') || 'Klasická lišta', desc: t('settings.navbar_desc_standard') || 'Plná šířka s plynulým rozostřením' },
+    { id: 'floating', name: t('settings.navbar_style_floating') || 'Plovoucí ostrov', desc: t('settings.navbar_desc_floating') || 'Zaoblený dock odsazený od okrajů' },
+    { id: 'slim', name: t('settings.navbar_style_slim') || 'Kompaktní lišta', desc: t('settings.navbar_desc_slim') || 'Výška 46px s plynule se rozpínajícím podsvíceným paprskem' }
   ];
 
   const handleUpdate = (updates) => {
@@ -53,7 +53,7 @@ export default function LayoutSection({
                 <span>{t('settings.preset_layout_title') || 'Tlačítka a Dlaždice Sortimentu'}</span>
               </h3>
               <p className="settings-section-desc">
-                Nastavte velikost, počet sloupců a barevný vzhled tlačítek pro rychlý prodej.
+                {t('settings.preset_layout_desc') || 'Nastavte velikost, počet sloupců a barevný vzhled tlačítek pro rychlý prodej.'}
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function LayoutSection({
               {t('settings.grid_density_label') || 'Počet sloupců dlaždic'}
             </span>
             <span className="settings-toggle-subtitle">
-              {config.presetGridColumns === 'auto' || !config.presetGridColumns ? 'Automatické přizpůsobení velikosti obrazovky' : `Pevně nastaveno na ${config.presetGridColumns} sloupce`}
+              {config.presetGridColumns === 'auto' || !config.presetGridColumns ? t('settings.grid_auto_desc') || 'Automatické přizpůsobení velikosti obrazovky' : `${t('settings.grid_fixed_desc') || 'Pevně nastaveno na {count} sloupce'}`.replace('{count}', config.presetGridColumns)}
             </span>
           </div>
 
@@ -102,9 +102,9 @@ export default function LayoutSection({
 
           <div className="settings-segmented-group">
             {[
-              { id: 'compact', label: 'Kompaktní (S)' },
-              { id: 'standard', label: 'Standardní (M)' },
-              { id: 'large', label: 'Velká (L)' }
+              { id: 'compact', label: t('settings.preset_size_compact') || 'Kompaktní (S)' },
+              { id: 'standard', label: t('settings.preset_size_standard') || 'Standardní (M)' },
+              { id: 'large', label: t('settings.preset_size_large') || 'Velká (L)' }
             ].map(sz => (
               <button
                 key={sz.id}
@@ -170,7 +170,7 @@ export default function LayoutSection({
               {t('settings.show_preset_vat_label') || 'Zobrazovat sazbu DPH na tlačítkách'}
             </span>
             <span className="settings-toggle-subtitle">
-              Zobrazí malé procento DPH na každé dlaždici. Vypněte pro neplátce DPH.
+              {t('settings.show_preset_vat_desc') || 'Zobrazí malé procento DPH na každé dlaždici. Vypněte pro neplátce DPH.'}
             </span>
           </div>
 
@@ -305,10 +305,10 @@ export default function LayoutSection({
         <div>
           <div style={{ fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
             <Tag size={19} style={{ color: 'var(--accent-blue)' }} />
-            <span>Katalog produktů & Tlačítek sortimentu</span>
+            <span>{t('settings.preset_catalog_banner_title') || 'Katalog produktů & Tlačítek sortimentu'}</span>
           </div>
           <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-            Spravovat, přidávat a upravovat všech {presets.length} rychlých produktů a kategorií.
+            {(t('settings.preset_catalog_banner_desc') || 'Spravovat, přidávat a upravovat všech {count} rychlých produktů a kategorií.').replace('{count}', presets.length)}
           </div>
         </div>
 
@@ -335,7 +335,7 @@ export default function LayoutSection({
               <span>{t('settings.register_layout_title') || 'Ergonomie a Rozvržení Pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
-              Přizpůsobení obrazovky pro praváky / leváky a starší obsluhu.
+              {t('settings.register_layout_desc') || 'Přizpůsobení obrazovky pro praváky / leváky a starší obsluhu.'}
             </p>
           </div>
         </div>
@@ -353,8 +353,8 @@ export default function LayoutSection({
 
           <div className="settings-segmented-group">
             {[
-              { id: 'left', label: 'Vlevo (Standard)' },
-              { id: 'right', label: 'Vpravo' }
+              { id: 'left', label: t('settings.cart_left') || 'Vlevo (Standard)' },
+              { id: 'right', label: t('settings.cart_right') || 'Vpravo' }
             ].map(pos => (
               <button
                 key={pos.id}
@@ -520,7 +520,7 @@ export default function LayoutSection({
               {t('settings.high_legibility_label') || 'Vysoká čitelnost (High-Legibility Mode)'}
             </span>
             <span className="settings-toggle-subtitle">
-              Zvětší dlaždice produktů o 25 % a ztuční texty pro snadný dotyk bez brýlí na menších displejích.
+              {t('settings.high_legibility_desc') || 'Zvětší dlaždice produktů o 25 % a ztuční texty pro snadný dotyk bez brýlí na menších displejích.'}
             </span>
           </div>
 
@@ -544,7 +544,7 @@ export default function LayoutSection({
               <span>{t('settings.customer_display_title') || 'Zákaznický LCD Displej'}</span>
             </h3>
             <p className="settings-section-desc">
-              Nastavení druhé obrazovky otočené k zákazníkovi nebo mobilního náhledu.
+              {t('settings.customer_display_desc') || 'Nastavení druhé obrazovky otočené k zákazníkovi nebo mobilního náhledu.'}
             </p>
           </div>
         </div>
@@ -569,7 +569,7 @@ export default function LayoutSection({
               {t('settings.customer_display_auto_sleep_label') || 'Automaticky zhasínat displej při vypnutí pokladny'}
             </span>
             <span className="settings-toggle-subtitle">
-              Při kliknutí na "Vypnout pokladnu" přepne zákaznický displej do úsporného černého režimu.
+              {t('settings.customer_display_auto_sleep_desc') || 'Při kliknutí na "Vypnout pokladnu" přepne zákaznický displej do úsporného černého režimu.'}
             </span>
           </div>
 

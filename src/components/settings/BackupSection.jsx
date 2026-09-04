@@ -101,10 +101,10 @@ export default function BackupSection({
           <div>
             <h3 className="settings-section-title">
               <HardDrive size={19} style={{ color: 'var(--accent-emerald)' }} />
-              <span>Zálohování & Obnova Dat</span>
+              <span>{t('settings.backup_title') || 'Zálohování & Obnova Dat'}</span>
             </h3>
             <p className="settings-section-desc">
-              Vytvářejte bezpečné online zálohy SQLite databáze a exportujte konfiguraci produktů.
+              {t('settings.backup_desc') || 'Vytvářejte bezpečné online zálohy SQLite databáze a exportujte konfiguraci produktů.'}
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function BackupSection({
             onClick={handleCreateDbBackup}
           >
             <Database size={16} />
-            <span>{dbBackupLoading ? 'Vytvářím zálohu...' : 'Vytvořit SQLite zálohu'}</span>
+            <span>{dbBackupLoading ? t('settings.backup_creating') || 'Vytvářím zálohu...' : t('settings.backup_create_sqlite') || 'Vytvořit SQLite zálohu'}</span>
           </button>
 
           <button
@@ -128,7 +128,7 @@ export default function BackupSection({
             onClick={onExportJSON}
           >
             <Download size={16} />
-            <span>Exportovat položky (JSON)</span>
+            <span>{t('settings.backup_export_json') || 'Exportovat položky (JSON)'}</span>
           </button>
 
           <label
@@ -147,7 +147,7 @@ export default function BackupSection({
             }}
           >
             <Upload size={16} />
-            <span>Nahrát JSON zálohu</span>
+            <span>{t('settings.backup_import_json') || 'Nahrát JSON zálohu'}</span>
             <input
               type="file"
               accept=".json"
@@ -163,7 +163,7 @@ export default function BackupSection({
             onClick={onResetData}
           >
             <Trash2 size={16} />
-            <span>Resetovat</span>
+            <span>{t('settings.backup_reset_btn') || 'Resetovat'}</span>
           </button>
         </div>
 
@@ -183,7 +183,7 @@ export default function BackupSection({
 
         {dbBackupStatus?.last_backup_time && (
           <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-            Poslední SQLite záloha: <strong>{new Date(dbBackupStatus.last_backup_time).toLocaleString('cs-CZ')}</strong> ({dbBackupStatus.last_backup_file})
+            {t('settings.backup_last_time') || 'Poslední SQLite záloha'}: <strong>{new Date(dbBackupStatus.last_backup_time).toLocaleString('cs-CZ')}</strong> ({dbBackupStatus.last_backup_file})
           </div>
         )}
 
@@ -192,7 +192,7 @@ export default function BackupSection({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <span style={{ fontWeight: '800', color: 'var(--text-primary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Shield size={15} style={{ color: litestreamData?.is_running ? 'var(--accent-emerald)' : 'var(--accent-amber)' }} />
-              <span>Automatická ochrana a replikace databáze</span>
+              <span>{t('settings.litestream_title') || 'Automatická ochrana a replikace databáze'}</span>
             </span>
             <span className="status-badge" style={{
               padding: '0.2rem 0.55rem',
@@ -202,11 +202,11 @@ export default function BackupSection({
               border: 'none',
               fontWeight: '800'
             }}>
-              {litestreamData?.is_running ? '🟢 Aktivní ochrana' : '⚪ Lokální SQLite úložiště'}
+              {litestreamData?.is_running ? t('settings.litestream_active') || '🟢 Aktivní ochrana' : t('settings.litestream_local') || '⚪ Lokální SQLite úložiště'}
             </span>
           </div>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
-            {litestreamData?.message || 'Data se okamžitě a bezpečně ukládají do lokální databáze SQLite v pokladně.'}
+            {litestreamData?.message || t('settings.litestream_default_msg') || 'Data se okamžitě a bezpečně ukládají do lokální databáze SQLite v pokladně.'}
           </div>
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function BackupSection({
                     {t('settings.current_version') || 'Nainstalovaná verze'}: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>v{tauriUpdateInfo?.currentVersion || '1.0.0'}</span>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                    Nativní desktopová aplikace (Tauri v2 NSIS). Aktualizace se instalují bez nutnosti vývojářských nástrojů.
+                    {t('settings.updates_tauri_desc') || 'Nativní desktopová aplikace (Tauri v2 NSIS). Aktualizace se instalují bez nutnosti vývojářských nástrojů.'}
                   </div>
                 </div>
 
@@ -287,7 +287,7 @@ export default function BackupSection({
                   fontWeight: '600'
                 }}>
                   <AlertCircle size={18} />
-                  <span>Chyba při kontrole aktualizací: {tauriUpdateInfo.error}</span>
+                  <span>{t('settings.updates_check_error') || 'Chyba při kontrole aktualizací:'} {tauriUpdateInfo.error}</span>
                 </div>
               )}
 
@@ -355,7 +355,7 @@ export default function BackupSection({
                         {tauriInstallProgress?.total > 0 && (
                           <span>{((tauriInstallProgress.downloaded || 0) / (1024 * 1024)).toFixed(1)} MB / {((tauriInstallProgress.total || 0) / (1024 * 1024)).toFixed(1)} MB — </span>
                         )}
-                        <span>Pokladna se po instalaci automaticky restartuje.</span>
+                        <span>{t('settings.updates_restart_note') || 'Pokladna se po instalaci automaticky restartuje.'}</span>
                       </div>
                     </div>
                   ) : (
@@ -386,7 +386,7 @@ export default function BackupSection({
                   {t('settings.current_version') || 'Nainstalovaná verze'}: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}</span>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                  Webový režim prohlížeče. Pro produkční automatické aktualizace spusťte nativní desktopovou aplikaci VoltFlow POS.
+                  {t('settings.updates_web_desc') || 'Webový režim prohlížeče. Pro produkční automatické aktualizace spusťte nativní desktopovou aplikaci VoltFlow POS.'}
                 </div>
               </div>
 
@@ -430,7 +430,7 @@ export default function BackupSection({
         {!config.eetEnabled && (
           <div style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.2)', fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CheckCircle size={16} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
-            <span>EET je vypnuté. Pokladna funguje v plném rychlém offline režimu bez generování EET podpisů.</span>
+            <span>{t('settings.eet_off_offline_banner') || 'EET je vypnuté. Pokladna funguje v plném rychlém offline režimu bez generování EET podpisů.'}</span>
           </div>
         )}
       </div>
