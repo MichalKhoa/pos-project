@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-title Himmel POS - Build Standalone Bundle
+title VoltFlow POS - Build Standalone Bundle
 echo ========================================================
-echo   Building Himmel POS Standalone Bundle (Windows)...
+echo   Building VoltFlow POS Standalone Bundle (Windows)...
 echo ========================================================
 echo.
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Layout, Tag, ArrowRight, Tv, Sliders, Palette, Check } from 'lucide-react';
+import { Layout, Tag, ArrowRight, Tv, Sliders, Palette, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { useTauri } from '../../hooks/useTauri.js';
 
 export default function LayoutSection({
   config,
@@ -11,6 +12,7 @@ export default function LayoutSection({
   onSaveStoreConfig
 }) {
   const { t } = useTranslation();
+  const { openCustomerDisplay } = useTauri();
 
   const ACCENT_COLORS = [
     { id: 'indigo', name: t('settings.accent_indigo') || 'Indigo', hex: '#6366f1' },
@@ -541,6 +543,18 @@ export default function LayoutSection({
             />
             <span className="settings-switch-slider" />
           </label>
+        </div>
+
+        <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-start' }}>
+          <button
+            type="button"
+            className="settings-action-btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '40px', padding: '0 16px', whiteSpace: 'nowrap' }}
+            onClick={openCustomerDisplay}
+          >
+            <ExternalLink size={16} />
+            <span>{t('settings.customer_display_open_btn') || 'Otevřít okno zákaznického displeje'}</span>
+          </button>
         </div>
       </div>
       </div>

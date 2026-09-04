@@ -1,6 +1,6 @@
 # Security, PIN Authentication & Recovery Architecture
 
-Security practices, authentication workflows, cryptographic hashing, and PIN recovery mechanisms in Himmel POS.
+Security practices, authentication workflows, cryptographic hashing, and PIN recovery mechanisms in VoltFlow POS.
 
 ## 🔑 Cashier PIN Authentication & Hashing
 - **PIN Length:** Supports variable length PINs from 4 to 8 digits.
@@ -32,9 +32,9 @@ Security practices, authentication workflows, cryptographic hashing, and PIN rec
    - Format: `VOLTFLOW-<ICO>-MASTER` or universal fallback `VOLTFLOW-RECOVERY-99` (with backward compatibility for `HIMMEL-*`).
    - Resets stored PIN to default `1234` and unlocks the screen.
 2. **Local Terminal Script:**
-   - `Himmel_POS_Reset_PIN.bat` directly executes an SQLite update in `pos_store.db` to set PIN hash to `1234`.
+   - `VoltFlow_POS_Reset_PIN.bat` directly executes an SQLite update in `pos_store.db` to set PIN hash to `1234`.
 
 ## 🚀 Execution & Launcher Scripts
-- **Production Silent Mode (`Himmel_POS.bat`):** Runs FastAPI backend, Litestream, and Vite in background with no terminal windows; opens Edge POS app.
-- **Debug Mode (`Himmel_POS_Debug.bat`):** Launches dedicated terminal windows for backend, frontend, and litestream with Edge DevTools auto-opened.
+- **Production Silent Mode (`VoltFlow_POS.bat`):** Runs FastAPI backend, Litestream, and Vite in background with no terminal windows; opens Edge POS app.
+- **Debug Mode (`VoltFlow_POS_Debug.bat`):** Launches dedicated terminal windows for backend, frontend, and litestream with Edge DevTools auto-opened.
 - **Windows Service (`WINDOWS_SERVICE_SETUP.md`):** Complete guide for setting up FastAPI backend via NSSM as a native Windows service starting at boot.

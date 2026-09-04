@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-title Himmel POS
+title VoltFlow POS
 echo ========================================================
-echo   Starting Himmel POS...
+echo   Starting VoltFlow POS...
 echo ========================================================
 echo.
 
@@ -34,17 +34,17 @@ set "VENV_PYTHON=%~dp0backend\venv\Scripts\python.exe"
 
 if exist "%STANDALONE_EXE%" (
     echo [INFO] Launching standalone backend binary...
-    start "Himmel POS Backend" /min "%STANDALONE_EXE%"
+    start "VoltFlow POS Backend" /min "%STANDALONE_EXE%"
 ) else if exist "%VENV_PYTHON%" (
     echo [INFO] Launching backend via Python virtual environment...
     "%VENV_PYTHON%" "%~dp0backend\migrations.py" >nul 2>&1
-    start "Himmel POS Backend" /min /D "%~dp0backend" "%VENV_PYTHON%" main.py
+    start "VoltFlow POS Backend" /min /D "%~dp0backend" "%VENV_PYTHON%" main.py
 ) else (
     where python >nul 2>&1
     if !errorlevel! equ 0 (
         echo [INFO] Launching backend via system Python...
         python "%~dp0backend\migrations.py" >nul 2>&1
-        start "Himmel POS Backend" /min /D "%~dp0backend" python main.py
+        start "VoltFlow POS Backend" /min /D "%~dp0backend" python main.py
     ) else (
         echo [ERROR] Neither standalone executable nor Python found.
         echo Please run build_standalone.bat or install Python.
@@ -109,6 +109,6 @@ if not "!EDGE_EXE!"=="" (
     start http://localhost:8000
 )
 
-echo [SUCCESS] Himmel POS running!
+echo [SUCCESS] VoltFlow POS running!
 echo To stop all services: VoltFlow_POS_Stop.bat
 echo.

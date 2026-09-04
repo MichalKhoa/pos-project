@@ -1,10 +1,12 @@
-# Himmel POS — Agent Instructions & Engineering Guidelines
+# VoltFlow POS — Agent Instructions & Engineering Guidelines
 
 ## 1. Project Overview & Architecture
-Himmel POS (`pos-eet-himmel`): touchscreen Point of Sale system.
+VoltFlow POS (`pos-eet-himmel`): touchscreen Point of Sale system.
+- **Desktop Shell**: Tauri v2 (`src-tauri/`), native Rust wrapper, system tray integration, sidecar process lifecycle, and dual-screen customer display support.
 - **Frontend**: React 19, Vite, Lucide Icons, Vanilla CSS (No Tailwind). Port `5173`.
 - **Backend**: Python 3.10+ FastAPI, Uvicorn, SQLAlchemy 2.0+, SQLite (`backend/pos_store.db`). Port `8000`.
-- **Hardware**: ESC/POS thermal printers (`python-escpos`), RJ11 drawer, WebSocket customer LCD display (`/api/v1/ws/customer-display`), ČSOB Ingenico Move 3500 terminal TCP API, IMAP bank email payment listener.
+- **Standalone Packaging**: PyInstaller single-file backend freeze (`build_standalone.py`, `pos_backend.spec`), staged via `scripts/prepare_sidecar.py`, and NSIS installer generation via `build_windows_release.bat`.
+- **Hardware**: ESC/POS thermal printers (`python-escpos`), RJ11 drawer pulse, WebSocket customer LCD display (`/api/v1/ws/customer-display`), ČSOB Ingenico Move 3500 terminal TCP API, IMAP bank email payment listener.
 - **Fiscalization**: Czech EET 2.0 PKCS#12 signing, RSA-SHA256 PKP, SHA-1 BKP, SOAP dispatcher + offline queue fallback.
 
 ---
@@ -12,7 +14,7 @@ Himmel POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 ## 2. Core Principles & Engineering Standards
 
 ### Build Discipline & Simplicity
-- **Reuse First**: Check `src/utils/`, `src/hooks/`, `backend/services/`, `src/api/posApi.js` before writing code.
+- **Reuse First**: Check `src/utils/`, `src/hooks/` (`useCart`, `useRegisterKeypad`, `useTauri`), `backend/services/`, `src/api/posApi.js` before writing code.
 - **Surgical Edits**: Touch only task-required files. Preserve comments + docstrings.
 - **Clean Orphans**: Remove unused imports, variables, props introduced by changes.
 - **Token Discipline**: Follow `.agents/rules/token_discipline.md`. Call `codegraph_explore` first, shield context with `context-mode` for >200-line files, slice reads with `StartLine`/`EndLine`, and prompt `/clear` after commits.
@@ -57,19 +59,32 @@ Himmel POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 pos-project-himmel/
 ├── backend/
 │   ├── main.py              # FastAPI app, static mount, lifespan, routers
-│   ├── database.py          # SQLAlchemy engine, session maker, auto-migration
+│   ├── database.py          # SQLAlchemy engine, session maker, freeze-safe path resolution
+│   ├── build_standalone.py  # PyInstaller packaging automation
+│   ├── pos_backend.spec     # PyInstaller spec file (onefile & onedir)
 │   ├── models.py            # SQLite ORM models (Sale, Item, Preset, Config, etc.)
-│   ├── routers/             # REST endpoints (sales, config, printer, payments, etc.)
+│   ├── routers/             # REST endpoints (sales, inventory, printer, payments, config, etc.)
 │   ├── services/            # Business logic (eet, escpos, email_payment_listener, etc.)
 │   └── tests/               # Python unittest suite
 ├── src/
 │   ├── App.jsx              # Main POS register shell (code-split views)
 │   ├── api/                 # REST API client wrapper (posApi.js)
 │   ├── components/          # UI components and modals
-│   ├── hooks/               # Custom React hooks (useCart, useRegisterKeypad, usePosAudio, etc.)
+│   ├── hooks/               # Custom React hooks (useCart, useRegisterKeypad, useTauri, etc.)
 │   ├── i18n/                # Localization dictionary (translations.js)
 │   ├── utils/               # Tax, currency, audio, and formatting utilities
 │   └── index.css            # Design tokens and styles
+├── src-tauri/               # Tauri v2 native desktop application wrapper
+│   ├── src/lib.rs           # Sidecar lifecycle, tray menu, window management
+│   ├── capabilities/        # Desktop capabilities (shell, process permissions)
+│   └── tauri.conf.json      # Window settings, bundle config, externalBin
+├── scripts/
+│   └── prepare_sidecar.py   # Stages pos-backend-<target-triple> for Tauri
+├── build_standalone.sh      # Linux standalone bundle packaging
+├── build_standalone.bat     # Windows standalone bundle packaging
+├── build_windows_release.bat # 1-Click native Windows release installer script
+├── start_pos.sh             # Unified Linux production launcher
+├── start_pos.bat            # Unified Windows production launcher
 ├── .agents/rules/           # Antigravity rule definitions
 └── .serena/memories/        # Serena domain memory index
 ```

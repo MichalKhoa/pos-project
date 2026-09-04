@@ -1,75 +1,58 @@
-# Dokumentace Českého EET (Elektronická Evidence Tržeb)
+# VoltFlow POS — Documentation & Operational Guides
 
-Tato složka slouží pro ukládání a správu oficiálních specifikací, certifikátů a technických metodik pro **EET 2.0 / Finanční správu ČR**.
+Welcome to the comprehensive technical documentation and operational guides for **VoltFlow POS** (`pos-eet-himmel`).
 
 ---
 
-## 📂 Dokumentační Struktura
+## 📂 Documentation Map
 
 ```
 docs/
-├── plans/                          # Specifikace a Plány Implementace
-│   ├── INVENTORY_IMPLEMENTATION_PLAN.md
-│   ├── EET_HARDENING_PLAN.md
-│   ├── DATABASE_SAFETY_PLAN.md
-│   ├── PROMPTING_GUIDE.md
-│   ├── PROMPT_QUESTIONNAIRE.md
-│   └── security_and_stability_roadmap.md
-├── guides/                         # Příručky pro Nastavení a Správu
-│   ├── CASHIER_SETUP_GUIDE.md
-│   ├── CSOB_TERMINAL_GUIDE.md
-│   ├── LITESTREAM_R2_SETUP.md
-│   ├── SCALING_AND_NETWORK_SECURITY.md
-│   └── WINDOWS_SERVICE_SETUP.md
-├── eet_docs/                       # Oficiální EET PDF & konvertovaný Markdown
-├── csob_docs/                      # CSOB terminál dokumentace
-└── convert_pdf_to_md.py            # Python skript pro konverzi PDF na Markdown
+├── README.md                          # Documentation index (this file)
+├── guides/                            # Operator & Administrator Manuals
+│   ├── CASHIER_SETUP_GUIDE.md         # Daily cashier touch workflows & register usage
+│   ├── CSOB_TERMINAL_GUIDE.md         # ČSOB Ingenico Move 3500 terminal TCP configuration
+│   ├── REALTIME_QR_EMAIL_VERIFICATION_GUIDE.md # Bank email listener instant QR verification
+│   ├── SCALING_AND_NETWORK_SECURITY.md# Multi-register networking & firewall configuration
+│   ├── LITESTREAM_R2_SETUP.md         # Off-site real-time SQLite database replication to S3/R2
+│   └── WINDOWS_SERVICE_SETUP.md       # Windows background service administration
+├── eet_docs/                          # Official Czech EET 2.0 Specifications & Metodika
+│   ├── markdown/                      # Converted Markdown EET documentation
+│   └── convert_pdf_to_md.py           # Converter script for incoming Ministry PDF documents
+├── csob_docs/                         # ČSOB Business Connector technical specifications
+├── plans/                             # Architecture & Implementation Roadmaps
+│   ├── DONE_DATABASE_SAFETY_PLAN.md   # SQLite schema auto-migrations & safety invariants
+│   ├── DONE_EET_HARDENING_PLAN.md     # EET 2.0 cryptographic signing & SOAP dispatch
+│   ├── DONE_INVENTORY_IMPLEMENTATION_PLAN.md # Inventory ledger & stock tracking
+│   └── DONE_STABILITY_AND_QUALITY_PLAN.md    # Test coverage & touch ergonomics standards
+└── TOKEN_TRACKING.md                  # Development telemetry & token optimization guide
 ```
 
 ---
 
-## 🛠️ Jak Konvertovat PDF Specifikace na Markdown
+## 📘 Quick Reference: Operations & Setup Guides
 
-Skript [`convert_pdf_to_md.py`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/convert_pdf_to_md.py) automaticky prohledá složku [`eet_docs/`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/eet_docs/) a převede veškeré PDF specifikace do strukturovaného Markdownu.
+### 1. Cashier Operations (`docs/guides/CASHIER_SETUP_GUIDE.md`)
+- Touchscreen 4x4 keypad with ± Vratka (return) mode.
+- Preset item selection, category switching, and quick Czech VAT tier buttons (21%, 12%, 0%).
+- Completing transactions via Cash (with change calculation), Card, QR, and Split tenders.
 
-### 1. Vložení PDF souborů
-Vložte vaše EET PDF dokumenty (např. *Technická specifikace EET 2.0*, *Certifikační metodika*) do složky [`docs/eet_docs/`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/eet_docs/).
+### 2. ČSOB Terminal Integration (`docs/guides/CSOB_TERMINAL_GUIDE.md`)
+- Connecting the Ingenico Move 3500 payment terminal via local TCP/IP network.
+- Protocol commands: amount passing, transaction approval, merchant copy printing.
+- Troubleshooting communication timeouts and switching to manual card entry mode.
 
-### 2. Spuštění konverzního skriptu
-Spusťte skript z kořenového adresáře projektu:
+### 3. Real-Time QR Payment Verification (`docs/guides/REALTIME_QR_EMAIL_VERIFICATION_GUIDE.md`)
+- Setting up the background IMAP listener for instant payment validation (2–4 seconds).
+- Supported email providers (Seznam.cz, Gmail, Outlook) and bank notification formats.
+- Testing and debugging incoming Variable Symbol (VS) and amount parsing.
 
-```bash
-# S využitím Python 3:
-python docs/convert_pdf_to_md.py
-```
+### 4. Database Security & Off-Site Replication (`docs/guides/LITESTREAM_R2_SETUP.md`)
+- Real-time continuous replication of SQLite `pos_store.db` using Litestream.
+- Backing up to Cloudflare R2 or Amazon S3 with zero downtime and point-in-time recovery.
 
-Skript se nejprve pokusí použít Python knihovnu `pypdf` (`pip install pypdf`), a pokud není dostupná, použije systémový nástroj `pdftotext`.
-
-### 3. Výstup
-Skript vygeneruje odpovídající `.md` dokumenty do složky [`docs/eet_docs/markdown/`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/eet_docs/markdown/). AI asistent si z nich dokáže přečíst přesnou technickou specifikaci pro aktualizaci backendu.
-
----
-
-## 🔑 Práce s EET Certifikáty PKCS#12 (`.p12` / `.pfx`)
-
-Pro testovací prostředí (Playground) i ostrý provoz (Production) je vyžadován kryptografický certifikát poplatníka ve formátu PKCS#12 (`.p12` nebo `.pfx`).
-
-### Umístění certifikátu
-Uložte Váš certifikát do složky `backend/certs/` (např. `backend/certs/EET_CZ12345678.p12`).
-
-### Konfigurace v aplikaci
-V rozhraní **Nastavení (Settings)** zadáváte:
-- **Cesta k certifikátu**: `certs/EET_CZ12345678.p12`
-- **Heslo k certifikátu**: Heslo zadané při vygenerování na portálu Finanční správy ČR
-- **Režim tržby**: `Standardní` (online) nebo `Zjednodušený` (offline)
-- **ID provozovny**: Např. `11`
-- **ID pokladny**: Např. `1`
-
----
-
-## 📋 Standardy EET 2.0 v Himmel POS
-
-1. **PKP (Podpisový Kód Poplatníka)**: RSA-SHA256 podpis kanonického řetězce tržby.
-2. **BKP (Bezpečnostní Kód Poplatníka)**: SHA-1 hash z binárního podpisu PKP, formátovaný do 5 osmičkových hex skupin.
-3. **WS-Security 1.0 SOAP**: Odesílání podepsaných SOAP zpráv přes HTTPS POST na servery Finanční správy ČR.
-4. **FIK (Fiskální Identifikační Kód)**: Unikátný kód vrácený serverem Finanční správy ČR při úspěšné registraci tržby.
+### 5. Czech EET 2.0 Technical Standard (`docs/eet_docs/`)
+- PKCS#12 (`.p12`) taxpayer certificate management.
+- RSA-SHA256 PKP (Podpisový Kód Poplatníka) signature generation.
+- SHA-1 BKP (Bezpečnostní Kód Poplatníka) security code formatting.
+- WS-Security 1.0 SOAP envelope dispatch with offline queue fallback.

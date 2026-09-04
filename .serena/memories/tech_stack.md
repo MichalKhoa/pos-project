@@ -3,7 +3,7 @@
 ## Frontend
 - React 19, Vite, Lucide Icons, Vanilla CSS design tokens (`index.css`).
 - Modular views: Code-split via `React.lazy()` + `<Suspense>` (`SettingsView`, `SalesHistoryView`, `InventoryView`, `CustomerDisplayView`, `PresetsCatalogView`).
-- Custom hooks: `useCart`, `useRegisterKeypad`, `usePosAudio`, `usePosConfig`.
+- Custom hooks: `useCart`, `useRegisterKeypad`, `usePosAudio`, `usePosConfig`, `useTauri`.
 - Financial utilities: `src/utils/tax.js` (`roundCZK`, `calculateCartTotals`, `calculateCashChange`).
 - API client: Custom `fetch` wrapper in `src/api/posApi.js`.
 

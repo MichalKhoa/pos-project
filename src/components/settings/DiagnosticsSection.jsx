@@ -20,6 +20,7 @@ import {
   fetchShiftStats,
   fetchBackendRoot
 } from '../../api/posApi.js';
+import { useTauri } from '../../hooks/useTauri.js';
 
 export default function DiagnosticsSection({
   config = {}
@@ -33,6 +34,31 @@ export default function DiagnosticsSection({
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
   const [shiftData, setShiftData] = useState(null);
+  const [restartingBackend, setRestartingBackend] = useState(false);
+  const { isTauri, restartBackend } = useTauri();
+
+  const handleRestartBackend = async () => {
+    setRestartingBackend(true);
+    setActionMessage(null);
+    soundFx.playKeypadClick?.();
+    try {
+      const res = await restartBackend();
+      if (res.success) {
+        soundFx.playSuccessChime?.();
+        setActionMessage({ type: 'success', text: 'Backend server byl restartován.' });
+        setTimeout(() => checkHealth(), 1500);
+      } else {
+        soundFx.playErrorChime?.();
+        setActionMessage({ type: 'error', text: res.error || 'Restart selhal.' });
+      }
+    } catch (err) {
+      soundFx.playErrorChime?.();
+      setActionMessage({ type: 'error', text: 'Chyba restartu: ' + err.message });
+    } finally {
+      setRestartingBackend(false);
+      setTimeout(() => setActionMessage(null), 4000);
+    }
+  };
 
   const cleanIban = (config.bankAccountIban || 'CZ6508000000001234567890').replace(/\s/g, '').toUpperCase();
   const formattedIban = cleanIban.match(/.{1,4}/g)?.join(' ') || cleanIban;
@@ -349,9 +375,24 @@ export default function DiagnosticsSection({
                   </span>
                 </div>
               </div>
-              <span className={`diag-pill ${backendOnline ? 'diag-pill-success' : 'diag-pill-warning'}`}>
-                {backendOnline ? 'ONLINE' : 'OFFLINE'}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isTauri && (
+                  <button
+                    type="button"
+                    className="settings-action-btn"
+                    style={{ padding: '3px 8px', fontSize: '0.75rem', minHeight: '28px', gap: '4px', whiteSpace: 'nowrap' }}
+                    onClick={handleRestartBackend}
+                    disabled={restartingBackend}
+                    title="Restartovat backend proces"
+                  >
+                    <RefreshCw size={12} className={restartingBackend ? 'animate-spin' : ''} />
+                    <span>{restartingBackend ? 'Restart...' : 'Restart'}</span>
+                  </button>
+                )}
+                <span className={`diag-pill ${backendOnline ? 'diag-pill-success' : 'diag-pill-warning'}`}>
+                  {backendOnline ? 'ONLINE' : 'OFFLINE'}
+                </span>
+              </div>
             </div>
 
             {/* 2. ESC/POS Printer */}

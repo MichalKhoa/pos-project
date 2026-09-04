@@ -1,3 +1,3 @@
 @echo off
-REM Backwards-compatible launcher alias for VoltFlow POS
-call "%~dp0VoltFlow_POS.bat" %*
+REM Launcher alias forwarding to unified production starter
+call "%~dp0start_pos.bat" %*

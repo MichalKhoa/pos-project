@@ -77,7 +77,7 @@ fn open_customer_display(app: AppHandle) -> Result<(), String> {
         "customer-display",
         tauri::WebviewUrl::App("/#/customer-display".into()),
     )
-    .title("Himmel POS - Customer Display")
+    .title("VoltFlow POS - Customer Display")
     .inner_size(1024.0, 768.0)
     .resizable(true)
     .build()
@@ -111,7 +111,7 @@ pub fn run() {
             let _ = spawn_sidecar(&handle, &init_state);
 
             // Setup system tray menu
-            let title_item = MenuItem::with_id(app, "title", "Himmel POS", false, None::<&str>)?;
+            let title_item = MenuItem::with_id(app, "title", "VoltFlow POS", false, None::<&str>)?;
             let open_item = MenuItem::with_id(app, "open", "Otevřít / Open Register", true, None::<&str>)?;
             let restart_item = MenuItem::with_id(app, "restart", "Restartovat backend", true, None::<&str>)?;
             let exit_item = MenuItem::with_id(app, "exit", "Ukončit / Exit", true, None::<&str>)?;
@@ -124,7 +124,7 @@ pub fn run() {
             let tray_handle = app.handle().clone();
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
-                .tooltip("Himmel POS")
+                .tooltip("VoltFlow POS")
                 .on_menu_event(move |_app, event| match event.id.as_ref() {
                     "open" => {
                         if let Some(window) = tray_handle.get_webview_window("main") {

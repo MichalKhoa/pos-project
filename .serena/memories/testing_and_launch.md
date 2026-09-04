@@ -4,14 +4,14 @@ Operational execution scripts, test suites, and environment setup.
 
 ## Launchers & Production Serving
 - **Single-Process Production Mode**: FastAPI mounts compiled `dist/` static files on port 8000, eliminating Node/Vite dev server overhead in production (~150MB RAM savings).
-- `Himmel_POS_Install.bat`: 1-Click complete installer for Python venv, dependencies, npm build, and Windows Firewall.
-- `Himmel_POS.bat`: Fast production launcher with native port detection and Phone Customer Display QR/URL display.
-- `Himmel_POS_Debug.bat`: Developer debug mode launching FastAPI (`:8000`) and Vite dev server (`:5173`) in visible windows with hot reloading.
-- `Himmel_POS_Kiosk.bat`: Full-screen touch kiosk mode using Microsoft Edge `--kiosk`.
-- `Himmel_POS_Customer_Display.bat`: Dedicated customer display launcher (`:8000/#/customer-display`).
-- `Himmel_POS_Service_Install.bat`: Native Windows Task auto-boot service manager (install/uninstall menu).
-- `Himmel_POS_Stop.bat`: Gracefully stops all POS processes and frees ports 8000 and 5173.
-- `Himmel_POS_Update.bat`: 1-Click Git pull, package update, and UI re-compiler.
+- `VoltFlow_POS_Install.bat`: 1-Click complete installer for Python venv, dependencies, npm build, and Windows Firewall.
+- `VoltFlow_POS.bat`: Fast production launcher with native port detection and Phone Customer Display QR/URL display.
+- `VoltFlow_POS_Debug.bat`: Developer debug mode launching FastAPI (`:8000`) and Vite dev server (`:5173`) in visible windows with hot reloading.
+- `VoltFlow_POS_Kiosk.bat`: Full-screen touch kiosk mode using Microsoft Edge `--kiosk`.
+- `VoltFlow_POS_Customer_Display.bat`: Dedicated customer display launcher (`:8000/#/customer-display`).
+- `VoltFlow_POS_Service_Install.bat`: Native Windows Task auto-boot service manager (install/uninstall menu).
+- `VoltFlow_POS_Stop.bat`: Gracefully stops all POS processes and frees ports 8000 and 5173.
+- `VoltFlow_POS_Update.bat`: 1-Click Git pull, package update, and UI re-compiler.
 - **Linux Shell Scripts (`*.sh`)**:
   - `himmel_pos.sh`: Standard Linux production launcher (builds UI bundle, starts FastAPI on port 8000, opens Chrome/Chromium).
   - `himmel_pos_debug.sh`: Linux debug launcher with hot-reloading (`ENV=development`) on port 8000 and Vite dev server on port 5173.
@@ -23,6 +23,7 @@ Operational execution scripts, test suites, and environment setup.
   - `himmel_backend_settings.sh`: Launches Python pywebview desktop settings GUI.
 - **Tauri Native Shell**:
   - `scripts/prepare_sidecar.py`: Builds PyInstaller standalone binary and stages it to `src-tauri/binaries/pos-backend-<target-triple>`.
+  - `build_windows_release.bat`: 1-Click native Windows release installer build script (`.exe` NSIS & `.msi`).
   - `npm run tauri dev`: Launches desktop app in development mode with hot reload.
   - `npm run tauri build`: Compiles production native desktop bundle / installer.
 

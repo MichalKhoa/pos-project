@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Himmel POS - Tauri Sidecar Preparation Script
+VoltFlow POS - Tauri Sidecar Preparation Script
 Builds standalone backend executable and stages it with proper target-triple
 naming for Tauri v2 bundling.
 """
@@ -45,7 +45,7 @@ def get_target_triple() -> str:
 
 
 def main():
-    print("=== Himmel POS: Preparing Tauri Sidecar ===")
+    print("=== VoltFlow POS: Preparing Tauri Sidecar ===")
     BINARIES_DIR.mkdir(parents=True, exist_ok=True)
 
     target_triple = get_target_triple()

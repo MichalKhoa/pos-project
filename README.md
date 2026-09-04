@@ -1,57 +1,93 @@
-# Himmel POS - Modern Touchscreen Point of Sale System
+# VoltFlow POS — Modern Touchscreen Point of Sale System
 
-**Himmel POS** (`pos-eet-himmel`) is a production-ready, full-stack Point of Sale (POS) system designed for retail, grocery, and hospitality operations. It combines a modern React 19 touchscreen UI with a robust Python FastAPI hardware backend, offering Czech EET 2.0 fiscal signature support, ESC/POS thermal receipt printing, ČSOB Ingenico payment terminal integration, real-time QR payment email verification, and background Windows Service execution via NSSM.
+**VoltFlow POS** (`pos-eet-himmel`) is an enterprise-grade, touch-optimized Point of Sale (POS) system engineered for retail, grocery, and hospitality businesses. It bridges a high-performance **React 19** touchscreen UI with a resilient **Python FastAPI** hardware backend, wrapped in a lightweight **Tauri v2** native desktop shell or deployable as a zero-dependency standalone server.
 
 ---
 
 ## 🌟 Key Features
 
-- 🖥️ **Touchscreen Cashier Register**: Optimized responsive UI supporting category quick-presets, fast search, barcode/SKU scanner input, and manual custom item entry. Includes **High-Legibility Mode** for enhanced visibility and touch performance.
-- 🖨️ **Streamlined Receipt Print Modal & Auto-Print**:
-  - **Top-Mounted Action Buttons**: Print buttons (`⚡ Přímý Tisk Účtenky`, `Nový Prodej`) positioned at the top of the receipt modal for fast, single-tap operation.
-  - **Auto-Print on Finish**: Configurable setting to automatically dispatch receipts to connected ESC/POS thermal printers immediately upon sale completion.
-- 🛒 **Cart & Discount Management**: Per-item custom discounts, cart-level percentage/amount discounts, quantity toggles, and multi-tax CZ VAT calculations (21%, 12%, 0%).
-- 💳 **Flexible Payment Methods**:
-  - **Cash**: Automated change calculation and RJ11 cash drawer kick pulse.
-  - **Card**: ČSOB Ingenico Move 3500 terminal TCP API integration & manual card fallbacks.
-  - **Czech QR Code (SPD)**: Standardized Czech Short Payment Descriptor QR code with real-time IMAP bank email listener verification (2–4 seconds).
-  - **Split Payment**: Split total amounts across Cash and Card seamlessly.
-- 🇨🇿 **Czech EET 2.0 Fiscalization**: PKCS#12 (`.p12`) certificate signing, RSA-SHA256 PKP generation, SHA-1 BKP security codes, and WS-Security 1.0 SOAP envelope dispatch with offline queue resilience.
-- 🖨️ **ESC/POS Hardware Thermal Printing**: Native USB, Serial, and Network thermal receipt printing (80mm & 58mm paper formats, plus A4 invoice fallback) using `python-escpos`.
-- 📺 **WebSocket Customer Display**: Real-time streaming of items, total amounts, and OLED auto-standby power management for external customer-facing LCD monitors.
-- 📊 **Sales Ledger & Reporting**: Local SQLite database storing complete transaction history with date filters, storno/refund management, receipt viewing, and CSV backup/restore.
-- ⚙️ **Windows Background Service (NSSM)**: Run backend silently as an auto-restarting Windows System Service on system boot.
+### 🖥️ Native Desktop Shell & Kiosk Mode (Tauri v2)
+- **Zero-Dependency Native Shell**: Packaged with Tauri v2 and Rust, eliminating browser chrome and command prompts.
+- **Embedded Process Lifecycle**: Spawns and manages the frozen FastAPI backend as a managed sidecar process with clean SIGTERM shutdown on app exit.
+- **System Tray Integration**: Native tray menu for quick status monitoring, window focus, and one-click backend service restart.
+- **Dual-Screen Customer Display**: Native command to launch and position a secondary customer-facing display window (`/#/customer-display`) on secondary monitors.
+
+### 🧾 Cashier Touch Ergonomics & UI
+- **Touch-First Register**: Optimized for 1024x768 and 1280x800 touch monitors with strict 40–44px minimum touch targets and non-wrapping action chips.
+- **Catalog & Keypad Workflow**: 4x4 numeric keypad with ± Vratka (return) toggle, quick Czech VAT selector (21%, 12%, 0%), product presets with category filtering, and instant barcode/SKU scanner capture.
+- **Thermal Receipt Preview & Auto-Print**: Top-mounted direct print actions, customizable margins, cut commands, and automatic printing on transaction completion.
+- **Multi-Language (i18n)**: Seamless instant switching between **Czech (cs)**, **Vietnamese (vi)**, and **English (en)**.
+
+### 💳 Payments & Hardware Drivers
+- **Cash**: Instant change calculation and automated RJ11 cash drawer solenoid kick pulse via ESC/POS.
+- **Payment Terminal (ČSOB)**: Direct TCP IP protocol integration with ČSOB Ingenico Move 3500 terminals, plus manual card fallback.
+- **Czech SPD QR Code**: Instant Short Payment Descriptor QR generation with real-time IMAP bank email listener verifying incoming bank transfers in 2–4 seconds.
+- **Split Payments**: Flexible tender splitting across Cash, Card, and QR in a single sale.
+- **ESC/POS Thermal Printers**: Native USB, Serial (RS-232), and Network (TCP/IP) printing for 80mm and 58mm paper formats via `python-escpos`.
+
+### 🇨🇿 Czech EET 2.0 Fiscalization
+- **Cryptographic Signing**: PKCS#12 (`.p12` / `.pfx`) certificate parsing, RSA-SHA256 PKP taxpayer signature computation, and SHA-1 BKP security code hashing.
+- **Resilient SOAP Dispatcher**: WS-Security 1.0 SOAP envelope transmission to Finanční správa ČR with automated background retry daemon for offline resilience.
 
 ---
 
-## 🏗️ System Architecture & Tech Stack
+## 🏗️ System Architecture
 
 ```
-                     ┌────────────────────────────────────────┐
-                     │          React 19 + Vite UI            │
-                     │  (Register, Catalog, Sales, Settings)  │
-                     └───────────────────┬────────────────────┘
-                                         │
-                                   REST / WebSockets
-                                         │
-                     ┌───────────────────▼────────────────────┐
-                     │         Python FastAPI Backend         │
-                     └───────┬───────────────┬────────────────┘
-                             │               │
-            ┌────────────────┴──────┐ ┌──────┴────────────────┐
-            │   SQLite DB Storage   │ │   Hardware & EET      │
-            │ (Sales, Items, Config)│ │ (ESC/POS, CSOB, SOAP) │
-            └───────────────────────┘ └───────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Tauri v2 Desktop Shell                          │
+│   (Native Window, System Tray, Process Lifecycle, Customer Display)    │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │                                │
+                    ▼                                ▼
+     ┌─────────────────────────────┐   ┌─────────────────────────────┐
+     │     React 19 + Vite UI      │   │  PyInstaller Frozen Backend │
+     │  (Touch Register, Catalog,  │   │   (FastAPI REST + SQLite +  │
+     │   Settings, Sales History)  │   │    Hardware Drivers & EET)  │
+     └──────────────┬──────────────┘   └─────────────┬───────────────┘
+                    │                                │
+                    └────── HTTP REST / WebSockets ──┘
+                                     │
+           ┌─────────────────────────┼─────────────────────────┐
+           ▼                         ▼                         ▼
+   ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+   │ SQLite Store  │         │ ESC/POS Print │         │ ČSOB Terminal │
+   │ (pos_store.db)│         │ & RJ11 Drawer │         │ & EET 2.0 SOAP│
+   └───────────────┘         └───────────────┘         └───────────────┘
 ```
 
-| Component | Technology | Description |
-| :--- | :--- | :--- |
-| **Frontend** | React 19, Vite, Lucide Icons, Vanilla CSS | Fast, responsive single-page touchscreen register UI |
-| **Backend** | Python 3.10+, FastAPI, Uvicorn, SQLAlchemy | REST API for register operations, hardware, and EET signing |
-| **Database** | SQLite (`pos_store.db`) | Local persistence for completed sales and store configurations |
-| **Service Engine**| NSSM (Non-Sucking Service Manager) | Runs backend automatically as a silent background Windows Service |
-| **Fiscal Engine**| PyCryptodome, Cryptography, Requests | Czech EET 2.0 PKI signing and WS-Security 1.0 SOAP client |
-| **Hardware** | `python-escpos`, WebSockets, PySerial | USB/Serial/Network thermal printers and dual-screen customer LCD |
+---
+
+## 🚀 Runtime & Deployment Modes
+
+VoltFlow POS supports three flexible deployment modes:
+
+### Mode 1: Native Desktop App (Recommended for POS Terminals)
+Run the native desktop shell with managed sidecar backend:
+```bash
+# Development desktop mode:
+npm run tauri dev
+
+# Build native Windows installer (.exe / .msi):
+build_windows_release.bat
+```
+
+### Mode 2: Standalone Web POS (Zero-Dependency Launcher)
+Runs the standalone frozen PyInstaller backend on port `8000` and opens the browser:
+- **Windows**: Double-click `start_pos.bat` (or `VoltFlow_POS.bat`)
+- **Linux**: Execute `./start_pos.sh` (or `./himmel_pos.sh`)
+
+### Mode 3: Developer Mode (Live Hot Reload)
+Run frontend and backend in separate terminal processes:
+```bash
+# Terminal 1: Backend
+cd backend
+source venv/bin/activate   # or .\venv\Scripts\activate on Windows
+python main.py
+
+# Terminal 2: Frontend
+npm run dev
+```
 
 ---
 
@@ -59,144 +95,85 @@
 
 ```
 pos-project-himmel/
-├── backend/                  # Python FastAPI Backend & Hardware Services
-│   ├── certs/                # Directory for EET PKCS#12 (.p12) certificates
-│   ├── database.py           # SQLAlchemy database connection setup
-│   ├── logs/                 # Backend runtime & NSSM service logs (nssm_err.log, nssm_out.log)
-│   ├── main.py               # FastAPI application entry point & router mounting
-│   ├── models.py             # SQLAlchemy DB schemas (SaleModel, StoreConfigModel, etc.)
-│   ├── requirements.txt      # Python dependencies
-│   ├── routers/              # API endpoints (sales, printer, eet, payments, config, display)
-│   └── services/             # Business logic (eet_crypto, eet_soap, escpos_service, email_listener)
-├── docs/                     # Documentation, guides, and implementation plans
-├── nssm.exe                  # Windows Service Manager executable
-├── src/                      # React 19 Frontend Web Application
-│   ├── api/                  # API client layer (posApi.js)
-│   ├── components/           # React UI components (Cart, ReceiptModal, SettingsView, etc.)
-│   ├── data/                 # Default seed data and constants (initialData.js)
-│   ├── App.jsx               # Root application component and state router
-│   └── index.css             # Design tokens and theme system
-├── Himmel_POS_Install.bat    # 1-Click Installer (Winget auto-install, venv, build & shortcut)
-├── Himmel_POS_NSSM_Install.bat # Registers Python backend as background Windows Service via NSSM
-├── Himmel_POS.bat            # Standard Cashier & Customer Display launcher
-├── Himmel_POS_Debug.bat      # Debug mode launcher (live logging windows & dev server)
-├── Himmel_POS_Kiosk.bat      # Full-screen touch kiosk mode launcher
-├── Himmel_POS_Mobile_Launcher.bat # Mobile phone / LAN launcher (displays network URLs)
-├── Himmel_POS_Customer_Display.bat # Dedicated secondary monitor customer screen launcher
-├── Himmel_POS_Standalone_Server.bat # Headless server launcher for dedicated POS server node
-├── Himmel_POS_Enable_LAN.bat # Configures Windows Defender Firewall rules & LAN access
-├── Himmel_POS_Service_Stop.bat # Stops and unregisters Windows background service
-├── Himmel_POS_Stop.bat       # Stops all running Himmel POS processes and browser windows
-├── Himmel_POS_Update.bat     # Pulls latest code, updates venv, migrates DB & rebuilds UI
-├── Himmel_Backend_Settings.bat # Desktop GUI configuration utility
-├── package.json              # Frontend npm dependencies and scripts
-└── vite.config.js            # Vite configuration
+├── backend/                       # Python FastAPI Backend
+│   ├── build_standalone.py        # PyInstaller freezing script
+│   ├── pos_backend.spec           # PyInstaller spec configuration (onefile & onedir)
+│   ├── database.py                # SQLite connection & auto-migrations
+│   ├── models.py                  # SQLAlchemy ORM models (Sale, Item, Preset, Config)
+│   ├── routers/                   # REST endpoints (sales, inventory, eet, printer, payments)
+│   ├── services/                  # Business logic (eet_crypto, escpos, email_listener)
+│   └── tests/                     # Python unittest test suite
+├── src/                           # React 19 Touchscreen Frontend
+│   ├── App.jsx                    # POS register shell & view router
+│   ├── api/posApi.js              # HTTP client API wrapper
+│   ├── components/                # Modular UI components (Cart, Keypad, Modals, Settings)
+│   ├── hooks/                     # Custom hooks (useCart, useRegisterKeypad, useTauri)
+│   ├── i18n/translations.js       # Localization dictionary (cs, vi, en)
+│   └── utils/                     # Tax invariants, roundCZK, currency math
+├── src-tauri/                     # Tauri v2 Desktop Wrapper
+│   ├── src/lib.rs                 # Rust sidecar management, tray menu, window lifecycle
+│   ├── capabilities/default.json  # Tauri v2 security capabilities
+│   └── tauri.conf.json            # Desktop window & bundle configuration
+├── scripts/
+│   └── prepare_sidecar.py         # Stages backend binary for Tauri bundling
+├── build_standalone.sh            # Builds standalone bundle on Linux
+├── build_standalone.bat           # Builds standalone bundle on Windows
+├── build_windows_release.bat      # Generates Windows NSIS setup.exe installer
+├── start_pos.sh                   # Linux production launcher
+├── start_pos.bat                  # Windows production launcher
+├── .github/workflows/             # GitHub Actions CI for Windows installers
+└── docs/                          # Detailed architecture guides & specifications
 ```
 
 ---
 
-## ⚡ Quick Start Instructions
+## 🛠️ Build & Packaging Guide
 
-### Option 1: Automated Installation & Windows Launchers (Recommended)
+### 1. Build Standalone Backend
+Freezes the backend into a standalone executable containing all dependencies:
+- **Linux**: `./build_standalone.sh`
+- **Windows**: `build_standalone.bat`
 
-1. **1-Click System Setup**: Run `Himmel_POS_Install.bat`.
-   - Automatically detects Python 3.10+ and Node.js. Offers auto-install via Winget if missing.
-   - Sets up Python virtual environment (`backend/venv`), installs packages, runs `npm install`, compiles production frontend (`npm run build`), and places a desktop shortcut.
-2. **Launch Application**:
-   - **`Himmel_POS.bat`**: Standard cashier register app.
-   - **`Himmel_POS_Kiosk.bat`**: Full-screen touch kiosk mode.
-   - **`Himmel_POS_Customer_Display.bat`**: Secondary screen customer display.
-   - **`Himmel_POS_Mobile_Launcher.bat`**: Smartphone / tablet register & customer display access.
+Output: `backend/dist_standalone/pos-backend-standalone` and staged into `src-tauri/binaries/`.
 
----
+### 2. Build Windows Release Installer
+To generate a production `.exe` NSIS installer for Windows POS terminals:
+```cmd
+build_windows_release.bat
+```
+Output:
+- `src-tauri\target\release\bundle\nsis\VoltFlow-POS-Setup.exe`
+- `src-tauri\target\release\bundle\msi\VoltFlow-POS.msi`
 
-### Option 2: Running the Backend with NSSM (Windows Service)
-
-To run the backend silently in the background so it automatically starts on Windows boot and auto-restarts on crashes:
-
-1. **Install Service**: Right-click `Himmel_POS_NSSM_Install.bat` and select **"Run as administrator"**.
-2. **Restarting the NSSM Service** (when backend code changes):
-   - **Via Command Line** (Administrator PowerShell / CMD):
-     ```powershell
-     .\nssm.exe restart HimmelPOSBackend
-     ```
-   - **Via Windows Service Commands**:
-     ```powershell
-     Restart-Service HimmelPOSBackend
-     ```
-     *or in CMD:*
-     ```cmd
-     net stop HimmelPOSBackend
-     net start HimmelPOSBackend
-     ```
-3. **Viewing Service Logs**:
-   - Errors: [`backend/logs/nssm_err.log`](file:///c:/Users/PC/Documents/GitHub/pos-project-himmel/backend/logs/nssm_err.log)
-   - Output: [`backend/logs/nssm_out.log`](file:///c:/Users/PC/Documents/GitHub/pos-project-himmel/backend/logs/nssm_out.log)
+### 3. Automated GitHub Actions Builds
+The repository includes [`.github/workflows/release-windows.yml`](.github/workflows/release-windows.yml). Pushing a release tag (e.g. `v1.0.0`) or triggering the workflow manually on GitHub compiles the Windows installer on a cloud runner and attaches the binaries to the release.
 
 ---
 
-### Option 3: Manual Developer Start
+## 🧪 Quality Gates & Verification
 
-#### 1. Backend Setup (FastAPI)
+All code changes must pass the automated quality gates:
 
 ```bash
-# Navigate to backend directory
-cd backend
+# 1. Frontend Unit Tests (78 tests covering VAT, currency, keypad, modals, useTauri)
+npm run test
 
-# Create virtual environment
-python -m venv venv
+# 2. Frontend Linter (0 errors, 0 warnings)
+npm run lint
 
-# Activate virtual environment
-# Windows PowerShell:
-.\venv\Scripts\Activate.ps1
-# Linux/macOS:
-source venv/bin/activate
+# 3. Production UI Build
+npm run build
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Start FastAPI backend
-python main.py
+# 4. Backend Unit Tests (45 tests covering sales, EET crypto, API, models)
+python -m unittest discover -s backend/tests -p "test_*.py"
 ```
-The API server will run at **`http://localhost:8000`** (OpenAPI docs at `http://localhost:8000/docs`).
-
-#### 2. Frontend Setup (React + Vite)
-
-```bash
-# In project root directory
-npm install
-
-# Start Vite development server
-npm run dev
-
-# Or build production bundle
-cmd /c npx vite build
-```
-The register application will open at **`http://localhost:5173`**.
 
 ---
 
-## ⚙️ Configuration & Features Guide
+## 📖 Additional Guides & Documentation
 
-### 🖨️ Receipt Printing & Auto-Print Setup
-- Open **Nastavení (Settings) -> Tiskárna & Periferie**:
-  - **Printer Selection**: Choose USB (`/dev/usb/lp0`), Serial, or Network IP printer.
-  - **Paper Format**: Select `80 mm` (72mm head, 48 chars/line), `58 mm` (48mm head, 32 chars/line), or `A4`.
-  - **Auto-Print Toggle**: Turn **ON** `Automatický tisk účtenky při dokončení prodeje (Auto-Print)` to print receipts automatically on sale finish without clicking print.
-- **Top Print Buttons**: The receipt completion modal displays **⚡ Přímý Tisk Účtenky** and **Nový Prodej** right at the top for immediate access.
-
-### 🇨🇿 Czech EET 2.0 Setup
-1. Place your official `.p12` certificate file inside `backend/certs/`.
-2. In **Nastavení (Settings) -> EET**, specify:
-   - Certificate file path and password
-   - Environment (`Playground` or `Production`)
-   - Business Premises ID (`id_provozovny`) and Register ID (`id_pokl`)
-3. When sales complete, FIK/BKP/PKP codes are calculated. If offline, sales are queued as `OFFLINE_PENDING` and auto-sent when internet is restored.
-
----
-
-## 📄 Documentation Links
-
-- Frontend Details: [`src/README.md`](file:///c:/Users/PC/Documents/GitHub/pos-project-himmel/src/README.md)
-- Backend API & Service Details: [`backend/README.md`](file:///c:/Users/PC/Documents/GitHub/pos-project-himmel/backend/README.md)
-- ČSOB & Email Integration Manuals: [`docs/`](file:///c:/Users/PC/Documents/GitHub/pos-project-himmel/docs/)
+- [Cashier Setup & Touch Operations Guide](docs/guides/CASHIER_SETUP_GUIDE.md)
+- [ČSOB Ingenico Move 3500 Terminal Integration](docs/guides/CSOB_TERMINAL_GUIDE.md)
+- [Real-Time QR Payment Bank Email Listener Guide](docs/guides/REALTIME_QR_EMAIL_VERIFICATION_GUIDE.md)
+- [Database Safety & Auto-Migration System](docs/plans/DONE_DATABASE_SAFETY_PLAN.md)
+- [EET 2.0 Legal & Cryptographic Specifications](docs/README.md)

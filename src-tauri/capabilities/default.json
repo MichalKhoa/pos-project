@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions for Himmel POS",
+  "description": "Permissions for VoltFlow POS",
   "windows": [
     "main",
     "customer-display"

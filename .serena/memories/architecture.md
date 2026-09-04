@@ -1,6 +1,6 @@
 # System Architecture
 
-High-level component interaction and communication layers in Himmel POS.
+High-level component interaction and communication layers in VoltFlow POS.
 
 ## Core Flow
 - **Frontend Register**: React 19 SPA running on Vite (default port 5173). Manages cart, item selection, discounts, and payment workflows.

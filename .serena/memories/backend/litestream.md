@@ -5,7 +5,7 @@ Litestream real-time SQLite database replication and backup manager.
 ## Config & Files
 - Config file: [backend/litestream.yml](file:///home/misko/Documents/pos-eet-himmel/backend/litestream.yml)
 - Database path: `backend/pos_store.db` (WAL mode enabled)
-- Launcher integration: `Himmel_POS.bat` silently runs `litestream.exe replicate -config backend/litestream.yml`
+- Launcher integration: `VoltFlow_POS.bat` silently runs `litestream.exe replicate -config backend/litestream.yml`
 
 ## Features & Invariants
 - Real-time WAL streaming (sync interval 1s, snapshot interval 24h, 72h retention).

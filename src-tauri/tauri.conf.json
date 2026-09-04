@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Himmel POS",
+  "productName": "VoltFlow POS",
   "version": "1.0.0",
-  "identifier": "com.himmel.pos",
+  "identifier": "com.voltflow.pos",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Himmel POS",
+        "title": "VoltFlow POS",
         "label": "main",
         "width": 1280,
         "height": 800,
@@ -27,7 +27,7 @@
     },
     "trayIcon": {
       "iconPath": "icons/32x32.png",
-      "tooltip": "Himmel POS"
+      "tooltip": "VoltFlow POS"
     }
   },
   "bundle": {

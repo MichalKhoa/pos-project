@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Himmel POS — Production Starter Script (Linux)
+# VoltFlow POS — Production Starter Script (Linux)
 # Prioritizes standalone PyInstaller binary, falls back to Python venv.
 
 set -e
@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "========================================================"
-echo "  Starting Himmel POS..."
+echo "  Starting VoltFlow POS..."
 echo "========================================================"
 echo ""
 
@@ -109,4 +109,4 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
     fi
 fi
 
-echo "[SUCCESS] Himmel POS running. To stop: ./himmel_pos_stop.sh"
+echo "[SUCCESS] VoltFlow POS running. To stop: ./himmel_pos_stop.sh"

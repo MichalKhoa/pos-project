@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Himmel POS — Build Standalone Backend Bundle (Linux)
+# VoltFlow POS — Build Standalone Backend Bundle (Linux)
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "========================================================"
-echo "  Building Himmel POS Standalone Bundle (Linux)..."
+echo "  Building VoltFlow POS Standalone Bundle (Linux)..."
 echo "========================================================"
 echo ""
 

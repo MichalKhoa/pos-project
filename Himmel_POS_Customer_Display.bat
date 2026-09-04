@@ -1,3 +1,4 @@
 @echo off
-REM Backwards-compatible customer display alias for VoltFlow POS
-call "%~dp0VoltFlow_POS_Customer_Display.bat" %*
+title Himmel POS - Customer Display
+echo Starting Customer Display Window...
+start "" "http://localhost:8000/#/customer-display"
