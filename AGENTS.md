@@ -38,9 +38,18 @@ VoltFlow POS (`pos-eet-himmel`): touchscreen Point of Sale system.
 - User-visible text MUST use `useTranslation()` (`t('key.path')`).
 - Add all new strings across 3 languages in `src/i18n/translations.js`: `cs` (Czech), `vi` (Vietnamese), `en` (English).
 
+### Context & Token Optimization
+- **Complexity Profiling**: Before executing any multi-file feature request, run `codegraph_explore` to map the blast radius. If the task spans multiple backend routers and frontend components, you must generate a phased `implementation_plan.md`, log the state handoff into `.serena/memories/`, and explicitly instruct the user to open a fresh conversation for Phase 1.
+- **The 50% Rule (Context Cap)**: Monitor the conversation length. If the chat history or context window feels heavily loaded, you must pause immediately, summarize the active state into a Serena memory, and prompt the user to execute `/clear` before continuing.
+- **Ban Unscoped Searches**: Never run blanket grep or file searches across the entire repository. If a symbol is missing from `codegraph_explore`, restrict any subsequent terminal searches strictly to the relevant subdirectory (e.g., `backend/services/` or `src/components/`).
+- **MCP Server Pruning**: Keep only the Serena and Codegraph MCP servers active by default. Ensure no unnecessary tool schemas are bloating the system prompt during routine edits.
+
 ### Implementation Planning Discipline & Anti-Looping
 - **Mandatory Plan & Intent Verification**: Create `implementation_plan.md` before multi-file/feature changes. Always stop and obtain explicit user plan approval to verify user intent before making code edits.
-- **Phased Subtasks**: Partition complex tasks into sequential numbered phases (Phase 1, 2, 3...).
+- **Complex Task Decomposition (>2 files or cross-stack)**: Whenever a request touches >2 files or crosses both frontend and backend boundaries, the agent MUST decompose the work into small, self-contained sequential phases (Phase 1, Phase 2, etc.).
+- **Standalone Conversation Kickoff Prompts**: For each phase in `implementation_plan.md`, provide an explicit, copy-pasteable prompt so the user can implement that phase in a brand-new conversation to minimize token overhead. Record active state handoff into `.serena/memories/`.
+- **Strict Planning Chat Boundary**: In the initial planning conversation, STOP immediately after generating `implementation_plan.md` and logging handoff state into Serena memory. Do NOT execute or write feature code in the planning conversation; instruct the user to start a fresh chat for Phase 1.
+- **Phase Completion & Handoff**: At the end of each implementation phase, update the plan progress, record handoff context in Serena memory, and provide the prompt for the next phase in a fresh conversation.
 - **Anti-Looping Circuit Breaker (Rule of Two)**: If any test, build, lint, or run fails **twice** with the same or related error, **STOP IMMEDIATELY**. Do not guess or attempt a 3rd speculative fix. Report the failure and ask for user clarification.
 - **Tool Burst Cap**: Never exceed 8 continuous tool operations without reporting progress and verifying intent.
 - **Autonomous Exception**: Serena memory updates (`.serena/memories/`), Codegraph queries/indexing, and requested git commit/push require NO approval or planning gates.
@@ -96,11 +105,12 @@ pos-project-himmel/
 
 Run before completing any task:
 
-1. **Frontend Tests**: `npm run test` (all pass).
-2. **Frontend Lint**: `npm run lint` (0 errors, 0 warnings).
-3. **Frontend Build**: `npm run build` (builds cleanly to `dist/`).
-4. **Backend Tests**: `python -m unittest discover -s backend/tests -p "test_*.py"` (all pass).
-5. **Serena Memory Sync**: domain memories match codebase.
-6. **Git Hygiene & Autonomous Operations**:
+1. **Mandatory tokless Piping**: All terminal commands that generate heavy output—including `npm run test`, `npm run lint`, `python -m unittest`, and build scripts—MUST be piped through the `tokless` utility. Never dump raw, uncompressed tracebacks or full terminal logs directly into the chat history.
+2. **Frontend Tests**: `npm run test | tokless` (all pass).
+3. **Frontend Lint**: `npm run lint | tokless` (0 errors, 0 warnings).
+4. **Frontend Build**: `npm run build | tokless` (builds cleanly to `dist/`).
+5. **Backend Tests**: `python -m unittest discover -s backend/tests -p "test_*.py" | tokless` (all pass).
+6. **Serena Memory Sync**: domain memories match codebase.
+7. **Git Hygiene & Autonomous Operations**:
    - Hygiene: no foreign/temp files staged.
    - Autonomous Commit & Push: when prompted to commit/push, stage surgical files (`git add`), write Conventional Commit, `git commit`, and `git push origin <branch>` without extra confirmation.
