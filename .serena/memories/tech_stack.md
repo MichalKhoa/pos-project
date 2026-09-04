@@ -15,7 +15,8 @@
 
 ## Desktop & Native Shell
 - Tauri v2 (`src-tauri/`): Native Rust desktop wrapper for Linux & Windows.
-- Capabilities & plugins: `tauri-plugin-shell`, `tauri-plugin-process`, `tauri-plugin-log`.
+- Capabilities & plugins: `tauri-plugin-shell`, `tauri-plugin-process`, `tauri-plugin-log`, `tauri-plugin-updater` (`@tauri-apps/plugin-updater`).
+- Auto-Updater: Cryptographically signed Tauri v2 updates (`tauri.conf.json` pubkey) for zero-dependency client machines, plus remote silent NSIS update script (`scripts/tools/update_client.bat`).
 - PyInstaller sidecar: Standalone backend packaging (`backend/dist_standalone/pos-backend-standalone`) bundled as `pos-backend-<target-triple>`.
 - System tray integration, auto-health polling, and clean child process shutdown.
 

@@ -8,6 +8,12 @@ echo.
 
 cd /d "%~dp0"
 
+REM 0. If running on client installation without git, delegate to client NSIS updater
+if not exist "%~dp0..\..\.git" (
+    call "%~dp0update_client.bat" %*
+    exit /b !errorlevel!
+)
+
 REM 1. Safely stop running POS backend services and browser windows
 echo [1/5] Stopping active POS services and app instances...
 call "%~dp0Himmel_POS_Service_Stop.bat" >nul 2>&1

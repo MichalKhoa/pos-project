@@ -111,6 +111,7 @@ pub fn run() {
         .manage(app_state.clone())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
             app.handle().plugin(
                 tauri_plugin_log::Builder::default()

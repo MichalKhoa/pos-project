@@ -121,4 +121,5 @@ Thumbs.db
 
 # Local imported agent logs
 .agent_logs/
+token_usage_*
 

@@ -88,9 +88,20 @@ if !errorlevel! neq 0 (
     exit /b !errorlevel!
 )
 
-REM 4. Build Tauri Native Release Bundle (NSIS / MSI)
+REM 4. Build Tauri Native Release Bundle (NSIS / MSI + Updater Signatures)
 echo.
 echo [4/4] Building Tauri Windows desktop installer...
+
+if "%TAURI_SIGNING_PRIVATE_KEY_PATH%"=="" (
+    if exist "%USERPROFILE%\.tauri\voltflow.key" (
+        set "TAURI_SIGNING_PRIVATE_KEY_PATH=%USERPROFILE%\.tauri\voltflow.key"
+        if "%TAURI_SIGNING_PRIVATE_KEY_PASSWORD%"=="" set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=voltflowpos"
+        echo [INFO] Detected Tauri signing key: %USERPROFILE%\.tauri\voltflow.key
+    ) else (
+        echo [WARNING] No Tauri updater signing key detected. Building without updater signature.
+    )
+)
+
 call npm run tauri build
 if !errorlevel! neq 0 (
     echo [ERROR] Tauri build failed!

@@ -53,5 +53,13 @@
         "displayLanguageSelector": false
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg3MEZBNjRBRERCMDk2OEEKUldTS2xyRGRTcVlQaHdKWTFkT1hYVFlUSU0vaFZFRWdzQ3gyeHplUGpOK0N3dStzdUlqRjFEWXAK",
+      "endpoints": [
+        "https://github.com/MichalKhoa/pos-project-himmel/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

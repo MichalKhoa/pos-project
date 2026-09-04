@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { HardDrive, Download, Upload, Trash2, Shield, RefreshCw, CheckCircle, Database } from 'lucide-react';
+import { HardDrive, Download, Upload, Trash2, Shield, RefreshCw, CheckCircle, Database, ArrowDownCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { fetchDatabaseBackupStatus, triggerDatabaseBackup } from '../../api/posApi.js';
+import { useTauri } from '../../hooks/useTauri.js';
 
 export default function BackupSection({
   config,
@@ -17,9 +18,43 @@ export default function BackupSection({
   onCheckUpdate
 }) {
   const { t } = useTranslation();
+  const { isTauri, checkTauriUpdate, installTauriUpdate } = useTauri();
   const [dbBackupStatus, setDbBackupStatus] = useState(null);
   const [dbBackupLoading, setDbBackupLoading] = useState(false);
   const [dbBackupMsg, setDbBackupMsg] = useState(null);
+
+  // Tauri updater state
+  const [tauriChecking, setTauriChecking] = useState(false);
+  const [tauriUpdateInfo, setTauriUpdateInfo] = useState(null);
+  const [tauriCheckedOnce, setTauriCheckedOnce] = useState(false);
+  const [tauriInstallProgress, setTauriInstallProgress] = useState(null);
+  const [tauriInstallError, setTauriInstallError] = useState(null);
+  const [tauriInstalling, setTauriInstalling] = useState(false);
+
+  const handleTauriCheck = async () => {
+    setTauriChecking(true);
+    setTauriInstallError(null);
+    const result = await checkTauriUpdate();
+    setTauriUpdateInfo(result);
+    setTauriCheckedOnce(true);
+    setTauriChecking(false);
+  };
+
+  const handleTauriInstall = async () => {
+    if (!tauriUpdateInfo?.updateRef) return;
+    setTauriInstalling(true);
+    setTauriInstallError(null);
+    setTauriInstallProgress({ percent: 0, downloaded: 0, total: 0 });
+
+    const res = await installTauriUpdate(tauriUpdateInfo.updateRef, (prog) => {
+      setTauriInstallProgress(prog);
+    });
+
+    if (!res.success) {
+      setTauriInstallError(res.error || 'Instalace aktualizace selhala');
+      setTauriInstalling(false);
+    }
+  };
 
   useEffect(() => {
     fetchDatabaseBackupStatus().then(res => {
@@ -181,40 +216,193 @@ export default function BackupSection({
       <div className="settings-grid-col">
         {/* 🔄 Card 2: Aktualizace systému */}
         <div className="settings-section-card">
-        <div className="settings-section-header">
-          <div>
-            <h3 className="settings-section-title">
-              <RefreshCw size={19} style={{ color: 'var(--accent-blue)' }} />
-              <span>{t('settings.updates_title') || 'Aktualizace pokladny'}</span>
-            </h3>
-            <p className="settings-section-desc">
-              Zkontrolujte a nainstalujte nejnovější vylepšení a opravy pokladního systému.
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-              Nainstalovaná verze: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}</span>
-            </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Systém se automaticky udržuje v aktuálním stabilním stavu.
+          <div className="settings-section-header">
+            <div>
+              <h3 className="settings-section-title">
+                <RefreshCw size={19} style={{ color: 'var(--accent-blue)' }} />
+                <span>{t('settings.updates_title') || 'Aktualizace pokladny'}</span>
+              </h3>
+              <p className="settings-section-desc">
+                {t('settings.updates_desc') || 'Zkontrolujte a nainstalujte nejnovější vylepšení a opravy pokladního systému.'}
+              </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            className="nav-tab"
-            disabled={updateLoading}
-            onClick={onCheckUpdate}
-            style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '800' }}
-          >
-            <RefreshCw size={15} className={updateLoading ? 'spin-icon' : ''} />
-            <span>{updateLoading ? 'Kontroluji...' : 'Zkontrolovat aktualizace'}</span>
-          </button>
+          {isTauri ? (
+            /* --- NATIVE TAURI DESKTOP UPDATER --- */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {t('settings.current_version') || 'Nainstalovaná verze'}: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>v{tauriUpdateInfo?.currentVersion || '1.0.0'}</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Nativní desktopová aplikace (Tauri v2 NSIS). Aktualizace se instalují bez nutnosti vývojářských nástrojů.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="nav-tab"
+                  disabled={tauriChecking || tauriInstalling}
+                  onClick={handleTauriCheck}
+                  style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '800' }}
+                >
+                  <RefreshCw size={15} className={tauriChecking ? 'spin-icon' : ''} />
+                  <span>{tauriChecking ? (t('settings.checking') || 'Kontroluji...') : (t('settings.check_updates') || 'Zkontrolovat aktualizace')}</span>
+                </button>
+              </div>
+
+              {/* Status banner when up-to-date */}
+              {tauriCheckedOnce && !tauriUpdateInfo?.available && !tauriUpdateInfo?.error && (
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(5, 150, 105, 0.1)',
+                  border: '1px solid rgba(5, 150, 105, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  fontSize: '0.85rem',
+                  color: 'var(--accent-emerald)',
+                  fontWeight: '700'
+                }}>
+                  <CheckCircle size={18} />
+                  <span>{t('settings.up_to_date') || 'Systém je aktuální'} (v{tauriUpdateInfo?.currentVersion || '1.0.0'})</span>
+                </div>
+              )}
+
+              {/* Error banner if check failed */}
+              {tauriUpdateInfo?.error && (
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  fontSize: '0.82rem',
+                  color: 'var(--accent-rose)',
+                  fontWeight: '600'
+                }}>
+                  <AlertCircle size={18} />
+                  <span>Chyba při kontrole aktualizací: {tauriUpdateInfo.error}</span>
+                </div>
+              )}
+
+              {/* Update available card */}
+              {tauriUpdateInfo?.available && (
+                <div style={{
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--accent-blue)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <ArrowDownCircle size={20} style={{ color: 'var(--accent-blue)' }} />
+                      <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                        {t('settings.new_version_available') || 'K dispozici je nová verze'}: <span style={{ color: 'var(--accent-blue)' }}>v{tauriUpdateInfo.version}</span>
+                      </span>
+                    </div>
+                    {tauriUpdateInfo.date && (
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        {tauriUpdateInfo.date}
+                      </span>
+                    )}
+                  </div>
+
+                  {tauriUpdateInfo.body && (
+                    <div style={{
+                      background: 'var(--bg-card)',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.82rem',
+                      color: 'var(--text-secondary)',
+                      whiteSpace: 'pre-wrap',
+                      maxHeight: '120px',
+                      overflowY: 'auto'
+                    }}>
+                      {tauriUpdateInfo.body}
+                    </div>
+                  )}
+
+                  {tauriInstalling ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.25rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: '700' }}>
+                        <span>{t('settings.downloading') || 'Stahování aktualizace...'}</span>
+                        <span>{tauriInstallProgress?.percent || 0}%</span>
+                      </div>
+                      <div style={{
+                        width: '100%',
+                        height: '8px',
+                        background: 'var(--border-color)',
+                        borderRadius: '4px',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{
+                          width: `${tauriInstallProgress?.percent || 0}%`,
+                          height: '100%',
+                          background: 'var(--accent-blue)',
+                          transition: 'width 0.2s ease-in-out'
+                        }} />
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                        {tauriInstallProgress?.total > 0 && (
+                          <span>{((tauriInstallProgress.downloaded || 0) / (1024 * 1024)).toFixed(1)} MB / {((tauriInstallProgress.total || 0) / (1024 * 1024)).toFixed(1)} MB — </span>
+                        )}
+                        <span>Pokladna se po instalaci automaticky restartuje.</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="pay-btn pay-btn-card"
+                      onClick={handleTauriInstall}
+                      style={{ height: '44px', fontWeight: '800', fontSize: '0.88rem', justifyContent: 'center' }}
+                    >
+                      <ArrowDownCircle size={18} />
+                      <span>{t('settings.download_and_install') || 'Stáhnout a instalovat'}</span>
+                    </button>
+                  )}
+
+                  {tauriInstallError && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--accent-rose)', fontWeight: '600' }}>
+                      {tauriInstallError}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* --- WEB / BROWSER RUNTIME FALLBACK --- */
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  {t('settings.current_version') || 'Nainstalovaná verze'}: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  Webový režim prohlížeče. Pro produkční automatické aktualizace spusťte nativní desktopovou aplikaci VoltFlow POS.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="nav-tab"
+                disabled={updateLoading}
+                onClick={onCheckUpdate}
+                style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '800' }}
+              >
+                <RefreshCw size={15} className={updateLoading ? 'spin-icon' : ''} />
+                <span>{updateLoading ? (t('settings.checking') || 'Kontroluji...') : (t('settings.check_updates') || 'Zkontrolovat aktualizace')}</span>
+              </button>
+            </div>
+          )}
         </div>
-      </div>
 
       {/* 🇨🇿 Card 3: EET 2.0 (Fiskalizace) */}
       <div className="settings-section-card">
