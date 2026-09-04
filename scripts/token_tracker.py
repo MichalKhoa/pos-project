@@ -17,10 +17,10 @@ from datetime import datetime
 BASE_SYSTEM_TOKENS = 6000  # Avg system prompt + schema overhead per call
 
 # Pricing models (per 1,000,000 tokens)
-# Gemini 2.0 / 1.5 Flash: Cache Read: $0.01875, Uncached In: $0.075, Out: $0.30
-FLASH_IN_UNCACHED = 0.075 / 1_000_000
-FLASH_IN_CACHED   = 0.01875 / 1_000_000
-FLASH_OUT         = 0.30 / 1_000_000
+# Gemini 3.5 / 3.8 Flash: Cache Read: $0.075, Uncached In: $0.75, Out: $3.75
+FLASH_IN_UNCACHED = 0.75 / 1_000_000
+FLASH_IN_CACHED   = 0.075 / 1_000_000
+FLASH_OUT         = 3.75 / 1_000_000
 
 # Claude 3.5 Sonnet: Cache Read: $0.30, Uncached In: $3.00, Out: $15.00
 SONNET_IN_UNCACHED = 3.00 / 1_000_000
@@ -433,7 +433,7 @@ def show_lifetime(custom_logs_dir=None, as_json=False):
     print(f"Total Tokens:          {data['total_tokens']:,} tokens")
     print("-" * 65)
     print("ESTIMATED CLOUD API COSTS (85% Prefix Prompt Caching):")
-    print(f"  • Gemini 2.0 / 1.5 Flash:  ${data['est_flash_usd']:.2f} USD")
+    print(f"  • Gemini 3.5 / 3.8 Flash:  ${data['est_flash_usd']:.2f} USD")
     print(f"  • Claude 3.5 Sonnet:       ${data['est_sonnet_usd']:.2f} USD")
     print("-" * 65)
     print("ATTRIBUTION BREAKDOWN:")

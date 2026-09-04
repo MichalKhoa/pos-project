@@ -128,7 +128,7 @@ python3 scripts/token_tracker.py sync pull
 
 | Model | Cached Prompt (per 1M) | Uncached Prompt (per 1M) | Completion (per 1M) |
 |---|---|---|---|
-| **Gemini 2.0 / 1.5 Flash** | $0.01875 | $0.075 | $0.30 |
+| **Gemini 3.5 / 3.8 Flash** | $0.07500 | $0.750 | $3.75 |
 | **Claude 3.5 Sonnet** | $0.30000 | $3.000 | $15.00 |
 
 *Note: In agentic loops, prompt caching hits ~85% of turns due to repetitive system prompt, tool schemas, and cumulative turn context.*
