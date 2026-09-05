@@ -25,11 +25,11 @@ if os.path.exists(legacy_backups_dir) and os.path.abspath(legacy_backups_dir) !=
             pass
 
 
-def create_database_backup() -> dict:
+def create_database_backup(upload_to_cloud: bool = True) -> dict:
     """
     Takes a live online SQLite backup using sqlite3.Connection.backup() API
     and compresses it into a timestamped ZIP archive inside backend/backups/.
-    Auto-purges local backups older than 30 days.
+    Auto-purges local backups older than 30 days and optionally triggers cloud sync.
     """
     if not os.path.exists(DB_PATH):
         return {"status": "ERROR", "message": f"Database file not found at {DB_PATH}"}
@@ -61,6 +61,16 @@ def create_database_backup() -> dict:
 
         # 3. Auto-purge backups older than 30 days
         purge_old_backups(max_days=30)
+
+        # 4. Trigger asynchronous cloud upload if enabled
+        if upload_to_cloud:
+            try:
+                from services.cloud_sync_service import get_cloud_sync_service
+                cloud_service = get_cloud_sync_service()
+                if cloud_service.is_enabled():
+                    cloud_service.upload_backup_async(zip_file_path)
+            except Exception as ce:
+                logger.warning(f"Failed to dispatch background cloud backup: {ce}")
 
         return {
             "status": "SUCCESS",
@@ -177,7 +187,7 @@ def restore_database_from_backup(zip_filename: str) -> dict:
 
         # 2. Take immediate safety backup of current active DB
         if os.path.exists(DB_PATH):
-            pre_restore_backup = create_database_backup()
+            pre_restore_backup = create_database_backup(upload_to_cloud=False)
 
         # 3. Close open connections and replace DB
         from database import engine

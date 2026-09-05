@@ -542,6 +542,199 @@ def restore_backup(payload: RestoreRequest, request: Request):
     return res
 
 
+# ==========================================
+# Native Python Cloud Sync Endpoints (S3/R2)
+# ==========================================
+
+class CloudBackupTestRequest(BaseModel):
+    endpoint: Optional[str] = ""
+    bucket: Optional[str] = ""
+    access_key: Optional[str] = ""
+    secret_key: Optional[str] = None
+    region_name: Optional[str] = "auto"
+
+
+class CloudBackupConfigRequest(BaseModel):
+    enabled: Optional[bool] = None
+    endpoint: Optional[str] = None
+    bucket: Optional[str] = None
+    access_key: Optional[str] = None
+    secret_key: Optional[str] = None
+    prefix: Optional[str] = None
+    retention_days: Optional[int] = None
+
+
+class CloudRestoreRequest(BaseModel):
+    filename: str
+
+
+@router.get("/cloud-backup/status")
+def get_cloud_backup_status(
+    request: Request,
+    _auth=Depends(verify_technician_auth)
+):
+    """Returns current cloud backup configuration and sync status."""
+    from services.cloud_sync_service import get_cloud_sync_service
+    service = get_cloud_sync_service()
+    cfg = service.get_config()
+    return {
+        "status": "SUCCESS",
+        "enabled": cfg["enabled"],
+        "endpoint": cfg["endpoint"],
+        "bucket": cfg["bucket"],
+        "access_key": cfg["access_key"],
+        "has_secret_key": bool(cfg["secret_key"]),
+        "prefix": cfg["prefix"],
+        "retention_days": cfg["retention_days"],
+        "last_sync": cfg["last_sync"],
+        "last_status": cfg["last_status"],
+        "last_error": cfg["last_error"]
+    }
+
+
+@router.post("/cloud-backup/test")
+def test_cloud_backup_connection(
+    payload: CloudBackupTestRequest,
+    request: Request,
+    _auth=Depends(verify_technician_auth)
+):
+    """Tests S3/R2 connectivity with provided or stored credentials."""
+    from services.cloud_sync_service import get_cloud_sync_service
+    service = get_cloud_sync_service()
+    cfg = service.get_config()
+
+    endpoint = payload.endpoint if payload.endpoint is not None and payload.endpoint != "" else cfg["endpoint"]
+    bucket = payload.bucket if payload.bucket is not None and payload.bucket != "" else cfg["bucket"]
+    access_key = payload.access_key if payload.access_key is not None and payload.access_key != "" else cfg["access_key"]
+    secret_key = payload.secret_key if payload.secret_key is not None and payload.secret_key != "" else cfg["secret_key"]
+    region_name = payload.region_name or "auto"
+
+    res = service.test_connection(
+        endpoint=endpoint,
+        bucket=bucket,
+        access_key=access_key,
+        secret_key=secret_key,
+        region_name=region_name
+    )
+    return res
+
+
+@router.post("/cloud-backup/configure")
+def configure_cloud_backup(
+    payload: CloudBackupConfigRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    _auth=Depends(verify_technician_auth)
+):
+    """Updates cloud backup configuration in StoreConfigModel."""
+    config = db.query(StoreConfigModel).filter(StoreConfigModel.id == 1).first()
+    if not config:
+        config = StoreConfigModel(id=1)
+        db.add(config)
+        db.commit()
+        db.refresh(config)
+
+    if payload.enabled is not None:
+        config.cloud_backup_enabled = payload.enabled
+    if payload.endpoint is not None:
+        config.cloud_backup_endpoint = payload.endpoint.strip()
+    if payload.bucket is not None:
+        config.cloud_backup_bucket = payload.bucket.strip()
+    if payload.access_key is not None:
+        config.cloud_backup_access_key = payload.access_key.strip()
+    if payload.secret_key is not None and payload.secret_key != "":
+        config.set_encrypted_cloud_secret(payload.secret_key.strip())
+    if payload.prefix is not None:
+        config.cloud_backup_prefix = payload.prefix.strip().strip("/")
+    if payload.retention_days is not None:
+        config.cloud_backup_retention_days = max(1, payload.retention_days)
+
+    db.commit()
+    db.refresh(config)
+
+    return {
+        "status": "SUCCESS",
+        "message": "Konfigurace cloudového zálohování byla úspěšně uložena.",
+        "config": {
+            "enabled": config.cloud_backup_enabled,
+            "endpoint": config.cloud_backup_endpoint,
+            "bucket": config.cloud_backup_bucket,
+            "access_key": config.cloud_backup_access_key,
+            "has_secret_key": bool(config.cloud_backup_secret_key),
+            "prefix": config.cloud_backup_prefix,
+            "retention_days": config.cloud_backup_retention_days
+        }
+    }
+
+
+@router.post("/cloud-backup/upload-now")
+def trigger_cloud_backup_upload(
+    request: Request,
+    _auth=Depends(verify_technician_auth)
+):
+    """Creates an immediate local SQLite snapshot and uploads it to configured cloud storage."""
+    from services.cloud_sync_service import get_cloud_sync_service
+    from services.backup_service import create_database_backup
+
+    service = get_cloud_sync_service()
+    if not service.is_enabled():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cloudové zálohování není povoleno nebo chybí přihlašovací údaje."
+        )
+
+    backup_res = create_database_backup(upload_to_cloud=False)
+    if backup_res.get("status") == "ERROR":
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Chyba při vytváření lokální zálohy: {backup_res.get('message')}"
+        )
+
+    local_zip_path = backup_res.get("path")
+    upload_res = service.upload_backup_file(local_zip_path)
+    if upload_res.get("status") == "ERROR":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Chyba při nahrávání zálohy do cloudu: {upload_res.get('message')}"
+        )
+
+    return upload_res
+
+
+@router.get("/cloud-backup/backups")
+def get_remote_cloud_backups(
+    request: Request,
+    _auth=Depends(verify_technician_auth)
+):
+    """Returns list of available remote backup archives from configured cloud bucket."""
+    from services.cloud_sync_service import get_cloud_sync_service
+    service = get_cloud_sync_service()
+    if not service.is_enabled():
+        return []
+    return service.list_remote_backups()
+
+
+@router.post("/cloud-backup/restore")
+def restore_from_cloud_backup(
+    payload: CloudRestoreRequest,
+    request: Request,
+    _auth=Depends(verify_technician_auth)
+):
+    """
+    Downloads remote backup archive, checks SQLite integrity, takes a pre-restore
+    local safety snapshot, and restores pos_store.db.
+    """
+    if not payload.filename or not payload.filename.strip():
+        raise HTTPException(status_code=400, detail="Název záložního souboru nesmí být prázdný.")
+
+    from services.cloud_sync_service import get_cloud_sync_service
+    service = get_cloud_sync_service()
+    res = service.download_and_restore(payload.filename.strip())
+    if res.get("status") == "ERROR":
+        raise HTTPException(status_code=400, detail=res.get("message"))
+    return res
+
+
 @router.post("/shutdown")
 def shutdown_system(request: Request):
     """Safely stop backend service & terminal windows on cashier request."""

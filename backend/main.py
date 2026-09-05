@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
             if _shutdown_event.wait(timeout=3600):
                 break
             try:
-                create_database_backup()
+                create_database_backup(upload_to_cloud=True)
             except Exception as e:
                 logger.warning(f"Error in hourly database backup daemon: {e}")
 

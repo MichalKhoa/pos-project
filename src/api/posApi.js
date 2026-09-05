@@ -895,6 +895,145 @@ export async function restoreDatabaseBackup(filename) {
 }
 
 /**
+ * Fetch cloud backup configuration and sync status
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function fetchCloudBackupStatus(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/cloud-backup/status`, { headers });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch cloud backup status:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Test S3/R2 cloud storage connectivity
+ * @param {Object} payload - { endpoint, bucket, access_key, secret_key, region_name }
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function testCloudBackupConnection(payload = {}, pin = null) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/cloud-backup/test`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to test cloud backup connection:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Configure and save cloud backup settings
+ * @param {Object} payload - { enabled, endpoint, bucket, access_key, secret_key, prefix, retention_days }
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function configureCloudBackup(payload, pin = null) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/cloud-backup/configure`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to configure cloud backup:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Trigger immediate snapshot creation and cloud upload
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function triggerCloudBackupUpload(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/cloud-backup/upload-now`, {
+      method: 'POST',
+      headers
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to trigger cloud backup upload:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Fetch available remote cloud backup archives
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function fetchRemoteCloudBackups(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/cloud-backup/backups`, { headers });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to list remote cloud backups:', err);
+    return [];
+  }
+}
+
+/**
+ * Restore SQLite database from remote cloud backup archive
+ * @param {string} filename - Remote backup zip filename
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function restoreRemoteCloudBackup(filename, pin = null) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/cloud-backup/restore`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ filename })
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to restore remote cloud backup:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+
+/**
  * Fetch full technician diagnostic telemetry
  * @param {string|null} pin - Technician Admin PIN or master key
  */

@@ -155,6 +155,18 @@ class StoreConfigModel(Base):
     receipt_show_branding = Column(Boolean, default=True)
     receipt_show_cashier = Column(Boolean, default=True)
 
+    # Cloud Backup Configuration (S3 / Cloudflare R2 / MinIO)
+    cloud_backup_enabled = Column(Boolean, default=False)
+    cloud_backup_endpoint = Column(String, default="")
+    cloud_backup_bucket = Column(String, default="himmel-pos-backups")
+    cloud_backup_access_key = Column(String, default="")
+    cloud_backup_secret_key = Column(String, default="")
+    cloud_backup_prefix = Column(String, default="store_01")
+    cloud_backup_retention_days = Column(Integer, default=30)
+    cloud_backup_last_sync = Column(String, default="")
+    cloud_backup_last_status = Column(String, default="")
+    cloud_backup_last_error = Column(String, default="")
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret
@@ -164,6 +176,16 @@ class StoreConfigModel(Base):
         """Encrypts and stores EET certificate password."""
         from services.security_utils import encrypt_secret
         self.eet_cert_password = encrypt_secret(password)
+
+    def get_decrypted_cloud_secret(self) -> str:
+        """Returns decrypted Cloud S3 Secret Access Key."""
+        from services.security_utils import decrypt_secret
+        return decrypt_secret(self.cloud_backup_secret_key or "")
+
+    def set_encrypted_cloud_secret(self, secret: str):
+        """Encrypts and stores Cloud S3 Secret Access Key."""
+        from services.security_utils import encrypt_secret
+        self.cloud_backup_secret_key = encrypt_secret(secret)
 
 
 

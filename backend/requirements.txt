@@ -16,5 +16,4 @@ pywin32; sys_platform == 'win32'
 httpx>=0.27.0
 pyinstaller>=6.4.0
 pywebview>=5.0.0
-
-
+boto3>=1.34.0
