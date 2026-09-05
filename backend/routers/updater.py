@@ -14,12 +14,18 @@ REPO_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 def run_git_command(args, cwd=REPO_DIR):
     """Utility to run git CLI command in repo root."""
     try:
+        kwargs = {
+            "cwd": cwd,
+            "capture_output": True,
+            "text": True,
+            "timeout": 15
+        }
+        if sys.platform == "win32" and hasattr(subprocess, "CREATE_NO_WINDOW"):
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
         res = subprocess.run(
             ["git"] + args,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=15
+            **kwargs
         )
         return res.returncode == 0, res.stdout.strip(), res.stderr.strip()
     except Exception as e:

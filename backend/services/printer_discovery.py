@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import subprocess
 import logging
@@ -61,25 +62,26 @@ def detect_connected_printers():
             "is_default": False
         })
 
-    # 3. Check CUPS System Printers via lpstat if available
-    try:
-        res = subprocess.run(["lpstat", "-p"], capture_output=True, text=True, timeout=2)
-        if res.returncode == 0:
-            for line in res.stdout.splitlines():
-                if "printer" in line:
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        pname = parts[1]
-                        devices.append({
-                            "id": f"cups-{pname}",
-                            "name": f"Systémová tiskárna CUPS ({pname})",
-                            "interface": "CUPS",
-                            "address": pname,
-                            "status": "CONNECTED",
-                            "is_default": False
-                        })
-    except Exception:
-        pass
+    # 3. Check CUPS System Printers via lpstat if available (Unix/Linux/macOS only)
+    if os.name != 'nt' and sys.platform != 'win32':
+        try:
+            res = subprocess.run(["lpstat", "-p"], capture_output=True, text=True, timeout=2)
+            if res.returncode == 0:
+                for line in res.stdout.splitlines():
+                    if "printer" in line:
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            pname = parts[1]
+                            devices.append({
+                                "id": f"cups-{pname}",
+                                "name": f"Systémová tiskárna CUPS ({pname})",
+                                "interface": "CUPS",
+                                "address": pname,
+                                "status": "CONNECTED",
+                                "is_default": False
+                            })
+        except Exception:
+            pass
 
     # 4. Fallback Default USB device if no physical hardware detected
     if not devices:

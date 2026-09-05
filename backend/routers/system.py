@@ -478,14 +478,28 @@ def get_litestream_status():
 
     is_running = False
     try:
-        if sys.platform == "win32":
-            res = subprocess.run(["tasklist", "/FI", "IMAGENAME eq litestream.exe"], capture_output=True, text=True, timeout=3)
-            is_running = "litestream.exe" in res.stdout
-        else:
-            res = subprocess.run(["pgrep", "-f", "litestream"], capture_output=True, text=True, timeout=3)
-            is_running = res.returncode == 0
+        import psutil
+        for proc in psutil.process_iter(['name']):
+            try:
+                name = proc.info.get('name') or ''
+                if 'litestream' in name.lower():
+                    is_running = True
+                    break
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
     except Exception:
-        is_running = False
+        try:
+            if sys.platform == "win32":
+                kwargs = {"capture_output": True, "text": True, "timeout": 3}
+                if hasattr(subprocess, "CREATE_NO_WINDOW"):
+                    kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+                res = subprocess.run(["tasklist", "/FI", "IMAGENAME eq litestream.exe"], **kwargs)
+                is_running = "litestream.exe" in res.stdout
+            else:
+                res = subprocess.run(["pgrep", "-f", "litestream"], capture_output=True, text=True, timeout=3)
+                is_running = res.returncode == 0
+        except Exception:
+            is_running = False
 
     wal_path = DB_PATH + "-wal"
     db_size = os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0
@@ -790,16 +804,20 @@ def shutdown_system(request: Request):
     def terminate():
         try:
             if sys.platform == "win32":
+                kwargs = {"shell": False, "capture_output": True}
+                if hasattr(subprocess, "CREATE_NO_WINDOW"):
+                    kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
                 # Stop Windows service cleanly if installed & active
-                subprocess.run(["net", "stop", "VoltFlowPOSBackend"], shell=False, capture_output=True)
-                subprocess.run(["net", "stop", "HimmelPOSBackend"], shell=False, capture_output=True)
+                subprocess.run(["net", "stop", "VoltFlowPOSBackend"], **kwargs)
+                subprocess.run(["net", "stop", "HimmelPOSBackend"], **kwargs)
 
                 # Target POS launcher terminal windows and app instances (both VoltFlow and legacy Himmel)
-                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq VoltFlow POS*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq *VoltFlow*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq *Himmel*"], shell=False, capture_output=True)
-                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq http://localhost:5173*"], shell=False, capture_output=True)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq VoltFlow POS*"], **kwargs)
+                subprocess.run(["taskkill", "/T", "/F", "/FI", "WINDOWTITLE eq Himmel POS*"], **kwargs)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq *VoltFlow*"], **kwargs)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq *Himmel*"], **kwargs)
+                subprocess.run(["taskkill", "/F", "/IM", "msedge.exe", "/FI", "WINDOWTITLE eq http://localhost:5173*"], **kwargs)
             else:
                 subprocess.run(["pkill", "-f", "vite"], shell=False, capture_output=True)
                 subprocess.run(["pkill", "-f", "main.py"], shell=False, capture_output=True)
