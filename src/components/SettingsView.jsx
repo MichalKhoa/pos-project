@@ -199,8 +199,11 @@ export default function SettingsView({
         mode: 'VERIFY',
         onAuthenticated: (verifiedPin) => {
           setPinModalState(null);
-          if (enterAdminMode) enterAdminMode(verifiedPin);
-          if (onToggleAdminMode && !effectiveIsAdmin) onToggleAdminMode();
+          if (enterAdminMode) {
+            enterAdminMode(verifiedPin);
+          } else if (onToggleAdminMode && !effectiveIsAdmin) {
+            onToggleAdminMode();
+          }
           callback();
         }
       });
@@ -308,8 +311,11 @@ export default function SettingsView({
       setPinModalState({
         mode: 'VERIFY',
         onAuthenticated: (verifiedPin) => {
-          if (enterAdminMode) enterAdminMode(verifiedPin);
-          if (onToggleAdminMode && !effectiveIsAdmin) onToggleAdminMode();
+          if (enterAdminMode) {
+            enterAdminMode(verifiedPin);
+          } else if (onToggleAdminMode && !effectiveIsAdmin) {
+            onToggleAdminMode();
+          }
           setActiveSubTab(tab.id);
           setPinModalState(null);
         }
@@ -435,8 +441,11 @@ export default function SettingsView({
                     setPinModalState({
                       mode: 'VERIFY',
                       onAuthenticated: (verifiedPin) => {
-                        if (enterAdminMode) enterAdminMode(verifiedPin);
-                        if (onToggleAdminMode && !effectiveIsAdmin) onToggleAdminMode();
+                        if (enterAdminMode) {
+                          enterAdminMode(verifiedPin);
+                        } else if (onToggleAdminMode && !effectiveIsAdmin) {
+                          onToggleAdminMode();
+                        }
                         setPinModalState(null);
                       }
                     });

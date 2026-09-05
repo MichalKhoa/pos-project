@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { StoreConfigProvider, useStoreConfig } from '../context/StoreConfigContext';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import Navbar from '../components/Navbar';
@@ -264,5 +264,49 @@ describe('SettingsView Tab Gating', () => {
     // No PIN modal appears, terminal section is rendered
     expect(screen.queryByText(/Ověření Admin PIN/i)).not.toBeInTheDocument();
     expect(screen.getAllByText(/ČSOB/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('unlocks gated tab and activates admin mode after entering correct PIN', async () => {
+    function TestApp() {
+      const { isAdminMode, toggleAdminMode } = useStoreConfig();
+      return (
+        <SettingsView
+          storeConfig={{ cashierPin: '1234' }}
+          onSaveStoreConfig={() => {}}
+          presets={[]}
+          onResetData={() => {}}
+          onNavigateToPresets={() => {}}
+          isAdminMode={isAdminMode}
+          onToggleAdminMode={toggleAdminMode}
+        />
+      );
+    }
+
+    render(
+      <LanguageProvider>
+        <StoreConfigProvider>
+          <TestApp />
+        </StoreConfigProvider>
+      </LanguageProvider>
+    );
+
+    // Click tab 'Platební Terminál' which is locked
+    fireEvent.click(screen.getByText('Platební Terminál'));
+
+    // Admin PIN modal appears
+    expect(screen.getByText(/Ověření Admin PIN/i)).toBeInTheDocument();
+
+    // Enter digits 1, 2, 3, 4
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    fireEvent.click(screen.getByRole('button', { name: '4' }));
+
+    // Wait for authentication and verify tab unlocks
+    await waitFor(() => {
+      expect(screen.queryByText(/Ověření Admin PIN/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Sekce vyžaduje oprávnění technika/i)).not.toBeInTheDocument();
+      expect(screen.getAllByText(/ČSOB/i).length).toBeGreaterThanOrEqual(1);
+    });
   });
 });
