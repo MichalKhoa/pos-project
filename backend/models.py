@@ -91,6 +91,7 @@ class StoreConfigModel(Base):
 
     # Cashier Lock & Security Configuration
     cashier_pin = Column(String, default="1234")
+    admin_pin = Column(String, default="1234")
     auto_lock_minutes = Column(Integer, default=15)
 
     # Hardware Direct Silent Printing vs Browser Debug Preview

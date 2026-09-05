@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, X, Check } from 'lucide-react';
-import { verifyPinBackend } from '../api/posApi';
+import { verifyPinBackend, verifyAdminPinBackend } from '../api/posApi';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
 export default function AdminPinModal({
@@ -28,12 +28,25 @@ export default function AdminPinModal({
   const verifyEnteredPin = useCallback(async (pinToTest) => {
     setIsVerifying(true);
     try {
-      const res = await verifyPinBackend(pinToTest);
-      let isValid = res?.valid === true;
+      let isValid = false;
+      // Try admin pin endpoint first
+      try {
+        const adminRes = await verifyAdminPinBackend(pinToTest);
+        if (adminRes?.valid === true) {
+          isValid = true;
+        }
+      } catch {
+        // continue to standard check
+      }
 
-      if (res?.valid === null) {
-        const localPin = storeConfig?.cashierPin || '1234';
-        isValid = pinToTest === localPin;
+      if (!isValid) {
+        const res = await verifyPinBackend(pinToTest);
+        if (res?.valid === true) {
+          isValid = true;
+        } else if (res?.valid === null) {
+          const localPin = storeConfig?.adminPin || storeConfig?.cashierPin || '1234';
+          isValid = pinToTest === localPin;
+        }
       }
 
       if (isValid) {
@@ -55,7 +68,7 @@ export default function AdminPinModal({
     } finally {
       setIsVerifying(false);
     }
-  }, [step, storeConfig?.cashierPin, onSuccess]);
+  }, [step, storeConfig?.adminPin, storeConfig?.cashierPin, onSuccess]);
 
   const finalizePinChange = useCallback((confirmed) => {
     if (confirmed !== newPin) {

@@ -11,6 +11,7 @@ import { usePosKeyboardShortcuts } from './hooks/usePosKeyboardShortcuts';
 import { useAutoLock } from './hooks/useAutoLock';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
+import { useStoreConfig } from './context/StoreConfigContext';
 import { soundFx } from './utils/audio';
 import { calculateCartTotals } from './utils/tax';
 import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
@@ -176,7 +177,10 @@ export default function App() {
   }, [cartItems, computedTotalAmount, isCustomerDisplayMode]);
 
   const [keypadAmount, setKeypadAmount] = useState('');
-  const [isAdminMode, setIsAdminMode] = useState(false);
+  const {
+    isAdminMode,
+    toggleAdminMode: handleToggleAdminMode
+  } = useStoreConfig();
   const [paymentModalMethod, setPaymentModalMethod] = useState(null); // 'cash' | 'card' | 'split' | null
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
   const [refundTargetSale, setRefundTargetSale] = useState(null);
@@ -210,10 +214,7 @@ export default function App() {
     setTimeout(() => setFlashBanner(null), 3000);
   }, []);
 
-  // Admin Mode & Test Sales Management
-  const handleToggleAdminMode = useCallback(() => {
-    setIsAdminMode(prev => !prev);
-  }, []);
+  // Test Sales Management
 
   const handleDeleteSale = async (saleId) => {
     if (window.confirm('Opravdu chcete smazat tento testovací prodej? Tržby se okamžitě přepočítají.')) {

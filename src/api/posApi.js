@@ -756,6 +756,27 @@ export async function verifyPinBackend(pin) {
 }
 
 /**
+ * Verify Technician/Admin PIN against backend (/config/verify-admin-pin)
+ * @param {string} pin - 4+ digit PIN or Master Recovery Key
+ * @returns {Promise<{valid: boolean, is_master?: boolean, error?: string}>}
+ */
+export async function verifyAdminPinBackend(pin) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config/verify-admin-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    if (res.status === 401 || res.status === 403) return { valid: false };
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Admin PIN verification failed (backend offline, falling back):', err);
+    return { valid: null, error: err.message };
+  }
+}
+
+/**
  * Verify Master Recovery Code (PUK) to reset PIN to 1234
  */
 export async function verifyPukBackend(puk) {
@@ -872,4 +893,171 @@ export async function restoreDatabaseBackup(filename) {
     return { status: 'ERROR', message: err.message };
   }
 }
+
+/**
+ * Fetch full technician diagnostic telemetry
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function fetchSystemDiagnostics(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/diagnostics`, { headers });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch system diagnostics:', err);
+    return { status: 'ERROR', error: err.message };
+  }
+}
+
+/**
+ * Execute SQLite VACUUM and WAL checkpoint to optimize database storage
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function triggerDbVacuum(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/db/vacuum`, {
+      method: 'POST',
+      headers
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to trigger database vacuum:', err);
+    return { status: 'ERROR', error: err.message };
+  }
+}
+
+/**
+ * Fetch recent tail of backend rotating log file
+ * @param {Object} options - { lines, level, search, pin }
+ */
+export async function fetchSystemLogs({ lines = 200, level = null, search = null, pin = null } = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (lines) params.append('lines', lines.toString());
+    if (level && level !== 'ALL') params.append('level', level);
+    if (search && search.trim()) params.append('search', search.trim());
+
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+
+    const res = await fetch(`${API_BASE_URL}/system/logs?${params.toString()}`, { headers });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch system logs:', err);
+    return { status: 'ERROR', error: err.message, lines: [] };
+  }
+}
+
+/**
+ * Download database snapshot archive (.zip)
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function downloadDatabaseSnapshot(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/db/backup`, { headers });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    const blob = await res.blob();
+    const disposition = res.headers.get('content-disposition');
+    let filename = `pos_store_snapshot_${new Date().toISOString().slice(0, 10)}.zip`;
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+    return { success: true, filename };
+  } catch (err) {
+    console.error('Failed to download database snapshot:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Restore SQLite database from an uploaded .db or .zip snapshot
+ * @param {File} file - Database or zip backup file
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function restoreDatabaseSnapshot(file, pin = null) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/db/restore`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to restore database snapshot:', err);
+    return { status: 'ERROR', error: err.message };
+  }
+}
+
+/**
+ * Export and download full diagnostic bundle (.zip)
+ * @param {string|null} pin - Technician Admin PIN or master key
+ */
+export async function downloadDiagnosticBundle(pin = null) {
+  try {
+    const headers = {};
+    if (pin) headers['X-Admin-PIN'] = pin;
+    const res = await fetch(`${API_BASE_URL}/system/export-bundle`, { headers });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `HTTP error ${res.status}`);
+    }
+    const blob = await res.blob();
+    const disposition = res.headers.get('content-disposition');
+    let filename = `voltflow_diagnostic_bundle_${new Date().toISOString().slice(0, 10)}.zip`;
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+    return { success: true, filename };
+  } catch (err) {
+    console.error('Failed to download diagnostic bundle:', err);
+    return { success: false, error: err.message };
+  }
+}
+
 

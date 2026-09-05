@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
@@ -12,6 +12,8 @@ function Navbar({
   activeTab,
   setActiveTab,
   storeConfig,
+  isAdminMode: propIsAdminMode,
+  onToggleAdminMode,
   pendingCount = 0,
   onOpenSyncModal,
   onOpenShutdownModal,
@@ -21,7 +23,26 @@ function Navbar({
   onPrintDailySummary
 }) {
   const { t, language } = useTranslation();
-  const { fontSize, cycleFontSize } = useStoreConfig();
+  const {
+    fontSize,
+    cycleFontSize,
+    isAdminMode: ctxIsAdminMode,
+    adminSessionRemainingSeconds: ctxRemainingSeconds,
+    exitAdminMode
+  } = useStoreConfig();
+  const isAdmin = propIsAdminMode !== undefined ? propIsAdminMode : ctxIsAdminMode;
+  const remainingSeconds = ctxRemainingSeconds ?? 0;
+
+  const handleExitTechnician = () => {
+    if (exitAdminMode) exitAdminMode();
+    else if (onToggleAdminMode) onToggleAdminMode();
+  };
+
+  const formatCountdown = (totalSec) => {
+    const m = Math.floor(Math.max(0, totalSec) / 60);
+    const s = Math.max(0, totalSec) % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
   const [currentTime, setCurrentTime] = useState(new Date());
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('pos_theme') || 'light';
@@ -136,6 +157,33 @@ function Navbar({
             <AlertTriangle size={14} />
             <span>{pendingCount}</span>
           </button>
+        )}
+
+        {isAdmin && (
+          <div
+            className={`nav-technician-badge ${remainingSeconds < 60 ? 'critical-warning' : ''}`}
+            title={
+              language === 'cs'
+                ? `Režim servisního technika aktivní • Automatické zamčení za ${formatCountdown(remainingSeconds)} • Klikněte pro okamžité uzamčení`
+                : language === 'vi'
+                ? `Chế độ kỹ thuật viên đang bật • Tự động khóa sau ${formatCountdown(remainingSeconds)} • Nhấp để khóa ngay`
+                : `Technician Mode Active • Auto-lock in ${formatCountdown(remainingSeconds)} • Click to lock`
+            }
+          >
+            <span className="technician-pulse-dot" />
+            <Wrench size={13} className="technician-icon" />
+            <span className="technician-label">{t('nav.technician_active') || 'Technik'}</span>
+            <span className="technician-timer">{formatCountdown(remainingSeconds)}</span>
+            <button
+              type="button"
+              className="technician-exit-btn"
+              onClick={handleExitTechnician}
+              title={t('nav.technician_lock_now') || 'Uzamknout'}
+              aria-label={t('nav.technician_lock_now') || 'Uzamknout'}
+            >
+              <Lock size={11} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -284,6 +332,25 @@ function Navbar({
               </button>
             </div>
           </div>
+
+          {isAdmin && (
+            <div className={`drawer-technician-banner ${remainingSeconds < 60 ? 'critical-warning' : ''}`}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Wrench size={14} />
+                <span>{t('nav.technician_active') || 'Technik'}</span>
+                <span className="technician-timer">{formatCountdown(remainingSeconds)}</span>
+              </div>
+              <button
+                type="button"
+                className="technician-drawer-exit-btn"
+                onClick={handleExitTechnician}
+                title={t('nav.technician_lock_now') || 'Uzamknout'}
+              >
+                <Lock size={12} />
+                <span>{t('nav.technician_lock_now') || 'Uzamknout'}</span>
+              </button>
+            </div>
+          )}
 
           {/* Language Switcher */}
           <LanguageSelector

@@ -1,3 +1,4 @@
+import os
 import hashlib
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -41,6 +42,7 @@ class StoreConfigSchema(BaseModel):
     csobTerminalPort: Optional[int] = None
     csobTerminalId: Optional[str] = None
     cashierPin: Optional[str] = None
+    adminPin: Optional[str] = None
     autoLockMinutes: Optional[int] = None
     directHardwarePrint: Optional[bool] = None
     defaultLanguage: Optional[str] = None
@@ -119,6 +121,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "csobTerminalPort": config.csob_terminal_port or 8888,
         "csobTerminalId": config.csob_terminal_id or "",
         "hasPin": bool(config.cashier_pin and config.cashier_pin != _hash_pin("1234")),
+        "hasAdminPin": bool(getattr(config, 'admin_pin', None) and config.admin_pin != _hash_pin("1234")),
         "autoLockMinutes": config.auto_lock_minutes if config.auto_lock_minutes is not None else 15,
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
         "autoPrintReceipt": getattr(config, 'auto_print_receipt', False) if getattr(config, 'auto_print_receipt', None) is not None else False,
@@ -199,6 +202,10 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
         if len(data.cashierPin) < 4 or len(data.cashierPin) > 8 or not data.cashierPin.isdigit():
             raise HTTPException(status_code=400, detail="PIN kód musí mít 4 až 8 číslic.")
         config.cashier_pin = _hash_pin(data.cashierPin)
+    if data.adminPin is not None:
+        if len(data.adminPin) < 4 or len(data.adminPin) > 8 or not data.adminPin.isdigit():
+            raise HTTPException(status_code=400, detail="Admin PIN kód musí mít 4 až 8 číslic.")
+        config.admin_pin = _hash_pin(data.adminPin)
     if data.autoLockMinutes is not None: config.auto_lock_minutes = data.autoLockMinutes
     if data.directHardwarePrint is not None: config.direct_hardware_print = data.directHardwarePrint
     if data.autoPrintReceipt is not None: config.auto_print_receipt = data.autoPrintReceipt
@@ -277,6 +284,38 @@ def verify_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(g
 
     pin_rate_limiter.record_failed_attempt(client_ip)
     raise HTTPException(status_code=401, detail="Nesprávný PIN kód")
+
+
+@router.post("/verify-admin-pin")
+def verify_admin_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(get_db)):
+    """Verify technician/admin PIN against hashed value in database or master recovery key."""
+    from services.rate_limiter import pin_rate_limiter
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    pin_rate_limiter.check_rate_limit(client_ip)
+
+    # 1. Master Recovery Key check
+    master_key = os.getenv("POS_MASTER_ADMIN_KEY", "VOLTFLOW-ADMIN-MASTER-RECOVERY")
+    if data.pin.strip() == master_key:
+        return {"status": "SUCCESS", "valid": True, "is_master": True}
+
+    config = db.query(StoreConfigModel).first()
+    stored = (getattr(config, 'admin_pin', None) or getattr(config, 'cashier_pin', None) or "1234") if config else "1234"
+
+    # Backward compat / plaintext check
+    if not _is_hashed(stored):
+        if data.pin == stored:
+            if config:
+                config.admin_pin = _hash_pin(stored)
+                db.commit()
+            return {"status": "SUCCESS", "valid": True}
+        pin_rate_limiter.record_failed_attempt(client_ip)
+        raise HTTPException(status_code=401, detail="Nesprávný Admin PIN kód")
+
+    if _hash_pin(data.pin) == stored:
+        return {"status": "SUCCESS", "valid": True}
+
+    pin_rate_limiter.record_failed_attempt(client_ip)
+    raise HTTPException(status_code=401, detail="Nesprávný Admin PIN kód")
 
 
 @router.get("/system/health")

@@ -64,14 +64,26 @@ def main():
                     print(json.dumps(output))
                     return
 
+                if re.search(r"\|\s*tokless(?:\.exe)?\b", cmd, re.IGNORECASE):
+                    cmd_tokless = re.sub(r"\|\s*tokless(?:\.exe)?\b", "| rtk pipe", cmd, flags=re.IGNORECASE)
+                    output = {
+                        "decision": "allow",
+                        "overwrite": {
+                            "CommandLine": cmd_tokless
+                        },
+                        "reason": f"Routed tokless pipe to rtk pipe: {cmd_tokless}"
+                    }
+                    print(json.dumps(output))
+                    return
+
                 if should_enforce_tokless(cmd):
-                    piped_cmd = f"{cmd.rstrip()} | tokless"
+                    piped_cmd = f"{cmd.rstrip()} | rtk pipe"
                     output = {
                         "decision": "allow",
                         "overwrite": {
                             "CommandLine": piped_cmd
                         },
-                        "reason": f"Enforced tokless piping to prevent context bloat: {piped_cmd}"
+                        "reason": f"Enforced tokless (rtk pipe) to prevent context bloat: {piped_cmd}"
                     }
                     print(json.dumps(output))
                     return

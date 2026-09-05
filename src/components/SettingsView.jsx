@@ -9,7 +9,9 @@ import {
   HardDrive,
   Check,
   Activity,
-  Receipt
+  Receipt,
+  Lock,
+  Wrench
 } from 'lucide-react';
 import {
   fetchBackendRoot,
@@ -24,6 +26,7 @@ import {
   fetchLitestreamStatus
 } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useStoreConfig } from '../context/StoreConfigContext.jsx';
 import AdminPinModal from './AdminPinModal.jsx';
 import StoreProfileSection from './settings/StoreProfileSection.jsx';
 import LayoutSection from './settings/LayoutSection.jsx';
@@ -33,6 +36,8 @@ import TerminalSection from './settings/TerminalSection.jsx';
 import SecuritySection from './settings/SecuritySection.jsx';
 import BackupSection from './settings/BackupSection.jsx';
 import DiagnosticsSection from './settings/DiagnosticsSection.jsx';
+import TechnicianTab from './settings/TechnicianTab.jsx';
+
 
 export default function SettingsView({
   storeConfig,
@@ -44,7 +49,14 @@ export default function SettingsView({
   onToggleAdminMode
 }) {
   const { t, setLanguage } = useTranslation();
+  const {
+    isAdminMode: ctxIsAdminMode,
+    enterAdminMode,
+    exitAdminMode
+  } = useStoreConfig();
+  const effectiveIsAdmin = isAdminMode !== undefined ? isAdminMode : ctxIsAdminMode;
   const [activeSubTab, setActiveSubTab] = useState('store');
+  const [diagSubMode, setDiagSubMode] = useState('technician');
 
   const [config, setConfig] = useState({
     id_provozovny: '11',
@@ -180,14 +192,15 @@ export default function SettingsView({
   };
 
   const requireAdminPin = (callback) => {
-    if (isAdminMode) {
+    if (effectiveIsAdmin) {
       callback();
     } else {
       setPinModalState({
         mode: 'VERIFY',
-        onAuthenticated: () => {
+        onAuthenticated: (verifiedPin) => {
           setPinModalState(null);
-          if (onToggleAdminMode) onToggleAdminMode();
+          if (enterAdminMode) enterAdminMode(verifiedPin);
+          if (onToggleAdminMode && !effectiveIsAdmin) onToggleAdminMode();
           callback();
         }
       });
@@ -280,15 +293,31 @@ export default function SettingsView({
   };
 
   const SUBTABS = [
-    { id: 'store', icon: Store, title: t('settings.tab_store') || 'Údaje prodejny', heading: t('settings.tab_store_heading') || 'Nastavení prodejny a provozovny', subtitle: t('settings.tab_store_sub') || 'Firma, IČO, adresa, DPH a IBAN' },
-    { id: 'layout', icon: Layout, title: t('settings.tab_layout') || 'Rozvržení & Zobrazení', heading: t('settings.tab_layout_heading') || 'Rozvržení a vzhled pokladny', subtitle: t('settings.tab_layout_sub') || 'Tlačítka sortimentu, košík, LCD' },
-    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Periferie', heading: t('settings.tab_hardware_heading') || 'Pokladní tiskárna a periferie', subtitle: t('settings.tab_hardware_sub') || 'ESC/POS tiskárna a pokladní zásuvka' },
-    { id: 'receipt', icon: Receipt, title: t('settings.tab_receipt') || 'Účtenka & Vzhled', heading: t('settings.tab_receipt_heading') || 'Vzhled a formátování účtenky', subtitle: t('settings.tab_receipt_sub') || 'Oddělovače, písmo, okraje a logo' },
-    { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: t('settings.tab_terminal_heading') || 'Platební terminál', subtitle: t('settings.tab_terminal_sub') || 'ČSOB terminál a ruční režim' },
-    { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: t('settings.tab_security_heading') || 'Zabezpečení a PIN kód', subtitle: t('settings.tab_security_sub') || 'Správce, PIN kód a zamykání' },
-    { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: t('settings.tab_system_heading') || 'Zálohování a systémová správa', subtitle: t('settings.tab_system_sub') || 'Export/import dat, aktualizace a EET' },
-    { id: 'diagnostics', icon: Activity, title: t('settings.tab_diagnostics') || 'Náhled & Diagnostika', heading: t('settings.tab_diagnostics_heading') || 'Živý náhled účtenky a diagnostika', subtitle: t('settings.tab_diagnostics_sub') || 'Reálná účtenka, kontrola periferií a tržba' },
+    { id: 'store', icon: Store, title: t('settings.tab_store') || 'Údaje prodejny', heading: t('settings.tab_store_heading') || 'Nastavení prodejny a provozovny', subtitle: t('settings.tab_store_sub') || 'Firma, IČO, adresa, DPH a IBAN', locked: false },
+    { id: 'layout', icon: Layout, title: t('settings.tab_layout') || 'Rozvržení & Zobrazení', heading: t('settings.tab_layout_heading') || 'Rozvržení a vzhled pokladny', subtitle: t('settings.tab_layout_sub') || 'Tlačítka sortimentu, košík, LCD', locked: false },
+    { id: 'hardware', icon: Printer, title: t('settings.tab_hardware') || 'Tiskárna & Periferie', heading: t('settings.tab_hardware_heading') || 'Pokladní tiskárna a periferie', subtitle: t('settings.tab_hardware_sub') || 'ESC/POS tiskárna a pokladní zásuvka', locked: false },
+    { id: 'receipt', icon: Receipt, title: t('settings.tab_receipt') || 'Účtenka & Vzhled', heading: t('settings.tab_receipt_heading') || 'Vzhled a formátování účtenky', subtitle: t('settings.tab_receipt_sub') || 'Oddělovače, písmo, okraje a logo', locked: false },
+    { id: 'terminal', icon: CreditCard, title: t('settings.tab_terminal') || 'Platební Terminál', heading: t('settings.tab_terminal_heading') || 'Platební terminál', subtitle: t('settings.tab_terminal_sub') || 'ČSOB terminál a ruční režim', locked: true },
+    { id: 'security', icon: Shield, title: t('settings.tab_security') || 'Bezpečnost & PIN', heading: t('settings.tab_security_heading') || 'Zabezpečení a PIN kód', subtitle: t('settings.tab_security_sub') || 'Správce, PIN kód a zamykání', locked: true },
+    { id: 'system', icon: HardDrive, title: t('settings.tab_system') || 'Zálohy & Systém', heading: t('settings.tab_system_heading') || 'Zálohování a systémová správa', subtitle: t('settings.tab_system_sub') || 'Export/import dat, aktualizace a EET', locked: true },
+    { id: 'diagnostics', icon: Activity, title: t('settings.tab_diagnostics') || 'Náhled & Diagnostika', heading: t('settings.tab_diagnostics_heading') || 'Živý náhled účtenky a diagnostika', subtitle: t('settings.tab_diagnostics_sub') || 'Reálná účtenka, kontrola periferií a tržba', locked: true },
   ];
+
+  const handleSelectSubTab = (tab) => {
+    if (tab.locked && !effectiveIsAdmin) {
+      setPinModalState({
+        mode: 'VERIFY',
+        onAuthenticated: (verifiedPin) => {
+          if (enterAdminMode) enterAdminMode(verifiedPin);
+          if (onToggleAdminMode && !effectiveIsAdmin) onToggleAdminMode();
+          setActiveSubTab(tab.id);
+          setPinModalState(null);
+        }
+      });
+      return;
+    }
+    setActiveSubTab(tab.id);
+  };
 
   const currentTabObj = SUBTABS.find(t => t.id === activeSubTab) || SUBTABS[0];
 
@@ -310,22 +339,28 @@ export default function SettingsView({
           {SUBTABS.map(tab => {
             const IconComponent = tab.icon;
             const isActive = activeSubTab === tab.id;
+            const isTabGated = tab.locked && !effectiveIsAdmin;
             return (
               <button
                 key={tab.id}
                 type="button"
-                className={`settings-sidebar-btn ${isActive ? 'active' : ''}`}
-                onClick={() => setActiveSubTab(tab.id)}
+                className={`settings-sidebar-btn ${isActive ? 'active' : ''} ${isTabGated ? 'locked-subtab' : ''}`}
+                onClick={() => handleSelectSubTab(tab)}
               >
                 <div className="settings-sidebar-icon">
                   <IconComponent size={20} />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
                   <span style={{ fontSize: '0.92rem', whiteSpace: 'nowrap' }}>{tab.title}</span>
                   <span style={{ fontSize: '0.72rem', color: isActive ? 'var(--accent-blue)' : 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                     {tab.subtitle}
                   </span>
                 </div>
+                {isTabGated && (
+                  <div className="subtab-lock-indicator" title={t('settings.tab_locked_badge') || 'Zamčeno'}>
+                    <Lock size={13} style={{ color: 'var(--accent-amber)', flexShrink: 0 }} />
+                  </div>
+                )}
               </button>
             );
           })}
@@ -380,103 +415,212 @@ export default function SettingsView({
           </div>
         </header>
 
-        {/* Scrollable Subtab Content */}
-        <div className="settings-content-scroll">
-          {activeSubTab === 'store' && (
-            <StoreProfileSection
-              config={config}
-              setConfig={setConfig}
-              saveConfigField={saveConfigField}
-            />
-          )}
+        {/* Scrollable Subtab Content or Locked Gate */}
+        {currentTabObj.locked && !effectiveIsAdmin ? (
+          <div className="settings-locked-gate">
+            <div className="settings-locked-card">
+              <div className="locked-icon-wrap">
+                <Shield size={44} style={{ color: 'var(--accent-amber)' }} />
+              </div>
+              <h3 className="locked-title">{t('settings.tab_locked_title') || 'Sekce vyžaduje oprávnění technika'}</h3>
+              <p className="locked-desc">
+                {t('settings.tab_locked_desc') || 'Tato konfigurace je zabezpečena a přístupná pouze v režimu servisního technika.'}
+              </p>
+              <div className="locked-actions">
+                <button
+                  type="button"
+                  className="pay-btn pay-btn-card"
+                  style={{ height: '44px', padding: '0 1.5rem', fontWeight: '800' }}
+                  onClick={() => {
+                    setPinModalState({
+                      mode: 'VERIFY',
+                      onAuthenticated: (verifiedPin) => {
+                        if (enterAdminMode) enterAdminMode(verifiedPin);
+                        if (onToggleAdminMode && !effectiveIsAdmin) onToggleAdminMode();
+                        setPinModalState(null);
+                      }
+                    });
+                  }}
+                >
+                  <Lock size={16} />
+                  <span>{t('settings.tab_locked_btn') || 'Odemknout režim technika'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="nav-tab"
+                  style={{ height: '44px', padding: '0 1.25rem' }}
+                  onClick={() => setActiveSubTab('store')}
+                >
+                  <span>{t('settings.tab_locked_back') || 'Zpět na údaje prodejny'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="settings-content-scroll">
+            {activeSubTab === 'store' && (
+              <StoreProfileSection
+                config={config}
+                setConfig={setConfig}
+                saveConfigField={saveConfigField}
+              />
+            )}
 
-          {activeSubTab === 'layout' && (
-            <LayoutSection
-              config={config}
-              setConfig={setConfig}
-              saveConfigBatch={saveConfigBatch}
-              presets={presets}
-              onNavigateToPresets={onNavigateToPresets}
-              onSaveStoreConfig={onSaveStoreConfig}
-            />
-          )}
+            {activeSubTab === 'layout' && (
+              <LayoutSection
+                config={config}
+                setConfig={setConfig}
+                saveConfigBatch={saveConfigBatch}
+                presets={presets}
+                onNavigateToPresets={onNavigateToPresets}
+                onSaveStoreConfig={onSaveStoreConfig}
+              />
+            )}
 
-          {activeSubTab === 'hardware' && (
-            <PrinterSection
-              config={config}
-              setConfig={setConfig}
-              saveConfigBatch={saveConfigBatch}
-              printerDevices={printerDevices}
-              scanningPrinters={scanningPrinters}
-              onScanPrinters={handleScanPrinters}
-            />
-          )}
+            {activeSubTab === 'hardware' && (
+              <PrinterSection
+                config={config}
+                setConfig={setConfig}
+                saveConfigBatch={saveConfigBatch}
+                printerDevices={printerDevices}
+                scanningPrinters={scanningPrinters}
+                onScanPrinters={handleScanPrinters}
+              />
+            )}
 
-          {activeSubTab === 'receipt' && (
-            <ReceiptSection
-              config={config}
-              setConfig={setConfig}
-              saveConfigBatch={saveConfigBatch}
-            />
-          )}
+            {activeSubTab === 'receipt' && (
+              <ReceiptSection
+                config={config}
+                setConfig={setConfig}
+                saveConfigBatch={saveConfigBatch}
+              />
+            )}
 
-          {activeSubTab === 'terminal' && (
-            <TerminalSection
-              termEnabled={termEnabled}
-              setTermEnabled={setTermEnabled}
-              termIp={termIp}
-              setTermIp={setTermIp}
-              termPort={termPort}
-              setTermPort={setTermPort}
-              termId={termId}
-              setTermId={setTermId}
-              onSaveTerminal={handleSaveTerminal}
-              termSaveSuccess={termSaveSuccess}
-              pingLoading={pingLoading}
-              pingResult={pingResult}
-              onPing={handlePingTerminal}
-              reconcileLoading={reconcileLoading}
-              reconcileResult={reconcileResult}
-              onReconcile={handleReconcileTerminal}
-            />
-          )}
+            {activeSubTab === 'terminal' && (
+              <TerminalSection
+                termEnabled={termEnabled}
+                setTermEnabled={setTermEnabled}
+                termIp={termIp}
+                setTermIp={setTermIp}
+                termPort={termPort}
+                setTermPort={setTermPort}
+                termId={termId}
+                setTermId={setTermId}
+                onSaveTerminal={handleSaveTerminal}
+                termSaveSuccess={termSaveSuccess}
+                pingLoading={pingLoading}
+                pingResult={pingResult}
+                onPing={handlePingTerminal}
+                reconcileLoading={reconcileLoading}
+                reconcileResult={reconcileResult}
+                onReconcile={handleReconcileTerminal}
+              />
+            )}
 
-          {activeSubTab === 'security' && (
-            <SecuritySection
-              config={config}
-              setConfig={setConfig}
-              saveConfigBatch={saveConfigBatch}
-              isAdminMode={isAdminMode}
-              onToggleAdminMode={onToggleAdminMode}
-              onOpenPinChange={handleOpenPinChange}
-            />
-          )}
+            {activeSubTab === 'security' && (
+              <SecuritySection
+                config={config}
+                setConfig={setConfig}
+                saveConfigBatch={saveConfigBatch}
+                isAdminMode={effectiveIsAdmin}
+                onToggleAdminMode={effectiveIsAdmin ? (exitAdminMode || onToggleAdminMode) : () => requireAdminPin(() => {})}
+                onOpenPinChange={handleOpenPinChange}
+              />
+            )}
 
-          {activeSubTab === 'system' && (
-            <BackupSection
-              config={config}
-              setConfig={setConfig}
-              saveConfigBatch={saveConfigBatch}
-              onSaveStoreConfig={onSaveStoreConfig}
-              onExportJSON={handleExportJSON}
-              onImportJSON={handleImportJSON}
-              onResetData={onResetData}
-              litestreamData={litestreamData}
-              updateData={updateData}
-              updateLoading={updateLoading}
-              onCheckUpdate={handleCheckUpdate}
-            />
-          )}
+            {activeSubTab === 'system' && (
+              <BackupSection
+                config={config}
+                setConfig={setConfig}
+                saveConfigBatch={saveConfigBatch}
+                onSaveStoreConfig={onSaveStoreConfig}
+                onExportJSON={handleExportJSON}
+                onImportJSON={handleImportJSON}
+                onResetData={onResetData}
+                litestreamData={litestreamData}
+                updateData={updateData}
+                updateLoading={updateLoading}
+                onCheckUpdate={handleCheckUpdate}
+              />
+            )}
 
-          {activeSubTab === 'diagnostics' && (
-            <DiagnosticsSection
-              config={config}
-              printerDevices={printerDevices}
-              scanningPrinters={scanningPrinters}
-              onScanPrinters={handleScanPrinters}
-            />
-          )}
-        </div>
+            {activeSubTab === 'diagnostics' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+                {/* 🔀 Subtab Switcher: Technician Suite vs Hardware & Receipt Overview */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    background: 'var(--bg-card)',
+                    padding: '4px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    alignSelf: 'flex-start',
+                    gap: '4px'
+                  }}
+                  data-testid="diag-subtab-switcher"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setDiagSubMode('technician')}
+                    style={{
+                      minHeight: '38px',
+                      padding: '0 1rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: 'none',
+                      fontSize: '0.84rem',
+                      fontWeight: '800',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      cursor: 'pointer',
+                      background: diagSubMode === 'technician' ? 'var(--accent-blue)' : 'transparent',
+                      color: diagSubMode === 'technician' ? '#fff' : 'var(--text-secondary)'
+                    }}
+                    data-testid="diag-subtab-tech-btn"
+                  >
+                    <Wrench size={15} />
+                    <span>{t('settings.diag_subtab_technician') || 'Servisní diagnostika'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDiagSubMode('overview')}
+                    style={{
+                      minHeight: '38px',
+                      padding: '0 1rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: 'none',
+                      fontSize: '0.84rem',
+                      fontWeight: '800',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      cursor: 'pointer',
+                      background: diagSubMode === 'overview' ? 'var(--accent-blue)' : 'transparent',
+                      color: diagSubMode === 'overview' ? '#fff' : 'var(--text-secondary)'
+                    }}
+                    data-testid="diag-subtab-overview-btn"
+                  >
+                    <Receipt size={15} />
+                    <span>{t('settings.diag_subtab_overview') || 'Náhled & Periferie'}</span>
+                  </button>
+                </div>
+
+                {diagSubMode === 'technician' ? (
+                  <TechnicianTab />
+                ) : (
+                  <DiagnosticsSection
+                    config={config}
+                    printerDevices={printerDevices}
+                    scanningPrinters={scanningPrinters}
+                    onScanPrinters={handleScanPrinters}
+                  />
+                )}
+              </div>
+            )}
+
+          </div>
+        )}
       </main>
 
       {/* Confirmation Modal for System Update */}

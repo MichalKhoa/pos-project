@@ -18,6 +18,7 @@ MIGRATIONS = [
     ("store_config", "csob_terminal_port", "INTEGER DEFAULT 8888"),
     ("store_config", "csob_terminal_id", "VARCHAR DEFAULT ''"),
     ("store_config", "cashier_pin", "VARCHAR DEFAULT '1234'"),
+    ("store_config", "admin_pin", "VARCHAR DEFAULT '1234'"),
     ("store_config", "auto_lock_minutes", "INTEGER DEFAULT 15"),
     ("store_config", "direct_hardware_print", "BOOLEAN DEFAULT 1"),
     ("store_config", "id_provozovny", "VARCHAR DEFAULT '11'"),

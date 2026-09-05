@@ -113,6 +113,134 @@ input, textarea, [contenteditable="true"] {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
+/* Technician Session Navbar Badge */
+.nav-technician-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  color: var(--accent-amber);
+  border-radius: 9999px;
+  padding: 0.2rem 0.5rem 0.2rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  animation: techBadgeEnter 0.2s ease-out;
+}
+
+.technician-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  animation: techPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  flex-shrink: 0;
+}
+
+.technician-timer {
+  font-family: monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] .technician-timer {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.technician-exit-btn {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 2px;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+.technician-exit-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: scale(1.08);
+}
+
+.nav-technician-badge.critical-warning {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+  animation: techCriticalPulse 1s infinite alternate;
+}
+
+.nav-technician-badge.critical-warning .technician-pulse-dot {
+  background: var(--accent-rose);
+}
+
+.drawer-technician-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: var(--radius-md);
+  color: var(--accent-amber);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.drawer-technician-banner.critical-warning {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--accent-rose);
+  color: var(--accent-rose);
+}
+
+.technician-drawer-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-amber);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.drawer-technician-banner.critical-warning .technician-drawer-exit-btn {
+  background: var(--accent-rose);
+}
+
+@keyframes techPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+@keyframes techCriticalPulse {
+  0% { opacity: 0.85; border-color: rgba(239, 68, 68, 0.6); }
+  100% { opacity: 1; border-color: var(--accent-rose); }
+}
+
+@keyframes techBadgeEnter {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* Center Island: Main Hero Navigation Capsule */
 .nav-island-center {
   height: 44px;
