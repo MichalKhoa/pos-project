@@ -8,6 +8,13 @@ import CashDrawerIcon from './CashDrawerIcon';
 import { soundFx } from '../utils/audio';
 import { getApiHost } from '../api/posApi';
 
+const FONT_SIZE_LABELS = {
+  sm: 'S',
+  md: 'M',
+  lg: 'L',
+  xl: 'XL'
+};
+
 function Navbar({
   activeTab,
   setActiveTab,
@@ -391,10 +398,10 @@ function Navbar({
             type="button"
             className="nav-tool-btn nav-font-size-btn"
             onClick={cycleFontSize}
-            title={`${t('nav.font_size_cycle') || 'Velikost písma'}: ${(fontSize || 'md').toUpperCase()}`}
+            title={`${t('nav.font_size_cycle') || 'Velikost písma'}: ${FONT_SIZE_LABELS[fontSize] || 'M'}`}
           >
             <Type size={15} style={{ color: 'var(--accent-indigo)' }} />
-            <span className="nav-font-size-badge">{(fontSize || 'md').toUpperCase()}</span>
+            <span className="nav-font-size-badge">{FONT_SIZE_LABELS[fontSize] || 'M'}</span>
           </button>
 
           {/* Sound Effects Volume Mute Toggle */}

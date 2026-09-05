@@ -134,24 +134,29 @@ describe('App Shell & Navigation Regression Tests', () => {
     expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
 
     // Find navbar font size cycle button
-    const fontBtn = screen.getByTitle(/Velikost písma: MD/i);
+    const fontBtn = screen.getByTitle(/Velikost písma: M\b/i);
     expect(fontBtn).toBeInTheDocument();
+    expect(fontBtn).toHaveTextContent('M');
 
-    // Cycle to LG
+    // Cycle to L
     fireEvent.click(fontBtn);
     expect(document.documentElement.getAttribute('data-font-size')).toBe('lg');
     expect(localStorage.getItem('voltflow_font_size')).toBe('lg');
+    expect(fontBtn).toHaveTextContent('L');
 
     // Cycle to XL
     fireEvent.click(fontBtn);
     expect(document.documentElement.getAttribute('data-font-size')).toBe('xl');
+    expect(fontBtn).toHaveTextContent('XL');
 
-    // Cycle to SM
+    // Cycle to S
     fireEvent.click(fontBtn);
     expect(document.documentElement.getAttribute('data-font-size')).toBe('sm');
+    expect(fontBtn).toHaveTextContent('S');
 
-    // Cycle back to MD
+    // Cycle back to M
     fireEvent.click(fontBtn);
     expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
+    expect(fontBtn).toHaveTextContent('M');
   });
 });
