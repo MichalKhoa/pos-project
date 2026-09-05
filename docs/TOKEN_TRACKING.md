@@ -94,6 +94,23 @@ python3 scripts/token_tracker.py lifetime
 python3 scripts/token_tracker.py lifetime --json
 ```
 
+### Export & Update Summary Files
+Regenerate lifetime JSON, commit summary JSON, and commit summary CSV in `token_summaries/`:
+```bash
+# Windows (or double-click scripts\token_tracker_win.bat)
+scripts\token_tracker_win.bat update
+
+# Cross-platform Python
+python scripts/token_tracker_win.py update
+# Or on Linux/macOS:
+python3 scripts/token_tracker.py update
+```
+
+Outputs are stored in `token_summaries/`:
+- `token_summaries/token_usage_lifetime.json`
+- `token_summaries/token_usage_summary.json`
+- `token_summaries/token_usage_summary.csv`
+
 ### View Commits Breakdown
 ```bash
 # View last 10 commits
@@ -102,8 +119,8 @@ python3 scripts/token_tracker.py summary -n 10
 # View all commits with pagination
 python3 scripts/token_tracker.py summary | less -S
 
-# Export table to CSV
-python3 scripts/token_tracker.py summary --csv > token_usage.csv
+# Export table to CSV directly to stdout
+python3 scripts/token_tracker.py summary --csv > token_summaries/token_usage_summary.csv
 ```
 
 ### Inspect Single Commit

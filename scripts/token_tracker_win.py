@@ -608,6 +608,74 @@ def show_single_commit(commit_ref="HEAD"):
         print(f"No token notes found for {commit_ref}: {e}")
 
 
+def export_summaries(output_dir=None, custom_logs_dir=None, auto_backfill=True):
+    repo_path = get_repo_path()
+    out_dir = output_dir or os.path.join(repo_path, "token_summaries")
+    os.makedirs(out_dir, exist_ok=True)
+
+    if auto_backfill:
+        print("Backfilling latest token usage from git notes...")
+        backfill_all(custom_logs_dir=custom_logs_dir)
+
+    # 1. Lifetime stats
+    conv_ids = get_matching_conversation_ids(repo_path, custom_logs_dir)
+    all_turns = load_all_conversation_turns(conv_ids, custom_logs_dir)
+    if all_turns:
+        earliest_ts = all_turns[0][0]
+        latest_ts = all_turns[-1][0]
+        stats = compute_turn_stats(all_turns)
+        commit_entries = get_all_note_entries()
+        commit_calls = sum(e.get("model_calls", 0) for e in commit_entries)
+        commit_prompt = sum(e.get("prompt_tokens", 0) for e in commit_entries)
+        commit_out = sum(e.get("output_tokens", 0) for e in commit_entries)
+        commit_flash = sum(e.get("est_flash_usd", 0.0) for e in commit_entries)
+        uncommitted_calls = stats["model_calls"] - commit_calls
+
+        lifetime_data = {
+            "workspace": repo_path,
+            "first_activity": datetime.fromtimestamp(earliest_ts).strftime("%Y-%m-%d %H:%M:%S"),
+            "last_activity": datetime.fromtimestamp(latest_ts).strftime("%Y-%m-%d %H:%M:%S"),
+            "conversations": len(conv_ids),
+            "total_model_calls": stats["model_calls"],
+            "total_prompt_tokens": stats["prompt_tokens"],
+            "total_output_tokens": stats["output_tokens"],
+            "total_tokens": stats["total_tokens"],
+            "est_flash_usd": stats["est_flash_usd"],
+            "est_sonnet_usd": stats["est_sonnet_usd"],
+            "committed_calls": commit_calls,
+            "uncommitted_calls": max(0, uncommitted_calls),
+        }
+
+        lifetime_file = os.path.join(out_dir, "token_usage_lifetime.json")
+        with open(lifetime_file, "w", encoding="utf-8") as f:
+            json.dump(lifetime_data, f, indent=2)
+        print(f"Updated: {lifetime_file}")
+
+    # 2. Entries for commits
+    entries = get_all_note_entries()
+    summary_json_file = os.path.join(out_dir, "token_usage_summary.json")
+    with open(summary_json_file, "w", encoding="utf-8") as f:
+        json.dump(entries, f, indent=2)
+    print(f"Updated: {summary_json_file}")
+
+    summary_csv_file = os.path.join(out_dir, "token_usage_summary.csv")
+    import csv
+    with open(summary_csv_file, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["sha", "date", "calls", "prompt_tokens", "output_tokens", "total_tokens", "flash_usd", "sonnet_usd", "subject"])
+        for e in entries:
+            ts = e.get("timestamp", 0)
+            dt_str = datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M") if ts else "-"
+            writer.writerow([
+                e.get('sha', ''), dt_str, e.get("model_calls", 0),
+                e.get("prompt_tokens", 0), e.get("output_tokens", 0), e.get("total_tokens", 0),
+                e.get("est_flash_usd", 0.0), e.get("est_sonnet_usd", 0.0),
+                e.get("subject", "")
+            ])
+    print(f"Updated: {summary_csv_file}")
+    print(f"\nAll token summaries successfully written to: {out_dir}")
+
+
 def sync_notes(direction="pull"):
     if direction == "push":
         cmd = ["git", "push", "origin", "refs/notes/tokens"]
@@ -631,7 +699,14 @@ if __name__ == "__main__":
         if a == "--logs-dir" and i + 1 < len(args):
             custom_logs_dir = os.path.expanduser(args[i + 1])
 
-    if cmd == "commit":
+    if cmd in ("update", "export", "export-summaries", "update-summaries"):
+        out_dir = None
+        for i, a in enumerate(args):
+            if a in ("--dir", "--out-dir", "-o") and i + 1 < len(args):
+                out_dir = os.path.expanduser(args[i + 1])
+        auto_backfill = "--no-backfill" not in args
+        export_summaries(output_dir=out_dir, custom_logs_dir=custom_logs_dir, auto_backfill=auto_backfill)
+    elif cmd == "commit":
         target = args[1] if len(args) > 1 and not args[1].startswith("--") else "HEAD"
         record_commit(target, custom_logs_dir=custom_logs_dir)
     elif cmd in ("summary", "list"):
@@ -659,6 +734,7 @@ if __name__ == "__main__":
         sync_notes(direction)
     else:
         print("Usage:")
+        print("  python scripts/token_tracker_win.py update [--dir /path/to/dir] [--no-backfill]")
         print("  python scripts/token_tracker_win.py lifetime [--logs-dir /path/to/brain]")
         print("  python scripts/token_tracker_win.py summary [-n 10] [--csv] [--json]")
         print("  python scripts/token_tracker_win.py show [commit_sha|HEAD]")
