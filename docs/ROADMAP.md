@@ -103,17 +103,23 @@ graph TD
   - Quick multi-line text input in Settings (`Nastavení` -> Účtenka): e.g. "Otevřeno denně 7:00 – 21:00", holiday hours, or WiFi password.
   - Automatically rendered on thermal receipts and digital preview.
 
----
+## 3. Near-Term Priorities & Payment Integrations 💳
 
-## 3. Close Future Features — Payment Terminal Enhancements 💳
+### 1. 🧾 Receipt Barcode Scanner & Item Return (`Skenování účtenky pro rychlou vratku / storno`)
+- **Store Reality**: Customer brings back an item with a receipt. Cashier currently has to open `Historie`, manually search or scroll through dozens of transactions, find the right sale, and verify line items. Manual/blind returns risk wrong VAT rate, wrong unit price, or duplicate refunds.
+- **Functionality**:
+  - **Receipt Barcode/QR**: Thermal receipt prints a compact Code128 / QR code encoding `receipt_number` / sale ID at top or bottom.
+  - **Direct Scan from Checkout or History**: Scanning a receipt barcode anywhere automatically opens the **Receipt Return Dialog (`Vratka ze záznamu`)**:
+    - Displays original items, purchased quantities, prices, and previously refunded quantities.
+    - Cashier selects item(s) to return (1-tap `[Vrátit 1 ks]` / `[Vrátit vše]`).
+    - Auto-generates exact reverse refund transaction linked to original `sale_id`, keeping financial/VAT precision and inventory restock clean.
+    - Prevents over-refunding (cannot refund more units than purchased).
 
-Targeted hardware payment integrations for near-term implementation:
-
-### 1. ČSOB Terminal Automated Reversals / Refunds
+### 2. ČSOB Terminal Automated Reversals / Refunds
 - **Scope**: Automated TCP card refund/storno command dispatch to the Ingenico Move 3500 terminal (`POST /api/v1/payments/card-refund`).
 - **Workflow**: Initiating refund in Sales History prompts terminal to display "Přiložte kartu pro vrácení" -> Customer taps card -> Terminal returns authorization code (`RRN`/`AuthCode`) -> Storno receipt printed with terminal reference.
 
-### 2. SumUp Terminal Integration (SumUp Air / Solo)
+### 3. SumUp Terminal Integration (SumUp Air / Solo)
 - **Scope**: Connect register to SumUp Bluetooth and Cloud REST API as an affordable, wire-free card terminal alternative for retail pop-ups or backup card processing.
 - **Workflow**: Selecting "Karta" with SumUp enabled pushes transaction to paired SumUp reader; register awaits live webhook/polling approval and auto-completes transaction.
 

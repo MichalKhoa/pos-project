@@ -12,7 +12,15 @@ PyInstaller sidecar (`pos-backend.exe`). Thermal printers (ESC/POS), customer LC
 - **i18n**: User-visible text MUST use `t('key.path')`. Add all new strings to `cs`, `vi`, `en` in `src/i18n/translations.js`.
 - **Serena Memory**: Update `.serena/memories/` when models, hooks, utilities, or API contracts change.
 
-## 3. Verification Gates (Run Before Done)
+## 3. Quota Optimization & Low-Level Task Delegation
+- **OpenRouter MCP (`openai/gpt-oss-120b`)**: Use for low-level sub-tasks, large text/file digests, code refactoring snippets, and structured tool calls to shield primary Antigravity quota.
+- **Tools**:
+  - `openrouter_query`: Quick query/drafting/summaries.
+  - `openrouter_chat_with_tools`: Auxiliary tool calls and JSON structured extraction.
+  - `openrouter_code_refactor`: Surgical single-component code refactors and test generation.
+- **Subagents**: When exploring multi-file references or reading logs, delegate to `flash_lite` subagents.
+
+## 4. Verification Gates (Run Before Done)
 - Frontend Tests: `npm run test | tokless`
 - Frontend Lint: `npm run lint | tokless`
 - Frontend Build: `npm run build | tokless`

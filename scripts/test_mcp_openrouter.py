@@ -42,15 +42,30 @@ async def run_tests():
             models_result = await session.call_tool("list_openrouter_models", {"query": "oss-120b"})
             print(f"    Result: {models_result.content[0].text[:300]}...")
 
-            # 4. Test missing API key handling
-            print("[4] Testing API key guard...")
-            query_result = await session.call_tool(
-                "openrouter_query",
+            # 5. Test native tool calling with gpt-oss-120b
+            print("[5] Testing tool calling with gpt-oss-120b...")
+            tool_schema = [{
+                "type": "function",
+                "function": {
+                    "name": "lookup_customer_receipt",
+                    "description": "Fetch transaction receipt by receipt ID",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "receipt_id": {"type": "string", "description": "The receipt ID (e.g. REC-1029)"}
+                        },
+                        "required": ["receipt_id"]
+                    }
+                }
+            }]
+            tool_call_res = await session.call_tool(
+                "openrouter_chat_with_tools",
                 {
-                    "prompt": "Hello",
-                },
+                    "prompt": "Please look up receipt REC-8832 for customer refund.",
+                    "tools": tool_schema,
+                }
             )
-            print(f"    Result: {query_result.content[0].text[:200]}")
+            print(f"    Tool call result: {tool_call_res.content[0].text[:300]}")
 
     print("=== All OpenRouter MCP Server tests PASSED! ===")
 

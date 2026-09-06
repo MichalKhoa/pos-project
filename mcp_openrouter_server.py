@@ -3,21 +3,60 @@
 import json
 import os
 import sys
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 import httpx
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
+# Load optional .env from project root or user config if present
+for env_candidate in [Path.cwd() / ".env", Path(__file__).resolve().parent / ".env", Path.home() / ".gemini" / ".env"]:
+    if env_candidate.exists():
+        try:
+            with open(env_candidate, "r", encoding="utf-8") as ef:
+                for line in ef:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        except Exception:
+            pass
+
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
-DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "gpt-oss-120b")
+DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-120b")
 REQUEST_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "180.0"))
 
 mcp = FastMCP("openrouter-bridge", dependencies=["httpx", "pydantic", "mcp"])
 
 
+def _normalize_model_id(model: Optional[str]) -> str:
+    target = (model or DEFAULT_MODEL).strip()
+    if target == "gpt-oss-120b":
+        return "openai/gpt-oss-120b"
+    return target
+
+
 def _get_api_key() -> Optional[str]:
-    """Retrieve OpenRouter API key from environment."""
-    return os.getenv("OPENROUTER_API_KEY")
+    """Retrieve OpenRouter API key from environment, .env, or mcp_config.json."""
+    key = os.getenv("OPENROUTER_API_KEY")
+    if key:
+        return key
+
+    # Check ~/.gemini/config/mcp_config.json
+    config_path = Path.home() / ".gemini" / "config" / "mcp_config.json"
+    if config_path.exists():
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                openrouter_cfg = data.get("mcpServers", {}).get("openrouter", {})
+                env_cfg = openrouter_cfg.get("env", {})
+                k = env_cfg.get("OPENROUTER_API_KEY")
+                if k:
+                    return k
+        except Exception:
+            pass
+
+    return None
 
 
 def _get_auth_headers() -> Dict[str, str]:
@@ -60,7 +99,7 @@ async def openrouter_query(
             "error": "OPENROUTER_API_KEY environment variable is not set. Please configure it in .env or MCP config.",
         }
 
-    target_model = model or DEFAULT_MODEL
+    target_model = _normalize_model_id(model)
     messages: List[Dict[str, str]] = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
@@ -159,7 +198,7 @@ async def openrouter_chat_with_tools(
             "error": "OPENROUTER_API_KEY environment variable is not set.",
         }
 
-    target_model = model or DEFAULT_MODEL
+    target_model = _normalize_model_id(model)
 
     # Normalize tools input if passed as serialized JSON string
     parsed_tools: List[Dict[str, Any]] = []
