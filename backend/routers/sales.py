@@ -94,6 +94,20 @@ class SaleItemResponseSchema(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SaleItemLookupResponseSchema(BaseModel):
+    id: int
+    item_id: Optional[str] = None
+    name: str
+    price: float
+    quantity: int = 1
+    vat: int = 21
+    discount_percent: float = 0.0
+    refunded_quantity: int = 0
+    remaining_quantity: int = 1
+
+    model_config = {"from_attributes": True}
+
+
 class SaleResponseSchema(BaseModel):
     id: str
     receipt_number: str
@@ -119,6 +133,35 @@ class SaleResponseSchema(BaseModel):
     refund_status: Optional[str] = "NONE"
     refunded_amount: Optional[float] = 0.0
     items: List[SaleItemResponseSchema] = []
+
+    model_config = {"from_attributes": True}
+
+
+class SaleLookupResponseSchema(BaseModel):
+    id: str
+    receipt_number: str
+    timestamp: datetime
+    total_amount: float
+    cart_discount_percent: Optional[float] = 0.0
+    payment_method: str
+    split_details: Optional[dict] = None
+    tendered_amount: Optional[float] = 0.0
+    change_due: Optional[float] = 0.0
+    tax_summary: dict
+    fik_code: Optional[str] = None
+    bkp_code: Optional[str] = None
+    pkp_code: Optional[str] = None
+    eet_status: Optional[str] = "EVD_OK"
+    eic_popl: Optional[str] = None
+    id_provozovny: Optional[str] = "11"
+    id_pokl: Optional[str] = "1"
+    is_sent_to_eet: Optional[bool] = True
+    is_refund: Optional[bool] = False
+    original_receipt_number: Optional[str] = None
+    refund_reason: Optional[str] = None
+    refund_status: Optional[str] = "NONE"
+    refunded_amount: Optional[float] = 0.0
+    items: List[SaleItemLookupResponseSchema] = []
 
     model_config = {"from_attributes": True}
 
@@ -338,6 +381,107 @@ def get_shift_sales_stats(
         "todayCash": round_currency(res.cash_total or 0.0) if res else 0.0,
         "todayCard": round_currency(res.card_total or 0.0) if res else 0.0
     }
+
+
+@router.get("/by-receipt/{receipt_number}", response_model=SaleLookupResponseSchema)
+def get_sale_by_receipt_number(receipt_number: str, db: Session = Depends(get_db)):
+    """
+    Fetch sale transaction by receipt number (case-insensitive) with computed
+    refunded and remaining refundable quantities per item line.
+    """
+    clean_receipt = receipt_number.strip()
+    sale = (
+        db.query(SaleModel)
+        .options(selectinload(SaleModel.items))
+        .filter(func.lower(SaleModel.receipt_number) == clean_receipt.lower())
+        .first()
+    )
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found for given receipt number")
+
+    # Query all refund transactions referencing this receipt number
+    refund_sales = (
+        db.query(SaleModel)
+        .options(selectinload(SaleModel.items))
+        .filter(
+            SaleModel.is_refund == True,
+            func.lower(SaleModel.original_receipt_number) == clean_receipt.lower()
+        )
+        .all()
+    )
+
+    # Accumulate refunded counts by item name and item_id
+    # In STORNO sales, item names may have "STORNO: " prefix, and quantities are negative (e.g. -1)
+    refunded_by_item_id = {}
+    refunded_by_name = {}
+
+    for ref in refund_sales:
+        for ref_item in ref.items:
+            qty_refunded = abs(ref_item.quantity)
+            if ref_item.item_id:
+                refunded_by_item_id[ref_item.item_id] = refunded_by_item_id.get(ref_item.item_id, 0) + qty_refunded
+            
+            clean_name = ref_item.name
+            if clean_name.startswith("STORNO: "):
+                clean_name = clean_name[len("STORNO: "):]
+            clean_name_key = clean_name.strip().lower()
+            refunded_by_name[clean_name_key] = refunded_by_name.get(clean_name_key, 0) + qty_refunded
+
+    # Compute refundable quantities per original item
+    enhanced_items = []
+    for item in sale.items:
+        # Match refund count by item_id or normalized name
+        refunded_qty = 0
+        if item.item_id and item.item_id in refunded_by_item_id:
+            refunded_qty = refunded_by_item_id[item.item_id]
+        else:
+            name_key = item.name.strip().lower()
+            refunded_qty = refunded_by_name.get(name_key, 0)
+
+        # Cap refunded_quantity at item's original quantity
+        refunded_qty = min(item.quantity, max(0, refunded_qty))
+        remaining_qty = max(0, item.quantity - refunded_qty)
+
+        enhanced_items.append({
+            "id": item.id,
+            "item_id": item.item_id,
+            "name": item.name,
+            "price": item.price,
+            "quantity": item.quantity,
+            "vat": item.vat,
+            "discount_percent": item.discount_percent,
+            "refunded_quantity": refunded_qty,
+            "remaining_quantity": remaining_qty
+        })
+
+    sale_dict = {
+        "id": sale.id,
+        "receipt_number": sale.receipt_number,
+        "timestamp": sale.timestamp,
+        "total_amount": sale.total_amount,
+        "cart_discount_percent": sale.cart_discount_percent,
+        "payment_method": sale.payment_method,
+        "split_details": sale.split_details,
+        "tendered_amount": sale.tendered_amount,
+        "change_due": sale.change_due,
+        "tax_summary": sale.tax_summary,
+        "fik_code": sale.fik_code,
+        "bkp_code": sale.bkp_code,
+        "pkp_code": sale.pkp_code,
+        "eet_status": sale.eet_status,
+        "eic_popl": sale.eic_popl,
+        "id_provozovny": sale.id_provozovny,
+        "id_pokl": sale.id_pokl,
+        "is_sent_to_eet": sale.is_sent_to_eet,
+        "is_refund": sale.is_refund,
+        "original_receipt_number": sale.original_receipt_number,
+        "refund_reason": sale.refund_reason,
+        "refund_status": sale.refund_status,
+        "refunded_amount": sale.refunded_amount,
+        "items": enhanced_items
+    }
+
+    return sale_dict
 
 
 @router.get("/{sale_id}", response_model=SaleResponseSchema)

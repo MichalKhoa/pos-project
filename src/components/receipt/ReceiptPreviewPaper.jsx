@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Scissors } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
+import { generateBarcodeSVG } from '../../utils/barcodeGenerator.js';
 
 export default function ReceiptPreviewPaper({
   saleData,
@@ -44,6 +45,7 @@ export default function ReceiptPreviewPaper({
   const qrType = storeConfig?.receiptQrCodeType || 'none';
   const showBranding = storeConfig?.receiptShowBranding !== false;
   const showCashier = storeConfig?.receiptShowCashier !== false;
+  const showBarcode = storeConfig?.receiptShowBarcode !== false;
   const showLogo = Boolean(storeConfig?.receiptShowLogo);
   const logoBase64 = storeConfig?.receiptLogoBase64 || '';
 
@@ -70,6 +72,16 @@ export default function ReceiptPreviewPaper({
     }
     return <div key={key} style={{ borderTop: '1px dashed #000', margin: sepMargin }} />;
   };
+
+  // Receipt Barcode Data
+  const receiptBarcodeData = useMemo(() => {
+    if (!showBarcode || !saleData?.receiptNumber) return null;
+    return generateBarcodeSVG(saleData.receiptNumber, {
+      height: is58mm ? 36 : 46,
+      barWidth: is58mm ? 1.5 : 1.8,
+      quietZone: 8
+    });
+  }, [showBarcode, saleData?.receiptNumber, is58mm]);
 
   // Live QR Code Generation
   const qrCodeDataUrl = useMemo(() => {
@@ -435,6 +447,34 @@ export default function ReceiptPreviewPaper({
             alt="QR Kód"
             style={{ width: is58mm ? '90px' : '115px', height: is58mm ? '90px' : '115px', display: 'block', margin: '0 auto' }}
           />
+        </div>
+      )}
+
+      {/* Receipt Barcode (Code128 for Fast Scan & Item Return) */}
+      {receiptBarcodeData && (
+        <div style={{ textAlign: 'center', marginTop: '6px' }}>
+          {renderSeparator('sep-barcode')}
+          <svg
+            width={receiptBarcodeData.svgWidth}
+            height={receiptBarcodeData.svgHeight}
+            viewBox={`0 0 ${receiptBarcodeData.svgWidth} ${receiptBarcodeData.svgHeight}`}
+            style={{ display: 'inline-block', maxWidth: '85%', margin: '0 auto' }}
+          >
+            {receiptBarcodeData.rects.map((r, i) => (
+              <rect key={i} x={r.x} y={0} width={r.width} height={r.height} fill="#000" />
+            ))}
+            <text
+              x={receiptBarcodeData.svgWidth / 2}
+              y={receiptBarcodeData.svgHeight - 4}
+              textAnchor="middle"
+              fontSize={is58mm ? '8px' : '10px'}
+              fontFamily="monospace"
+              fontWeight="bold"
+              fill="#000"
+            >
+              {clean(receiptBarcodeData.text)}
+            </text>
+          </svg>
         </div>
       )}
 

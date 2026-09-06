@@ -154,6 +154,7 @@ class StoreConfigModel(Base):
     receipt_footer_lines = Column(String, default="Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.")
     receipt_show_branding = Column(Boolean, default=True)
     receipt_show_cashier = Column(Boolean, default=True)
+    receipt_show_barcode = Column(Boolean, default=True)
 
     # Cloud Backup Configuration (S3 / Cloudflare R2 / MinIO)
     cloud_backup_enabled = Column(Boolean, default=False)

@@ -439,7 +439,13 @@ export const translations = {
       reason: "Důvod vratky",
       return_method: "Forma vrácení peněz",
       total_refund: "Celková částka k vrácení zákazníkovi",
-      confirm_btn: "Potvrdit vratku a vystavit storno doklad"
+      confirm_btn: "Potvrdit vratku a vystavit storno doklad",
+      scanned_receipt_banner: "Načtena účtenka #{receiptNumber}",
+      receipt_not_found: "Účtenka #{receiptNumber} nebyla nalezena",
+      remaining_refundable: "Zbývá k vrácení: {qty} ks",
+      return_all: "Vrátit vše",
+      already_fully_refunded: "Všechny položky na této účtence již byly kompletně vráceny",
+      original_receipt_info: "Doklad #{receiptNumber} • {date} • Pokladník: {cashier} • Platba: {paymentMethod}"
     },
     settings: {
       title: "Nastavení Pokladny & EET 2.0 Backend",
@@ -550,6 +556,8 @@ export const translations = {
       receipt_qr_none: "Bez QR kódu",
       receipt_qr_url_label: "Cílová URL adresa pro QR kód",
       receipt_footer_lines_label: "Víceřádkový text v patičce účtenky",
+      receipt_show_barcode: "Tisknout čárový kód účtenky (Code-128)",
+      receipt_show_barcode_desc: "Umožňuje okamžité načtení účtenky čtečkou čárových kódů pro rychlou vratku/storno",
       receipt_show_branding: "Zobrazit označení pokladního systému v zápatí",
       receipt_branding_desc: "\"Vystaveno v pokladním systému VoltFlow POS\"",
       receipt_print_test_btn: "Vytisknout zkušební účtenku",
@@ -986,6 +994,40 @@ export const translations = {
       error: "Chyba",
       add: "Přidat",
       all: "Vše"
+    },
+    last_receipt: {
+      chip_title: "Poslední účtenka",
+      chip_label: "Poslední: {amount} Kč ({time})",
+      reprint: "Vytisknout znovu",
+      quick_refund: "Rychlé storno",
+      receipt_no: "Účtenka č.",
+      amount: "Částka:",
+      time: "Čas:",
+      payment_method: "Platba:",
+      items_count: "položek",
+      reprint_success: "Účtenka byla odeslána k tisku",
+      reprint_failed: "Tisk účtenky se nezdařil (tiskárna offline)",
+      reprint_preview: "Účtenka otevřena k tisku",
+      popover_title: "Poslední účtenka",
+      close: "Zavřít"
+    },
+    price_check: {
+      toggle_btn: "Kontrola ceny",
+      toggle_short: "Cenovka",
+      toggle_active: "Cenovka: AKTIVNÍ",
+      modal_title: "Kontrola ceny zboží",
+      price_label: "Prodejní cena",
+      stock_label: "Skladová zásoba",
+      vat_label: "Sazba DPH",
+      barcode_label: "Čárový kód (EAN)",
+      category_label: "Kategorie",
+      add_to_cart: "Přidat do košíku",
+      close: "Zavřít",
+      in_stock: "Skladem",
+      out_of_stock: "Vyprodáno",
+      unknown_title: "Neznámý čárový kód",
+      unknown_msg: "Produkt s tímto čárovým kódem nebyl nalezen v katalogu.",
+      create_product: "Vytvořit produkt"
     }
   },
   vi: {
@@ -1428,7 +1470,13 @@ export const translations = {
       reason: "Lý do trả hàng",
       return_method: "Hình thức hoàn tiền",
       total_refund: "Tổng số tiền hoàn lại cho khách",
-      confirm_btn: "Xác nhận trả hàng và xuất hóa đơn hủy"
+      confirm_btn: "Xác nhận trả hàng và xuất hóa đơn hủy",
+      scanned_receipt_banner: "Đã quét hóa đơn #{receiptNumber}",
+      receipt_not_found: "Không tìm thấy hóa đơn #{receiptNumber}",
+      remaining_refundable: "Còn lại có thể trả: {qty} sp",
+      return_all: "Trả tất cả",
+      already_fully_refunded: "Tất cả sản phẩm trong hóa đơn này đã được hoàn trả",
+      original_receipt_info: "Hóa đơn #{receiptNumber} • {date} • Thu ngân: {cashier} • Thanh toán: {paymentMethod}"
     },
     settings: {
       title: "Cài Đặt Máy Bán Hàng & Backend EET 2.0",
@@ -1539,6 +1587,8 @@ export const translations = {
       receipt_qr_none: "Không in mã QR",
       receipt_qr_url_label: "Đường dẫn URL đích cho mã QR",
       receipt_footer_lines_label: "Văn bản nhiều dòng ở chân hóa đơn",
+      receipt_show_barcode: "In mã vạch hóa đơn (Code-128)",
+      receipt_show_barcode_desc: "Cho phép quét hóa đơn bằng đầu đọc mã vạch để trả hàng/hủy nhanh",
       receipt_show_branding: "Hiển thị thông tin hệ thống bán hàng ở chân trang",
       receipt_branding_desc: "\"Xuất từ hệ thống bán hàng VoltFlow POS\"",
       receipt_print_test_btn: "In thử hóa đơn",
@@ -1975,6 +2025,40 @@ export const translations = {
       error: "Lỗi",
       add: "Thêm",
       all: "Tất cả"
+    },
+    last_receipt: {
+      chip_title: "Hóa đơn gần nhất",
+      chip_label: "Gần nhất: {amount} Kč ({time})",
+      reprint: "In lại hóa đơn",
+      quick_refund: "Hoàn tiền nhanh",
+      receipt_no: "Hóa đơn số",
+      amount: "Tổng tiền:",
+      time: "Thời gian:",
+      payment_method: "Thanh toán:",
+      items_count: "mặt hàng",
+      reprint_success: "Đã gửi lệnh in hóa đơn",
+      reprint_failed: "In hóa đơn thất bại (máy in ngoại tuyến)",
+      reprint_preview: "Mở xem trước hóa đơn",
+      popover_title: "Hóa đơn gần nhất",
+      close: "Đóng"
+    },
+    price_check: {
+      toggle_btn: "Kiểm tra giá",
+      toggle_short: "Xem giá",
+      toggle_active: "Xem giá: ĐANG BẬT",
+      modal_title: "Kiểm tra giá sản phẩm",
+      price_label: "Giá bán",
+      stock_label: "Tồn kho",
+      vat_label: "Thuế suất VAT",
+      barcode_label: "Mã vạch (EAN)",
+      category_label: "Nhóm hàng",
+      add_to_cart: "Thêm vào giỏ",
+      close: "Đóng",
+      in_stock: "Còn hàng",
+      out_of_stock: "Hết hàng",
+      unknown_title: "Mã vạch không xác định",
+      unknown_msg: "Không tìm thấy sản phẩm có mã vạch này trong danh mục.",
+      create_product: "Tạo sản phẩm"
     }
   },
   en: {
@@ -2417,7 +2501,13 @@ export const translations = {
       reason: "Refund reason",
       return_method: "Refund payment method",
       total_refund: "Total refund amount to customer",
-      confirm_btn: "Confirm refund and issue credit note"
+      confirm_btn: "Confirm refund and issue credit note",
+      scanned_receipt_banner: "Scanned receipt #{receiptNumber}",
+      receipt_not_found: "Receipt #{receiptNumber} not found",
+      remaining_refundable: "Remaining refundable: {qty} pcs",
+      return_all: "Return all",
+      already_fully_refunded: "All items on this receipt have already been fully refunded",
+      original_receipt_info: "Receipt #{receiptNumber} • {date} • Cashier: {cashier} • Payment: {paymentMethod}"
     },
     settings: {
       title: "POS Register Settings & EET 2.0 Backend",
@@ -2517,6 +2607,8 @@ export const translations = {
       receipt_copies_desc: "Option to print a second merchant copy",
       receipt_copies_1x: "1x (Customer copy)",
       receipt_copies_2x: "2x (+ Merchant copy)",
+      receipt_show_barcode: "Print receipt barcode (Code-128)",
+      receipt_show_barcode_desc: "Enables instant scanner lookup for fast item return / storno",
       receipt_auto_print: "Instant auto-print upon checkout",
       receipt_auto_print_desc: "Automatically prints receipt without asking on sale completion",
       receipt_encoding_label: "Character encoding (ESC/POS)",
@@ -2964,6 +3056,40 @@ export const translations = {
       error: "Error",
       add: "Add",
       all: "All"
+    },
+    last_receipt: {
+      chip_title: "Last Receipt",
+      chip_label: "Last: {amount} Kč ({time})",
+      reprint: "Re-print Receipt",
+      quick_refund: "Quick Storno / Refund",
+      receipt_no: "Receipt #",
+      amount: "Amount:",
+      time: "Time:",
+      payment_method: "Payment:",
+      items_count: "items",
+      reprint_success: "Receipt sent to printer",
+      reprint_failed: "Printing failed (printer offline)",
+      reprint_preview: "Receipt preview opened",
+      popover_title: "Last Receipt",
+      close: "Close"
+    },
+    price_check: {
+      toggle_btn: "Price Check",
+      toggle_short: "Price Tag",
+      toggle_active: "Price Check: ACTIVE",
+      modal_title: "Product Price Check",
+      price_label: "Selling Price",
+      stock_label: "Stock Level",
+      vat_label: "VAT Rate",
+      barcode_label: "Barcode (EAN)",
+      category_label: "Category",
+      add_to_cart: "Add to Cart",
+      close: "Close",
+      in_stock: "In Stock",
+      out_of_stock: "Out of Stock",
+      unknown_title: "Unknown Barcode",
+      unknown_msg: "Product with this barcode was not found in catalog.",
+      create_product: "Create Product"
     }
   }
 };

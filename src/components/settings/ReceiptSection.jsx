@@ -774,6 +774,21 @@ export default function ReceiptSection({
             />
           </div>
 
+          <div className="settings-toggle-row" style={{ paddingTop: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+            <div className="settings-toggle-label-wrap">
+              <span className="settings-toggle-title">{t('settings.receipt_show_barcode') || 'Tisknout čárový kód účtenky (Code-128)'}</span>
+              <span className="settings-toggle-subtitle">{t('settings.receipt_show_barcode_desc') || 'Umožňuje okamžité načtení účtenky čtečkou čárových kódů pro rychlou vratku/storno'}</span>
+            </div>
+            <label className="settings-switch-toggle">
+              <input
+                type="checkbox"
+                checked={config.receiptShowBarcode !== false}
+                onChange={e => handleUpdate({ receiptShowBarcode: e.target.checked })}
+              />
+              <span className="settings-switch-slider" />
+            </label>
+          </div>
+
           <div className="settings-toggle-row" style={{ paddingTop: '0.75rem' }}>
             <div className="settings-toggle-label-wrap">
               <span className="settings-toggle-title">{t('settings.receipt_show_branding') || 'Zobrazit označení pokladního systému v zápatí'}</span>

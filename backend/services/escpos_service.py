@@ -170,6 +170,7 @@ class ESCPOSPrinterService:
             logo_base64 = str(store_config.get("receiptLogoBase64", "") or "").strip()
             show_branding = bool(store_config.get("receiptShowBranding", True))
             show_cashier = bool(store_config.get("receiptShowCashier", True))
+            show_barcode = bool(store_config.get("receiptShowBarcode", store_config.get("receipt_show_barcode", True)))
             custom_header = str(store_config.get("receiptCustomHeader") or store_config.get("receipt_custom_header") or "").strip()
 
 
@@ -464,6 +465,22 @@ class ESCPOSPrinterService:
                                         printer.qr(qr_url, size=3)
                                 except Exception as qr_err:
                                     logger.debug(f"ESC/POS QR print note: {qr_err}")
+
+                        # Receipt Barcode for fast refund / return scanning
+                        if show_barcode and receipt_num:
+                            printer.set(align='center')
+                            try:
+                                if hasattr(printer, 'barcode'):
+                                    # Use CODE128 (or CODE128B) standard ESC/POS barcode
+                                    printer.barcode(receipt_num, 'CODE128', height=50, width=2, pos='BELOW', align_ct=True)
+                                else:
+                                    write_receipt_text(printer, f"||| {receipt_num} |||\n", strip_diacritics, encoding)
+                            except Exception as bc_err:
+                                logger.debug(f"ESC/POS Barcode print note: {bc_err}")
+                                try:
+                                    write_receipt_text(printer, f"||| {receipt_num} |||\n", strip_diacritics, encoding)
+                                except Exception:
+                                    pass
 
                         printer.text(separator + "\n")
 

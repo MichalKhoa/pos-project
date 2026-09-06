@@ -15,7 +15,12 @@ export function usePosKeyboardShortcuts({
   storeConfig,
   presets = [],
   onUnknownBarcode,
-  onBarcodeScanned
+  onBarcodeScanned,
+  onReceiptScanned,
+  isPriceCheckActive = false,
+  onTogglePriceCheck = null,
+  onInspectPrice = null,
+  onPriceCheckUnknown = null
 }) {
   const barcodeBufferRef = useRef('');
   const lastCharTimeRef = useRef(0);
@@ -31,6 +36,14 @@ export function usePosKeyboardShortcuts({
       }
 
       const key = e.key;
+
+      // F2 hotkey: Toggle Price Check Mode (Cenovka)
+      if (key === 'F2') {
+        e.preventDefault();
+        if (onTogglePriceCheck) onTogglePriceCheck();
+        return;
+      }
+
       const now = Date.now();
       const diff = now - lastCharTimeRef.current;
       lastCharTimeRef.current = now;
@@ -44,6 +57,31 @@ export function usePosKeyboardShortcuts({
           e.preventDefault();
           e.stopPropagation();
           setKeypadAmount('');
+
+          // In Price Check Mode, route scanned barcode to price inspection modal
+          if (isPriceCheckActive) {
+            const matchedPreset = (presets || []).find(p => {
+              if (!p || !p.barcode) return false;
+              const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
+              return codes.includes(buffer.toLowerCase());
+            });
+
+            if (matchedPreset) {
+              soundFx.playScanChime();
+              if (onInspectPrice) onInspectPrice(matchedPreset);
+            } else {
+              soundFx.playErrorChime();
+              if (onPriceCheckUnknown) onPriceCheckUnknown(buffer);
+            }
+            return;
+          }
+
+          // 1. Check if scanned barcode is a receipt / storno document number
+          const isReceiptBarcode = /^(RCP|STORNO)-/i.test(buffer) || /^\d{4}-\d{5,8}$/.test(buffer);
+          if (isReceiptBarcode && onReceiptScanned) {
+            onReceiptScanned(buffer);
+            return;
+          }
 
           const matchedPreset = (presets || []).find(p => {
             if (!p || !p.barcode) return false;
@@ -164,5 +202,5 @@ export function usePosKeyboardShortcuts({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, presets, onUnknownBarcode, onBarcodeScanned]);
+  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, presets, onUnknownBarcode, onBarcodeScanned, onReceiptScanned, isPriceCheckActive, onTogglePriceCheck, onInspectPrice, onPriceCheckUnknown]);
 }

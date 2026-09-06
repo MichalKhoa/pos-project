@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
@@ -67,10 +67,46 @@ function Cart({
   onOpenCashDrawer = null,
   parkedCartsCount = 0,
   onOpenParkedModal = null,
-  cartItemStyle = 'elevated-card'
+  cartItemStyle = 'elevated-card',
+  lastSale = null,
+  onReprintLastReceipt = null,
+  onInitiateRefund = null
 }) {
   const { t } = useTranslation();
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
+  const lastReceiptRef = useRef(null);
+
+  useEffect(() => {
+    if (!isLastReceiptOpen) return;
+    const handleOutsideClick = (e) => {
+      if (lastReceiptRef.current && !lastReceiptRef.current.contains(e.target)) {
+        setIsLastReceiptOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [isLastReceiptOpen]);
+
+  const lastSaleAmount = useMemo(() => {
+    if (!lastSale) return 0;
+    return (lastSale.totalAmount !== undefined ? lastSale.totalAmount : (lastSale.total_amount !== undefined ? lastSale.total_amount : lastSale.total)) || 0;
+  }, [lastSale]);
+
+  const lastSaleTime = useMemo(() => {
+    if (!lastSale) return '';
+    const dateVal = lastSale.timestamp || lastSale.created_at || lastSale.date;
+    if (!dateVal) return '';
+    try {
+      return new Date(dateVal).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
+  }, [lastSale]);
 
   const activeCartItemStyle = useMemo(() => {
     try {
@@ -169,6 +205,153 @@ function Cart({
           )}
         </div>
       </div>
+
+      {/* Last Receipt Quick Actions Chip & Popover */}
+      {lastSale && (
+        <div ref={lastReceiptRef} className="last-receipt-quick-container" style={{ position: 'relative', margin: '0.25rem 0.65rem 0.45rem', flexShrink: 0 }}>
+          <button
+            type="button"
+            className="last-receipt-chip-btn"
+            onClick={() => setIsLastReceiptOpen(prev => !prev)}
+            title="Poslední účtenka: Rychlý dotisk a Storno"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              padding: '0.35rem 0.65rem',
+              minHeight: '36px',
+              width: '100%',
+              borderRadius: '6px',
+              background: 'color-mix(in srgb, var(--accent-blue) 10%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--accent-blue) 30%, transparent)',
+              color: 'var(--text-primary)',
+              fontSize: '0.8rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              touchAction: 'manipulation'
+            }}
+          >
+            <Receipt size={14} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'left' }}>
+              {t('last_receipt.chip_label', {
+                amount: Math.abs(lastSaleAmount).toFixed(0),
+                time: lastSaleTime
+              }) || `🧾 Poslední: ${Math.abs(lastSaleAmount).toFixed(0)} Kč (${lastSaleTime})`}
+            </span>
+            <ChevronDown size={13} style={{ opacity: 0.7, transform: isLastReceiptOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease', flexShrink: 0 }} />
+          </button>
+
+          {/* Last Receipt Popover */}
+          {isLastReceiptOpen && (
+            <div
+              className="last-receipt-popover"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                background: 'var(--bg-secondary, #1e293b)',
+                border: '1px solid color-mix(in srgb, var(--accent-blue) 50%, transparent)',
+                borderRadius: '8px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.2)',
+                padding: '0.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.6rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.4rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Receipt size={14} style={{ color: 'var(--accent-blue)' }} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {t('last_receipt.popover_title')}
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)', fontWeight: '700' }}>
+                  #{lastSale.receiptNumber || lastSale.receipt_number || '---'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <span>{t('last_receipt.amount')} <strong style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{lastSaleAmount.toFixed(2)} Kč</strong></span>
+                <span>{lastSaleTime}</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                {onReprintLastReceipt && (
+                  <button
+                    type="button"
+                    className="last-receipt-action-btn btn-reprint"
+                    onClick={() => {
+                      onReprintLastReceipt(lastSale);
+                      setIsLastReceiptOpen(false);
+                    }}
+                    style={{
+                      flex: 1,
+                      minHeight: '42px',
+                      padding: '0 0.5rem',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)',
+                      touchAction: 'manipulation',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title={t('last_receipt.reprint')}
+                  >
+                    <Printer size={15} strokeWidth={2.5} />
+                    <span>{t('last_receipt.reprint')}</span>
+                  </button>
+                )}
+
+                {onInitiateRefund && (
+                  <button
+                    type="button"
+                    className="last-receipt-action-btn btn-storno"
+                    onClick={() => {
+                      onInitiateRefund(lastSale);
+                      setIsLastReceiptOpen(false);
+                    }}
+                    style={{
+                      flex: 1,
+                      minHeight: '42px',
+                      padding: '0 0.5rem',
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: '800',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.25)',
+                      touchAction: 'manipulation',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title={t('last_receipt.quick_refund')}
+                  >
+                    <RotateCcw size={15} strokeWidth={2.5} />
+                    <span>{t('last_receipt.quick_refund')}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Cart Items List */}
       <div className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>

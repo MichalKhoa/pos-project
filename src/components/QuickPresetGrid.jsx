@@ -26,7 +26,10 @@ function QuickPresetGrid({
   keypadAmount = '',
   onClearKeypadAmount,
   isAdminMode = false,
-  storeConfig = null
+  storeConfig = null,
+  isPriceCheckActive = false,
+  onTogglePriceCheck = null,
+  onInspectPrice = null
 }) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -136,8 +139,15 @@ function QuickPresetGrid({
   const isEditModeRef = useRef(isEditMode);
   isEditModeRef.current = isEditMode;
 
+  const isPriceCheckActiveRef = useRef(isPriceCheckActive);
+  isPriceCheckActiveRef.current = isPriceCheckActive;
+
   const handleCardClick = useCallback((preset) => {
     if (isDraggingRef.current) return;
+    if (isPriceCheckActiveRef.current) {
+      if (onInspectPrice) onInspectPrice(preset);
+      return;
+    }
     if (isEditModeRef.current) {
       setEditingPreset(preset);
       setActiveModal('edit');
@@ -181,7 +191,7 @@ function QuickPresetGrid({
     if (setItemMultiplier && currentMultiplier !== 1) {
       setItemMultiplier(1);
     }
-  }, [onAddToCart, onClearKeypadAmount, setItemMultiplier, isDraggingRef]);
+  }, [onAddToCart, onClearKeypadAmount, setItemMultiplier, onInspectPrice, isDraggingRef]);
 
   const handleOpenPriceSubmit = (e) => {
     e.preventDefault();
@@ -305,6 +315,34 @@ function QuickPresetGrid({
             {isEditMode ? <Check size={15} /> : <Edit3 size={15} />}
             <span>{isEditMode ? 'Hotovo' : t('presets.edit') || 'Upravit'}</span>
           </button>
+
+          {/* Price Check Mode 1-Tap Toggle Button */}
+          {onTogglePriceCheck && (
+            <button
+              type="button"
+              className={`nav-tab price-check-toggle-btn ${isPriceCheckActive ? 'active' : ''}`}
+              style={{
+                height: '38px',
+                minHeight: '38px',
+                padding: '0 0.75rem',
+                fontSize: '0.82rem',
+                background: isPriceCheckActive ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'rgba(255,255,255,0.06)',
+                color: isPriceCheckActive ? '#ffffff' : 'var(--accent-emerald, #10b981)',
+                border: isPriceCheckActive ? '1px solid #34d399' : '1px solid rgba(16, 185, 129, 0.3)',
+                fontWeight: '800',
+                gap: '0.35rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                touchAction: 'manipulation',
+                boxShadow: isPriceCheckActive ? '0 0 12px rgba(16, 185, 129, 0.4)' : 'none'
+              }}
+              onClick={onTogglePriceCheck}
+              title="Kontrola ceny / Cenovka (F2)"
+            >
+              <Search size={15} strokeWidth={2.5} />
+              <span>{isPriceCheckActive ? t('price_check.toggle_active') : t('price_check.toggle_btn')}</span>
+            </button>
+          )}
 
           {isAdminMode && (
             <button

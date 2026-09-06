@@ -1,4 +1,5 @@
 import { generateQrDataUrl } from './qrCode.js';
+import { generateBarcodeSVG } from './barcodeGenerator.js';
 
 export function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -56,6 +57,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
   const qrType = storeConfig?.receiptQrCodeType || 'none';
   const showBranding = storeConfig?.receiptShowBranding !== false;
   const showCashier = storeConfig?.receiptShowCashier !== false;
+  const showBarcode = storeConfig?.receiptShowBarcode !== false;
   const showLogo = Boolean(storeConfig?.receiptShowLogo);
   const logoBase64 = storeConfig?.receiptLogoBase64 || '';
 
@@ -202,6 +204,27 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
     }
   } else if (qrType === 'url' && storeConfig?.receiptQrCodeUrl) {
     qrCodeDataUrl = generateQrDataUrl(storeConfig.receiptQrCodeUrl, 150);
+  }
+
+  // Barcode Generation for Fast Scan & Refund
+  let receiptBarcodeSvgHtml = '';
+  if (showBarcode && saleData.receiptNumber) {
+    const bcData = generateBarcodeSVG(saleData.receiptNumber, {
+      height: is58mm ? 36 : 46,
+      barWidth: is58mm ? 1.5 : 1.8,
+      quietZone: 8
+    });
+    if (bcData && bcData.rects) {
+      const rectsHtml = bcData.rects.map(r => `<rect x="${r.x}" y="0" width="${r.width}" height="${r.height}" fill="#000" />`).join('');
+      receiptBarcodeSvgHtml = `
+        <div class="center" style="margin: 6px 0 2px 0;">
+          <svg width="${bcData.svgWidth}" height="${bcData.svgHeight}" viewBox="0 0 ${bcData.svgWidth} ${bcData.svgHeight}" style="display:inline-block; max-width: 90%;">
+            ${rectsHtml}
+            <text x="${bcData.svgWidth / 2}" y="${bcData.svgHeight - 4}" text-anchor="middle" font-size="${is58mm ? '8px' : '9.5px'}" font-family="monospace" font-weight="bold" fill="#000">${escapeHtml(bcData.text)}</text>
+          </svg>
+        </div>
+      `;
+    }
   }
 
   // Multi-line footer
@@ -451,6 +474,11 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
               </div>
               <img src="${qrCodeDataUrl}" alt="QR" style="width: ${is58mm ? '100px' : '130px'}; height: ${is58mm ? '100px' : '130px'}; display: block; margin: 0 auto;" />
             </div>
+          ` : ''}
+
+          ${receiptBarcodeSvgHtml ? `
+            ${sepDividerHtml}
+            ${receiptBarcodeSvgHtml}
           ` : ''}
 
           ${sepDividerHtml}

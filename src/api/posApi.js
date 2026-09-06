@@ -144,7 +144,11 @@ export function normalizeSale(sale) {
     quantity: item.quantity !== undefined ? parseInt(item.quantity, 10) : (item.qty !== undefined ? parseInt(item.qty, 10) : 1),
     vat: item.vat !== undefined ? parseInt(item.vat, 10) : (item.vat_rate !== undefined ? parseInt(item.vat_rate, 10) : 21),
     discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0),
-    discount_percent: item.discount_percent !== undefined ? parseFloat(item.discount_percent) : (item.discountPercent !== undefined ? parseFloat(item.discountPercent) : 0)
+    discount_percent: item.discount_percent !== undefined ? parseFloat(item.discount_percent) : (item.discountPercent !== undefined ? parseFloat(item.discountPercent) : 0),
+    refundedQuantity: item.refundedQuantity !== undefined ? parseInt(item.refundedQuantity, 10) : (item.refunded_quantity !== undefined ? parseInt(item.refunded_quantity, 10) : 0),
+    refunded_quantity: item.refunded_quantity !== undefined ? parseInt(item.refunded_quantity, 10) : (item.refundedQuantity !== undefined ? parseInt(item.refundedQuantity, 10) : 0),
+    remainingQuantity: item.remainingQuantity !== undefined ? parseInt(item.remainingQuantity, 10) : (item.remaining_quantity !== undefined ? parseInt(item.remaining_quantity, 10) : (item.quantity !== undefined ? parseInt(item.quantity, 10) : 1)),
+    remaining_quantity: item.remaining_quantity !== undefined ? parseInt(item.remaining_quantity, 10) : (item.remainingQuantity !== undefined ? parseInt(item.remainingQuantity, 10) : (item.quantity !== undefined ? parseInt(item.quantity, 10) : 1))
   })) : [];
 
   return {
@@ -242,6 +246,26 @@ export async function purgeAllSalesBackend(pin = '') {
     return await res.json();
   } catch (err) {
     console.warn('Failed to purge all test sales in backend:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch sale details by receipt number (case-insensitive) with remaining refundable tracking
+ */
+export async function fetchSaleByReceiptNumber(receiptNumber) {
+  if (!receiptNumber) return null;
+  try {
+    const cleanNum = encodeURIComponent(receiptNumber.trim());
+    const res = await fetch(`${API_BASE_URL}/sales/by-receipt/${cleanNum}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error(`HTTP error ${res.status}`);
+    }
+    const data = await res.json();
+    return data ? normalizeSale(data) : null;
+  } catch (err) {
+    console.warn(`Failed to fetch sale by receipt number ${receiptNumber}:`, err);
     return null;
   }
 }

@@ -61,6 +61,7 @@ Directory: `/src/components`
   - `CardPaymentPanel.jsx`, `QrPaymentPanel.jsx`, `SplitPaymentPanel.jsx`: Tender panels with dual 1-tap print-on-demand completion buttons (`printReceipt: false` skips ReceiptModal at 0s delay).
 - `Navbar.jsx`: Clock, backend status, cart toggle, lock button, 1-click thermal daily summary, navigation tabs (`[ 🛒 Pokladna ] [ 📦 Sklad ] [ 🏷️ Katalog ] [ 📜 Historie ] [ 📊 Analytika ] [ ⚙️ Nastavení ]`).
 - `CalendarModal.jsx`, `TouchCalendarModal.jsx`, `TouchDateRangeModal.jsx`: Date modals powered by `src/utils/calendarGrid.js` and `src/utils/czechHolidays.js`.
+- `RefundModal.jsx`: Easy item return and storno modal triggered via scanned receipt barcode or Sales History. Features 1-tap quick action buttons (`[+ 1 ks]`, `[- 1 ks]`, `[Vrátit vše]`), remaining refundable quantity tracking (`Zbývá k vrácení: X ks`), maximum limit enforcement preventing over-refunding, header metadata badge (receipt #, timestamp, cashier, payment method), damaged/scrap waste toggle, and full multilingual support (`cs`, `vi`, `en`).
 - `UnknownBarcodeModal.jsx`: 5s touch modal on unrecognized barcode at checkout. Quick registration (name, price, VAT, category) + cart insert with multiplier without leaving sales screen.
 
 ## Active Custom Hooks in `/src/hooks/`

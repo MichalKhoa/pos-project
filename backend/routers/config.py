@@ -88,6 +88,7 @@ class StoreConfigSchema(BaseModel):
     receiptFooterLines: Optional[str] = None
     receiptShowBranding: Optional[bool] = None
     receiptShowCashier: Optional[bool] = None
+    receiptShowBarcode: Optional[bool] = None
 
 
 @router.get("")
@@ -164,7 +165,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "receiptCustomHeader": getattr(config, 'receipt_custom_header', "") or "",
         "receiptFooterLines": getattr(config, 'receipt_footer_lines', "Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.") or "Děkujeme za váš nákup!\nReklamace možná do 14 dnů s účtenkou.",
         "receiptShowBranding": getattr(config, 'receipt_show_branding', True) if getattr(config, 'receipt_show_branding', None) is not None else True,
-        "receiptShowCashier": getattr(config, 'receipt_show_cashier', True) if getattr(config, 'receipt_show_cashier', None) is not None else True
+        "receiptShowCashier": getattr(config, 'receipt_show_cashier', True) if getattr(config, 'receipt_show_cashier', None) is not None else True,
+        "receiptShowBarcode": getattr(config, 'receipt_show_barcode', True) if getattr(config, 'receipt_show_barcode', None) is not None else True
     }
 
 
@@ -246,6 +248,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.receiptFooterLines is not None: config.receipt_footer_lines = data.receiptFooterLines
     if data.receiptShowBranding is not None: config.receipt_show_branding = data.receiptShowBranding
     if data.receiptShowCashier is not None: config.receipt_show_cashier = data.receiptShowCashier
+    if data.receiptShowBarcode is not None: config.receipt_show_barcode = data.receiptShowBarcode
 
     db.commit()
     db.refresh(config)

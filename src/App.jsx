@@ -12,6 +12,7 @@ import { useAutoLock } from './hooks/useAutoLock';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
+import { useTranslation } from './i18n/LanguageContext';
 import { soundFx } from './utils/audio';
 import { calculateCartTotals } from './utils/tax';
 import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
@@ -28,7 +29,9 @@ import {
   deleteSaleBackend,
   purgeAllSalesBackend,
   openCashDrawerBackend,
-  printDailySummaryBackend
+  printDailySummaryBackend,
+  printReceiptBackend,
+  fetchSaleByReceiptNumber
 } from './api/posApi';
 import { formatLocalDate } from './utils/dateUtils';
 import SalesHistoryView from './components/SalesHistoryView';
@@ -39,6 +42,7 @@ import SettingsView from './components/SettingsView';
 import CustomerDisplayView from './components/CustomerDisplayView';
 
 export default function App() {
+  const { t } = useTranslation();
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
 
   useEffect(() => {
@@ -184,6 +188,62 @@ export default function App() {
   const [paymentModalMethod, setPaymentModalMethod] = useState(null); // 'cash' | 'card' | 'split' | null
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
   const [refundTargetSale, setRefundTargetSale] = useState(null);
+
+  // Price Check Mode State (Kontrola ceny / Cenovka)
+  const [isPriceCheckActive, setIsPriceCheckActive] = useState(false);
+  const [priceCheckItem, setPriceCheckItem] = useState(null);
+  const [unknownPriceCheckBarcode, setUnknownPriceCheckBarcode] = useState(null);
+
+  const handleTogglePriceCheck = useCallback(() => {
+    setIsPriceCheckActive(prev => {
+      const next = !prev;
+      soundFx.playScanChime();
+      setFlashBanner({
+        type: next ? 'info' : 'default',
+        message: next ? '🔍 Kontrola ceny (Cenovka) zapnuta' : 'Kontrola ceny vypnuta'
+      });
+      return next;
+    });
+  }, []);
+
+  const handleInspectPrice = useCallback((item) => {
+    setUnknownPriceCheckBarcode(null);
+    setPriceCheckItem(item);
+  }, []);
+
+  const handleInspectPriceUnknown = useCallback((barcode) => {
+    setPriceCheckItem(null);
+    setUnknownPriceCheckBarcode(barcode);
+  }, []);
+
+  // Most recent completed sale for Quick Reprint / Storno chip
+  const lastSale = useMemo(() => {
+    if (!salesHistory || salesHistory.length === 0) return null;
+    return salesHistory[0];
+  }, [salesHistory]);
+
+  const handleReprintSale = useCallback(async (sale) => {
+    if (!sale) return;
+    soundFx.playScanChime();
+    try {
+      const res = await printReceiptBackend(sale, storeConfig);
+      if (res && res.status === 'PRINTED' && res.physical !== false) {
+        soundFx.playSuccessChime();
+        setFlashBanner({
+          message: `✓ Účtenka #${sale.receiptNumber || sale.receipt_number || ''} vytištěna`,
+          type: 'success'
+        });
+      } else {
+        setCurrentReceiptData(sale);
+        setFlashBanner({
+          message: `Účtenka #${sale.receiptNumber || sale.receipt_number || ''} otevřena k tisku`,
+          type: 'info'
+        });
+      }
+    } catch {
+      setCurrentReceiptData(sale);
+    }
+  }, [storeConfig]);
 
   // Open Cash Drawer Handler
   const handleOpenCashDrawer = useCallback(async () => {
@@ -506,6 +566,52 @@ export default function App() {
     });
   }, [handleAddPreset, handleAddToCart]);
 
+  const handleReceiptScanned = useCallback(async (barcode) => {
+    soundFx.playScanChime();
+    setFlashBanner({
+      message: `${t('refund.scanned_receipt_banner', { receiptNumber: barcode })}...`,
+      type: 'info'
+    });
+
+    try {
+      // 1. Check local salesHistory first for immediate responsiveness
+      const cleanCode = barcode.trim().toLowerCase();
+      let matchedSale = salesHistory.find(s => {
+        const rNum = (s.receiptNumber || s.receipt_number || '').toLowerCase();
+        return rNum === cleanCode;
+      });
+
+      // 2. Fetch from backend with updated refundable item counts
+      const backendSale = await fetchSaleByReceiptNumber(barcode);
+      if (backendSale) {
+        matchedSale = backendSale;
+      }
+
+      if (matchedSale) {
+        soundFx.playSuccessChime();
+        setRefundTargetSale(matchedSale);
+        const rNum = matchedSale.receiptNumber || matchedSale.receipt_number;
+        const total = (matchedSale.totalAmount !== undefined ? matchedSale.totalAmount : (matchedSale.total_amount || 0)).toFixed(0);
+        setFlashBanner({
+          message: `✓ ${t('refund.scanned_receipt_banner', { receiptNumber: rNum })} (${total} Kč)`,
+          type: 'success'
+        });
+      } else {
+        soundFx.playErrorChime();
+        setFlashBanner({
+          message: t('refund.receipt_not_found', { receiptNumber: barcode }),
+          type: 'error'
+        });
+      }
+    } catch (err) {
+      soundFx.playErrorChime();
+      setFlashBanner({
+        message: `Chyba při načítání účtenky: ${err.message}`,
+        type: 'error'
+      });
+    }
+  }, [salesHistory, t]);
+
   // Hook for hardware keyboard, numpad and USB barcode scanner listeners
   usePosKeyboardShortcuts({
     isAppLocked,
@@ -526,7 +632,12 @@ export default function App() {
         message: `✓ ${preset.name} (${preset.price} Kč)${qty > 1 ? ` ×${qty}` : ''}`,
         type: 'success'
       });
-    }
+    },
+    onReceiptScanned: handleReceiptScanned,
+    isPriceCheckActive,
+    onTogglePriceCheck: handleTogglePriceCheck,
+    onInspectPrice: handleInspectPrice,
+    onPriceCheckUnknown: handleInspectPriceUnknown
   });
 
   const handleOpenCustomDiscountModal = useCallback((item = null) => {
@@ -792,6 +903,9 @@ export default function App() {
                       onClearKeypadAmount={handleClearKeypadAmount}
                       isAdminMode={isAdminMode}
                       storeConfig={storeConfig}
+                      isPriceCheckActive={isPriceCheckActive}
+                      onTogglePriceCheck={handleTogglePriceCheck}
+                      onInspectPrice={handleInspectPrice}
                     />
                   </div>
                 </div>
@@ -823,6 +937,9 @@ export default function App() {
                   parkedCartsCount={parkedCarts.length}
                   onOpenParkedModal={handleOpenParkedModal}
                   cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
+                  lastSale={lastSale}
+                  onReprintLastReceipt={handleReprintSale}
+                  onInitiateRefund={setRefundTargetSale}
                 />
               </div>
             </div>
@@ -960,6 +1077,12 @@ export default function App() {
         onDismissUndoToast={dismissUndoToast}
         flashBanner={flashBanner}
         onDismissFlashBanner={() => setFlashBanner(null)}
+        priceCheckItem={priceCheckItem}
+        setPriceCheckItem={setPriceCheckItem}
+        unknownPriceCheckBarcode={unknownPriceCheckBarcode}
+        setUnknownPriceCheckBarcode={setUnknownPriceCheckBarcode}
+        onAddToCartFromPriceCheck={handleAddToCart}
+        onCreateProductFromPriceCheck={(code) => setUnknownBarcode(code)}
       />
     </div>
   );

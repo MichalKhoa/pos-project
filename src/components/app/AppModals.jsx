@@ -10,6 +10,7 @@ import LockScreenModal from '../LockScreenModal';
 import ToastUndo from '../ToastUndo';
 import CheckoutFlashBanner from '../CheckoutFlashBanner';
 import UnknownBarcodeModal from '../UnknownBarcodeModal';
+import PriceCheckModal from '../PriceCheckModal';
 
 export default function AppModals({
   // Discount Modal
@@ -69,7 +70,15 @@ export default function AppModals({
   onUndoLastAction,
   onDismissUndoToast,
   flashBanner,
-  onDismissFlashBanner
+  onDismissFlashBanner,
+
+  // Price Check Modal (Kontrola ceny / Cenovka)
+  priceCheckItem,
+  setPriceCheckItem,
+  unknownPriceCheckBarcode,
+  setUnknownPriceCheckBarcode,
+  onAddToCartFromPriceCheck,
+  onCreateProductFromPriceCheck
 }) {
   const computedTotal = Math.round((cartItems.reduce((sum, item) => {
     const disc = item.discountPercent || 0;
@@ -78,6 +87,21 @@ export default function AppModals({
 
   return (
     <>
+      {/* Price Check Modal (Kontrola ceny / Cenovka) */}
+      {(priceCheckItem || unknownPriceCheckBarcode) && (
+        <PriceCheckModal
+          item={priceCheckItem}
+          unknownBarcode={unknownPriceCheckBarcode}
+          categories={categories}
+          onAddToCart={onAddToCartFromPriceCheck}
+          onCreateProduct={onCreateProductFromPriceCheck}
+          onClose={() => {
+            if (setPriceCheckItem) setPriceCheckItem(null);
+            if (setUnknownPriceCheckBarcode) setUnknownPriceCheckBarcode(null);
+          }}
+        />
+      )}
+
       {/* Custom Discount Modal */}
       <DiscountModal
         isOpen={isDiscountModalOpen}
