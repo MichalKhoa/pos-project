@@ -148,9 +148,9 @@ echo   SUCCESS: VoltFlow POS Installation Complete!
 echo ========================================================
 echo.
 echo   Quick Start:
-echo     start_pos.bat       -^> Launch POS in kiosk/app mode
+echo     start.bat           -^> Launch POS in kiosk/app mode (:8000)
 echo     debug.bat           -^> Launch POS in hot-reload dev mode
-echo     start.bat           -^> Launch POS backend server (:8000)
+echo     backend_settings.bat -^> Configure hardware and settings
 echo.
 echo   Hardware Checks:
 echo     scripts\tools\hardware_preflight.bat  -^> Audit POS hardware

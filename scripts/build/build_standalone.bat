@@ -75,7 +75,7 @@ echo ========================================================
 echo   SUCCESS: Standalone executable and Tauri sidecar created!
 echo   Location: backend\dist_standalone\pos-backend\pos-backend.exe
 echo   Sidecar:  src-tauri\binaries\
-echo   To launch web:   start_pos.bat
+echo   To launch web:   start.bat
 echo   To launch Tauri: npm run tauri dev
 echo ========================================================
 echo.

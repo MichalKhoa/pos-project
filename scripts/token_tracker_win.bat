@@ -31,7 +31,7 @@ if "%~1"=="" (
     echo.
     %PYTHON_CMD% "%~dp0token_tracker_win.py" update
     echo.
-    echo Summaries updated in folder: token_summaries\
+    echo Summaries updated in folder: docs\token_summaries\
     echo.
     pause
     exit /b 0

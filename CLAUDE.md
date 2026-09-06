@@ -17,7 +17,7 @@
 ### 2. Standalone PyInstaller Freeze
 - `backend/pos_backend.spec`: Supports both `--onefile` (`PYINSTALLER_ONEFILE=1`) and `--onedir` modes.
 - `scripts/prepare_sidecar.py`: Automates target-triple binary detection and staging for Tauri bundling.
-- Unified zero-dependency starters: `start_pos.sh` (Linux) and `start_pos.bat` (Windows).
+- Unified zero-dependency starters: `start.sh` (Linux) and `start.bat` (Windows).
 
 ### 3. Payment Integrations & Cashier Ergonomics
 - Cash payment with RJ11 drawer pulse and change calculations.

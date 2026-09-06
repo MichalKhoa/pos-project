@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { RotateCcw, Sparkles, Coins, Banknote, Delete, CheckCircle2 } from 'lucide-react';
+import { RotateCcw, Sparkles, Coins, Banknote, Delete, Zap, Printer } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { getCzechCashBreakdown } from '../../utils/currencyBreakdown.js';
 import { soundFx } from '../../utils/audio.js';
@@ -308,26 +308,54 @@ export default function CashPaymentPanel({
           )}
         </div>
 
-        {/* Complete Sale Button */}
-        <button
-          type="button"
-          className="pay-btn pay-btn-cash"
-          style={{ width: '100%', height: '54px', fontSize: '1.05rem', fontWeight: '800' }}
-          disabled={tenderedVal > 0 && changeDue < 0}
-          onClick={() => {
-            soundFx.playSuccessChime();
-            onComplete();
-          }}
-        >
-          <CheckCircle2 size={22} />
-          <span>
-            {tenderedVal === 0
-              ? `${t('payment.complete_sale') || 'Dokončit prodej'} — ${t('payment.exact') || 'Přesně'} (${effectiveCashTotal.toFixed(0)} Kč)`
-              : (changeDue >= 0
-                ? `${t('payment.complete_sale') || 'Dokončit prodej'} (${t('payment.change_due') || 'Vrátit'} ${changeDue.toFixed(0)} Kč)`
-                : (t('payment.complete_sale') || 'Dokončit prodej'))}
-          </span>
-        </button>
+        {/* 1-Tap Dual Completion Buttons: Finish without print vs Finish with print */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: '0.5rem', width: '100%' }}>
+          <button
+            type="button"
+            className="pay-btn"
+            style={{
+              height: '54px',
+              fontSize: '0.96rem',
+              fontWeight: '800',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1.5px solid var(--border-color)',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              cursor: (tenderedVal > 0 && changeDue < 0) ? 'not-allowed' : 'pointer',
+              opacity: (tenderedVal > 0 && changeDue < 0) ? 0.5 : 1,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+            }}
+            disabled={tenderedVal > 0 && changeDue < 0}
+            onClick={() => {
+              soundFx.playSuccessChime();
+              onComplete({ printReceipt: false });
+            }}
+            title={t('payment.finish_no_print') || 'Dokončit bez tisku'}
+          >
+            <Zap size={18} style={{ color: 'var(--accent-amber)' }} />
+            <span>{t('payment.finish_no_print') || 'Dokončit bez tisku'}</span>
+          </button>
+
+          <button
+            type="button"
+            className="pay-btn pay-btn-cash"
+            style={{ height: '54px', fontSize: '0.98rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', whiteSpace: 'nowrap' }}
+            disabled={tenderedVal > 0 && changeDue < 0}
+            onClick={() => {
+              soundFx.playSuccessChime();
+              onComplete({ printReceipt: true });
+            }}
+            title={t('payment.finish_with_print') || 'Dokončit a vytisknout'}
+          >
+            <Printer size={19} />
+            <span>{t('payment.finish_with_print') || 'Dokončit a vytisknout'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -165,34 +165,39 @@ export default function PaymentModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMethod, tenderedStr, tenderedVal, splitCashStr, changeDue, totalAmount, effectiveCashTotal]);
 
-  const handleComplete = () => {
+  const handleComplete = (options = {}) => {
+    const printReceipt = typeof options === 'boolean' ? options : (options?.printReceipt !== false);
+
     if (activeMethod === 'cash') {
       if (tenderedVal > 0 && changeDue < 0) return;
       const finalTendered = tenderedVal === 0 ? effectiveCashTotal : tenderedVal;
       const finalChange = tenderedVal === 0 ? 0 : (changeDue > 0 ? changeDue : 0);
       onCompleteSale({
         method: 'cash',
+        paymentMethod: 'cash',
         tendered: finalTendered,
-        change: finalChange
+        tenderedAmount: finalTendered,
+        change: finalChange,
+        changeDue: finalChange,
+        printReceipt
       });
       return;
     }
 
     let payDetails = {
       method: activeMethod,
+      paymentMethod: activeMethod,
       tendered: totalAmount,
-      change: 0
+      tenderedAmount: totalAmount,
+      change: 0,
+      changeDue: 0,
+      printReceipt
     };
 
     if (activeMethod === 'split') {
-      payDetails = {
-        method: 'split',
-        tendered: totalAmount,
-        change: 0,
-        splitDetails: {
-          cash: splitCashVal,
-          card: splitCardVal
-        }
+      payDetails.splitDetails = {
+        cash: splitCashVal,
+        card: splitCardVal
       };
     }
 

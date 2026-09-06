@@ -6,8 +6,8 @@ Operational execution scripts, test suites, and environment setup.
 - **Root Scripts**:
   - `debug.sh` / `debug.bat`: Developer debug mode launching FastAPI (`:8000`) and Vite dev server (`:5173`) with live hot reloading and clean Ctrl+C teardown.
   - `install.sh` / `install.bat`: 1-Click complete installer for Python venv, requirements, DB migrations, npm install, and production build.
-  - `start.sh` / `start.bat`: Production launcher serving compiled frontend from FastAPI on port 8000.
-  - `start_pos.sh` / `start_pos.bat`: Comprehensive production launcher with native port detection and Customer Display QR/URL display.
+  - `start.sh` / `start.bat`: Production launcher with native port detection, build verification, Customer Display QR/URL display, and Edge App mode.
+  - `stop.bat`: Cleanly terminates backend services and browser instances.
   - `backend_settings.sh` / `backend_settings.bat`: GUI for setting up backend `.env` variables, database config, EET certs, and payment terminals.
 - **Build Scripts (`scripts/build/`)**:
   - `scripts/build/build_standalone.sh` / `scripts/build/build_standalone.bat`: PyInstaller standalone bundle generator.

@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "ollama": {
+      "command": "C:\\Python314\\python.exe",
+      "args": [
+        "c:\\Users\\micha\\Documents\\GitHub\\pos-project-himmel\\mcp_ollama_server.py"
+      ],
+      "env": {
+        "OLLAMA_HOST": "http://127.0.0.1:11434",
+        "OLLAMA_MODEL": "qwen3:8b"
+      },
+      "trust": true
+    },
+    "openrouter": {
+      "command": "C:\\Python314\\python.exe",
+      "args": [
+        "c:\\Users\\micha\\Documents\\GitHub\\pos-project-himmel\\mcp_openrouter_server.py"
+      ],
+      "env": {
+        "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
+        "OPENROUTER_MODEL": "gpt-oss-120b"
+      },
+      "trust": true
+    }
+  }
+}

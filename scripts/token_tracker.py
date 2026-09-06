@@ -481,7 +481,7 @@ def show_single_commit(commit_ref="HEAD"):
 
 def export_summaries(output_dir=None, custom_logs_dir=None, auto_backfill=True):
     repo_path = get_repo_path()
-    out_dir = output_dir or os.path.join(repo_path, "token_summaries")
+    out_dir = output_dir or os.path.join(repo_path, "docs", "token_summaries")
     os.makedirs(out_dir, exist_ok=True)
 
     if auto_backfill:

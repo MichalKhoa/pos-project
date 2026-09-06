@@ -29,7 +29,7 @@ function wrapWithLanguage(ui) {
 
 describe('Modals & Dialog Component Tests', () => {
   describe('PaymentModal', () => {
-    it('renders CashPaymentPanel by default with quick denomination buttons and change calculation', () => {
+    it('renders CashPaymentPanel by default and finishes sale with print', () => {
       const onCompleteSale = vi.fn();
       wrapWithLanguage(
         <PaymentModal
@@ -55,19 +55,20 @@ describe('Modals & Dialog Component Tests', () => {
       const exactBtn = screen.getByRole('button', { name: /^Přesně \(/i });
       fireEvent.click(exactBtn);
 
-      // Click complete sale button
-      const completeBtn = screen.getByRole('button', { name: /Dokončit prodej/i });
-      expect(completeBtn).toBeEnabled();
-      fireEvent.click(completeBtn);
+      // Click complete sale with print button
+      const completeWithPrintBtn = screen.getByRole('button', { name: /Dokončit a vytisknout/i });
+      expect(completeWithPrintBtn).toBeEnabled();
+      fireEvent.click(completeWithPrintBtn);
 
       expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
         method: 'cash',
         tendered: 450,
-        change: 0
+        change: 0,
+        printReceipt: true
       }));
     });
 
-    it('allows instant 1-click completion as exact amount without entering tendered cash', () => {
+    it('allows 1-click completion without printing receipt', () => {
       const onCompleteSale = vi.fn();
       wrapWithLanguage(
         <PaymentModal
@@ -80,15 +81,16 @@ describe('Modals & Dialog Component Tests', () => {
         />
       );
 
-      // Complete button is immediately enabled for fast checkout
-      const completeBtn = screen.getByRole('button', { name: /Dokončit prodej — Přesně/i });
-      expect(completeBtn).toBeEnabled();
-      fireEvent.click(completeBtn);
+      // Complete button without print is immediately available
+      const noPrintBtn = screen.getByRole('button', { name: /Dokončit bez tisku/i });
+      expect(noPrintBtn).toBeEnabled();
+      fireEvent.click(noPrintBtn);
 
       expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
         method: 'cash',
         tendered: 250,
-        change: 0
+        change: 0,
+        printReceipt: false
       }));
     });
 
@@ -138,15 +140,64 @@ describe('Modals & Dialog Component Tests', () => {
       expect(qrImage).toBeInTheDocument();
       expect(qrImage.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
 
-      // Click confirm QR payment button
-      const confirmBtn = screen.getByRole('button', { name: /Potvrdit Přijatou QR Platbu/i });
+      // Click confirm QR payment button with print
+      const confirmBtn = screen.getByRole('button', { name: /Dokončit a vytisknout/i });
       expect(confirmBtn).toBeInTheDocument();
       fireEvent.click(confirmBtn);
 
       expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
         method: 'qr',
         tendered: 520,
-        change: 0
+        change: 0,
+        printReceipt: true
+      }));
+    });
+
+    it('completes card payment with or without print', () => {
+      const onCompleteSale = vi.fn();
+      wrapWithLanguage(
+        <PaymentModal
+          isOpen={true}
+          totalAmount={350}
+          initialMethod="card"
+          storeConfig={DEFAULT_STORE_CONFIG}
+          onClose={() => {}}
+          onCompleteSale={onCompleteSale}
+        />
+      );
+
+      // Finish without print
+      const noPrintBtn = screen.getByRole('button', { name: /Dokončit bez tisku/i });
+      fireEvent.click(noPrintBtn);
+
+      expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
+        method: 'card',
+        tendered: 350,
+        printReceipt: false
+      }));
+    });
+
+    it('completes QR payment without print when requested', () => {
+      const onCompleteSale = vi.fn();
+      wrapWithLanguage(
+        <PaymentModal
+          isOpen={true}
+          totalAmount={520}
+          initialMethod="qr"
+          storeConfig={{ ...DEFAULT_STORE_CONFIG, bankAccountIban: 'CZ0508000000001234567890' }}
+          onClose={() => {}}
+          onCompleteSale={onCompleteSale}
+        />
+      );
+
+      const noPrintBtn = screen.getByRole('button', { name: /Dokončit bez tisku/i });
+      fireEvent.click(noPrintBtn);
+
+      expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
+        method: 'qr',
+        tendered: 520,
+        change: 0,
+        printReceipt: false
       }));
     });
 

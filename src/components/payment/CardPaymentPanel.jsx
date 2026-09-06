@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Wifi, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Wifi, RefreshCw, Zap, Printer } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function CardPaymentPanel({
@@ -118,12 +118,13 @@ export default function CardPaymentPanel({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: 'auto' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'nowrap' }}>
         {termConfig?.enabled && termConfig?.ip && (
           <button
+            type="button"
             className="pay-btn pay-btn-card"
             disabled={termLoading}
-            style={{ flex: 1, height: '56px', fontSize: '1rem', fontWeight: '800' }}
+            style={{ flex: 1.2, height: '56px', fontSize: '0.95rem', fontWeight: '800' }}
             onClick={onTerminalPay}
           >
             <RefreshCw size={18} className={termLoading ? 'spin' : ''} />
@@ -132,19 +133,50 @@ export default function CardPaymentPanel({
         )}
 
         <button
-          className="pay-btn pay-btn-card"
+          type="button"
+          className="pay-btn"
           style={{
             flex: 1,
             height: '56px',
-            fontSize: '1rem',
+            fontSize: '0.95rem',
             fontWeight: '800',
-            background: (termConfig?.enabled && termConfig?.ip) ? 'var(--bg-main)' : 'var(--accent-blue)',
-            border: (termConfig?.enabled && termConfig?.ip) ? '1px solid var(--border-color)' : 'none'
+            background: 'var(--bg-main)',
+            color: 'var(--text-primary)',
+            border: '1.5px solid var(--border-color)',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
-          onClick={onComplete}
+          onClick={() => onComplete({ printReceipt: false })}
+          title={t('payment.finish_no_print') || 'Dokončit bez tisku'}
         >
-          <CheckCircle2 size={20} />
-          <span>{(termConfig?.enabled && termConfig?.ip) ? t('payment.card_manual_override') : `${t('payment.card_confirm_manual')} (${totalAmount.toFixed(2)} Kč)`}</span>
+          <Zap size={18} style={{ color: 'var(--accent-amber)' }} />
+          <span>{t('payment.finish_no_print') || 'Dokončit bez tisku'}</span>
+        </button>
+
+        <button
+          type="button"
+          className="pay-btn pay-btn-card"
+          style={{
+            flex: 1.2,
+            height: '56px',
+            fontSize: '0.95rem',
+            fontWeight: '800',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.45rem',
+            whiteSpace: 'nowrap'
+          }}
+          onClick={() => onComplete({ printReceipt: true })}
+          title={t('payment.finish_with_print') || 'Dokončit a vytisknout'}
+        >
+          <Printer size={19} />
+          <span>{t('payment.finish_with_print') || 'Dokončit a vytisknout'}</span>
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Zap, Printer } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
@@ -142,16 +142,54 @@ export default function QrPaymentPanel({
         </div>
       </div>
 
-      {/* Confirmation Action Button */}
-      <button
-        type="button"
-        className="pay-btn pay-btn-card"
-        style={{ width: '100%', height: '56px', background: 'var(--accent-purple)', fontSize: '1.05rem', fontWeight: '800', marginTop: 'auto' }}
-        onClick={onComplete}
-      >
-        <CheckCircle2 size={22} />
-        <span>{t('payment.qr_confirm_btn', { amount: totalAmount.toFixed(2) }) || `${t('payment.qr_confirm')} (${totalAmount.toFixed(2)} Kč)`}</span>
-      </button>
+      {/* Dual Confirmation Action Buttons */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: '0.5rem', width: '100%', marginTop: 'auto' }}>
+        <button
+          type="button"
+          className="pay-btn"
+          style={{
+            height: '56px',
+            fontSize: '0.96rem',
+            fontWeight: '800',
+            background: 'var(--bg-card)',
+            color: 'var(--text-primary)',
+            border: '1.5px solid var(--border-color)',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+          onClick={() => onComplete({ printReceipt: false })}
+          title={t('payment.finish_no_print') || 'Dokončit bez tisku'}
+        >
+          <Zap size={18} style={{ color: 'var(--accent-amber)' }} />
+          <span>{t('payment.finish_no_print') || 'Dokončit bez tisku'}</span>
+        </button>
+
+        <button
+          type="button"
+          className="pay-btn pay-btn-card"
+          style={{
+            height: '56px',
+            background: 'var(--accent-purple)',
+            fontSize: '0.98rem',
+            fontWeight: '800',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.45rem',
+            whiteSpace: 'nowrap'
+          }}
+          onClick={() => onComplete({ printReceipt: true })}
+          title={t('payment.finish_with_print') || 'Dokončit a vytisknout'}
+        >
+          <Printer size={19} />
+          <span>{t('payment.finish_with_print') || 'Dokončit a vytisknout'}</span>
+        </button>
+      </div>
     </div>
   );
 }

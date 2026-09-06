@@ -131,7 +131,7 @@ Once installed, use the following shortcuts depending on your setup:
 
 | Launch Script | Description | Recommended For |
 | :--- | :--- | :--- |
-| **`start_pos.bat`** | Launches backend (:8000) and opens Microsoft Edge in dedicated chromeless App mode (`--app=...`). | **Standard POS cashiers** |
+| **`start.bat`** | Launches backend (:8000) and opens Microsoft Edge in dedicated chromeless App mode (`--app=...`). | **Standard POS cashiers** |
 | **`scripts\tools\Himmel_POS_Kiosk.bat`** | Launches backend and opens fullscreen locked Touch Kiosk mode (`--kiosk`). | **Public / Locked POS terminals** |
 | **`scripts\tools\Himmel_POS_Service_Install.bat`** | Installs backend as an auto-starting Windows Service (NSSM) or Scheduled Task that starts with Windows boot. | **Unattended terminal servers** |
 | **`debug.bat`** | Launches hot-reload Vite server (:5173) + FastAPI (:8000). | **Developers / Diagnostics** |
@@ -164,7 +164,7 @@ Once installed, use the following shortcuts depending on your setup:
      ```
      http://<POS_LOCAL_IP>:8000/#/customer-display
      ```
-   *(Scan the QR code printed in the terminal console when running `start_pos.bat`)*.
+   *(Scan the QR code printed in the terminal console when running `start.bat`)*.
 ---
 
 ## 📁 Repository Structure

@@ -21,7 +21,8 @@ VoltFlow POS (`pos-eet-himmel`) is a production-grade retail point-of-sale syste
 - **Retail Barcode Engine**: Global HID USB barcode scanner keystroke interceptor (<50ms timing detection), multiplier resolution (`N * scan`), and on-the-fly Unknown Barcode Quick-Add modal without leaving checkout.
 - **Catalog Fast Search**: `.preset-search-bar` in `QuickPresetGrid.jsx` providing live instant filtering across product names, prices, and barcodes.
 - **Fast Banknote & Cash Breakdown Tender**: `CashPaymentPanel.jsx` with 100–5000 Kč banknote buttons, exact total button (`Přesně`), and greedy coin breakdown algorithm for customer change.
-- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (80 frontend tests, 45 backend tests, 0 lint errors).
+- **1-Tap Print on Demand ("Účtenku nechci")**: Dual completion buttons in `PaymentModal` (`[ ⚡ Dokončit bez tisku ]` / `[ 🖨️ Dokončit a vytisknout ]`) saving thermal paper and counter turnaround time.
+- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (113 frontend tests, 83 backend tests, 0 lint errors).
 
 ---
 
@@ -59,12 +60,12 @@ graph TD
     - Actions: `[Zavřít]` or `[+ Přidat do košíku]`.
   - Does not modify or disrupt the current checkout cart unless confirmed.
 
-### 3. 🖨️ 1-Tap Tisk účtenky v pokladně ("Účtenku nechci" / Print On Demand Toggle)
+### 3. 🖨️ 1-Tap Tisk účtenky v pokladně ("Účtenku nechci" / Print On Demand Choice) ✅
 - **Store Reality**: In convenience stores, 80%+ of customers buying beer, chewing gum, or bread decline paper receipts. Printing every receipt wastes expensive thermal paper rolls and creates counter clutter.
 - **Functionality**:
-  - Prominent 1-tap toggle in `PaymentModal` and register settings: `[🖨️ Tisk účtenky: ANO / NE]`.
-  - Remembers default preference (e.g. default OFF for cash < 200 Kč, or manual toggle).
-  - Transaction is fiscalized and saved to database, but physical paper is printed only when enabled or on explicit request.
+  - 1-tap dual action buttons in `PaymentModal` (`CashPaymentPanel`, `CardPaymentPanel`, `QrPaymentPanel`, `SplitPaymentPanel`): `[ ⚡ Dokončit bez tisku ]` and `[ 🖨️ Dokončit a vytisknout ]`.
+  - Transaction is fiscalized (EET 2.0 / SQLite) and saved to database, but physical paper / receipt preview is printed only when `[ Dokončit a vytisknout ]` is chosen.
+  - Full touch ergonomics (min 44px targets, `white-space: nowrap`) and full i18n support (`cs`, `vi`, `en`).
 
 ### 4. ⚡ Rychlé násobiče množství pro basy a kartony (Quick Multiplier Chips: 2×, 4×, 6×, 10×, 20×)
 - **Store Reality**: Customers constantly buy 6-packs of beer/water, 10 rolls (10× rohlík), or full crates (basa piva / 20 ks). Typing multipliers on numpad slows down queues.

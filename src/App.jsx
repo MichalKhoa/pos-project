@@ -610,8 +610,12 @@ export default function App() {
     setPaymentModalMethod(method);
   }, [cartItems.length]);
 
-  const handleCompleteSale = ({ paymentMethod, splitDetails, tenderedAmount, changeDue }) => {
+  const handleCompleteSale = ({ method, paymentMethod, splitDetails, tendered, tenderedAmount, change, changeDue, printReceipt = true }) => {
     soundFx.playSuccessChime();
+    const effectiveMethod = paymentMethod || method || 'cash';
+    const effectiveTendered = tenderedAmount !== undefined ? tenderedAmount : (tendered !== undefined ? tendered : 0);
+    const effectiveChange = changeDue !== undefined ? changeDue : (change !== undefined ? change : 0);
+
     const {
       finalGrandTotal,
       taxSummary
@@ -642,13 +646,13 @@ export default function App() {
         vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
         discount_percent: item.discountPercent || 0
       })),
-      totalAmount: paymentMethod === 'cash' ? Math.round(finalGrandTotal) : finalGrandTotal,
-      cashRounding: paymentMethod === 'cash' ? Math.round((Math.round(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
+      totalAmount: effectiveMethod === 'cash' ? Math.round(finalGrandTotal) : finalGrandTotal,
+      cashRounding: effectiveMethod === 'cash' ? Math.round((Math.round(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
       cartDiscountPercent,
-      paymentMethod,
+      paymentMethod: effectiveMethod,
       splitDetails: splitDetails || null,
-      tenderedAmount: paymentMethod === 'cash' ? tenderedAmount : finalGrandTotal,
-      changeDue: paymentMethod === 'cash' ? changeDue : 0,
+      tenderedAmount: effectiveMethod === 'cash' ? effectiveTendered : finalGrandTotal,
+      changeDue: effectiveMethod === 'cash' ? effectiveChange : 0,
       taxSummary
     });
 
@@ -677,7 +681,9 @@ export default function App() {
     });
 
     setSalesHistory(prev => [newSale, ...prev]);
-    setCurrentReceiptData(newSale);
+    if (printReceipt) {
+      setCurrentReceiptData(newSale);
+    }
     setPaymentModalMethod(null);
     setCartItems([]);
     setCartDiscountPercent(0);

@@ -92,7 +92,7 @@ VoltFlow POS provides a real-time WebSocket customer display (`/api/v1/ws/custom
 
 1. Run `scripts\build\build_standalone.bat` on your build machine to generate the standalone bundle.
 2. Copy the project folder containing `backend\dist_standalone\` to the POS terminal.
-3. Run `start_pos.bat`.
+3. Run `start.bat`.
 4. The script verifies port availability, starts the pre-compiled backend executable, and opens the POS UI in Microsoft Edge App Mode.
 
 ---
@@ -150,7 +150,7 @@ To allow customer-facing screens, mobile waiter tablets, or kitchen displays to 
 
 ### Option A: Windows Autostart Shortcut
 1. Press `Win + R`, type `shell:startup`, and press Enter.
-2. Create a shortcut to `start_pos.bat` (or the desktop executable) in this folder.
+2. Create a shortcut to `start.bat` (or the desktop executable) in this folder.
 3. Enable Windows automatic user login via `netplwiz` so the terminal boots directly into the POS register without a password prompt.
 
 ### Option B: Windows Background Service (NSSM)
