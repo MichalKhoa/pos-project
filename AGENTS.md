@@ -12,17 +12,28 @@ PyInstaller sidecar (`pos-backend.exe`). Thermal printers (ESC/POS), customer LC
 - **i18n**: User-visible text MUST use `t('key.path')`. Add all new strings to `cs`, `vi`, `en` in `src/i18n/translations.js`.
 - **Serena Memory**: Update `.serena/memories/` when models, hooks, utilities, or API contracts change.
 
-## 3. Quota Optimization & Low-Level Task Delegation
-- **OpenRouter MCP (`openai/gpt-oss-120b`)**: Use for low-level sub-tasks, large text/file digests, code refactoring snippets, and structured tool calls to shield primary Antigravity quota.
-- **Tools**:
-  - `openrouter_query`: Quick query/drafting/summaries.
-  - `openrouter_chat_with_tools`: Auxiliary tool calls and JSON structured extraction.
-  - `openrouter_code_refactor`: Surgical single-component code refactors and test generation.
-- **Subagents**: When exploring multi-file references or reading logs, delegate to `flash_lite` subagents.
+## 3. Delegation & Quota Shield
+
+### Mechanical Tasks (Delegate to Shield Primary Quota)
+Offload mechanical, low-reasoning drafting to OpenRouter or `flash_lite` subagents:
+
+| Task Category | Mandatory Tool / Delegation |
+|---|---|
+| **i18n Dictionary Drafting** | `openrouter_query` (`openai/gpt-oss-120b`) |
+| **Mock Test Fixtures & Data Boilerplate** | `openrouter_query` or `openrouter_code_refactor` |
+| **Multi-File Search / Code Exploration** | `invoke_subagent` (Role: `research`, Model: `flash_lite`) or `subagent-investigate` |
+| **Log Digging & Large File Inspection (>200 lines)** | `ctx_execute_file` (in-sandbox) or `flash_lite` subagent |
+
+### Core Engineering (Keep Strictly in Main Context)
+DO NOT delegate high-reasoning tasks. The primary Antigravity context owns:
+- **Bug fixing & root-cause debugging** (test failures, state bugs, DOM selector clashes)
+- **Financial & VAT calculations**
+- **Surgical code edits** (`replace_file_content`)
+- **Synthesis & verification gates**
 
 ## 4. Verification Gates (Run Before Done)
 - Frontend Tests: `npm run test | tokless`
 - Frontend Lint: `npm run lint | tokless`
 - Frontend Build: `npm run build | tokless`
 - Backend Tests: `python -m unittest discover -s backend/tests -p "test_*.py" | tokless`
-- Git Operations: When prompted to commit/push, stage surgical files, write Conventional Commit, push to branch autonomously.
+- Git Operations: Stage surgical files, Conventional Commit, push to branch.

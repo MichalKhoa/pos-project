@@ -1225,6 +1225,327 @@ select.input-field:focus {
   border-color: color-mix(in srgb, var(--accent-blue) 35%, transparent);
 }
 
+/* ==========================================================================
+   Last Receipt Quick Actions (Chip & Popover Modal)
+   ========================================================================== */
+.last-receipt-quick-container {
+  position: relative;
+  margin: 0.25rem 0.65rem 0.45rem;
+  flex-shrink: 0;
+}
+
+.last-receipt-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.65rem;
+  min-height: 38px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-blue) 8%, var(--bg-card));
+  border: 1px solid color-mix(in srgb, var(--accent-blue) 28%, var(--border-color));
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.last-receipt-chip-btn:hover {
+  background: color-mix(in srgb, var(--accent-blue) 14%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--accent-blue) 55%, transparent);
+}
+
+.last-receipt-chip-btn.is-active,
+.last-receipt-chip-btn:focus-visible {
+  background: color-mix(in srgb, var(--accent-blue) 16%, var(--bg-card));
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 25%, transparent);
+  outline: none;
+}
+
+.last-receipt-chip-btn.is-past-day {
+  border-color: color-mix(in srgb, var(--accent-amber) 35%, var(--border-color));
+}
+
+.last-receipt-chip-btn.is-past-day .last-receipt-chip-icon {
+  color: var(--accent-amber);
+}
+
+.last-receipt-chip-count-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.last-receipt-chip-icon {
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+
+.last-receipt-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: left;
+}
+
+.last-receipt-chip-chevron {
+  opacity: 0.75;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.last-receipt-chip-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Last Receipt Popover Modal Card */
+.last-receipt-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-elevated), 0 10px 28px rgba(0, 0, 0, 0.22);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  animation: popoverFadeSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.last-receipt-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.45rem;
+}
+
+.last-receipt-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.last-receipt-popover-title svg {
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+
+.last-receipt-popover-badge {
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+  color: var(--accent-blue);
+  font-weight: 800;
+  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+}
+
+.last-receipt-popover-details {
+  background: color-mix(in srgb, var(--text-primary) 3.5%, transparent);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.last-receipt-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.last-receipt-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.last-receipt-value {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.last-receipt-value.amount {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.last-receipt-value.time {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.last-receipt-value.payment {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Items Preview Section */
+.last-receipt-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: color-mix(in srgb, var(--text-primary) 2%, transparent);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+}
+
+.last-receipt-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+}
+
+.last-receipt-items-count-tag {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.last-receipt-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.last-receipt-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.last-receipt-item-qty {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--accent-blue);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  min-width: 18px;
+}
+
+.last-receipt-item-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.last-receipt-item-price {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  margin-left: 0.35rem;
+}
+
+.last-receipt-popover-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.last-receipt-action-btn {
+  flex: 1;
+  min-height: 42px;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color 0.12s ease, transform 0.1s ease, box-shadow 0.12s ease;
+}
+
+.last-receipt-action-btn:active {
+  transform: scale(0.97);
+}
+
+.last-receipt-action-btn.btn-reprint {
+  background: var(--accent-emerald);
+  color: #ffffff;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-emerald) 30%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .last-receipt-action-btn.btn-reprint:hover {
+    background: var(--accent-emerald-hover);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--accent-emerald) 45%, transparent);
+  }
+}
+
+.last-receipt-action-btn.btn-storno {
+  background: var(--accent-rose);
+  color: #ffffff;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-rose) 30%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .last-receipt-action-btn.btn-storno:hover {
+    background: var(--accent-rose-hover);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--accent-rose) 45%, transparent);
+  }
+}
+
 .cart-items-container {
   flex: 1;
   overflow-y: auto;

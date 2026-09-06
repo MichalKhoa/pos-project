@@ -123,8 +123,38 @@ describe('Last Receipt Quick Actions & Price Check Mode', () => {
 
       // Popover should be open
       expect(screen.getByText(/#2026-000089/i)).toBeInTheDocument();
+      expect(screen.getByText(/Kofola 2L/i)).toBeInTheDocument();
+      expect(screen.getByText(/5×/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Vytisknout znovu/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Rychlé storno/i })).toBeInTheDocument();
+    });
+
+    it('displays date and item breakdown in popover for previous day receipt', async () => {
+      const pastSale = {
+        id: 'sale-past-1',
+        receiptNumber: '2026-000045',
+        timestamp: '2026-09-01T10:15:00.000Z',
+        totalAmount: 350,
+        paymentMethod: 'card',
+        items: [
+          { id: 'p1', name: 'Burger Classic', price: 150, quantity: 2, vat: 12 },
+          { id: 'p2', name: 'Hranolky', price: 50, quantity: 1, vat: 12 }
+        ]
+      };
+      setStorageItem('sales', [pastSale]);
+      posApi.fetchSalesHistoryBackend.mockResolvedValue([pastSale]);
+
+      renderApp();
+
+      const chipBtn = await screen.findByRole('button', { name: /Poslední:\s*350\s*Kč/i });
+      fireEvent.click(chipBtn);
+
+      const popover = screen.getByText(/#2026-000045/i).closest('.last-receipt-popover');
+      expect(popover).toBeInTheDocument();
+      expect(within(popover).getByText(/Burger Classic/i)).toBeInTheDocument();
+      expect(within(popover).getByText(/2×/i)).toBeInTheDocument();
+      expect(within(popover).getByText(/Hranolky/i)).toBeInTheDocument();
+      expect(within(popover).getByText(/1×/i)).toBeInTheDocument();
     });
 
     it('triggers printReceiptBackend when clicking Re-print in popover', async () => {

@@ -22,7 +22,10 @@ VoltFlow POS (`pos-eet-himmel`) is a production-grade retail point-of-sale syste
 - **Catalog Fast Search**: `.preset-search-bar` in `QuickPresetGrid.jsx` providing live instant filtering across product names, prices, and barcodes.
 - **Fast Banknote & Cash Breakdown Tender**: `CashPaymentPanel.jsx` with 100–5000 Kč banknote buttons, exact total button (`Přesně`), and greedy coin breakdown algorithm for customer change.
 - **1-Tap Print on Demand ("Účtenku nechci")**: Dual completion buttons in `PaymentModal` (`[ ⚡ Dokončit bez tisku ]` / `[ 🖨️ Dokončit a vytisknout ]`) saving thermal paper and counter turnaround time.
-- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (113 frontend tests, 83 backend tests, 0 lint errors).
+- **Receipt Barcode Scanner & Line-Item Return (`Vratka ze záznamu`)**: Code128 receipt barcode scanner on thermal slips, global barcode listener lookup (`GET /api/v1/sales/by-receipt/{receipt_number}`), quantity-capped line item return dialog (`ReceiptReturnModal.jsx`), and automatic reverse transaction linkage.
+- **Encrypted Cloud Backup & Sync**: Native Python S3 / Cloudflare R2 backup service (`cloud_sync.py`), automated background sync, encrypted ZIP bundles, manual upload/restore, and technician diagnostic status indicator.
+- **Technician Diagnostic & Maintenance Mode**: Protected `DiagnosticModal.jsx` with live hardware checks, SQLite integrity / vacuum, log inspector, and exportable diagnostics bundle.
+- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (129 frontend tests, 86 backend tests, 0 lint errors).
 
 ---
 
@@ -41,24 +44,25 @@ graph TD
     G --> H[8. Custom Receipt Footer Notes]
 ```
 
-### 1. 🧾 Poslední účtenka: Rychlý dotisk a Storno (Last Receipt Quick Actions)
+### 1. 🧾 Poslední účtenka: Rychlý dotisk a Storno (Last Receipt Quick Actions) ✅
 - **Store Reality**: Customer finishes paying, starts walking out, then asks: "Můžete mi přece jen dát účtenku?" Or customer immediately notices they bought the wrong item and wants a refund. Cashier currently must open `Historie`, locate the sale, and print/storno.
-- **Functionality**:
-  - Top bar chip / cart footer widget: `[🧾 Poslední: 145 Kč (12:34)]`.
-  - 1 tap opens a lightweight touch popover:
+- **Functionality & Implementation**:
+  - Cart header quick chip: `[🧾 Poslední: 145 Kč (12:34)]` rendering live from `lastSale`.
+  - 1 tap opens a lightweight touch popover (`Cart.jsx`):
     - **`[🖨️ Vytisknout znovu]`**: Instantly re-prints the last receipt to thermal printer in <1s.
-    - **`[↩️ Rychlé storno]`**: Prompts 1-tap confirmation and issues a reverse refund transaction immediately.
+    - **`[↩️ Rychlé storno]`**: Prompts 1-tap confirmation and opens refund dialog for immediate reversal.
+  - Displays full item breakdown, timestamp, payment method, and past-day indicator.
 
-### 2. 🔍 Kontrola ceny / Cenovka (Price Check Mode)
+### 2. 🔍 Kontrola ceny / Cenovka (Price Check Mode) ✅
 - **Store Reality**: A customer brings an unpriced item to the counter and asks: "Kolik tohle stojí?". Scanning it currently adds it to the active cart, requiring manual line deletion if the customer decides not to buy.
-- **Functionality**:
-  - 1-tap toggle button on register: `[🔍 Kontrola ceny]`.
-  - When active, scanning any barcode displays a prominent, high-contrast modal with:
-    - Product Name & Category
-    - Selling Price in bold (e.g. **45 Kč**)
-    - Stock on hand & VAT rate
-    - Actions: `[Zavřít]` or `[+ Přidat do košíku]`.
-  - Does not modify or disrupt the current checkout cart unless confirmed.
+- **Functionality & Implementation**:
+  - 1-tap toggle button on register toolbar + `F2` keyboard shortcut: `[🔍 Kontrola ceny]`.
+  - When active, scanning any barcode or tapping any preset tile displays a prominent modal (`PriceCheckModal.jsx`) with:
+    - Product Name, Barcode & Category
+    - Large high-contrast selling price (e.g. **45 Kč**)
+    - Stock quantity on hand & VAT rate
+    - 1-tap actions: `[Zavřít]` or `[+ Přidat do košíku]`.
+  - Does not modify active checkout cart unless cashier confirms adding.
 
 ### 3. 🖨️ 1-Tap Tisk účtenky v pokladně ("Účtenku nechci" / Print On Demand Choice) ✅
 - **Store Reality**: In convenience stores, 80%+ of customers buying beer, chewing gum, or bread decline paper receipts. Printing every receipt wastes expensive thermal paper rolls and creates counter clutter.
@@ -105,14 +109,14 @@ graph TD
 
 ## 3. Near-Term Priorities & Payment Integrations 💳
 
-### 1. 🧾 Receipt Barcode Scanner & Item Return (`Skenování účtenky pro rychlou vratku / storno`)
+### 1. 🧾 Receipt Barcode Scanner & Item Return (`Skenování účtenky pro rychlou vratku / storno`) ✅
 - **Store Reality**: Customer brings back an item with a receipt. Cashier currently has to open `Historie`, manually search or scroll through dozens of transactions, find the right sale, and verify line items. Manual/blind returns risk wrong VAT rate, wrong unit price, or duplicate refunds.
-- **Functionality**:
-  - **Receipt Barcode/QR**: Thermal receipt prints a compact Code128 / QR code encoding `receipt_number` / sale ID at top or bottom.
-  - **Direct Scan from Checkout or History**: Scanning a receipt barcode anywhere automatically opens the **Receipt Return Dialog (`Vratka ze záznamu`)**:
-    - Displays original items, purchased quantities, prices, and previously refunded quantities.
-    - Cashier selects item(s) to return (1-tap `[Vrátit 1 ks]` / `[Vrátit vše]`).
-    - Auto-generates exact reverse refund transaction linked to original `sale_id`, keeping financial/VAT precision and inventory restock clean.
+- **Functionality & Implementation**:
+  - **Receipt Barcode/QR**: Thermal receipt prints a compact Code128 barcode encoding `receipt_number` at the top.
+  - **Direct Scan from Checkout or History**: Scanning a receipt barcode anywhere automatically opens the **Receipt Return Dialog (`ReceiptReturnModal.jsx`)**:
+    - Queries backend `GET /api/v1/sales/by-receipt/{receipt_number}` and calculates remaining returnable quantity per item across prior refunds.
+    - Cashier selects item(s) to return with intuitive touch stepper controls.
+    - Submits structured refund payload (`POST /api/v1/sales/`) linked to `original_sale_id`, updating inventory ledger and creating immutable reverse transaction.
     - Prevents over-refunding (cannot refund more units than purchased).
 
 ### 2. ČSOB Terminal Automated Reversals / Refunds
@@ -192,7 +196,7 @@ flowchart TB
 - E-commerce two-way inventory sync (Shoptet, WooCommerce, Shopify).
 
 ### Pillar 8: SaaS Platform, Auto-Backup & Handheld POS Devices
-- Automated encrypted SQLite replication to Cloudflare R2 / AWS S3 via Litestream with in-app status UI.
+- **Native Python Cloud Sync & S3/R2 Auto-Backup ✅**: Automated encrypted SQLite replication to Cloudflare R2 / AWS S3 (`cloud_sync.py`), background sync scheduler, on-demand technician backup/restore, and diagnostic indicator.
 - Background OTA updates via Tauri.
 - Single-column touch layout for compact handheld Android POS devices (<640px).
 
@@ -208,4 +212,5 @@ For detailed implementation history and architectural blueprints of completed mi
 - [`DONE_STABILITY_AND_QUALITY_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_STABILITY_AND_QUALITY_PLAN.md) — Test suites & ergonomics standards.
 - [`DONE_RETAIL_QUICK_WINS_ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_RETAIL_QUICK_WINS_ROADMAP.md) — Barcode scanner, tender keypad & tone engine.
 - [`DONE_LEGACY_FUTURE_ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_LEGACY_FUTURE_ROADMAP.md) — Legacy UI & accessibility roadmap.
+- [`NATIVE_PYTHON_CLOUD_SYNC_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/NATIVE_PYTHON_CLOUD_SYNC_PLAN.md) — Native Python S3/Cloudflare R2 backup & sync specification.
 - [`GROCERY_AND_ENTERPRISE_BACKLOG.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/GROCERY_AND_ENTERPRISE_BACKLOG.md) — Original specialized grocery ideas.

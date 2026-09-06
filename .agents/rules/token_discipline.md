@@ -36,13 +36,18 @@ These rules are mandatory for all AI agents working on this codebase to prevent 
 
 ---
 
-## 4. Local Model Offloading (Ollama / qwen3:8b)
+## 4. Model Offloading & Allowance (OpenRouter & Ollama MCP)
 
-- **Zero-Cost Local Ingestion**: Use `ollama_quick_query` (or `ollama_chat_with_tools`) for:
-  - Extracting structured JSON from unstructured text/logs without cloud roundtrips.
-  - Intermediate classification, sorting, or data transformation.
-  - Parsing large text blocks locally so only the concise JSON summary enters the main conversation.
-- **Default Local Model**: Use configured `qwen3:8b` for fast zero-shot local execution.
+- **OpenRouter MCP (Explicitly Allowed & Authorized)**:
+  - The agent is explicitly AUTHORIZED and ENCOURAGED to invoke OpenRouter MCP tools (`openrouter_query`, `openrouter_code_refactor`, `openrouter_chat_with_tools`) via `call_mcp_tool(ServerName: "openrouter", ...)`.
+  - **Permitted & Required Use Cases**:
+    - Drafting multi-language i18n translation dictionaries (`cs`, `vi`, `en`).
+    - Generating mock test fixtures, schemas, and repetitive data boilerplate.
+    - Large text/file digests and code generation sub-tasks to shield primary Antigravity quota.
+  - **Default Model**: `openai/gpt-oss-120b` (or `gpt-oss-120b`).
+- **Local Model Ingestion (Ollama / qwen3:8b)**:
+  - Use `ollama_quick_query` (or `ollama_chat_with_tools`) for zero-cost local structured JSON extraction from unstructured text/logs without cloud roundtrips.
+  - Intermediate classification, sorting, or offline data transformation.
 
 ---
 
