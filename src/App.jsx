@@ -767,7 +767,8 @@ export default function App() {
       taxSummary
     });
 
-    createSaleBackend(newSale).then(backendRes => {
+    createSaleBackend(newSale).then(async backendRes => {
+      let finalSaleToPrint = newSale;
       if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
         const assignedRn = backendRes.receipt_number || newSale.receiptNumber;
         if (assignedRn && assignedRn.startsWith(yearPrefix)) {
@@ -788,20 +789,42 @@ export default function App() {
         });
         setSalesHistory(prev => prev.map(s => s.id === newSale.id ? enrichedSale : s));
         setCurrentReceiptData(prev => prev && prev.id === newSale.id ? enrichedSale : prev);
+        finalSaleToPrint = enrichedSale;
+      }
+
+      if (printReceipt) {
+        try {
+          const res = await printReceiptBackend(finalSaleToPrint, storeConfig);
+          if (res && res.status === 'PRINTED' && res.physical !== false) {
+            setFlashBanner({
+              type: 'SUCCESS',
+              message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
+              amount: finalGrandTotal
+            });
+          } else {
+            // Fallback to preview modal only if hardware direct print could not be executed
+            setCurrentReceiptData(finalSaleToPrint);
+          }
+        } catch (err) {
+          console.warn('Background receipt print failed, falling back to modal preview:', err);
+          setCurrentReceiptData(finalSaleToPrint);
+        }
+      }
+    }).catch(err => {
+      console.warn('Backend sale registration failed:', err);
+      if (printReceipt) {
+        setCurrentReceiptData(newSale);
       }
     });
 
     setSalesHistory(prev => [newSale, ...prev]);
-    if (printReceipt) {
-      setCurrentReceiptData(newSale);
-    }
     setPaymentModalMethod(null);
     setCartItems([]);
     setCartDiscountPercent(0);
 
     setFlashBanner({
       type: 'SUCCESS',
-      message: 'Zaplaceno!',
+      message: printReceipt ? 'Zaplaceno!' : 'Zaplaceno!',
       amount: finalGrandTotal
     });
   };

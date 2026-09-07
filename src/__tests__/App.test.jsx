@@ -29,8 +29,9 @@ vi.mock('../api/posApi', async (importOriginal) => {
     broadcastCustomerDisplay: vi.fn(),
     deleteSaleBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
     purgeAllSalesBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
+    createSaleBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS', receipt_number: '2026-000001' }),
     openCashDrawerBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
-    printReceiptBackend: vi.fn().mockResolvedValue({ status: 'PRINTED' }),
+    printReceiptBackend: vi.fn().mockResolvedValue({ status: 'PRINTED', physical: true }),
     fetchPrinterDevices: vi.fn().mockResolvedValue([]),
     fetchTerminalConfig: vi.fn().mockResolvedValue({ enabled: false }),
     fetchLitestreamStatus: vi.fn().mockResolvedValue(null),
@@ -159,4 +160,39 @@ describe('App Shell & Navigation Regression Tests', () => {
     expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
     expect(fontBtn).toHaveTextContent('M');
   });
+
+  it('prints receipt directly via hardware in background without lingering in ReceiptModal on payment completion', async () => {
+    const posApi = await import('../api/posApi');
+    renderAppWithProviders();
+
+    // Type 1, 5, 0 on keypad
+    fireEvent.click(await screen.findByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: '5' }));
+    fireEvent.click(screen.getByRole('button', { name: '0' }));
+
+    // Click Add to Cart
+    const addBtn = screen.getByRole('button', { name: /Přidat do Košíku/i });
+    fireEvent.click(addBtn);
+
+    // Click Pay Cash
+    const payCashBtn = screen.getByRole('button', { name: /^Hotovost$/i });
+    fireEvent.click(payCashBtn);
+
+    // Inside payment modal, click "Dokončit a vytisknout"
+    const completeWithPrintBtn = await screen.findByRole('button', { name: /Dokončit a vytisknout/i });
+    fireEvent.click(completeWithPrintBtn);
+
+    // Verify printReceiptBackend was called directly in background
+    await waitFor(() => {
+      expect(posApi.printReceiptBackend).toHaveBeenCalled();
+    });
+
+    // Verify payment modal is closed and ReceiptModal is not blocking the register
+    await waitFor(() => {
+      expect(screen.queryByText(/Platba Prodeje/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/STORNO DOKLAD \/ DOBROPIS/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Prodej Dokončen/i)).not.toBeInTheDocument();
+    });
+  });
 });
+
