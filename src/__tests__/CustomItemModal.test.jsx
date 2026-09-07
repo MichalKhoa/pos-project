@@ -1,8 +1,13 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CustomItemModal from '../components/CustomItemModal';
 import { LanguageProvider } from '../i18n/LanguageContext';
+import * as posApi from '../api/posApi';
+
+vi.mock('../api/posApi', () => ({
+  openSystemKeyboard: vi.fn().mockResolvedValue({ status: 'SUCCESS' })
+}));
 
 function renderModal(props = {}) {
   const defaultProps = {
@@ -28,16 +33,16 @@ function renderModal(props = {}) {
 }
 
 describe('CustomItemModal Component Tests', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   it('renders correctly when open with default values', () => {
     renderModal();
 
     expect(screen.getByText(/Vlastní \/ Nezařazená položka/i)).toBeInTheDocument();
     expect(screen.getByTestId('amount-display')).toHaveTextContent('0 Kč');
-    expect(screen.getByRole('button', { name: '100' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '200' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '500' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: '21%' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByLabelText(/Název/i)).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'DPH 21%' })).toHaveClass('active');
+    expect(screen.getByRole('textbox', { name: /Název/i })).toHaveValue('');
   });
 
   it('does not render when isOpen is false', () => {
@@ -59,64 +64,51 @@ describe('CustomItemModal Component Tests', () => {
     renderModal();
 
     fireEvent.click(screen.getByRole('button', { name: '4' }));
-    fireEvent.click(screen.getByRole('button', { name: '.' }));
+    fireEvent.click(screen.getByRole('button', { name: ',' }));
     fireEvent.click(screen.getByRole('button', { name: '5' }));
 
     expect(screen.getByTestId('amount-display')).toHaveTextContent('4.5 Kč');
 
-    // Backspace
-    fireEvent.click(screen.getByRole('button', { name: 'Backspace' }));
+    // Inline Backspace
+    fireEvent.click(screen.getByLabelText('Inline Backspace'));
     expect(screen.getByTestId('amount-display')).toHaveTextContent('4. Kč');
 
-    // Clear
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    // Clear key 'C'
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     expect(screen.getByTestId('amount-display')).toHaveTextContent('0 Kč');
-  });
-
-  it('sets price quickly via banknote chips (100, 200, 500)', () => {
-    renderModal();
-
-    fireEvent.click(screen.getByRole('button', { name: '200' }));
-    expect(screen.getByTestId('amount-display')).toHaveTextContent('200 Kč');
-
-    fireEvent.click(screen.getByRole('button', { name: '500' }));
-    expect(screen.getByTestId('amount-display')).toHaveTextContent('500 Kč');
   });
 
   it('switches VAT rate between 21%, 12%, and 0%', () => {
     renderModal();
 
-    const vat21 = screen.getByRole('radio', { name: '21%' });
-    const vat12 = screen.getByRole('radio', { name: '12%' });
-    const vat0 = screen.getByRole('radio', { name: '0%' });
+    const vat21 = screen.getByRole('button', { name: 'DPH 21%' });
+    const vat12 = screen.getByRole('button', { name: 'DPH 12%' });
+    const vat0 = screen.getByRole('button', { name: 'DPH 0%' });
 
-    expect(vat21).toHaveAttribute('aria-checked', 'true');
+    expect(vat21).toHaveClass('active');
 
     fireEvent.click(vat12);
-    expect(vat12).toHaveAttribute('aria-checked', 'true');
-    expect(vat21).toHaveAttribute('aria-checked', 'false');
+    expect(vat12).toHaveClass('active');
+    expect(vat21).not.toHaveClass('active');
 
     fireEvent.click(vat0);
-    expect(vat0).toHaveAttribute('aria-checked', 'true');
-    expect(vat12).toHaveAttribute('aria-checked', 'false');
+    expect(vat0).toHaveClass('active');
+    expect(vat12).not.toHaveClass('active');
   });
 
-  it('adjusts multiplier using quick chips and +/- stepper', () => {
+  it('adjusts multiplier using +/- stepper bar', () => {
     renderModal();
 
-    // Quick multiplier chips
-    fireEvent.click(screen.getByRole('button', { name: '3x' }));
-    expect(screen.getByText('3 ks')).toBeInTheDocument();
+    // Stepper +1
+    fireEvent.click(screen.getByTitle('Zvýšit množství (+1)'));
+    expect(screen.getByText('2×')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: '10x' }));
-    expect(screen.getByText('10 ks')).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle('Zvýšit množství (+1)'));
+    expect(screen.getByText('3×')).toBeInTheDocument();
 
-    // Stepper +1 / -1
-    fireEvent.click(screen.getByRole('button', { name: 'Zvýšit množství' }));
-    expect(screen.getByText('11 ks')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Snížit množství' }));
-    expect(screen.getByText('10 ks')).toBeInTheDocument();
+    // Stepper -1
+    fireEvent.click(screen.getByTitle('Snížit množství (−1 / Vratka)'));
+    expect(screen.getByText('2×')).toBeInTheDocument();
   });
 
   it('toggles return mode via ± button', () => {
@@ -129,50 +121,19 @@ describe('CustomItemModal Component Tests', () => {
     // Toggle return
     fireEvent.click(screen.getByRole('button', { name: '±' }));
     expect(screen.getByTestId('amount-display')).toHaveTextContent('-100 Kč');
-    expect(screen.getAllByText(/Vratka/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/VRATKA/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it('sets item name via retail suggestion chips', () => {
     renderModal();
 
-    const nameInput = screen.getByLabelText(/Název/i);
+    const nameInput = screen.getByRole('textbox', { name: /Název/i });
 
     fireEvent.click(screen.getByRole('button', { name: 'Pečivo' }));
     expect(nameInput).toHaveValue('Pečivo');
 
     fireEvent.click(screen.getByRole('button', { name: 'Nealko' }));
     expect(nameInput).toHaveValue('Nealko');
-  });
-
-  it('opens on-screen touch keyboard and types Czech characters', () => {
-    renderModal();
-
-    // Toggle touch keyboard open
-    const keyboardToggle = screen.getByRole('button', { name: /Klávesnice/i });
-    fireEvent.click(keyboardToggle);
-
-    // Type with Shift + P, e, č, i, v, o
-    fireEvent.click(screen.getByRole('button', { name: 'Shift' }));
-    fireEvent.click(screen.getByRole('button', { name: 'p' }));
-    fireEvent.click(screen.getByRole('button', { name: 'e' }));
-    fireEvent.click(screen.getByRole('button', { name: 'č' }));
-    fireEvent.click(screen.getByRole('button', { name: 'i' }));
-    fireEvent.click(screen.getByRole('button', { name: 'v' }));
-    fireEvent.click(screen.getByRole('button', { name: 'o' }));
-
-    const nameInput = screen.getByLabelText(/Název/i);
-    expect(nameInput).toHaveValue('Pečivo');
-
-    // Space & Backspace in touch keyboard
-    fireEvent.click(screen.getByRole('button', { name: 'Mezera' }));
-    expect(nameInput).toHaveValue('Pečivo ');
-
-    fireEvent.click(screen.getByRole('button', { name: '⌫' }));
-    expect(nameInput).toHaveValue('Pečivo');
-
-    // Clear text
-    fireEvent.click(screen.getByRole('button', { name: 'Clear text' }));
-    expect(nameInput).toHaveValue('');
   });
 
   it('submits valid custom item to cart and calls onAddToCart and onClose', () => {
@@ -184,16 +145,16 @@ describe('CustomItemModal Component Tests', () => {
     fireEvent.click(screen.getByRole('button', { name: '0' }));
 
     // Select VAT 12%
-    fireEvent.click(screen.getByRole('radio', { name: '12%' }));
+    fireEvent.click(screen.getByRole('button', { name: 'DPH 12%' }));
 
-    // Select Qty 2x
-    fireEvent.click(screen.getByRole('button', { name: '2x' }));
+    // Select Qty +1 (2x)
+    fireEvent.click(screen.getByTitle('Zvýšit množství (+1)'));
 
     // Set name
     fireEvent.click(screen.getByRole('button', { name: 'Pečivo' }));
 
-    // Submit
-    const submitBtn = screen.getByRole('button', { name: /Vložit do košíku/i });
+    // Submit via Enter button in KeypadNumberGrid
+    const submitBtn = screen.getByRole('button', { name: /Přidat do Košíku/i });
     expect(submitBtn).not.toBeDisabled();
     fireEvent.click(submitBtn);
 
@@ -216,10 +177,57 @@ describe('CustomItemModal Component Tests', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zrušit' }));
     expect(props.onClose).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Zavřít' }));
+    fireEvent.click(screen.getByLabelText('Zavřít'));
     expect(props.onClose).toHaveBeenCalledTimes(2);
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(props.onClose).toHaveBeenCalledTimes(3);
   });
+
+  it('triggers system keyboard on keyboard button click', () => {
+    const showMock = vi.fn();
+    globalThis.navigator.virtualKeyboard = { show: showMock };
+
+    renderModal();
+
+    const keyboardBtn = screen.getByRole('button', { name: 'Otevřít klávesnici' });
+    fireEvent.click(keyboardBtn);
+
+    expect(posApi.openSystemKeyboard).toHaveBeenCalledTimes(1);
+    expect(showMock).toHaveBeenCalledTimes(1);
+
+    delete globalThis.navigator.virtualKeyboard;
+  });
+
+  it('auto-opens touch keyboard on input focus when autoOpenTouchKeyboard is enabled in props or config', () => {
+    renderModal({ autoOpenTouchKeyboard: true });
+
+    const nameInput = screen.getByRole('textbox', { name: /Název/i });
+    fireEvent.focus(nameInput);
+
+    expect(posApi.openSystemKeyboard).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not auto-open touch keyboard on input focus when autoOpenTouchKeyboard is false', () => {
+    renderModal({ autoOpenTouchKeyboard: false, storeConfig: { autoOpenTouchKeyboard: false } });
+
+    const nameInput = screen.getByRole('textbox', { name: /Název/i });
+    fireEvent.focus(nameInput);
+
+    expect(posApi.openSystemKeyboard).not.toHaveBeenCalled();
+  });
+
+  it('clears name when clear button is clicked', () => {
+    renderModal();
+
+    const nameInput = screen.getByRole('textbox', { name: /Název/i });
+    fireEvent.change(nameInput, { target: { value: 'Custom Coffee' } });
+    expect(nameInput).toHaveValue('Custom Coffee');
+
+    const clearBtn = screen.getByRole('button', { name: 'Clear name' });
+    fireEvent.click(clearBtn);
+
+    expect(nameInput).toHaveValue('');
+  });
 });
+

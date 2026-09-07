@@ -749,6 +749,72 @@ def restore_from_cloud_backup(
     return res
 
 
+@router.post("/open-keyboard")
+def open_system_keyboard(request: Request):
+    """
+    Spawns Windows Touch Keyboard (TabTip.exe) or On-Screen Keyboard (osk.exe)
+    in a non-blocking background process for touch terminals.
+    Restricted strictly to loopback callers.
+    """
+    _enforce_loopback_and_origin(request)
+
+    if sys.platform != "win32":
+        return {
+            "status": "SKIPPED",
+            "message": "Virtuální klávesnice je podporována pouze na systému Windows."
+        }
+
+    tabtip_candidates = [
+        os.path.expandvars(r"%CommonProgramFiles%\microsoft shared\ink\TabTip.exe"),
+        os.path.expandvars(r"%CommonProgramFiles(x86)%\microsoft shared\ink\TabTip.exe"),
+        r"C:\Program Files\Common Files\microsoft shared\ink\TabTip.exe",
+        r"C:\Program Files (x86)\Common Files\microsoft shared\ink\TabTip.exe",
+    ]
+
+    launched = False
+    error_msg = None
+
+    for path in tabtip_candidates:
+        if os.path.exists(path):
+            try:
+                if hasattr(os, "startfile"):
+                    os.startfile(path)
+                else:
+                    subprocess.Popen([path], shell=False)
+                launched = True
+                break
+            except Exception as e:
+                logger.warning(f"Failed to launch TabTip from {path}: {e}")
+                error_msg = str(e)
+
+    if not launched:
+        osk_candidates = [
+            "osk.exe",
+            os.path.expandvars(r"%SystemRoot%\system32\osk.exe"),
+            os.path.expandvars(r"%SystemRoot%\Sysnative\osk.exe"),
+        ]
+        for osk_path in osk_candidates:
+            try:
+                subprocess.Popen(["cmd.exe", "/c", "start", osk_path], shell=False)
+                launched = True
+                break
+            except Exception as e:
+                logger.warning(f"Failed to launch osk from {osk_path}: {e}")
+                error_msg = str(e)
+
+    if launched:
+        return {
+            "status": "SUCCESS",
+            "message": "Systémová klávesnice byla spuštěna."
+        }
+    else:
+        logger.error(f"Could not open Windows on-screen keyboard: {error_msg}")
+        return {
+            "status": "ERROR",
+            "message": f"Nepodařilo se spustit systémovou klávesnici: {error_msg}"
+        }
+
+
 @router.post("/shutdown")
 def shutdown_system(request: Request):
     """Safely stop backend service & terminal windows on cashier request."""

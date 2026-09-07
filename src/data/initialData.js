@@ -177,5 +177,6 @@ export const DEFAULT_STORE_CONFIG = {
   buttonAnimationMode: 'instant', // 'instant' (default, no transform lag on touch) or 'animated'
   registerLayout: 'two_column', // 'two_column' (default, wide preset grid + cart) or 'three_column' (classic manual keypad + presets + cart)
   shiftWidgetPosition: 'bottom_presets', // 'bottom_presets' (slim bar under presets), 'under_cart' (docked under cart), or 'keypad' (under keypad in left col)
-  fontSize: 'md' // 'sm' (14px), 'md' (16px), 'lg' (18px), 'xl' (20px)
+  fontSize: 'md', // 'sm' (14px), 'md' (16px), 'lg' (18px), 'xl' (20px)
+  autoOpenTouchKeyboard: false // Auto-invoke Windows Touch Keyboard on input focus
 };

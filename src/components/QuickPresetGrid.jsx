@@ -574,6 +574,8 @@ function QuickPresetGrid({
           onAddToCart={onAddToCart}
           defaultVat={storeConfig?.defaultVat}
           initialMultiplier={itemMultiplier}
+          autoOpenTouchKeyboard={storeConfig?.autoOpenTouchKeyboard}
+          storeConfig={storeConfig}
         />
       )}
     </div>

@@ -552,7 +552,7 @@ export default function LayoutSection({
         </div>
 
         {/* High-Legibility Mode */}
-        <div className="settings-toggle-row">
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
           <div className="settings-toggle-label-wrap">
             <span className="settings-toggle-title">
               {t('settings.high_legibility_label') || 'Vysoká čitelnost (High-Legibility Mode)'}
@@ -567,6 +567,27 @@ export default function LayoutSection({
               type="checkbox"
               checked={config.highLegibilityMode || false}
               onChange={e => handleUpdate({ highLegibilityMode: e.target.checked })}
+            />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        {/* Windows Touch Keyboard Auto-Open */}
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.touch_keyboard_title') || 'Automatické otevření dotykové klávesnice Windows'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {t('settings.touch_keyboard_desc') || 'Při zadávání názvu vlastní položky nebo na dotykové obrazovce automaticky vyvolá systémovou klávesnici Windows (TabTip).'}
+            </span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input
+              type="checkbox"
+              checked={config.autoOpenTouchKeyboard || false}
+              onChange={e => handleUpdate({ autoOpenTouchKeyboard: e.target.checked })}
             />
             <span className="settings-switch-slider" />
           </label>

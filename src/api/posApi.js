@@ -1223,4 +1223,21 @@ export async function downloadDiagnosticBundle(pin = null) {
   }
 }
 
+/**
+ * Trigger Windows Touch Keyboard / On-Screen Keyboard via backend endpoint
+ */
+export async function openSystemKeyboard() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/system/open-keyboard`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to open system keyboard:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+
 

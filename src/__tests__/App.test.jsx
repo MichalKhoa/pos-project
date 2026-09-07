@@ -174,8 +174,8 @@ describe('App Shell & Navigation Regression Tests', () => {
     fireEvent.click(screen.getByRole('button', { name: '5' }));
     fireEvent.click(screen.getByRole('button', { name: '0' }));
 
-    // Click Add to Cart / Vložit do košíku
-    const addBtn = screen.getByRole('button', { name: /^Vložit do košíku$/i });
+    // Click Add to Cart
+    const addBtn = screen.getByRole('button', { name: /Přidat do Košíku|Vložit do košíku/i });
     fireEvent.click(addBtn);
 
     // Click Pay Cash

@@ -235,6 +235,8 @@ export default function AppModals({
           }}
           defaultVat={storeConfig?.defaultVat}
           initialMultiplier={itemMultiplier}
+          autoOpenTouchKeyboard={storeConfig?.autoOpenTouchKeyboard}
+          storeConfig={storeConfig}
         />
       )}
 
