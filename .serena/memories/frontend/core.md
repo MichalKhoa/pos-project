@@ -15,3 +15,8 @@
   - **Right Island (`.nav-island-right`)**: Unified hardware capsule containing borderless 32px circular tool buttons (`.nav-tool-btn`, including theme toggle, font size cycle `.nav-font-size-btn` with size badge, sound toggle, cash drawer, and lock), compact language dropdown (`LanguageSelector`), hairline dividers, and localized live time/date chip (`.nav-clock-chip`) in `weekday DD/MM` format.
 - **Navbar Style Variants**: `.navbar.style-floating` (default), `.navbar.style-standard`, `.navbar.style-slim`.
 - **Category Chips**: Synchronized with elevated crisp card tile styling.
+
+## Register Layout Modes & Touch Input
+- **2-Column Mode (`layout-two-column`)**: Default modern touch layout. Left: auto-scaling wide preset grid (`pos-col-presets`, ~65–70% width, 4–6 columns), Right: cart (`pos-col-cart`, ~30–35% width). Keypad replaced with uncataloged item popover (`CustomItemModal.jsx`).
+- **3-Column Mode (`layout-three-column`)**: Classic register layout (Left: `ManualKeypad`, Center: presets grid, Right: cart).
+- **Store Config Attributes**: `storeConfig.registerLayout` (`'two_column'` | `'three_column'`), `storeConfig.shiftWidgetPosition` (`'bottom_presets'` | `'under_cart'` | `'keypad'`).

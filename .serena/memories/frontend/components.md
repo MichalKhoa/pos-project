@@ -3,7 +3,7 @@
 Directory: `/src/components`
 
 ## Views (Top-Level Code-Split Tabs)
-- `App.jsx`: Main register shell coordinator. Uses `useMemo` for cart subtotal. Subcomponents & hooks:
+- `App.jsx`: Main register shell coordinator. Supports 2-column (`layout-two-column`: wide presets + cart) and 3-column (`layout-three-column`: keypad + presets + cart) modes configurable via `storeConfig.registerLayout`. Uses `useMemo` for cart subtotal. Subcomponents & hooks:
   - `src/components/app/AppModals.jsx`: Centralized modal and portal coordinator.
   - `src/hooks/usePosKeyboardShortcuts.js`: Hardware numpad & shortcut keybindings.
   - `src/hooks/usePosCatalog.js`: Category & preset state and CRUD handlers.
@@ -43,6 +43,7 @@ Directory: `/src/components`
   - `PresetTileCard.jsx`: 4 selectable styles (`style-left-stripe` 4.5px left border on dark slate, `style-color-fill` authentic color with white `#ffffff` typography, `style-modern-card` gradient with top accent rim, `style-modern-glass` translucent glassmorphism with glow), corner icon (`.preset-corner-icon`), corner VAT text (`.preset-vat-text`). Edit mode: dashed border, tap to edit modal, drag reorder/delete.
   - `PresetModal.jsx`: 1000px studio modal. Left: details, Open Price toggle, store default VAT auto-selection, stock tracking toggle, USB barcode listener. Right: live `PresetTileCard` preview, 28-color palette + eyedropper, 100+ Lucide icons with search, photo upload.
   - `OpenPriceModal.jsx`: Numeric touch popover for open-price presets and returns (compact price card, inline backspace, 38px stepper, 44px 4×4 numpad grid, 44px submit/cancel).
+- `CustomItemModal.jsx`: Touch-first unclassified/custom item and return modal (`[🔢 Vlastní položka]`) with touch numpad, VAT chips, multiplier stepper, retail suggestion chips, on-screen Czech QWERTY keyboard toggle, and keyboard shortcuts (F2/F3/Enter/Esc).
   - `src/hooks/usePresetDragDrop.js`: Drag-and-drop tile reordering and keyboard arrow shifting.
 - `ManualKeypad.jsx`: Touch numeric pad (`touch-action: manipulation`). Three floating card boxes in `.pos-col-left`: top Keypad card (`.keypad-card-box` 46px keys, 36px name input, inline backspace on readout) and two bottom-docked cards (`marginTop: 'auto'`) separating Parked Carts (`.keypad-parked-box`) and Shift Summary (`.keypad-stats-box`). Subcomponents in `/src/components/keypad/`:
   - `KeypadStepperBar.jsx`: 38px quantity stepper (`ChevronDown` `-1`, `ChevronUp` `+1`), `{itemMultiplier}×` badge. Stepping < 1 enters return mode (`-1×`, `-2×`); unified with `±` toggle.

@@ -44,6 +44,7 @@ export const translations = {
     parked_carts: {
       card_title: "Odložené Nákupy (Zákazníci)",
       park_btn: "Odložit nákup",
+      park_btn_short: "Odložit",
       park_btn_title: "Odložit aktuální nákup pro vyřízení jiného zákazníka",
       restore_btn: "Obnovit",
       restore_btn_title: "Obnovit odložený nákup",
@@ -721,6 +722,11 @@ export const translations = {
       navbar_style_floating: "Plovoucí ostrov (Island)",
       navbar_style_slim: "Kompaktní lišta (Slim)",
       register_layout_title: "Ergonomie a rozvržení pokladny",
+      register_layout_mode: "Rozvržení pokladny (Layout)",
+      layout_two_column: "2 sloupce (Široký sortiment)",
+      layout_two_column_desc: "Moderní široký katalog produktů s rychlým prodejem bez stacionární klávesnice",
+      layout_three_column: "3 sloupce (Klasická klávesnice)",
+      layout_three_column_desc: "Klasické rozvržení s pevnou manuální klávesnicí vlevo a sortimentem uprostřed",
       cart_position_label: "Pozice košíku",
       cart_position_desc: "Umístění účtenkového košíku v rozvržení pokladny.",
       cart_left: "Vlevo (Standard)",
@@ -739,8 +745,9 @@ export const translations = {
       touch_animations_animated: "✨ Plynulé animace",
       shift_widget_position_title: "Umístění přehledu směny",
       shift_widget_position_desc: "Umístění widgetu denního přehledu tržeb a rychlé uzávěrky.",
-      shift_widget_pos_keypad: "Vlevo pod klávesnicí (Standard)",
-      shift_widget_pos_presets: "Široká lišta pod sortimentem (Doporučeno pro 14\" LCD)",
+      shift_widget_pos_keypad: "Na klávesnici (Standard)",
+      shift_widget_pos_presets: "Pod sortimentem (Široká lišta)",
+      shift_widget_pos_cart: "Pod košíkem",
       customer_display_title: "Zákaznický LCD displej",
       customer_display_greeting: "Pozdrav / Název na zákaznickém displeji",
       customer_display_auto_sleep_label: "Zhasínat zákaznický displej při vypnutí pokladny (Auto-Sleep / Standby)",
@@ -1032,6 +1039,23 @@ export const translations = {
       unknown_title: "Neznámý čárový kód",
       unknown_msg: "Produkt s tímto čárovým kódem nebyl nalezen v katalogu.",
       create_product: "Vytvořit produkt"
+    },
+    custom_item: {
+      title: "Vlastní / Nezařazená položka",
+      custom_btn: "Vlastní položka",
+      price_label: "Prodejní cena",
+      name_label: "Název / Popis položky",
+      name_placeholder: "Zadejte název položky (volitelné)...",
+      vat_label: "Sazba DPH",
+      add_to_cart: "Vložit do košíku",
+      keyboard_toggle: "Dotyková klávesnice",
+      quick_tags: {
+        bakery: "Pečivo",
+        produce: "Ovoce/Zel",
+        press: "Tiskoviny",
+        beverages: "Nealko",
+        other: "Ostatní"
+      }
     }
   },
   vi: {
@@ -1079,6 +1103,7 @@ export const translations = {
     parked_carts: {
       card_title: "Đơn hàng tạm giữ (Khách hàng)",
       park_btn: "Tạm giữ đơn",
+      park_btn_short: "Tạm gác",
       park_btn_title: "Tạm giữ đơn hiện tại để phục vụ khách khác",
       restore_btn: "Khôi phục",
       restore_btn_title: "Khôi phục đơn hàng đã tạm giữ",
@@ -1755,7 +1780,12 @@ export const translations = {
       navbar_style_standard: "Thanh tiêu chuẩn (Standard)",
       navbar_style_floating: "Đảo nổi (Floating Island)",
       navbar_style_slim: "Thanh siêu gọn (Slim)",
-      register_layout_title: "Giao diện & bố cục máy bán hàng",
+      register_layout_title: "Ergonomics và Bố cục quầy thu ngân",
+      register_layout_mode: "Bố cục quầy thu ngân (Layout)",
+      layout_two_column: "2 cột (Danh mục đa dạng)",
+      layout_two_column_desc: "Danh mục sản phẩm hiện đại rộng rãi cho việc bán nhanh mà không cần bàn phím cố định",
+      layout_three_column: "3 cột (Bàn phím cổ điển)",
+      layout_three_column_desc: "Bố cục cổ điển với bàn phím thủ công cố định bên trái và danh mục ở giữa",
       cart_position_label: "Vị trí giỏ hàng",
       cart_position_desc: "Vị trí của giỏ hóa đơn trên màn hình thu ngân.",
       cart_left: "Bên trái (Mặc định)",
@@ -1774,8 +1804,9 @@ export const translations = {
       touch_animations_animated: "✨ Hiệu ứng mượt mà",
       shift_widget_position_title: "Vị trí bảng tổng kết ca",
       shift_widget_position_desc: "Vị trí hiển thị tổng kết doanh thu ca và in kết ca nhanh.",
-      shift_widget_pos_keypad: "Bên trái dưới bàn phím (Mặc định)",
-      shift_widget_pos_presets: "Thanh ngang dưới danh mục (Tối ưu cho laptop 14\")",
+      shift_widget_pos_keypad: "Trên bàn phím (Mặc định)",
+      shift_widget_pos_presets: "Dưới danh mục (Thanh ngang)",
+      shift_widget_pos_cart: "Dưới giỏ hàng",
       customer_display_title: "Màn hình phụ LCD khách hàng",
       customer_display_greeting: "Lời chào / Tiêu đề trên màn hình khách",
       customer_display_auto_sleep_label: "Tắt màn hình khách khi tắt máy thu ngân (Auto-Sleep / Standby)",
@@ -2067,6 +2098,23 @@ export const translations = {
       unknown_title: "Mã vạch không xác định",
       unknown_msg: "Không tìm thấy sản phẩm có mã vạch này trong danh mục.",
       create_product: "Tạo sản phẩm"
+    },
+    custom_item: {
+      title: "Mặt hàng Tùy chỉnh / Chưa phân loại",
+      custom_btn: "Mặt hàng tùy chọn",
+      price_label: "Giá bán",
+      name_label: "Tên / Mô tả mặt hàng",
+      name_placeholder: "Nhập tên mặt hàng (tùy chọn)...",
+      vat_label: "Tỷ lệ VAT",
+      add_to_cart: "Thêm vào giỏ hàng",
+      keyboard_toggle: "Bàn phím cảm ứng",
+      quick_tags: {
+        bakery: "Bánh mì",
+        produce: "Rau củ / Trái cây",
+        press: "Tạp chí",
+        beverages: "Thức uống không cồn",
+        other: "Khác"
+      }
     }
   },
   en: {
@@ -2114,6 +2162,7 @@ export const translations = {
     parked_carts: {
       card_title: "Parked Carts (Customers)",
       park_btn: "Park Cart",
+      park_btn_short: "Park",
       park_btn_title: "Park current cart to serve another customer",
       restore_btn: "Restore",
       restore_btn_title: "Restore parked cart",
@@ -2790,7 +2839,12 @@ export const translations = {
       navbar_style_standard: "Standard Full-Width",
       navbar_style_floating: "Floating Island",
       navbar_style_slim: "Slim Underline",
-      register_layout_title: "Register Layout & Ergonomics",
+      register_layout_title: "Register Ergonomics and Layout",
+      register_layout_mode: "Register Layout",
+      layout_two_column: "2 Columns (Wide Variety)",
+      layout_two_column_desc: "Modern wide product catalog for quick sales without a stationary keyboard",
+      layout_three_column: "3 Columns (Classic Keyboard)",
+      layout_three_column_desc: "Classic layout with a fixed manual keyboard on the left and products in the center",
       cart_position_label: "Cart position",
       cart_position_desc: "Placement of the receipt cart on the register view.",
       cart_left: "Left (Default)",
@@ -2809,8 +2863,9 @@ export const translations = {
       touch_animations_animated: "✨ Smooth Animations",
       shift_widget_position_title: "Shift summary widget position",
       shift_widget_position_desc: "Placement of the daily sales summary and 1-click report widget.",
-      shift_widget_pos_keypad: "Left column under keypad (Standard)",
-      shift_widget_pos_presets: "Slim bar under presets (Recommended for 14\" laptops)",
+      shift_widget_pos_keypad: "On keypad (Standard)",
+      shift_widget_pos_presets: "Under presets (Wide bar)",
+      shift_widget_pos_cart: "Below cart",
       customer_display_title: "Customer LCD Display",
       customer_display_greeting: "Greeting / Title on customer display",
       customer_display_auto_sleep_label: "Dim customer display when shutting down POS (Auto-Sleep / Standby)",
@@ -3102,6 +3157,23 @@ export const translations = {
       unknown_title: "Unknown Barcode",
       unknown_msg: "Product with this barcode was not found in catalog.",
       create_product: "Create Product"
+    },
+    custom_item: {
+      title: "Custom / Unclassified Item",
+      custom_btn: "Custom Item",
+      price_label: "Selling Price",
+      name_label: "Item Name / Description",
+      name_placeholder: "Enter item name (optional)...",
+      vat_label: "VAT Rate",
+      add_to_cart: "Add to Cart",
+      keyboard_toggle: "Touch Keyboard",
+      quick_tags: {
+        bakery: "Bakery",
+        produce: "Produce",
+        press: "Press",
+        beverages: "Non-Alcoholic Beverages",
+        other: "Other"
+      }
     }
   }
 };

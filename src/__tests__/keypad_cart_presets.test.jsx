@@ -312,6 +312,22 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       }));
       expect(onClearKeypadAmount).toHaveBeenCalled();
     });
+
+    it('opens CustomItemModal when clicking Vlastní položka toolbar button', () => {
+      const onOpenCustomModal = vi.fn();
+      wrapWithLanguage(
+        <QuickPresetGrid
+          presets={samplePresets}
+          categories={sampleCategories}
+          onOpenCustomModal={onOpenCustomModal}
+        />
+      );
+
+      const customItemBtn = screen.getByRole('button', { name: /Vlastní položka/i });
+      expect(customItemBtn).toBeInTheDocument();
+      fireEvent.click(customItemBtn);
+      expect(onOpenCustomModal).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Cart', () => {
@@ -370,6 +386,23 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
 
       fireEvent.click(restoreBadgeBtn);
       expect(onOpenParkedModal).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders park button in Cart header when cart has items and calls onParkCart on click', () => {
+      const onParkCart = vi.fn();
+      wrapWithLanguage(
+        <Cart
+          cartItems={sampleCartItems}
+          onParkCart={onParkCart}
+          storeConfig={DEFAULT_STORE_CONFIG}
+        />
+      );
+
+      const parkBtn = screen.getByRole('button', { name: /Odložit/i });
+      expect(parkBtn).toBeInTheDocument();
+
+      fireEvent.click(parkBtn);
+      expect(onParkCart).toHaveBeenCalledTimes(1);
     });
   });
 

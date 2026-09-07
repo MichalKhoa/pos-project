@@ -23,9 +23,10 @@ VoltFlow POS (`pos-eet-himmel`) is a production-grade retail point-of-sale syste
 - **Fast Banknote & Cash Breakdown Tender**: `CashPaymentPanel.jsx` with 100–5000 Kč banknote buttons, exact total button (`Přesně`), and greedy coin breakdown algorithm for customer change.
 - **1-Tap Print on Demand ("Účtenku nechci")**: Dual completion buttons in `PaymentModal` (`[ ⚡ Dokončit bez tisku ]` / `[ 🖨️ Dokončit a vytisknout ]`) saving thermal paper and counter turnaround time.
 - **Receipt Barcode Scanner & Line-Item Return (`Vratka ze záznamu`)**: Code128 receipt barcode scanner on thermal slips, global barcode listener lookup (`GET /api/v1/sales/by-receipt/{receipt_number}`), quantity-capped line item return dialog (`ReceiptReturnModal.jsx`), and automatic reverse transaction linkage.
+- **2-Column Wide Presets & On-Screen Touch Input**: Configurable POS layout (`registerLayout`: `'two_column'` default vs `'three_column'`) expanding product catalog grid to 65–70% width with auto-scaling 4–6 columns. Integrated uncataloged item/return modal (`CustomItemModal.jsx`) with large touch numpad, banknote shortcuts (100, 200, 500 Kč), VAT selectors (21%, 12%, 0%), multiplier stepper, retail suggestion chips, and on-screen Czech QWERTY keyboard (`ěščřžýáíéúů`).
 - **Encrypted Cloud Backup & Sync**: Native Python S3 / Cloudflare R2 backup service (`cloud_sync.py`), automated background sync, encrypted ZIP bundles, manual upload/restore, and technician diagnostic status indicator.
 - **Technician Diagnostic & Maintenance Mode**: Protected `DiagnosticModal.jsx` with live hardware checks, SQLite integrity / vacuum, log inspector, and exportable diagnostics bundle.
-- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (129 frontend tests, 86 backend tests, 0 lint errors).
+- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (145 frontend tests, 86 backend tests, 0 lint errors).
 
 ---
 
@@ -180,9 +181,9 @@ flowchart TD
 - **1-Click Tax Return Preparation (Podklady pro DPFO Příloha č. 1 & DPH)**:
   - Clean exportable PDF/Excel report matching Czech Financial Administration lines (Příjmy § 7, Daňové výdaje za nákup zboží, Provozní režie, Počáteční a konečný stav zásob k 31.12.).
   - Monthly/Quarterly VAT summary (Base & Tax for 21%, 12%, 0% output + input from registered supplier invoices) for direct entry into MOJE daně (DIS+/EPO).
-- **Stock Catalog Integrity & Generic Preset Rules (Volný prodej vs. Sklad)**:
-  - In Fast/Večerka Mode: Unlinked generic presets (`Volný prodej 12%/21%`) allow fast checkout without inventory decrements.
-  - In Accounting Mode: Unlinked open items are disabled or mapped to **Group Stock Cards (*Skupinová karta*)** (e.g. *Pečivo nebalené*, *Sezónní ovoce*) with estimated COGS to ensure every sale generates a valid Goods Issue (*Výdejka*).
+- **Stock Catalog Integrity & Preset-First Architecture (Kniha zásob & Volný prodej)**:
+  - **Preset-First Ledger Enforcement**: The 2-column layout promotes preset-first checkout where items link directly to stock catalog cards with verified VAT rates and inventory decrement hooks, ensuring accurate Goods Issue (*Výdejka*) records and preventing unclassified open sales drift.
+  - **Uncataloged Touch Entry (`CustomItemModal`)**: Manual items entered via on-screen touch numpad/keyboard are cleanly flagged with explicit VAT tiers (21%, 12%, 0%) and retail categories (`Pečivo`, `Nealko`, etc.), mapping directly to **Group Stock Cards (*Skupinová karta*)** with estimated COGS in Accounting Mode.
 - **Returnable Packaging Tracking (Zálohované vratné obaly)**:
   - Dedicated asset sub-ledger for beer bottles (3 Kč) and crates (100 Kč) compliant with packaging deposit accounting rules.
 

@@ -11,8 +11,24 @@ import ToastUndo from '../ToastUndo';
 import CheckoutFlashBanner from '../CheckoutFlashBanner';
 import UnknownBarcodeModal from '../UnknownBarcodeModal';
 import PriceCheckModal from '../PriceCheckModal';
+import CustomItemModal from '../CustomItemModal';
+import ParkedCartsDrawer from '../keypad/ParkedCartsDrawer';
 
 export default function AppModals({
+  // Custom Item Modal (2-column mode / quick action)
+  isCustomItemModalOpen = false,
+  setIsCustomItemModalOpen = null,
+  onAddToCartFromCustomItem = null,
+
+  // Parked Carts Modal
+  isParkedModalOpen = false,
+  setIsParkedModalOpen = null,
+  parkedCarts = [],
+  onParkCart = null,
+  onRestoreParkedCart = null,
+  onDeleteParkedCart = null,
+  onUpdateParkedCartNote = null,
+
   // Discount Modal
   isDiscountModalOpen,
   setIsDiscountModalOpen,
@@ -205,6 +221,36 @@ export default function AppModals({
         flashBanner={flashBanner}
         onDismiss={onDismissFlashBanner}
       />
+
+      {/* Custom Item Modal (2-column layout or toolbar trigger) */}
+      {isCustomItemModalOpen && (
+        <CustomItemModal
+          isOpen={isCustomItemModalOpen}
+          onClose={() => {
+            if (setIsCustomItemModalOpen) setIsCustomItemModalOpen(false);
+          }}
+          onAddToCart={(item) => {
+            if (onAddToCartFromCustomItem) onAddToCartFromCustomItem(item);
+            if (setIsCustomItemModalOpen) setIsCustomItemModalOpen(false);
+          }}
+          defaultVat={storeConfig?.defaultVat}
+          initialMultiplier={itemMultiplier}
+        />
+      )}
+
+      {/* Standalone Parked Carts Modal Dialog */}
+      {isParkedModalOpen && (
+        <ParkedCartsDrawer
+          modalOnly={true}
+          isOpen={isParkedModalOpen}
+          onOpenChange={setIsParkedModalOpen}
+          parkedCarts={parkedCarts}
+          onParkCart={onParkCart}
+          onRestoreParkedCart={onRestoreParkedCart}
+          onDeleteParkedCart={onDeleteParkedCart}
+          onUpdateParkedCartNote={onUpdateParkedCartNote}
+        />
+      )}
     </>
   );
 }

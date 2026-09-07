@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Plus, Layers, Check, Edit3, Search, X, FolderPlus, Trash2 } from 'lucide-react';
+import { Plus, Layers, Check, Edit3, Search, X, FolderPlus, Trash2, Calculator } from 'lucide-react';
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
+import CustomItemModal from './CustomItemModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { usePresetDragDrop } from '../hooks/usePresetDragDrop';
 import CategoryFilterBar from './presets/CategoryFilterBar.jsx';
@@ -29,7 +30,8 @@ function QuickPresetGrid({
   storeConfig = null,
   isPriceCheckActive = false,
   onTogglePriceCheck = null,
-  onInspectPrice = null
+  onInspectPrice = null,
+  onOpenCustomModal = null
 }) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -40,6 +42,15 @@ function QuickPresetGrid({
   const [managingCatId, setManagingCatId] = useState(null);
   const [editingPreset, setEditingPreset] = useState(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
+  const [isInternalCustomModalOpen, setIsInternalCustomModalOpen] = useState(false);
+
+  const handleOpenCustomItem = () => {
+    if (onOpenCustomModal) {
+      onOpenCustomModal();
+    } else {
+      setIsInternalCustomModalOpen(true);
+    }
+  };
 
   const handleOpenCategoryManager = (catId = null) => {
     setManagingCatId(catId);
@@ -265,6 +276,31 @@ function QuickPresetGrid({
               </button>
             </div>
           )}
+
+          {/* Custom Item 1-Tap Opener */}
+          <button
+            type="button"
+            className="nav-tab custom-item-btn"
+            style={{
+              height: '38px',
+              minHeight: '38px',
+              padding: '0 0.75rem',
+              fontSize: '0.82rem',
+              background: 'rgba(56, 189, 248, 0.12)',
+              color: 'var(--accent-blue, #38bdf8)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              fontWeight: '800',
+              gap: '0.35rem',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              touchAction: 'manipulation'
+            }}
+            onClick={handleOpenCustomItem}
+            title={t('custom_item.title') || 'Vlastní položka'}
+          >
+            <Calculator size={15} strokeWidth={2.5} />
+            <span>{t('custom_item.custom_btn') || t('custom_item.title') || 'Vlastní položka'}</span>
+          </button>
 
           {/* Action Buttons */}
           <button
@@ -527,6 +563,17 @@ function QuickPresetGrid({
             setManagingCatId(null);
           }}
           onSelectCategory={(id) => setActiveCategory(id)}
+        />
+      )}
+
+      {/* Custom Item Modal (when used standalone without external coordinator) */}
+      {isInternalCustomModalOpen && (
+        <CustomItemModal
+          isOpen={isInternalCustomModalOpen}
+          onClose={() => setIsInternalCustomModalOpen(false)}
+          onAddToCart={onAddToCart}
+          defaultVat={storeConfig?.defaultVat}
+          initialMultiplier={itemMultiplier}
         />
       )}
     </div>

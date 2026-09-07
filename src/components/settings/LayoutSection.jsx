@@ -340,6 +340,43 @@ export default function LayoutSection({
           </div>
         </div>
 
+        {/* Register Layout (2 Columns vs 3 Columns) */}
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.register_layout_mode') || 'Rozvržení pokladny (Layout)'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {(config.registerLayout || 'two_column') === 'two_column'
+                ? (t('settings.layout_two_column_desc') || 'Moderní široký katalog produktů s rychlým prodejem bez stacionární klávesnice')
+                : (t('settings.layout_three_column_desc') || 'Klasické rozvržení s pevnou manuální klávesnicí vlevo a sortimentem uprostřed')}
+            </span>
+          </div>
+
+          <div className="settings-segmented-group">
+            {[
+              { id: 'two_column', label: t('settings.layout_two_column') || '2 sloupce (Široký sortiment)' },
+              { id: 'three_column', label: t('settings.layout_three_column') || '3 sloupce (Klasická klávesnice)' }
+            ].map(layout => (
+              <button
+                key={layout.id}
+                type="button"
+                className={`settings-segmented-btn ${(config.registerLayout || 'two_column') === layout.id ? 'active' : ''}`}
+                onClick={() => {
+                  handleUpdate({ registerLayout: layout.id });
+                  try {
+                    localStorage.setItem('voltflow_pos_register_layout', layout.id);
+                  } catch (e) {
+                    console.warn(e);
+                  }
+                }}
+              >
+                {layout.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Cart Position (Left vs Right) */}
         <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem' }}>
           <div className="settings-toggle-label-wrap">
@@ -491,13 +528,14 @@ export default function LayoutSection({
 
           <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
             {[
-              { id: 'keypad', label: t('settings.shift_widget_pos_keypad') || 'Pod klávesnicí' },
-              { id: 'bottom_presets', label: t('settings.shift_widget_pos_presets') || 'Lišta pod sortimentem (14" LCD)' }
+              { id: 'bottom_presets', label: t('settings.shift_widget_pos_presets') || 'Pod sortimentem' },
+              { id: 'under_cart', label: t('settings.shift_widget_pos_cart') || 'Pod košíkem' },
+              { id: 'keypad', label: t('settings.shift_widget_pos_keypad') || 'Na klávesnici' }
             ].map(pos => (
               <button
                 key={pos.id}
                 type="button"
-                className={`settings-segmented-btn ${(config.shiftWidgetPosition || 'keypad') === pos.id ? 'active' : ''}`}
+                className={`settings-segmented-btn ${(config.shiftWidgetPosition || 'bottom_presets') === pos.id ? 'active' : ''}`}
                 onClick={() => {
                   handleUpdate({ shiftWidgetPosition: pos.id });
                   try {

@@ -115,8 +115,8 @@ describe('App Shell & Navigation Regression Tests', () => {
     const registerTabs = screen.getAllByRole('button', { name: /Pokladna/i });
     fireEvent.click(registerTabs[0]);
 
-    // Verify keypad label input is present
-    expect(await screen.findByPlaceholderText(/Název \/ popis/i)).toBeInTheDocument();
+    // Verify preset search / catalog is present
+    expect(await screen.findByPlaceholderText(/Hledat položku nebo název/i)).toBeInTheDocument();
   });
 
   it('renders customer display view when hash is #/customer-display', async () => {
@@ -165,13 +165,17 @@ describe('App Shell & Navigation Regression Tests', () => {
     const posApi = await import('../api/posApi');
     renderAppWithProviders();
 
-    // Type 1, 5, 0 on keypad
+    // Open Custom Item Modal
+    const customItemBtn = await screen.findByRole('button', { name: /Vlastní položka/i });
+    fireEvent.click(customItemBtn);
+
+    // Type 1, 5, 0 on touch numpad
     fireEvent.click(await screen.findByRole('button', { name: '1' }));
     fireEvent.click(screen.getByRole('button', { name: '5' }));
     fireEvent.click(screen.getByRole('button', { name: '0' }));
 
-    // Click Add to Cart
-    const addBtn = screen.getByRole('button', { name: /Přidat do Košíku/i });
+    // Click Add to Cart / Vložit do košíku
+    const addBtn = screen.getByRole('button', { name: /^Vložit do košíku$/i });
     fireEvent.click(addBtn);
 
     // Click Pay Cash
@@ -193,6 +197,24 @@ describe('App Shell & Navigation Regression Tests', () => {
       expect(screen.queryByText(/STORNO DOKLAD \/ DOBROPIS/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Prodej Dokončen/i)).not.toBeInTheDocument();
     });
+  });
+
+  it('renders 2-column wide layout without stationary keypad by default and supports 3-column mode', async () => {
+    // 1. Default 2-column mode
+    const { container, unmount } = renderAppWithProviders();
+    expect(container.querySelector('.pos-layout.layout-two-column')).toBeInTheDocument();
+    expect(container.querySelector('.pos-col-presets')).toBeInTheDocument();
+    expect(container.querySelector('.pos-col-cart')).toBeInTheDocument();
+    expect(container.querySelector('.pos-col-left')).not.toBeInTheDocument();
+    unmount();
+
+    // 2. Set 3-column mode in localStorage
+    localStorage.setItem('voltflow_pos_config', JSON.stringify({ registerLayout: 'three_column' }));
+    const { container: container3 } = renderAppWithProviders();
+    expect(container3.querySelector('.pos-layout.layout-three-column')).toBeInTheDocument();
+    expect(container3.querySelector('.pos-col-left')).toBeInTheDocument();
+    expect(container3.querySelector('.pos-col-center')).toBeInTheDocument();
+    expect(container3.querySelector('.pos-col-right')).toBeInTheDocument();
   });
 });
 

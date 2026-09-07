@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown, PauseCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
@@ -86,6 +86,7 @@ function Cart({
   onOpenCashDrawer = null,
   parkedCartsCount = 0,
   onOpenParkedModal = null,
+  onParkCart = null,
   cartItemStyle = 'elevated-card',
   lastSale = null,
   onReprintLastReceipt = null,
@@ -228,6 +229,19 @@ function Cart({
 
           {cartItems.length > 0 && (
             <>
+              {/* Park Active Cart Button */}
+              {onParkCart && (
+                <button
+                  type="button"
+                  className="clear-cart-btn btn-park"
+                  onClick={onParkCart}
+                  title={t('parked_carts.park_btn_title') || 'Odložit nákup'}
+                >
+                  <PauseCircle size={13} style={{ flexShrink: 0 }} />
+                  <span>{t('parked_carts.park_btn_short') || t('parked_carts.park_btn') || 'Odložit'}</span>
+                </button>
+              )}
+
               {/* Open Custom Discount Modal for Cart */}
               <button
                 type="button"

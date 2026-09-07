@@ -928,7 +928,96 @@ input, textarea, [contenteditable="true"] {
   overflow: visible;
 }
 
-/* Re-order Columns when Cart position is configured */
+/* ──────────────────────────────────────────────────────────────────────────
+   2-Column POS Register Layout — Wide Presets Grid + Compact Cart
+   ────────────────────────────────────────────────────────────────────────── */
+.pos-layout.layout-two-column {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  padding: 0.45rem 0.65rem;
+  gap: 0.65rem;
+  background: var(--bg-main);
+  box-sizing: border-box;
+}
+
+.pos-layout.layout-two-column .pos-col-presets {
+  flex: 1 1 68%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pos-layout.layout-two-column .pos-col-presets .pos-presets-box {
+  flex: 1;
+  min-height: 0;
+  padding: 0.85rem 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-sizing: border-box;
+}
+
+.pos-layout.layout-two-column .pos-col-cart {
+  flex: 0 0 32%;
+  width: 32%;
+  min-width: 360px;
+  max-width: 480px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  position: relative;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Re-order Columns when Cart position is configured in 2-column mode */
+.pos-layout.layout-two-column.cart-layout-left .pos-col-cart {
+  order: -1;
+}
+.pos-layout.layout-two-column.cart-layout-left .pos-col-presets {
+  order: 1;
+}
+
+.pos-layout.layout-two-column.cart-layout-right .pos-col-presets {
+  order: -1;
+}
+.pos-layout.layout-two-column.cart-layout-right .pos-col-cart {
+  order: 1;
+}
+
+/* Wide screen auto-scaling grid (4 to 6 columns) */
+.pos-layout.layout-two-column .preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.55rem;
+}
+
+@media (min-width: 1400px) {
+  .pos-layout.layout-two-column .preset-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.65rem;
+  }
+}
+
+@media (min-width: 1700px) {
+  .pos-layout.layout-two-column .preset-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* Re-order Columns when Cart position is configured in 3-column mode */
 .pos-layout.cart-layout-left .pos-col-right {
   order: -2;
 }
