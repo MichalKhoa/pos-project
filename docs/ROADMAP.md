@@ -3,7 +3,7 @@
 _Last updated: September 2026_  
 _Status: Active Living Document_  
 _Architecture: Hybrid Offline-First Desktop (Tauri v2 + FastAPI + SQLite + React 19)_  
-_Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka)_
+_Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka / OSVČ)_
 
 ---
 
@@ -31,17 +31,15 @@ VoltFlow POS (`pos-eet-himmel`) is a production-grade retail point-of-sale syste
 
 ## 2. Immediate Priorities — Real Counter Features for Parents' Večerka 🏪
 
-These are concrete, high-impact features designed specifically for the daily reality of running a busy večerka: fast customer turnaround, paper roll savings, shelf management, and eliminating counter friction.
+Concrete, high-impact features designed specifically for the daily counter reality of running a busy večerka: fast customer turnaround, paper roll savings, shelf management, and eliminating counter friction.
 
 ```mermaid
 graph TD
-    A[1. Last Receipt Quick Actions] --> B[2. Price Check Mode / Cenovka]
-    B --> C[3. 1-Tap Receipt Print Toggle]
-    C --> D[4. Quick Multiplier Chips]
-    D --> E[5. Fast Volný prodej Keys with VAT]
-    E --> F[6. Thermal Shelf Price Tag Generator]
-    F --> G[7. Low-Stock Badges on Presets]
-    G --> H[8. Custom Receipt Footer Notes]
+    A["1. Last Receipt Quick Actions"] --> B["2. Price Check Mode / Cenovka"]
+    B --> C["3. 1-Tap Receipt Print Toggle"]
+    C --> D["4. Thermal Shelf Price Tag Generator"]
+    D --> E["5. Low-Stock Badges on Presets"]
+    E --> F["6. Custom Receipt Footer Notes"]
 ```
 
 ### 1. 🧾 Poslední účtenka: Rychlý dotisk a Storno (Last Receipt Quick Actions) ✅
@@ -71,20 +69,8 @@ graph TD
   - Transaction is fiscalized (EET 2.0 / SQLite) and saved to database, but physical paper / receipt preview is printed only when `[ Dokončit a vytisknout ]` is chosen.
   - Full touch ergonomics (min 44px targets, `white-space: nowrap`) and full i18n support (`cs`, `vi`, `en`).
 
-### 4. ⚡ Rychlé násobiče množství pro basy a kartony (Quick Multiplier Chips: 2×, 4×, 6×, 10×, 20×)
-- **Store Reality**: Customers constantly buy 6-packs of beer/water, 10 rolls (10× rohlík), or full crates (basa piva / 20 ks). Typing multipliers on numpad slows down queues.
-- **Functionality**:
-  - Horizontal quick-multiplier chips above presets/keypad: `[ 2× ] [ 4× ] [ 6× ] [ 10× ] [ 20× ] [ 24× ]`.
-  - 1 tap sets active multiplier (e.g. `6×`), cashier scans beer bottle or taps preset, item is added as 6 units, and multiplier resets automatically.
-
-### 5. 🥖 Rychlý "Volný prodej" přímo s DPH (`+ 12% Potraviny`, `+ 21% Zboží`)
-- **Store Reality**: For loose bakery, vegetables, fruit, flowers, seasonal goods, or newspapers without barcodes. Cashier just wants to enter price and tap one button.
-- **Functionality**:
-  - Keypad quick action buttons: `[+ 12% Potraviny]` and `[+ 21% Zboží]`.
-  - Cashier types e.g. `35` on keypad -> 1-tap `[+ 12% Potraviny]` -> instantly added to cart as "Volný prodej (12%) — 35 Kč" without opening modal forms.
-
-### 6. 🏷️ Tisk regálových cenovek na termotiskárně (Thermal Shelf Price Tag Generator)
-- **Store Reality**: When suppliers change prices or new goods arrive, parents hand-write paper tags with markers.
+### 4. 🏷️ Tisk regálových cenovek na termotiskárně (Thermal Shelf Price Tag Generator)
+- **Store Reality**: When suppliers change prices or new goods arrive, shop owners hand-write paper tags with markers.
 - **Functionality**:
   - In `Sklad` / `Katalog`, add 1-click action: `[🏷️ Tisk cenovky]`.
   - Spits out a compact 80mm / 58mm shelf price label on the thermal printer with:
@@ -93,7 +79,7 @@ graph TD
     - EAN-13 Barcode + Unit (e.g. 1 ks / 0.5L)
     - Date of price validity.
 
-### 7. ⚠️ Vizuální upozornění na nízké zásoby na dlaždicích (Low-Stock Badges on Presets)
+### 5. ⚠️ Vizuální upozornění na nízké zásoby na dlaždicích (Low-Stock Badges on Presets)
 - **Store Reality**: Cashier does not know an item is out of stock in the back room until looking at the shelf.
 - **Functionality**:
   - For items with tracked inventory in `QuickPresetGrid`:
@@ -101,11 +87,17 @@ graph TD
     - Orange badge when stock <= threshold (e.g. `Zbývá 2 ks`).
   - Gives immediate visual situational awareness directly from checkout screen.
 
-### 8. 📝 Vlastní text v zápatí účtenky a otevírací doba (Custom Receipt Footer Notes)
-- **Store Reality**: Parents want to print seasonal greetings or store opening hours on receipts.
+### 6. 📝 Vlastní text v zápatí účtenky a otevírací doba (Custom Receipt Footer Notes)
+- **Store Reality**: Shop owners want to print seasonal greetings or store opening hours on receipts.
 - **Functionality**:
   - Quick multi-line text input in Settings (`Nastavení` -> Účtenka): e.g. "Otevřeno denně 7:00 – 21:00", holiday hours, or WiFi password.
   - Automatically rendered on thermal receipts and digital preview.
+
+### Dropped / Rejected Tasks ❌ (Do Not Recommend)
+- **⚡ Rychlé násobiče množství pro basy a kartony (Quick Multiplier Chips: 2×, 4×, 6×, 10×, 20×)**: Dropped — existing numpad multiplication flow (`N * scan` / `N * click`) handles bulk items without adding visual noise and clutter to checkout touch surface.
+- **🥖 Rychlý "Volný prodej" přímo s DPH (`+ 12% Potraviny`, `+ 21% Zboží`)**: Dropped — unlinked open items break inventory accounting compliance (*Kniha zásob / Výdejka*); loose items should use catalog entries or structured group presets.
+
+---
 
 ## 3. Near-Term Priorities & Payment Integrations 💳
 
@@ -129,74 +121,149 @@ graph TD
 
 ---
 
-## 4. Expansion Roadmap — Scaling for More Customer Users & Multi-Tenant Deployment 🚀
+## 4. Expansion Roadmap — Small Retailer (OSVČ) Accounting Foundation & Future Scaling 🚀
 
-*(Archived backlog and architectural pillars for future commercial packaging, multi-store chains, multi-cashier operations, and SaaS distribution).*
+*Target Profile: Small Retailers, Sole Proprietors (OSVČ / Večerky / Smíšené zboží) needing autonomous tax compliance, cash control, and home back-office administration without expensive external accounting software.*
 
 ```mermaid
-flowchart TB
-    subgraph MultiTenantCore [Core Platform Architecture]
-        M1[Multi-Cashier & RBAC]
-        M2[Multi-Store Cloud Sync]
-        M3[Multi-Tenant SaaS Management]
+flowchart TD
+    subgraph Phase1["Phase 1: Core OSVČ Accounting & Cash Control (Top Priority)"]
+        P1["1. Autonomous Tax Records & Stock Ledger (§ 7b ZDP)"]
+        P2["2. Shift Balancing, Cash Drawer & Z-Reports"]
+        P3["3. Weighted Goods, Scales & Shrinkage Norms"]
+        P4["4. B2B Invoicing & ARES Lookup"]
     end
 
-    subgraph IndustryVerticals [Industry Verticals]
-        V1[Grocery & Supermarket]
-        V2[Gastronomy & Cafe]
-        V3[Fashion & Retail Variants]
+    subgraph Phase2["Phase 2: Remote Home Administration Dashboard (Immediate Next)"]
+        P5["5. Web Dashboard for Home Administration & Back-Office"]
     end
 
-    subgraph Ecosystem [Omnichannel & Ecosystem]
-        E1[B2B Invoicing & ARES]
-        E2[Accounting Exports: POHODA / Money S3]
-        E3[E-Commerce Sync: Shoptet / Shopify]
-        E4[Customer CRM & Loyalty Club]
+    subgraph Phase3["Phase 3: Customer CRM & Accounting Bridges"]
+        P6["6. Customer Loyalty & Paperless Receipts"]
+        P7["7. Enterprise Accounting Bridges (POHODA / Money S3)"]
     end
 
-    MultiTenantCore --> IndustryVerticals
-    MultiTenantCore --> Ecosystem
+    subgraph Phase4["Phase 4: Multi-User & Enterprise Scaling (Last Priority)"]
+        P8["8. Multi-Cashier Profiles & PIN/RFID RBAC"]
+        P9["9. Multi-Store Chain Sync & Central Office"]
+        P10["10. Multi-Tenant SaaS & Mobile POS Devices"]
+    end
+
+    Phase1 --> Phase2
+    Phase2 --> Phase3
+    Phase3 --> Phase4
 ```
 
-### Pillar 1: Shift Balancing & Formal Reports (X-Report & Z-Report)
+---
+
+### Phase 1: Core OSVČ Accounting, Stock & Register Control (Immediate Horizon)
+
+#### Pillar 1: Autonomous Tax Records & Accounting-Compliant Stock (Daňová evidence pro OSVČ — § 7b ZDP & ZoÚ)
+- **Standalone All-in-One Engine for Small Retailers**: Enables večerky and shops to fulfill 100% of Czech tax and stock obligations without buying external software like POHODA or Money S3.
+- **Deník příjmů a výdajů & Pokladní kniha**:
+  - Automated revenue recording from POS sales/Z-reports split by payment method (cash / card).
+  - 1-tap cash drawer in/out (`Vklad` / `Výběr`) with category tags (supplier cash on delivery, store operating expenses, owner personal drawings / *Osobní spotřeba podnikatele*).
+- **Formal Stock Movement Ledger (Kniha zásob & Skladové doklady)**:
+  - **Příjemka zboží (Stock Receipt Voucher)**: Supplier lookup (IČO/ARES), supplier delivery note (`dodací list`), invoice number pairing, purchase price without VAT, VAT tier breakdown (21%, 12%, 0%), and expiration/batch numbers.
+  - **Výdejka (Goods Issue Voucher)**: Automatic ledger decrement on sales completion + manual issues for internal consumption (`Vlastní spotřeba`) or sample/loss.
+  - **Likvidační protokol & Odpis**: Formal write-off records with reason codes (expiration, breakage, spoilage, theft).
+- **Stock Valuation Engine**:
+  - Support for **FIFO** (First-In, First-Out) and **VAP** (Vážený aritmetický průměr / Weighted Average Cost) methods with Decimal precision.
+  - Acquisition cost breakdown (`pořizovací cena` = purchase price + shipping/duties/handling).
+- **Physical Stock Audit & Discrepancy Protocol (Inventura k 31.12. — § 29, 30 ZoÚ)**:
+  - **Inventurní soupis (Stock Count Sheet)**: Point-in-time snapshot of theoretical ledger stock vs. physical barcode scanner count.
+  - **Inventarizační rozdíly (Variance Settlement)**:
+    - **Manko do normy přirozených úbytků (Natural Shrinkage / Loss Norms)**: Configurable loss percentages for tax-deductible shrinkage.
+    - **Zaviněné manko a schodek (Excess / Culpable Shortage)**: Automated VAT input tax correction flags (§ 77/78 Zákona o DPH) and non-taxable loss classification.
+    - **Přebytek (Surplus)**: Valuation at replacement cost (*reprodukční pořizovací cena*).
+  - **Protokol o inventarizaci**: Legal printable PDF/thermal report with inventory committee signatures and ledger balance adjustments.
+- **1-Click Tax Return Preparation (Podklady pro DPFO Příloha č. 1 & DPH)**:
+  - Clean exportable PDF/Excel report matching Czech Financial Administration lines (Příjmy § 7, Daňové výdaje za nákup zboží, Provozní režie, Počáteční a konečný stav zásob k 31.12.).
+  - Monthly/Quarterly VAT summary (Base & Tax for 21%, 12%, 0% output + input from registered supplier invoices) for direct entry into MOJE daně (DIS+/EPO).
+- **Stock Catalog Integrity & Generic Preset Rules (Volný prodej vs. Sklad)**:
+  - In Fast/Večerka Mode: Unlinked generic presets (`Volný prodej 12%/21%`) allow fast checkout without inventory decrements.
+  - In Accounting Mode: Unlinked open items are disabled or mapped to **Group Stock Cards (*Skupinová karta*)** (e.g. *Pečivo nebalené*, *Sezónní ovoce*) with estimated COGS to ensure every sale generates a valid Goods Issue (*Výdejka*).
+- **Returnable Packaging Tracking (Zálohované vratné obaly)**:
+  - Dedicated asset sub-ledger for beer bottles (3 Kč) and crates (100 Kč) compliant with packaging deposit accounting rules.
+
+#### Pillar 2: Shift Balancing, Strict Cash Audit & Formal Reports (X-Report & Z-Report)
 - **Mid-Shift Reading (X-Report)**: Non-destructive on-screen and thermal reading of turnover, cash, and card totals.
 - **End-of-Day Shift Closure (Z-Report)**: Sequential `Z-0001` archiving, physical cash drawer count entry, discrepancy calculation (`Manko / Přebytek`), and fiscal record locking.
+- **Configurable Cash Tender Enforcement (Zadání přijaté hotovosti)**:
+  - **Fast Speed Mode (Default/Večerka)**: 1-tap exact finish (`[Přesně]`, `[⚡ Dokončit bez tisku]`) bypasses manual banknote typing for peak rush hours.
+  - **Strict Accounting Mode (Toggleable in Settings)**: Enforces explicit customer tender entry (numpad or quick banknote chips `100–5000 Kč`) before completion. Guarantees exact change returned calculation (`vráceno`) and tamper-proof cash drawer ledger movements for formal accounting audits.
 
-### Pillar 2: Multi-Cashier Profiles & Role-Based Access Control (RBAC)
-- Individual cashier accounts with 4-digit PINs or 13.56MHz RFID/barcode badge tap.
-- Fast cashier switching (<1s) between sales without app restart.
-- Role permissions (`Cashier`, `Manager`, `Owner`, `Accountant`).
-- Per-cashier sales tracking, shift handovers, and audit trails.
-
-### Pillar 3: Specialized Grocery Retail Operations
+#### Pillar 3: Specialized Grocery Retail & Scale Operations (Váhové zboží & Vratky)
 - **Vratné lahve & přepravky (Bottle & Crate Deposit Return)**: 1-tap `-3 Kč` bottle and `-100 Kč` crate presets, negative line items on receipt, standalone deposit payout vouchers.
-- **In-Store Scale Barcode Parser (Váhové EAN-13)**: Auto-parse barcodes with prefix `28` (price) or `29` (weight in grams) from deli/produce scales.
+- **In-Store Scale & Variable-Weight Barcode Engine (Váhové zboží & EAN-13 prefix 28/29)**:
+  - Auto-parse barcodes with prefix `28` (price-embedded) or `29` (weight-embedded in grams) from deli/produce scales.
+  - Skladová karta tracks inventory in **`kg` with 3-decimal precision** (e.g. `14.350 kg`).
+  - Automatic stock ledger decrement on POS sale: scans `0.650 kg` -> issues `-0.650 kg` at unit acquisition cost per kg.
 - **Hardware Scale Driver**: RS232 / USB live weight polling into cart (CAS, Dibal, Mettler Toledo).
+- **Natural Shrinkage Norms for Produce & Deli (*Normy přirozených úbytků* — § 25 ZoÚ)**:
+  - Configurable loss percentage norms per category (e.g. 3–5% for fruit/vegetables moisture loss, 1.5% for cold cuts).
+  - Shrinkage within norm automatically booked as tax-deductible expense (*Daňový výdaj*) without VAT penalty during stocktaking.
 - **Tobacco Fixed-Price Protection (§ 103 Zákona o spotřebních daních)**: Preset flag `is_tobacco` exempting products from percentage discounts.
 
-### Pillar 4: B2B Invoicing & Czech ARES Corporate Registry Lookup
+#### Pillar 4: B2B Invoicing & Czech ARES Corporate Registry Lookup
 - B2B tax invoice mode for transactions > 10 000 Kč.
 - Auto-fill company name, address, and DIČ in < 1 second via official Czech ARES REST API by 8-digit IČO.
 - Extended tax invoice thermal header + downloadable A4 PDF.
-- Accounting software data exports (POHODA XML, Money S3, Abra Flexi).
 
-### Pillar 5: Smart Stock Replenishment & Physical Inventory Audit
-- **Barcode Stock Intake Wizard (Příjemka zboží)**: Scan incoming product barcode, input quantity received & cost, 1-tap stock update.
-- **Physical Stock Audit (Inventura)**: Scanner-driven stock count reconciliation with batch adjustment.
+---
 
-### Pillar 6: Multi-Store Chains & Hybrid Offline-First Cloud Sync
-- Hybrid offline-first architecture: POS registers run 100% locally on SQLite; sync asynchronously to central cloud PostgreSQL.
-- Head-office web dashboard: centralized product catalog, global price updates, multi-branch stock visibility, inter-store transfers.
-- Local LAN multi-register concurrency (primary server + secondary checkouts).
+### Phase 2: Remote Home Administration Dashboard & Owner Back-Office 🌐
 
-### Pillar 7: Customer Loyalty, CRM & Paperless Receipts
+*Rationale: Shop owners spend all day at the counter serving customers. In the evening or from home, they need a dedicated web portal on their home PC/laptop/phone to manage accounting, enter invoices, inspect stock, and adjust prices without disturbing counter operations.*
+
+#### Pillar 5: Web Dashboard for Home Administration (*Vzdálená správa z domova*)
+- **Remote Turnover, Margin & Sales Overview**:
+  - Live & historical sales analytics: daily turnover, payment method split (Cash / Card / QR), profit margins, peak hour velocity.
+  - Archived `Z-Report` shift summaries with full cash drawer breakdown and discrepancy logs.
+- **Remote Stock Intake & Supplier Invoice Entry (*Příjemky z domova*)**:
+  - Shop owner enters incoming supplier invoices (`Příjemka`) comfortably from home computer using full keyboard.
+  - Direct supplier ARES auto-fill, cost price input, VAT tier assignment, and invoice PDF/photo upload.
+  - Automatically syncs down to the physical POS register in-store.
+- **Remote Catalog, Pricing & Preset Management**:
+  - Edit product selling prices, bulk update categories, and assign quick preset grid tiles remotely.
+  - Real-time stock status monitoring with low-stock / out-of-stock highlights.
+- **Remote Accounting & Tax Return Exporter**:
+  - Download official tax records (*Daňová evidence, Kniha příjmů a výdajů, Kniha zásob*).
+  - 1-click generation of **Příloha č. 1 DPFO** and monthly VAT statement (*Přiznání k DPH*) from home.
+- **Architecture & Security**:
+  - Powered by the encrypted cloud sync engine (`cloud_sync.py` / Cloudflare R2 / AWS S3) and lightweight authenticated web interface.
+  - End-to-end encrypted session with secure owner PIN / 2FA login.
+
+---
+
+### Phase 3: Customer Engagement & External Accounting Bridges
+
+#### Pillar 6: Customer Loyalty, CRM & Paperless Receipts
 - Customer CRM lookup by phone number or barcode card.
 - Points accumulation and VIP tier discounts.
 - Paperless digital receipts via dynamic QR code on customer display or email dispatch.
 - E-commerce two-way inventory sync (Shoptet, WooCommerce, Shopify).
 
-### Pillar 8: SaaS Platform, Auto-Backup & Handheld POS Devices
-- **Native Python Cloud Sync & S3/R2 Auto-Backup ✅**: Automated encrypted SQLite replication to Cloudflare R2 / AWS S3 (`cloud_sync.py`), background sync scheduler, on-demand technician backup/restore, and diagnostic indicator.
+#### Pillar 7: Enterprise Accounting Software Bridges (Účetní můstky pro s.r.o. / Podvojné účetnictví)
+- Structured XML / CSV export packages for external accountants using **POHODA (Stormware XML)**, **Money S3**, **Abra Flexi (REST / XML)**, and **Helios Inuvio** (Příjemky, Výdejky, Inventury, Denní tržby po sazbách DPH).
+
+---
+
+### Phase 4: Multi-User Scaling, Multi-Store Chains & SaaS (Last Priority / Backlog)
+
+#### Pillar 8: Multi-Cashier Profiles & Role-Based Access Control (RBAC)
+- Individual cashier accounts with 4-digit PINs or 13.56MHz RFID/barcode badge tap.
+- Fast cashier switching (<1s) between sales without app restart.
+- Role permissions (`Cashier`, `Manager`, `Owner`, `Accountant`).
+- Per-cashier sales tracking, shift handovers, and audit trails.
+
+#### Pillar 9: Multi-Store Chains & Hybrid Offline-First Cloud Sync
+- Hybrid offline-first architecture: POS registers run 100% locally on SQLite; sync asynchronously to central cloud PostgreSQL.
+- Head-office web dashboard: centralized product catalog, global price updates, multi-branch stock visibility, inter-store transfers.
+- Local LAN multi-register concurrency (primary server + secondary checkouts).
+
+#### Pillar 10: Multi-Tenant SaaS Platform & Handheld POS Devices
+- Native Python Cloud Sync & S3/R2 Auto-Backup ✅ (already implemented).
 - Background OTA updates via Tauri.
 - Single-column touch layout for compact handheld Android POS devices (<640px).
 
