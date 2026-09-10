@@ -1,6 +1,6 @@
 # VoltFlow POS — Active Task List
 
-_Last updated: 2026-09-07_  
+_Last updated: 2026-09-10_
 _Master Roadmap: [`docs/ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/ROADMAP.md)_  
 _Target User: Parents' Mixed Retail & Convenience Store (Smíšené zboží / Večerka)_
 
@@ -14,16 +14,17 @@ _Target User: Parents' Mixed Retail & Convenience Store (Smíšené zboží / Ve
   - 1-tap toggle `[🔍 Kontrola ceny]` + `F2` shortcut displaying high-contrast price & stock modal without inserting into active cart.
 - [x] **3. 🖨️ 1-Tap Tisk účtenky v pokladně ("Účtenku nechci" / Print On Demand)**:
   - 1-tap dual action buttons in `PaymentModal`: `[ ⚡ Dokončit bez tisku ]` vs `[ 🖨️ Dokončit a vytisknout ]` saving paper rolls and queue speed.
-- [ ] **4. ⚡ Rychlé násobiče množství pro basy a kartony (Quick Multiplier Chips: 2×, 4×, 6×, 10×, 20×)**:
-  - Quick chips above presets/keypad: 1 tap sets multiplier (e.g. `6×`), scan bottle, auto-adds 6 units and resets.
-- [ ] **5. 🥖 Rychlý "Volný prodej" přímo s DPH (`+ 12% Potraviny`, `+ 21% Zboží`)**:
-  - Keypad quick buttons to immediately add typed price into cart with correct VAT tier without opening modals.
-- [ ] **6. 🏷️ Tisk regálových cenovek na termotiskárně (Thermal Shelf Price Tag Generator)**:
+- [x] **4. 🏷️ Tisk regálových cenovek na termotiskárně (Thermal Shelf Price Tag Generator)**:
   - 1-click in Sklad / Katalog: print 80mm/58mm shelf price label on thermal printer (large bold price, name, EAN).
-- [ ] **7. ⚠️ Vizuální upozornění na nízké zásoby na dlaždicích (Low-Stock Badges on Presets)**:
-  - Corner badges on preset tiles when stock = `0 ks` (red) or `<= 3 ks` (orange).
-- [ ] **8. 📝 Vlastní text v zápatí účtenky a otevírací doba (Custom Receipt Footer Notes)**:
+- [x] **5. ⚠️ Vizuální upozornění na nízké zásoby na dlaždicích (Low-Stock Badges on Presets)**:
+  - Corner badges on preset tiles when stock = `0 ks` (red) or `<= 5 ks` (amber).
+- [x] **6. 📝 Vlastní text v zápatí účtenky a otevírací doba (Custom Receipt Footer Notes)**:
   - Settings field for store opening hours or custom note printed on receipts.
+
+---
+
+- [x] **7. 2-Sloupcové rozložení dlaždic a dotykový vlastní prodej (2-Column Wide Presets & Touch Custom Item Modal)**:
+  - Konfigurovatelné 2-sloupcové rozložení pokladny (65–70% šířka) a dotykový dialog volného prodeje s virtuální klávesnicí.
 
 ---
 
@@ -47,6 +48,11 @@ All multi-cashier RBAC, Czech bottle deposit returns, B2B invoicing with ARES lo
 ## ✅ Completed & Verified Capabilities
 
 - **1-Tap Print on Demand**: Live in `PaymentModal.jsx` (`CashPaymentPanel`, `CardPaymentPanel`, `QrPaymentPanel`, `SplitPaymentPanel`).
+- **Thermal Shelf Price Tags**: Live in `BarcodeLabelModal.jsx` and thermal ESC/POS label generator.
+- **Custom Receipt Footer**: Live in Settings and thermal receipt print layout.
+- **2-Column Wide Presets Layout**: Live in `pos-layout-two-column` and `QuickPresetGrid.jsx`.
+- **Touch Custom Item Modal**: Live in `CustomItemModal.jsx` with touch numpad and Czech virtual keyboard.
+- **Low-Stock Badges on Presets**: Live in `PresetTileCard.jsx` with red `out-of-stock` and amber `low-stock` chips.
 - **Receipt Barcode Return Scanner**: Live in `ReceiptReturnModal.jsx` and `GET /api/v1/sales/by-receipt/{receipt_number}`.
 - **Native Python Cloud Sync (S3/R2)**: Live in `cloud_sync.py` with automatic scheduler and technician diagnostics.
 - **Technician Diagnostic Mode**: Live in `DiagnosticModal.jsx` and `/api/v1/system/diagnostics`.

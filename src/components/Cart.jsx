@@ -67,8 +67,23 @@ function parseSaleItems(sale) {
     id: item.id || `item-${idx}`,
     name: item.name || item.title || item.item_name || 'Položka',
     price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
-    quantity: item.quantity !== undefined ? parseFloat(item.quantity) : (item.qty !== undefined ? parseFloat(item.qty) : 1)
+    quantity: item.quantity !== undefined ? parseFloat(item.quantity) : (item.qty !== undefined ? parseFloat(item.qty) : 1),
+    unit: item.unit
   }));
+}
+
+function formatQty(qty) {
+  if (qty === null || qty === undefined) return '0';
+  const num = Number(qty);
+  if (Number.isInteger(num)) return num.toString();
+  return Number(num.toFixed(3)).toString();
+}
+
+function formatQtyWithUnit(item) {
+  const formatted = formatQty(item.quantity);
+  const defaultUnit = Number.isInteger(Number(item.quantity)) ? 'ks' : 'kg';
+  const unit = item.unit || defaultUnit;
+  return `${formatted} ${unit}`;
 }
 
 function Cart({
@@ -178,7 +193,8 @@ function Cart({
 
   const isRefundTransaction = finalGrandTotal < 0;
   const totalItemCount = useMemo(() => {
-    return cartItems.reduce((sum, i) => sum + i.quantity, 0);
+    const sum = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+    return Number.isInteger(sum) ? sum : Number(sum.toFixed(3));
   }, [cartItems]);
 
   const activeItem = useMemo(() => {
@@ -454,21 +470,23 @@ function Cart({
                         className="cart-stepper-btn cart-stepper-btn-minus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onUpdateQty(item.id, item.quantity - 1);
+                          const step = item.unit === 'kg' ? 0.1 : 1;
+                          onUpdateQty(item.id, Math.round((item.quantity - step) * 1000) / 1000);
                         }}
-                        title="-1 ks"
+                        title={item.unit === 'kg' ? "-0.1 kg" : "-1 ks"}
                       >
                         <Minus size={15} strokeWidth={2.5} />
                       </button>
-                      <span className="cart-stepper-num">{item.quantity}</span>
+                      <span className="cart-stepper-num">{formatQty(item.quantity)}</span>
                       <button
                         type="button"
                         className="cart-stepper-btn cart-stepper-btn-plus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onUpdateQty(item.id, item.quantity + 1);
+                          const step = item.unit === 'kg' ? 0.1 : 1;
+                          onUpdateQty(item.id, Math.round((item.quantity + step) * 1000) / 1000);
                         }}
-                        title="+1 ks"
+                        title={item.unit === 'kg' ? "+0.1 kg" : "+1 ks"}
                       >
                         <Plus size={15} strokeWidth={2.5} />
                       </button>
@@ -506,7 +524,7 @@ function Cart({
                         {parseFloat(item.price).toFixed(2)} Kč
                       </span>
                     )}
-                    <span style={{ opacity: 0.6 }}> × {item.quantity} ({t('cart.vat')} {itemVat}%)</span>
+                    <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)} ({t('cart.vat')} {itemVat}%)</span>
                   </div>
 
                   <div className="cart-item-line-total-price" style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined }}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Delete, Plus } from 'lucide-react';
+import { Calculator, Delete, Banknote } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
 import KeypadVatSelector from './keypad/KeypadVatSelector';
@@ -26,6 +26,8 @@ export default function ManualKeypad({
   hasCartItems = false,
   salesHistory = [],
   onPrintDailySummary,
+  onOpenCashMovement,
+  onOpenZReport,
   shiftWidgetPosition = 'keypad'
 }) {
   const { t } = useTranslation();
@@ -331,7 +333,7 @@ export default function ManualKeypad({
           onAddCustomItem={handleAddCustomItem}
         />
 
-        {/* ── Keypad Bottom Action Dock (Placeholder for future action buttons) ── */}
+        {/* ── Keypad Bottom Action Dock (Cash movements / Drawer actions) ── */}
         <div
           className="keypad-bottom-dock"
           style={{
@@ -345,22 +347,32 @@ export default function ManualKeypad({
           <button
             type="button"
             className="key-btn"
+            onClick={() => {
+              soundFx.playKeypadClick();
+              onOpenCashMovement?.();
+            }}
             style={{
-              height: '38px',
+              height: '42px',
+              minHeight: '42px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '0.45rem',
               borderRadius: 'var(--radius-md)',
-              border: '1px dashed color-mix(in srgb, var(--border-color) 70%, transparent)',
-              background: 'color-mix(in srgb, var(--text-primary) 2%, transparent)',
-              color: 'var(--text-muted)',
-              cursor: 'default',
+              border: '1px solid color-mix(in srgb, var(--accent-emerald) 35%, transparent)',
+              background: 'color-mix(in srgb, var(--accent-emerald) 10%, transparent)',
+              color: 'var(--accent-emerald)',
+              fontWeight: '800',
+              fontSize: '0.90rem',
+              cursor: 'pointer',
               transition: 'all 0.15s ease',
               touchAction: 'manipulation'
             }}
-            aria-label="Placeholder pro budoucí rychlou akci"
+            aria-label="Pohyby hotovosti v pokladně (Vklad / Výběr)"
+            title="Pohyby hotovosti v pokladně (Vklad / Výběr)"
           >
-            <Plus size={16} style={{ opacity: 0.5 }} />
+            <Banknote size={17} />
+            <span>{t('cash.cash_btn') || '± Pokladna'}</span>
           </button>
         </div>
       </div>
@@ -391,6 +403,7 @@ export default function ManualKeypad({
           <ShiftStatsWidget
             salesHistory={salesHistory}
             onPrintDailySummary={onPrintDailySummary}
+            onOpenZReport={onOpenZReport}
           />
         )}
       </div>

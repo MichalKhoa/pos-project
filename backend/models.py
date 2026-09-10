@@ -49,7 +49,7 @@ class SaleItemModel(Base):
     item_id = Column(String, nullable=True)
     name = Column(String, nullable=False)
     price = Column(Float, nullable=False)
-    quantity = Column(Integer, nullable=False, default=1)
+    quantity = Column(Float, nullable=False, default=1.0)
     vat = Column(Integer, nullable=False, default=21)
     discount_percent = Column(Float, default=0.0)
 
@@ -212,14 +212,16 @@ class PresetModel(Base):
     is_open_price = Column(Boolean, default=False)
     is_general = Column(Boolean, default=False, nullable=False)
     position = Column(Integer, default=0)
-    stock_quantity = Column(Integer, default=0, nullable=False)
+    stock_quantity = Column(Float, default=0.0, nullable=False)
     track_stock = Column(Boolean, default=False, nullable=False)
-    min_stock_alert = Column(Integer, default=5, nullable=False)
+    min_stock_alert = Column(Float, default=5.0, nullable=False)
     barcode = Column(String, index=True, nullable=True)
     icon = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
     show_in_presets = Column(Boolean, default=True, nullable=False)
     cost_price = Column(Float, default=0.0, nullable=False)
+
+    stock_movements = relationship("StockMovementModel", back_populates="preset", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class ReceiptSequenceModel(Base):
@@ -243,5 +245,53 @@ class EetAuditLogModel(Base):
     fik = Column(String, nullable=True)
     request_hash = Column(String, nullable=True)
     error_message = Column(String, nullable=True)
+
+
+class CashMovementModel(Base):
+    """DB Model for Cash Drawer Movements (Float In, Payout, Safe Drop)."""
+    __tablename__ = "cash_movements"
+
+    id = Column(String, primary_key=True, index=True)
+    shift_id = Column(String, index=True, nullable=True)
+    movement_type = Column(String, nullable=False)  # 'FLOAT_IN' (vklad), 'PAYOUT' (výběr/dodavatel), 'SAFE_DROP' (odvod do trezoru)
+    amount = Column(Float, nullable=False)          # Always positive float
+    reason = Column(String, nullable=True)          # e.g. "Ranní vklad do pokladny", "Pekárna hotovost"
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ShiftSessionModel(Base):
+    """DB Model for Shift Sessions and Z-Report Balancing."""
+    __tablename__ = "shift_sessions"
+
+    id = Column(String, primary_key=True, index=True)
+    shift_number = Column(Integer, default=1)
+    opened_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    closed_at = Column(DateTime, nullable=True)
+    opening_cash = Column(Float, default=0.0, nullable=False)
+    expected_cash = Column(Float, default=0.0, nullable=False)
+    actual_cash = Column(Float, default=0.0, nullable=True)
+    discrepancy = Column(Float, default=0.0, nullable=True)  # actual - expected (negative = manko, positive = přebytek)
+    is_closed = Column(Boolean, default=False, nullable=False)
+    z_seq = Column(Integer, default=1, nullable=False)       # Sequential Z-Report closure counter
+
+
+class StockMovementModel(Base):
+    """DB Model for Stock Movement Ledger (§ 7b ZDP)."""
+    __tablename__ = "stock_movements"
+
+    id = Column(String, primary_key=True, index=True)
+    preset_id = Column(String, ForeignKey("presets.id", ondelete="CASCADE"), index=True, nullable=False)
+    movement_type = Column(String, nullable=False, index=True)  # 'RECEIPT', 'SALE', 'RETURN', 'WRITE_OFF', 'ADJUSTMENT'
+    quantity_delta = Column(Float, nullable=False)  # Positive for RECEIPT/RETURN, negative for SALE/WRITE_OFF
+    unit_cost = Column(Float, default=0.0, nullable=False)  # Purchase cost price without VAT
+    supplier_ico = Column(String, nullable=True, index=True)  # Czech IČO
+    supplier_name = Column(String, nullable=True)
+    document_ref = Column(String, nullable=True)  # Invoice or delivery note number
+    note = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    preset = relationship("PresetModel", back_populates="stock_movements")
+
+
 
 

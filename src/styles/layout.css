@@ -878,6 +878,34 @@ input, textarea, [contenteditable="true"] {
   flex-shrink: 0;
 }
 
+.shift-stats-slim {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.shift-stats-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-elevated);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@media (max-width: 580px) {
+  .shift-stats-split-preview {
+    display: none !important;
+  }
+}
+
 /* Center Column: Quick Presets Grid Column */
 .pos-col-center {
   flex: 1;

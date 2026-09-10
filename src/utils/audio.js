@@ -206,6 +206,18 @@ class SoundEffectsManager {
       // Ignore audio errors
     }
   }
+
+  playBeep() {
+    this.playScanChime();
+  }
+
+  playSuccess() {
+    this.playSuccessChime();
+  }
+
+  playError() {
+    this.playErrorChime();
+  }
 }
 
 export const soundFx = new SoundEffectsManager();

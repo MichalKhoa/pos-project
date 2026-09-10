@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { soundFx } from '../utils/audio.js';
+import { parseScaleBarcode } from '../utils/barcodeUtils.js';
 
 export function usePosKeyboardShortcuts({
   isAppLocked,
@@ -58,12 +59,27 @@ export function usePosKeyboardShortcuts({
           e.stopPropagation();
           setKeypadAmount('');
 
+          // Check if scale barcode (EAN-13 prefix 28 or 29)
+          const scaleResult = parseScaleBarcode(buffer);
+
           // In Price Check Mode, route scanned barcode to price inspection modal
           if (isPriceCheckActive) {
             const matchedPreset = (presets || []).find(p => {
-              if (!p || !p.barcode) return false;
-              const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
-              return codes.includes(buffer.toLowerCase());
+              if (!p) return false;
+              if (p.barcode) {
+                const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
+                if (codes.includes(buffer.toLowerCase())) return true;
+                if (scaleResult.isScaleBarcode && (codes.includes(scaleResult.sku.toLowerCase()) || codes.includes(scaleResult.sku.replace(/^0+/, '').toLowerCase()))) {
+                  return true;
+                }
+              }
+              if (scaleResult.isScaleBarcode) {
+                const rawSku = scaleResult.sku.toLowerCase();
+                const strippedSku = scaleResult.sku.replace(/^0+/, '').toLowerCase();
+                if (p.id && (String(p.id).toLowerCase() === rawSku || String(p.id).toLowerCase() === strippedSku)) return true;
+                if (p.sku && (String(p.sku).toLowerCase() === rawSku || String(p.sku).toLowerCase() === strippedSku)) return true;
+              }
+              return false;
             });
 
             if (matchedPreset) {
@@ -83,6 +99,61 @@ export function usePosKeyboardShortcuts({
             return;
           }
 
+          // 2. Weighed Scale Barcode Handling (prefixes 28 & 29)
+          if (scaleResult.isScaleBarcode) {
+            const rawSku = scaleResult.sku.toLowerCase();
+            const strippedSku = scaleResult.sku.replace(/^0+/, '').toLowerCase();
+
+            const matchedScalePreset = (presets || []).find(p => {
+              if (!p) return false;
+              if (p.barcode) {
+                const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
+                if (codes.includes(buffer.toLowerCase()) || codes.includes(rawSku) || (strippedSku && codes.includes(strippedSku))) {
+                  return true;
+                }
+              }
+              if (p.id && (String(p.id).toLowerCase() === rawSku || (strippedSku && String(p.id).toLowerCase() === strippedSku))) return true;
+              if (p.sku && (String(p.sku).toLowerCase() === rawSku || (strippedSku && String(p.sku).toLowerCase() === strippedSku))) return true;
+              if (p.plu && (String(p.plu).toLowerCase() === rawSku || (strippedSku && String(p.plu).toLowerCase() === strippedSku))) return true;
+              return false;
+            });
+
+            if (matchedScalePreset) {
+              let qty = 1;
+              let itemUnit = 'kg';
+              let unitPrice = matchedScalePreset.price;
+
+              if (scaleResult.type === 'WEIGHT') {
+                qty = scaleResult.weightKg;
+                itemUnit = 'kg';
+              } else if (scaleResult.type === 'PRICE') {
+                if (matchedScalePreset.price > 0) {
+                  qty = Math.round((scaleResult.totalPrice / matchedScalePreset.price) * 1000) / 1000;
+                  itemUnit = 'kg';
+                } else {
+                  qty = 1;
+                  unitPrice = scaleResult.totalPrice;
+                }
+              }
+
+              handleAddToCart({
+                ...matchedScalePreset,
+                price: unitPrice,
+                quantity: qty,
+                unit: itemUnit
+              });
+              soundFx.playScanChime();
+              if (itemMultiplier !== 1) setItemMultiplier(1);
+              if (onBarcodeScanned) onBarcodeScanned(matchedScalePreset, qty);
+              return;
+            } else {
+              soundFx.playErrorChime();
+              if (onUnknownBarcode) onUnknownBarcode(buffer);
+              return;
+            }
+          }
+
+          // 3. Standard EAN Barcode Matching
           const matchedPreset = (presets || []).find(p => {
             if (!p || !p.barcode) return false;
             const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());

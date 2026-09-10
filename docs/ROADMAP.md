@@ -26,7 +26,8 @@ VoltFlow POS (`pos-eet-himmel`) is a production-grade retail point-of-sale syste
 - **2-Column Wide Presets & On-Screen Touch Input**: Configurable POS layout (`registerLayout`: `'two_column'` default vs `'three_column'`) expanding product catalog grid to 65–70% width with auto-scaling 4–6 columns. Integrated uncataloged item/return modal (`CustomItemModal.jsx`) with large touch numpad, banknote shortcuts (100, 200, 500 Kč), VAT selectors (21%, 12%, 0%), multiplier stepper, retail suggestion chips, and on-screen Czech QWERTY keyboard (`ěščřžýáíéúů`).
 - **Encrypted Cloud Backup & Sync**: Native Python S3 / Cloudflare R2 backup service (`cloud_sync.py`), automated background sync, encrypted ZIP bundles, manual upload/restore, and technician diagnostic status indicator.
 - **Technician Diagnostic & Maintenance Mode**: Protected `DiagnosticModal.jsx` with live hardware checks, SQLite integrity / vacuum, log inspector, and exportable diagnostics bundle.
-- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage (145 frontend tests, 86 backend tests, 0 lint errors).
+- **Stormware POHODA 2.0 XML Accounting Bridge**: 1-click export of monthly sales receipts (issued invoices) with 21%, 12%, 0% VAT breakdowns and cash drawer movements (float in, payout, safe drop) in standard Stormware XML dataPack (`GET /api/v1/sales/export/pohoda`).
+- **Resilience & Invariants**: Decimal financial precision, SQLite auto-migrations (65+ schema columns verified), 1-tap storno/undo mistake guards, high-legibility touch modes, and 100% test coverage.
 
 ---
 
@@ -246,7 +247,8 @@ flowchart TD
 - E-commerce two-way inventory sync (Shoptet, WooCommerce, Shopify).
 
 #### Pillar 7: Enterprise Accounting Software Bridges (Účetní můstky pro s.r.o. / Podvojné účetnictví)
-- Structured XML / CSV export packages for external accountants using **POHODA (Stormware XML)**, **Money S3**, **Abra Flexi (REST / XML)**, and **Helios Inuvio** (Příjemky, Výdejky, Inventury, Denní tržby po sazbách DPH).
+- **POHODA (Stormware XML 2.0)** ✅: Direct 1-click XML export bridge implemented (`generate_pohoda_datapack_xml`, `GET /api/v1/sales/export/pohoda`, `SalesHistoryView.jsx`) with 21%, 12%, 0% VAT breakdowns, line items, and cash movement vouchers.
+- Additional ERP exports backlog: **Money S3**, **Abra Flexi (REST / XML)**, and **Helios Inuvio** (Příjemky, Výdejky, Inventury, Denní tržby po sazbách DPH).
 
 ---
 

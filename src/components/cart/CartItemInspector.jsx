@@ -58,8 +58,14 @@ export default function CartItemInspector({
   const effectiveUnitPrice = (parseFloat(item.price) || 0) * (1 - currentDisc / 100);
   const lineTotal = effectiveUnitPrice * (item.quantity || 1);
 
+  const isWeighed = item?.unit === 'kg' || item?.unit === 'g';
+  const qtyStep = isWeighed ? 0.1 : 1;
+
   const handleQtyChange = (newQty) => {
-    const clamped = Math.max(1, Math.min(9999, parseInt(newQty, 10) || 1));
+    const parsed = parseFloat(newQty);
+    if (isNaN(parsed)) return;
+    const rounded = Math.round(parsed * 1000) / 1000;
+    const clamped = Math.max(isWeighed ? 0.001 : 1, Math.min(9999, rounded));
     onUpdateDetails(item.id, { quantity: clamped });
   };
 
@@ -139,19 +145,20 @@ export default function CartItemInspector({
                   type="button"
                   className="cart-stepper-btn"
                   style={{ width: '38px' }}
-                  onClick={() => handleQtyChange(item.quantity - 1)}
-                  disabled={item.quantity <= 1}
-                  title="-1 ks"
+                  onClick={() => handleQtyChange(Math.round((item.quantity - qtyStep) * 1000) / 1000)}
+                  disabled={item.quantity <= (isWeighed ? 0.1 : 1)}
+                  title={isWeighed ? "-0.1 kg" : "-1 ks"}
                 >
                   <Minus size={16} />
                 </button>
                 <input
                   type="number"
-                  min="1"
+                  step={isWeighed ? "0.001" : "1"}
+                  min={isWeighed ? "0.001" : "1"}
                   max="9999"
                   className="cart-stepper-num"
                   style={{
-                    width: '50px',
+                    width: '60px',
                     border: 'none',
                     background: 'transparent',
                     fontSize: '1.16rem',
@@ -165,8 +172,8 @@ export default function CartItemInspector({
                   type="button"
                   className="cart-stepper-btn"
                   style={{ width: '38px' }}
-                  onClick={() => handleQtyChange(item.quantity + 1)}
-                  title="+1 ks"
+                  onClick={() => handleQtyChange(Math.round((item.quantity + qtyStep) * 1000) / 1000)}
+                  title={isWeighed ? "+0.1 kg" : "+1 ks"}
                 >
                   <Plus size={16} />
                 </button>

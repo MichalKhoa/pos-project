@@ -196,4 +196,92 @@ describe('Barcode Scanner & Unknown Barcode Modal (RET-01 & RET-02)', () => {
       2
     );
   });
+
+  it('scans weighed goods scale barcode (prefix 29) and adds to cart with decimal kg quantity', () => {
+    const handleAddToCart = vi.fn();
+    const handleBarcodeScanned = vi.fn();
+    const weighedPresets = [
+      ...mockPresets,
+      {
+        id: 'p-apple',
+        name: 'Jablka Gala (kg)',
+        price: 39,
+        vat: 12,
+        barcode: '12345'
+      }
+    ];
+
+    render(
+      <ScannerHarness
+        presets={weighedPresets}
+        onAddToCart={handleAddToCart}
+        onBarcodeScanned={handleBarcodeScanned}
+        onUnknownBarcode={vi.fn()}
+      />
+    );
+
+    // 29 + 12345 (sku) + 00650 (650g) + 8 (check digit)
+    const scaleBarcode = '2912345006508';
+    act(() => {
+      for (const char of scaleBarcode) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+      }
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+
+    expect(handleAddToCart).toHaveBeenCalledTimes(1);
+    expect(handleAddToCart).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Jablka Gala (kg)',
+        price: 39,
+        quantity: 0.65,
+        unit: 'kg'
+      })
+    );
+    expect(handleBarcodeScanned).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Jablka Gala (kg)' }),
+      0.65
+    );
+  });
+
+  it('scans price-embedded scale barcode (prefix 28) and adds to cart with computed quantity', () => {
+    const handleAddToCart = vi.fn();
+    const pricedPresets = [
+      ...mockPresets,
+      {
+        id: 'p-gouda',
+        name: 'Sýr Gouda 48%',
+        price: 200,
+        vat: 12,
+        barcode: '54321'
+      }
+    ];
+
+    render(
+      <ScannerHarness
+        presets={pricedPresets}
+        onAddToCart={handleAddToCart}
+        onBarcodeScanned={vi.fn()}
+        onUnknownBarcode={vi.fn()}
+      />
+    );
+
+    // 28 + 54321 (sku) + 10000 (100.00 CZK) + 5 (check digit) -> 100 / 200 = 0.5 kg
+    const scaleBarcode = '2854321100005';
+    act(() => {
+      for (const char of scaleBarcode) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+      }
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+
+    expect(handleAddToCart).toHaveBeenCalledTimes(1);
+    expect(handleAddToCart).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Sýr Gouda 48%',
+        quantity: 0.5,
+        unit: 'kg'
+      })
+    );
+  });
 });

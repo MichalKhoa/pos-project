@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { History, Trash2, Unlock, Lock, ShieldAlert, Download, Receipt } from 'lucide-react';
+import { History, Trash2, Unlock, Lock, ShieldAlert, Download, Receipt, FileText } from 'lucide-react';
 import ReceiptModal from './ReceiptModal';
 import TouchCalendarModal from './TouchCalendarModal.jsx';
 import TouchDateRangeModal from './TouchDateRangeModal.jsx';
@@ -9,7 +9,7 @@ import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
 import ReceiptInspectorPanel from './history/ReceiptInspectorPanel.jsx';
 import { useSalesPeriodFilter } from '../hooks/useSalesPeriodFilter';
-import { fetchSalesHistoryBackend } from '../api/posApi';
+import { fetchSalesHistoryBackend, downloadPohodaXml } from '../api/posApi';
 
 export default function SalesHistoryView({
   salesHistory,
@@ -174,6 +174,25 @@ export default function SalesHistoryView({
     return periodBadgeLabel || t('history.all_period');
   };
 
+  const handleExportPohoda = async () => {
+    try {
+      if (periodFilter === 'month') {
+        const d = computedDateRange.start;
+        const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        await downloadPohodaXml({ month: monthStr });
+      } else if (periodFilter === 'all') {
+        await downloadPohodaXml({});
+      } else {
+        await downloadPohodaXml({
+          fromDate: computedDateRange.start.toISOString(),
+          toDate: computedDateRange.end.toISOString()
+        });
+      }
+    } catch (err) {
+      console.error('Failed to export POHODA XML:', err);
+    }
+  };
+
   return (
     <div className="full-view-container">
       {/* Header */}
@@ -202,6 +221,26 @@ export default function SalesHistoryView({
           >
             <Download size={14} />
             <span>{t('history.export_csv')}</span>
+          </button>
+
+          <button
+            className="checkout-btn"
+            style={{
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.8rem',
+              background: 'var(--accent-blue)',
+              color: '#ffffff',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              fontWeight: '700'
+            }}
+            onClick={handleExportPohoda}
+            title={t('history.export_pohoda_title')}
+          >
+            <FileText size={14} />
+            <span>{t('history.export_pohoda')}</span>
           </button>
 
           {isAdminMode && (

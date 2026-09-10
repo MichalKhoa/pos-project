@@ -1,6 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 import { Edit3 } from 'lucide-react';
 import { getPresetIconComponent } from '../../utils/presetIcons';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 function PresetTileCard({
   preset,
@@ -18,9 +20,31 @@ function PresetTileCard({
   storeConfig = null,
   buttonStyle = null
 }) {
+  const { t } = useLanguage();
   const IconComponent = !preset.imageUrl ? getPresetIconComponent(preset.icon) : null;
   const shouldShowVat = storeConfig?.showPresetVat !== false && preset.vat !== undefined;
   const activeStyle = buttonStyle || storeConfig?.presetButtonStyle || 'left-stripe';
+
+  const isStockTracked = Boolean(preset.trackStock ?? preset.track_stock);
+  const rawStock = preset.stockQuantity ?? preset.stock_quantity;
+  const stockQuantity = rawStock !== undefined && rawStock !== null ? Number(rawStock) : 0;
+  const rawMinStock = preset.minStockAlert ?? preset.min_stock_alert;
+  const minStockAlert = rawMinStock !== undefined && rawMinStock !== null ? Number(rawMinStock) : 5;
+
+  let stockBadge = null;
+  if (isStockTracked) {
+    if (stockQuantity <= 0) {
+      stockBadge = {
+        type: 'out-of-stock',
+        text: t('presets.out_of_stock')
+      };
+    } else if (stockQuantity <= minStockAlert) {
+      stockBadge = {
+        type: 'low-stock',
+        text: t('presets.low_stock', { count: stockQuantity })
+      };
+    }
+  }
 
   return (
     <button
@@ -82,6 +106,13 @@ function PresetTileCard({
         )}
       </div>
 
+      {/* Stock Availability Badge */}
+      {stockBadge && (
+        <span className={`preset-stock-badge ${stockBadge.type}`}>
+          {stockBadge.text}
+        </span>
+      )}
+
       {/* Footer Row: Price on Left, Smooth Subtle VAT Text in Corner */}
       <div className="preset-price-tag">
         <span className="preset-price">
@@ -96,7 +127,7 @@ function PresetTileCard({
   );
 }
 
-function arePresetCardPropsEqual(prevProps, nextProps) {
+export function arePresetCardPropsEqual(prevProps, nextProps) {
   if (prevProps.isEditMode !== nextProps.isEditMode) return false;
   if (prevProps.itemMultiplier !== nextProps.itemMultiplier) return false;
   if (prevProps.isDraggingThis !== nextProps.isDraggingThis) return false;
@@ -119,7 +150,10 @@ function arePresetCardPropsEqual(prevProps, nextProps) {
     p1.vat === p2.vat &&
     p1.color === p2.color &&
     p1.icon === p2.icon &&
-    p1.imageUrl === p2.imageUrl
+    p1.imageUrl === p2.imageUrl &&
+    (p1.trackStock ?? p1.track_stock) === (p2.trackStock ?? p2.track_stock) &&
+    (p1.stockQuantity ?? p1.stock_quantity) === (p2.stockQuantity ?? p2.stock_quantity) &&
+    (p1.minStockAlert ?? p1.min_stock_alert) === (p2.minStockAlert ?? p2.min_stock_alert)
   );
 }
 

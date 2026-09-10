@@ -404,6 +404,43 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(parkBtn);
       expect(onParkCart).toHaveBeenCalledTimes(1);
     });
+
+    it('formats integer and decimal quantities cleanly and steps weighed items by 0.1', () => {
+      const onUpdateQty = vi.fn();
+      const mixedCartItems = [
+        { id: 'item-discrete', name: 'Rohlík', price: 3, quantity: 5, unit: 'ks' },
+        { id: 'item-weighed', name: 'Jablka', price: 40, quantity: 0.65, unit: 'kg' }
+      ];
+
+      wrapWithLanguage(
+        <Cart
+          cartItems={mixedCartItems}
+          onUpdateQty={onUpdateQty}
+          onRemoveItem={vi.fn()}
+          storeConfig={DEFAULT_STORE_CONFIG}
+        />
+      );
+
+      // Integer discrete item formatted as 5 ks
+      expect(screen.getByText(/5 ks/i)).toBeInTheDocument();
+      // Decimal weighed item formatted as 0.65 kg
+      expect(screen.getByText(/0\.65 kg/i)).toBeInTheDocument();
+
+      // Click + on weighed item (title="+0.1 kg")
+      const plusWeighedBtn = screen.getByRole('button', { name: /\+0\.1 kg/i });
+      fireEvent.click(plusWeighedBtn);
+      expect(onUpdateQty).toHaveBeenCalledWith('item-weighed', 0.75);
+
+      // Click - on weighed item (title="-0.1 kg")
+      const minusWeighedBtn = screen.getByRole('button', { name: /-0\.1 kg/i });
+      fireEvent.click(minusWeighedBtn);
+      expect(onUpdateQty).toHaveBeenCalledWith('item-weighed', 0.55);
+
+      // Click + on discrete item (title="+1 ks")
+      const plusDiscreteBtn = screen.getByRole('button', { name: /\+1 ks/i });
+      fireEvent.click(plusDiscreteBtn);
+      expect(onUpdateQty).toHaveBeenCalledWith('item-discrete', 6);
+    });
   });
 
   describe('ParkedCartsDrawer & Localization', () => {

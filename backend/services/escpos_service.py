@@ -686,6 +686,303 @@ class ESCPOSPrinterService:
             logger.error(f"Failed to print daily summary: {e}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
 
+    def print_cash_movement_slip(self, movement_data: dict, store_config: dict) -> dict:
+        """Prints a physical 58mm/80mm thermal receipt for a cash drawer movement (Float In, Payout, Safe Drop)."""
+        with _hardware_printer_lock:
+            return self._do_print_cash_movement_slip(movement_data, store_config)
+
+    def _do_print_cash_movement_slip(self, movement_data: dict, store_config: dict) -> dict:
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_58mm = paper_width in ["58", "48"]
+        line_width = 32 if is_58mm else 48
+        separator = "=" * line_width
+        dash_line = "-" * line_width
+
+        m_type = str(movement_data.get("movement_type", "FLOAT_IN")).upper()
+        amount = float(movement_data.get("amount", 0.0))
+        reason = str(movement_data.get("reason", "") or "").strip()
+        created_at = movement_data.get("created_at") or datetime.now().strftime("%d.%m.%Y %H:%M")
+        shift_num = movement_data.get("shift_number", 1)
+
+        type_labels = {
+            "FLOAT_IN": "VKLAD DO POKLADNY",
+            "PAYOUT": "VYBER Z POKLADNY (VYDAJ)",
+            "SAFE_DROP": "ODVOD DO TREZORU"
+        }
+        type_title = type_labels.get(m_type, "POHYB HOTOVOSTI")
+
+        logger.info(f"Printing cash movement slip ({m_type}: {amount:.2f} Kc) via {self.interface_type}")
+
+        try:
+            printer = None
+            try:
+                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                    from escpos.printer import Win32Raw
+                    target_name = self.address
+                    if not target_name or target_name.startswith('/dev/'):
+                        target_name = ""
+                        try:
+                            import win32print
+                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                            if pos_printers:
+                                target_name = pos_printers[0]
+                            elif printers:
+                                target_name = printers[0]
+                        except Exception:
+                            pass
+                    printer = Win32Raw(target_name)
+                elif self.interface_type == "USB":
+                    from escpos.printer import Usb, File
+                    if os.path.exists(self.address):
+                        printer = File(self.address)
+                    else:
+                        printer = Usb(0x04b8, 0x0e15, 0)
+                elif self.interface_type == "NETWORK" and self.address:
+                    from escpos.printer import Network
+                    printer = Network(self.address, port=9100, timeout=3.0)
+                elif self.interface_type == "SERIAL" and self.address:
+                    from escpos.printer import Serial
+                    printer = Serial(self.address, baudrate=9600)
+            except Exception as conn_err:
+                logger.info(f"Physical printer offline for cash movement slip ({conn_err}), using simulation fallback.")
+                printer = None
+
+            if printer:
+                try:
+                    if hasattr(printer, 'open'):
+                        printer.open("VoltFlow_POS_Cash_Movement")
+                    try:
+                        if hasattr(printer, 'charcode'):
+                            printer.charcode('CP852')
+                    except Exception:
+                        pass
+
+                    printer.set(align='center', font='a', width=1, height=1)
+                    printer.text(f"{store_config.get('storeName', 'VoltFlow POS')}\n")
+                    if store_config.get("street"):
+                        printer.text(f"{store_config.get('street')}\n")
+                    if store_config.get("city"):
+                        printer.text(f"{store_config.get('city')}\n")
+                    if store_config.get("ico"):
+                        printer.text(f"ICO: {store_config.get('ico')}\n")
+
+                    printer.text(f"{separator}\n")
+                    printer.set(align='center', bold=True)
+                    printer.text(f"{type_title}\n")
+                    printer.set(align='center', bold=False)
+                    printer.text(f"Smena c.: {shift_num}   Cas: {created_at}\n")
+                    printer.text(f"{dash_line}\n")
+
+                    sign_char = "+" if m_type == "FLOAT_IN" else "-"
+                    printer.set(align='center', font='a', width=2, height=2, bold=True)
+                    printer.text(f"{sign_char} {amount:,.2f} Kc\n".replace(",", " "))
+
+                    printer.set(align='left', font='a', width=1, height=1, bold=False)
+                    if reason:
+                        printer.text(f"Duvod: {reason}\n")
+                    printer.text(f"{dash_line}\n")
+                    printer.text("Podpis pokladnika:\n\n\n")
+                    printer.text("...............................\n")
+                    printer.text(f"{separator}\n\n\n")
+
+                    printer.cut()
+                    return {"success": True, "physical": True, "status": "PRINTED"}
+                except Exception as print_err:
+                    logger.warning(f"Error printing cash movement slip: {print_err}")
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
+            # Simulation fallback
+            print(separator)
+            print(f"--- PHYSICAL ESC/POS CASH MOVEMENT SLIP ({type_title}) ---")
+            print(f"Store: {store_config.get('storeName', 'VoltFlow POS')}")
+            print(f"Amount: {amount:,.2f} Kc | Reason: {reason}")
+            print(f"Shift: {shift_num} | Time: {created_at}")
+            print(separator)
+            return {"success": True, "physical": False, "status": "SIMULATED"}
+        except Exception as e:
+            logger.error(f"Failed to print cash movement slip: {e}")
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
+
+    def print_z_report(self, z_report_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
+        """Prints official Z-Report thermal closing slip and optionally kicks open the cash drawer."""
+        with _hardware_printer_lock:
+            return self._do_print_z_report(z_report_data, store_config, open_drawer)
+
+    def _do_print_z_report(self, z_report_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_58mm = paper_width in ["58", "48"]
+        line_width = 32 if is_58mm else 48
+        separator = "=" * line_width
+        dash_line = "-" * line_width
+
+        shift = z_report_data.get("shift", {})
+        z_seq = z_report_data.get("z_seq", shift.get("z_seq", 1))
+        shift_num = z_report_data.get("shift_number", shift.get("shift_number", 1))
+        opened_at = shift.get("opened_at", "")
+        closed_at = shift.get("closed_at", datetime.now().strftime("%d.%m.%Y %H:%M"))
+
+        opening_cash = float(shift.get("opening_cash", 0.0))
+        cash_sales = float(shift.get("total_cash_sales", 0.0))
+        cash_refunds = float(shift.get("total_cash_refunds", 0.0))
+        float_in = float(shift.get("float_in", 0.0))
+        payouts = float(shift.get("payouts", 0.0))
+        safe_drops = float(shift.get("safe_drops", 0.0))
+        expected_cash = float(shift.get("expected_cash", 0.0))
+        actual_cash = float(shift.get("actual_cash", 0.0))
+        discrepancy = float(shift.get("discrepancy", 0.0))
+
+        total_rev = float(z_report_data.get("total_revenue", 0.0))
+        card_sales = float(z_report_data.get("card_sales", 0.0))
+        qr_sales = float(z_report_data.get("qr_sales", 0.0))
+        receipts_count = int(z_report_data.get("receipts_count", 0))
+
+        logger.info(f"Printing Z-Report #{z_seq} (Shift #{shift_num}) via {self.interface_type}")
+
+        try:
+            printer = None
+            try:
+                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                    from escpos.printer import Win32Raw
+                    target_name = self.address
+                    if not target_name or target_name.startswith('/dev/'):
+                        target_name = ""
+                        try:
+                            import win32print
+                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                            if pos_printers:
+                                target_name = pos_printers[0]
+                            elif printers:
+                                target_name = printers[0]
+                        except Exception:
+                            pass
+                    printer = Win32Raw(target_name)
+                elif self.interface_type == "USB":
+                    from escpos.printer import Usb, File
+                    if os.path.exists(self.address):
+                        printer = File(self.address)
+                    else:
+                        printer = Usb(0x04b8, 0x0e15, 0)
+                elif self.interface_type == "NETWORK" and self.address:
+                    from escpos.printer import Network
+                    printer = Network(self.address, port=9100, timeout=3.0)
+                elif self.interface_type == "SERIAL" and self.address:
+                    from escpos.printer import Serial
+                    printer = Serial(self.address, baudrate=9600)
+            except Exception as conn_err:
+                logger.info(f"Physical printer offline for Z-Report ({conn_err}), using simulation fallback.")
+                printer = None
+
+            if printer:
+                try:
+                    if hasattr(printer, 'open'):
+                        printer.open("VoltFlow_POS_Z_Report")
+                    try:
+                        if hasattr(printer, 'charcode'):
+                            printer.charcode('CP852')
+                    except Exception:
+                        pass
+
+                    printer.set(align='center', font='a', width=1, height=1)
+                    printer.text(f"{store_config.get('storeName', 'VoltFlow POS')}\n")
+                    if store_config.get("street"):
+                        printer.text(f"{store_config.get('street')}\n")
+                    if store_config.get("city"):
+                        printer.text(f"{store_config.get('city')}\n")
+                    if store_config.get("ico"):
+                        printer.text(f"ICO: {store_config.get('ico')}\n")
+
+                    printer.text(f"{separator}\n")
+                    printer.set(align='center', font='a', width=2, height=1, bold=True)
+                    printer.text("DENNI Z-UZAVERKA\n")
+                    printer.set(align='center', font='a', width=1, height=1, bold=False)
+                    printer.text(f"Z-Uzaverka c.: {z_seq:04d}   Smena c.: {shift_num}\n")
+                    printer.text(f"Otevreno: {opened_at}\n")
+                    printer.text(f"Uzavreno: {closed_at}\n")
+                    printer.text(f"{separator}\n")
+
+                    printer.set(align='center', bold=True)
+                    printer.text("SOUHRN TRZEB SMENY\n")
+                    printer.set(align='left', bold=False)
+                    printer.text(f"Trzba celkem:       {total_rev:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Hotovost:           {cash_sales:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Platby kartou:      {card_sales:,.2f} Kc\n".replace(",", " "))
+                    if qr_sales:
+                        printer.text(f"QR platby:          {qr_sales:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Pocet uctenek:      {receipts_count}\n")
+                    printer.text(f"{dash_line}\n")
+
+                    printer.set(align='center', bold=True)
+                    printer.text("STAV POKLADNY / ZASUVKY\n")
+                    printer.set(align='left', bold=False)
+                    printer.text(f"Pocatecni hotovost: {opening_cash:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Trzba hotovost (+): {cash_sales:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Vratky hotovost (-):{cash_refunds:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Vklady (+):         {float_in:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Vybery (-):         {payouts:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Odvody trezor (-):  {safe_drops:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"{dash_line}\n")
+
+                    printer.set(align='left', bold=True)
+                    printer.text(f"Ocekavana hotovost: {expected_cash:,.2f} Kc\n".replace(",", " "))
+                    printer.text(f"Skutecna hotovost:  {actual_cash:,.2f} Kc\n".replace(",", " "))
+
+                    disc_label = "V PORADKU" if abs(discrepancy) < 0.01 else ("PREBYTEK" if discrepancy > 0 else "MANKO")
+                    printer.text(f"Rozdil ({disc_label}): {discrepancy:,.2f} Kc\n".replace(",", " "))
+                    printer.set(align='left', bold=False)
+                    printer.text(f"{separator}\n")
+
+                    notes = z_report_data.get("notes") or shift.get("notes")
+                    if notes:
+                        printer.text(f"Poznamka: {notes}\n{dash_line}\n")
+
+                    printer.text("Podpis pokladnika / vedouciho:\n\n\n")
+                    printer.text("...............................\n")
+                    printer.text(f"{separator}\n\n\n")
+
+                    printer.cut()
+                    if open_drawer:
+                        try:
+                            printer.cashdraw(2)
+                        except Exception:
+                            pass
+                        try:
+                            printer.cashdraw(5)
+                        except Exception:
+                            pass
+
+                    return {"success": True, "physical": True, "status": "PRINTED"}
+                except Exception as print_err:
+                    logger.warning(f"Error printing Z-Report: {print_err}")
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
+            # Simulation fallback
+            print(separator)
+            print(f"--- PHYSICAL ESC/POS Z-REPORT #{z_seq:04d} SIMULATION ---")
+            print(f"Store: {store_config.get('storeName', 'VoltFlow POS')}")
+            print(f"Expected: {expected_cash:,.2f} Kc | Actual: {actual_cash:,.2f} Kc | Discrepancy: {discrepancy:,.2f} Kc")
+            print(f"Total Revenue: {total_rev:,.2f} Kc | Sales count: {receipts_count}")
+            if open_drawer:
+                print("--- CASH DRAWER OPEN SIGNAL SIMULATED ---")
+            print(separator)
+
+            return {"success": True, "physical": False, "status": "SIMULATED"}
+        except Exception as e:
+            logger.error(f"Failed to print Z-Report: {e}")
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
+
+
     def open_cash_drawer(self) -> dict:
         """
         Sends pulse signal to thermal printer cash drawer RJ11/RJ12 port to kick the drawer open.

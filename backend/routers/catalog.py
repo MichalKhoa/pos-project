@@ -23,9 +23,9 @@ class PresetSchema(BaseModel):
     isOpenPrice: Optional[bool] = False
     isGeneralPreset: Optional[bool] = False
     position: Optional[int] = 0
-    stockQuantity: Optional[int] = 0
+    stockQuantity: Optional[float] = 0.0
     trackStock: Optional[bool] = False
-    minStockAlert: Optional[int] = 5
+    minStockAlert: Optional[float] = 5.0
     barcode: Optional[str] = ""
     icon: Optional[str] = None
     imageUrl: Optional[str] = None
@@ -33,7 +33,7 @@ class PresetSchema(BaseModel):
     costPrice: Optional[float] = 0.0
 
 class RestockPresetSchema(BaseModel):
-    quantity_add: int
+    quantity_add: float
 
 class ReorderPresetsSchema(BaseModel):
     presets: List[PresetSchema]
@@ -47,13 +47,13 @@ DEFAULT_CATEGORIES_DATA = [
 ]
 
 DEFAULT_PRESETS_DATA = [
-    {"id": "preset-clothes", "name": "Oblečení", "icon": "Shirt", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-shoes", "name": "Boty", "icon": "Footprints", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-socks", "name": "Ponožky", "icon": "Layers", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-underwear", "name": "Spodní prádlo", "icon": "Heart", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-home", "name": "Domácí potřeby", "icon": "Home", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "icon": "Package", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""},
-    {"id": "preset-open-2", "name": "Dárkový Poukaz", "icon": "Gift", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0, "track_stock": False, "min_stock_alert": 5, "barcode": ""}
+    {"id": "preset-clothes", "name": "Oblečení", "icon": "Shirt", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
+    {"id": "preset-shoes", "name": "Boty", "icon": "Footprints", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
+    {"id": "preset-socks", "name": "Ponožky", "icon": "Layers", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
+    {"id": "preset-underwear", "name": "Spodní prádlo", "icon": "Heart", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
+    {"id": "preset-home", "name": "Domácí potřeby", "icon": "Home", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
+    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "icon": "Package", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
+    {"id": "preset-open-2", "name": "Dárkový Poukaz", "icon": "Gift", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""}
 ]
 
 # --- CATEGORIES ENDPOINTS ---
@@ -131,9 +131,9 @@ def get_presets(db: Session = Depends(get_db)):
                     is_open_price=p.get("is_open_price", False),
                     is_general=p.get("is_general", False),
                     position=p["position"],
-                    stock_quantity=p.get("stock_quantity", 0),
+                    stock_quantity=p.get("stock_quantity", 0.0),
                     track_stock=p.get("track_stock", False),
-                    min_stock_alert=p.get("min_stock_alert", 5),
+                    min_stock_alert=p.get("min_stock_alert", 5.0),
                     barcode=p.get("barcode", ""),
                     icon=p.get("icon", None),
                     image_url=p.get("imageUrl", None)
@@ -153,9 +153,9 @@ def get_presets(db: Session = Depends(get_db)):
             "isOpenPrice": p.is_open_price,
             "isGeneralPreset": p.is_general if p.is_general is not None else False,
             "position": p.position,
-            "stockQuantity": p.stock_quantity if p.stock_quantity is not None else 0,
+            "stockQuantity": p.stock_quantity if p.stock_quantity is not None else 0.0,
             "trackStock": p.track_stock if p.track_stock is not None else False,
-            "minStockAlert": p.min_stock_alert if p.min_stock_alert is not None else 5,
+            "minStockAlert": p.min_stock_alert if p.min_stock_alert is not None else 5.0,
             "barcode": p.barcode or "",
             "icon": getattr(p, 'icon', None),
             "imageUrl": getattr(p, 'image_url', None),
@@ -192,9 +192,9 @@ def get_preset_by_barcode(code: str, db: Session = Depends(get_db)):
         "isOpenPrice": preset.is_open_price,
         "isGeneralPreset": preset.is_general or False,
         "position": preset.position,
-        "stockQuantity": preset.stock_quantity or 0,
+        "stockQuantity": preset.stock_quantity if preset.stock_quantity is not None else 0.0,
         "trackStock": preset.track_stock or False,
-        "minStockAlert": preset.min_stock_alert or 5,
+        "minStockAlert": preset.min_stock_alert if preset.min_stock_alert is not None else 5.0,
         "barcode": preset.barcode or "",
         "icon": getattr(preset, 'icon', None),
         "imageUrl": getattr(preset, 'image_url', None),
@@ -216,9 +216,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         existing.is_open_price = preset.isOpenPrice
         existing.is_general = preset.isGeneralPreset if preset.isGeneralPreset is not None else False
         existing.position = preset.position
-        existing.stock_quantity = preset.stockQuantity if preset.stockQuantity is not None else 0
+        existing.stock_quantity = round(preset.stockQuantity, 3) if preset.stockQuantity is not None else 0.0
         existing.track_stock = preset.trackStock if preset.trackStock is not None else False
-        existing.min_stock_alert = preset.minStockAlert if preset.minStockAlert is not None else 5
+        existing.min_stock_alert = round(preset.minStockAlert, 3) if preset.minStockAlert is not None else 5.0
         existing.barcode = preset.barcode or ""
         existing.show_in_presets = preset.showInPresets if preset.showInPresets is not None else True
         existing.cost_price = preset.costPrice if preset.costPrice is not None else 0.0
@@ -235,9 +235,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
             is_open_price=preset.isOpenPrice,
             is_general=preset.isGeneralPreset if preset.isGeneralPreset is not None else False,
             position=preset.position,
-            stock_quantity=preset.stockQuantity if preset.stockQuantity is not None else 0,
+            stock_quantity=round(preset.stockQuantity, 3) if preset.stockQuantity is not None else 0.0,
             track_stock=preset.trackStock if preset.trackStock is not None else False,
-            min_stock_alert=preset.minStockAlert if preset.minStockAlert is not None else 5,
+            min_stock_alert=round(preset.minStockAlert, 3) if preset.minStockAlert is not None else 5.0,
             barcode=preset.barcode or "",
             icon=preset.icon,
             image_url=preset.imageUrl,
@@ -257,9 +257,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         "isOpenPrice": existing.is_open_price,
         "isGeneralPreset": existing.is_general,
         "position": existing.position,
-        "stockQuantity": existing.stock_quantity,
+        "stockQuantity": existing.stock_quantity if existing.stock_quantity is not None else 0.0,
         "trackStock": existing.track_stock,
-        "minStockAlert": existing.min_stock_alert,
+        "minStockAlert": existing.min_stock_alert if existing.min_stock_alert is not None else 5.0,
         "barcode": existing.barcode,
         "icon": getattr(existing, 'icon', None),
         "imageUrl": getattr(existing, 'image_url', None),
@@ -283,9 +283,9 @@ def bulk_save_presets(presets: List[PresetSchema], db: Session = Depends(get_db)
             existing.is_open_price = p.isOpenPrice
             existing.is_general = p.isGeneralPreset if p.isGeneralPreset is not None else False
             existing.position = p.position
-            existing.stock_quantity = p.stockQuantity if p.stockQuantity is not None else 0
+            existing.stock_quantity = round(p.stockQuantity, 3) if p.stockQuantity is not None else 0.0
             existing.track_stock = p.trackStock if p.trackStock is not None else False
-            existing.min_stock_alert = p.minStockAlert if p.minStockAlert is not None else 5
+            existing.min_stock_alert = round(p.minStockAlert, 3) if p.minStockAlert is not None else 5.0
             existing.barcode = p.barcode or ""
             existing.show_in_presets = p.showInPresets if p.showInPresets is not None else True
             existing.cost_price = p.costPrice if p.costPrice is not None else 0.0
@@ -302,9 +302,9 @@ def bulk_save_presets(presets: List[PresetSchema], db: Session = Depends(get_db)
                 is_open_price=p.isOpenPrice,
                 is_general=p.isGeneralPreset if p.isGeneralPreset is not None else False,
                 position=p.position,
-                stock_quantity=p.stockQuantity if p.stockQuantity is not None else 0,
+                stock_quantity=round(p.stockQuantity, 3) if p.stockQuantity is not None else 0.0,
                 track_stock=p.trackStock if p.trackStock is not None else False,
-                min_stock_alert=p.minStockAlert if p.minStockAlert is not None else 5,
+                min_stock_alert=round(p.minStockAlert, 3) if p.minStockAlert is not None else 5.0,
                 barcode=p.barcode or "",
                 icon=p.icon,
                 image_url=p.imageUrl,
@@ -343,7 +343,7 @@ def restock_preset(preset_id: str, data: RestockPresetSchema, db: Session = Depe
     if not preset:
         raise HTTPException(status_code=404, detail="Položka nebyla nalezena.")
 
-    preset.stock_quantity = (preset.stock_quantity or 0) + data.quantity_add
+    preset.stock_quantity = round((preset.stock_quantity or 0.0) + data.quantity_add, 3)
     db.commit()
     db.refresh(preset)
     return {

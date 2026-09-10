@@ -1,14 +1,17 @@
 import os
+import uuid
 import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session, selectinload, noload
 from sqlalchemy import func, case
 from typing import List, Optional, Any, Dict
+import re
 from database import get_db
-from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel
+from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel, PresetModel, StockMovementModel, CashMovementModel
 from services.eet_service import CzechEETService
 from services.security_utils import parse_iso_timestamp, round_currency
 from services.hardware_profile import get_hardware_profile
+from services.pohoda_export import generate_pohoda_datapack_xml
 from pydantic import BaseModel
 
 from datetime import datetime
@@ -52,7 +55,7 @@ class SaleItemSchema(BaseModel):
     id: Optional[str] = None
     name: str
     price: float
-    quantity: int = 1
+    quantity: float = 1.0
     vat: int = 21
     discount_percent: Optional[float] = 0.0
     discountPercent: Optional[float] = 0.0
@@ -88,7 +91,7 @@ class SaleItemResponseSchema(BaseModel):
     item_id: Optional[str] = None
     name: str
     price: float
-    quantity: int = 1
+    quantity: float = 1.0
     vat: int = 21
     discount_percent: float = 0.0
 
@@ -100,11 +103,11 @@ class SaleItemLookupResponseSchema(BaseModel):
     item_id: Optional[str] = None
     name: str
     price: float
-    quantity: int = 1
+    quantity: float = 1.0
     vat: int = 21
     discount_percent: float = 0.0
-    refunded_quantity: int = 0
-    remaining_quantity: int = 1
+    refunded_quantity: float = 0.0
+    remaining_quantity: float = 1.0
 
     model_config = {"from_attributes": True}
 
@@ -429,6 +432,112 @@ def get_sales_history(
     return query.all()
 
 
+@router.get("/export/pohoda")
+def export_pohoda_xml(
+    month: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Generate and download Stormware POHODA 2.0 XML dataPack export.
+    Supports filtering by month ('YYYY-MM') or specific date bounds.
+    """
+    period_label = "period"
+    start_dt = None
+    end_dt = None
+
+    if month and month.strip():
+        m_str = month.strip()
+        period_label = m_str
+        try:
+            parts = m_str.split("-")
+            y, m = int(parts[0]), int(parts[1])
+            start_dt = datetime(y, m, 1, 0, 0, 0)
+            if m == 12:
+                end_dt = datetime(y + 1, 1, 1, 0, 0, 0)
+            else:
+                end_dt = datetime(y, m + 1, 1, 0, 0, 0)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid month format '{month}'. Expected YYYY-MM.")
+    else:
+        if from_date and from_date.strip():
+            raw_from = from_date.strip()
+            if len(raw_from) == 10 and re.match(r"^\d{4}-\d{2}-\d{2}$", raw_from):
+                y, m, d = [int(x) for x in raw_from.split("-")]
+                start_dt = datetime(y, m, d, 0, 0, 0)
+            else:
+                parsed = parse_iso_timestamp(raw_from)
+                start_dt = parsed.replace(tzinfo=None) if hasattr(parsed, "tzinfo") and parsed.tzinfo else parsed
+
+        if to_date and to_date.strip():
+            raw_to = to_date.strip()
+            if len(raw_to) == 10 and re.match(r"^\d{4}-\d{2}-\d{2}$", raw_to):
+                y, m, d = [int(x) for x in raw_to.split("-")]
+                end_dt = datetime(y, m, d, 23, 59, 59, 999999)
+            else:
+                parsed = parse_iso_timestamp(raw_to)
+                parsed_naive = parsed.replace(tzinfo=None) if hasattr(parsed, "tzinfo") and parsed.tzinfo else parsed
+                if parsed_naive.hour == 0 and parsed_naive.minute == 0 and parsed_naive.second == 0:
+                    end_dt = parsed_naive.replace(hour=23, minute=59, second=59, microsecond=999999)
+                else:
+                    end_dt = parsed_naive
+
+        if from_date and to_date:
+            period_label = f"{from_date[:10]}_{to_date[:10]}"
+        elif from_date:
+            period_label = f"from_{from_date[:10]}"
+        elif to_date:
+            period_label = f"to_{to_date[:10]}"
+        else:
+            now = datetime.now()
+            period_label = now.strftime("%Y-%m")
+            start_dt = datetime(now.year, now.month, 1, 0, 0, 0)
+            if now.month == 12:
+                end_dt = datetime(now.year + 1, 1, 1, 0, 0, 0)
+            else:
+                end_dt = datetime(now.year, now.month + 1, 1, 0, 0, 0)
+
+    # Query Sales
+    sales_query = db.query(SaleModel).options(selectinload(SaleModel.items))
+    if start_dt:
+        sales_query = sales_query.filter(SaleModel.timestamp >= start_dt)
+    if end_dt:
+        if month:
+            sales_query = sales_query.filter(SaleModel.timestamp < end_dt)
+        else:
+            sales_query = sales_query.filter(SaleModel.timestamp <= end_dt)
+    sales = sales_query.order_by(SaleModel.timestamp.asc()).all()
+
+    # Query Cash Movements
+    mov_query = db.query(CashMovementModel)
+    if start_dt:
+        mov_query = mov_query.filter(CashMovementModel.created_at >= start_dt)
+    if end_dt:
+        if month:
+            mov_query = mov_query.filter(CashMovementModel.created_at < end_dt)
+        else:
+            mov_query = mov_query.filter(CashMovementModel.created_at <= end_dt)
+    cash_movements = mov_query.order_by(CashMovementModel.created_at.asc()).all()
+
+    # Query Store Config
+    store_config = db.query(StoreConfigModel).first()
+
+    xml_content = generate_pohoda_datapack_xml(
+        sales=sales,
+        cash_movements=cash_movements,
+        store_config=store_config,
+        period_label=period_label,
+    )
+
+    filename = f"pohoda_export_{month or period_label or 'period'}.xml"
+    return Response(
+        content=xml_content,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
 @router.get("/next-receipt-number")
 def get_next_receipt_number_preview(db: Session = Depends(get_db)):
     """Preview the next available receipt number sequence."""
@@ -598,30 +707,30 @@ def get_sale_by_receipt_number(receipt_number: str, db: Session = Depends(get_db
 
     for ref in refund_sales:
         for ref_item in ref.items:
-            qty_refunded = abs(ref_item.quantity)
+            qty_refunded = round(abs(ref_item.quantity), 3)
             if ref_item.item_id:
-                refunded_by_item_id[ref_item.item_id] = refunded_by_item_id.get(ref_item.item_id, 0) + qty_refunded
+                refunded_by_item_id[ref_item.item_id] = round(refunded_by_item_id.get(ref_item.item_id, 0.0) + qty_refunded, 3)
             
             clean_name = ref_item.name
             if clean_name.startswith("STORNO: "):
                 clean_name = clean_name[len("STORNO: "):]
             clean_name_key = clean_name.strip().lower()
-            refunded_by_name[clean_name_key] = refunded_by_name.get(clean_name_key, 0) + qty_refunded
+            refunded_by_name[clean_name_key] = round(refunded_by_name.get(clean_name_key, 0.0) + qty_refunded, 3)
 
     # Compute refundable quantities per original item
     enhanced_items = []
     for item in sale.items:
         # Match refund count by item_id or normalized name
-        refunded_qty = 0
+        refunded_qty = 0.0
         if item.item_id and item.item_id in refunded_by_item_id:
             refunded_qty = refunded_by_item_id[item.item_id]
         else:
             name_key = item.name.strip().lower()
-            refunded_qty = refunded_by_name.get(name_key, 0)
+            refunded_qty = refunded_by_name.get(name_key, 0.0)
 
         # Cap refunded_quantity at item's original quantity
-        refunded_qty = min(item.quantity, max(0, refunded_qty))
-        remaining_qty = max(0, item.quantity - refunded_qty)
+        refunded_qty = round(min(item.quantity, max(0.0, refunded_qty)), 3)
+        remaining_qty = round(max(0.0, item.quantity - refunded_qty), 3)
 
         enhanced_items.append({
             "id": item.id,
@@ -773,7 +882,7 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
                 item_id=item.id,
                 name=item.name,
                 price=round_currency(item.price),
-                quantity=item.quantity,
+                quantity=round(item.quantity, 3),
                 vat=item.vat,
                 discount_percent=item.discount_percent
             )
@@ -783,7 +892,23 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             if item.id:
                 preset = db.query(PresetModel).filter(PresetModel.id == item.id).first()
                 if preset and preset.track_stock:
-                    preset.stock_quantity -= item.quantity
+                    preset.stock_quantity = round((preset.stock_quantity or 0.0) - item.quantity, 3)
+                    movement_type = 'RETURN' if sale.isRefund else 'SALE'
+                    qty_delta = round(abs(item.quantity) if sale.isRefund else -abs(item.quantity), 3)
+                    doc_ref = assigned_receipt_number or sale.receiptNumber
+                    smov = StockMovementModel(
+                        id=f"smov_{uuid.uuid4().hex[:12]}",
+                        preset_id=preset.id,
+                        movement_type=movement_type,
+                        quantity_delta=qty_delta,
+                        unit_cost=float(getattr(preset, 'cost_price', 0.0) or 0.0),
+                        supplier_ico=None,
+                        supplier_name=None,
+                        document_ref=doc_ref,
+                        note="Prodej na pokladně" if not sale.isRefund else (sale.refundReason or "Vratka zboží"),
+                        timestamp=db_sale.timestamp
+                    )
+                    db.add(smov)
 
     db.refresh(db_sale)
 
@@ -824,12 +949,24 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
 
     # Auto-restock items if restock is enabled (unless damaged/waste)
     if data.restock:
-        from models import PresetModel
         for item in sale.items:
             if item.item_id:
                 preset = db.query(PresetModel).filter(PresetModel.id == item.item_id).first()
                 if preset and preset.track_stock:
-                    preset.stock_quantity += item.quantity
+                    preset.stock_quantity = round((preset.stock_quantity or 0.0) + item.quantity, 3)
+                    smov = StockMovementModel(
+                        id=f"smov_{uuid.uuid4().hex[:12]}",
+                        preset_id=preset.id,
+                        movement_type="RETURN",
+                        quantity_delta=round(item.quantity, 3),
+                        unit_cost=float(getattr(preset, 'cost_price', 0.0) or 0.0),
+                        supplier_ico=None,
+                        supplier_name=None,
+                        document_ref=sale.receipt_number,
+                        note=sale.refund_reason or "Vratka / storno dokladu",
+                        timestamp=datetime.utcnow()
+                    )
+                    db.add(smov)
 
     rec_num = sale.receipt_number
     orig_rec_num = sale.original_receipt_number

@@ -31,7 +31,8 @@ import {
   openCashDrawerBackend,
   printDailySummaryBackend,
   printReceiptBackend,
-  fetchSaleByReceiptNumber
+  fetchSaleByReceiptNumber,
+  getCurrentShift
 } from './api/posApi';
 import { formatLocalDate } from './utils/dateUtils';
 import SalesHistoryView from './components/SalesHistoryView';
@@ -162,6 +163,22 @@ export default function App() {
 
   const [isParkedModalOpen, setIsParkedModalOpen] = useState(false);
   const [isCustomItemModalOpen, setIsCustomItemModalOpen] = useState(false);
+  const [isCashMovementModalOpen, setIsCashMovementModalOpen] = useState(false);
+  const [isZReportModalOpen, setIsZReportModalOpen] = useState(false);
+  const [currentShift, setCurrentShift] = useState(null);
+
+  const fetchShiftData = useCallback(async () => {
+    try {
+      const shift = await getCurrentShift();
+      if (shift) setCurrentShift(shift);
+    } catch (e) {
+      console.warn('Failed to fetch shift data:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchShiftData();
+  }, [fetchShiftData]);
 
   const computedTotalAmount = useMemo(() => {
     return cartItems.reduce((sum, item) => {
@@ -898,6 +915,8 @@ export default function App() {
                       defaultVat={storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21}
                       onOpenCashDrawer={handleOpenCashDrawer}
                       onPrintDailySummary={handlePrintDailySummary}
+                      onOpenCashMovement={() => setIsCashMovementModalOpen(true)}
+                      onOpenZReport={() => setIsZReportModalOpen(true)}
                       onApplyDiscount={handleApplyCartDiscount}
                       parkedCarts={parkedCarts}
                       onParkCart={parkCurrentCart}
@@ -947,6 +966,7 @@ export default function App() {
                       variant="slim"
                       salesHistory={salesHistory}
                       onPrintDailySummary={handlePrintDailySummary}
+                      onOpenZReport={() => setIsZReportModalOpen(true)}
                     />
                   )}
                 </div>
@@ -981,6 +1001,7 @@ export default function App() {
                       variant="card"
                       salesHistory={salesHistory}
                       onPrintDailySummary={handlePrintDailySummary}
+                      onOpenZReport={() => setIsZReportModalOpen(true)}
                     />
                   )}
                 </div>
@@ -1138,6 +1159,18 @@ export default function App() {
         onRestoreParkedCart={restoreParkedCart}
         onDeleteParkedCart={deleteParkedCart}
         onUpdateParkedCartNote={updateParkedCartNote}
+        isCashMovementModalOpen={isCashMovementModalOpen}
+        setIsCashMovementModalOpen={setIsCashMovementModalOpen}
+        isZReportModalOpen={isZReportModalOpen}
+        setIsZReportModalOpen={setIsZReportModalOpen}
+        currentShift={currentShift}
+        onMovementRecorded={(res) => {
+          if (res?.shift) setCurrentShift(res.shift);
+          else fetchShiftData();
+        }}
+        onShiftClosed={() => {
+          fetchShiftData();
+        }}
       />
     </div>
   );

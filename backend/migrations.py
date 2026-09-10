@@ -46,19 +46,39 @@ MIGRATIONS = [
     ("sales", "refunded_amount", "FLOAT DEFAULT 0"),
     # Table: sale_items
     ("sale_items", "discount_percent", "FLOAT DEFAULT 0"),
+    ("sale_items", "quantity", "FLOAT DEFAULT 1.0"),
     # Table: catalog_presets
     ("catalog_presets", "is_open_price", "BOOLEAN DEFAULT 0"),
     ("catalog_presets", "color", "VARCHAR DEFAULT '#3b82f6'"),
     ("catalog_presets", "sort_order", "INTEGER DEFAULT 0"),
     # Table: presets
-    ("presets", "stock_quantity", "INTEGER DEFAULT 0"),
+    ("presets", "stock_quantity", "FLOAT DEFAULT 0.0"),
     ("presets", "track_stock", "BOOLEAN DEFAULT 0"),
-    ("presets", "min_stock_alert", "INTEGER DEFAULT 5"),
+    ("presets", "min_stock_alert", "FLOAT DEFAULT 5.0"),
     ("presets", "barcode", "VARCHAR DEFAULT ''"),
+    ("presets", "cost_price", "FLOAT DEFAULT 0.0"),
     # Table: store_config
     ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
     ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),
     ("store_config", "receipt_show_barcode", "BOOLEAN DEFAULT 1"),
+    # Table: cash_movements
+    ("cash_movements", "shift_id", "VARCHAR DEFAULT ''"),
+    ("cash_movements", "reason", "VARCHAR DEFAULT ''"),
+    # Table: shift_sessions
+    ("shift_sessions", "discrepancy", "FLOAT DEFAULT 0.0"),
+    ("shift_sessions", "z_seq", "INTEGER DEFAULT 1"),
+    # Table: stock_movements
+    ("stock_movements", "unit_cost", "FLOAT DEFAULT 0.0"),
+    ("stock_movements", "supplier_ico", "VARCHAR DEFAULT ''"),
+    ("stock_movements", "supplier_name", "VARCHAR DEFAULT ''"),
+    ("stock_movements", "document_ref", "VARCHAR DEFAULT ''"),
+    ("stock_movements", "note", "VARCHAR DEFAULT ''"),
+]
+
+FLOAT_COLUMN_MIGRATIONS = [
+    ("sale_items", "quantity", 1.0),
+    ("presets", "stock_quantity", 0.0),
+    ("presets", "min_stock_alert", 5.0),
 ]
 
 
@@ -154,6 +174,64 @@ def run_schema_migrations(engine=None):
                         logger.info(f"Applied legacy migration {table}.{col} ({col_type})")
                     except Exception:
                         pass
+
+        # 4. Safely migrate existing INTEGER columns to FLOAT without data loss
+        for table, col, default_val in FLOAT_COLUMN_MIGRATIONS:
+            if table in existing_tables:
+                try:
+                    pragma_res = conn.execute(text(f"PRAGMA table_info('{table}')")).fetchall()
+                    col_info = next((row for row in pragma_res if row[1] == col), None)
+                    if col_info:
+                        current_type = (col_info[2] or "").upper()
+                        if "FLOAT" not in current_type and "REAL" not in current_type:
+                            temp_col = f"{col}_new_float"
+                            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {temp_col} FLOAT DEFAULT {default_val}"))
+                            conn.execute(text(f"UPDATE {table} SET {temp_col} = CAST({col} AS FLOAT)"))
+                            conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {col}"))
+                            conn.execute(text(f"ALTER TABLE {table} RENAME COLUMN {temp_col} TO {col}"))
+                            conn.commit()
+                            added_columns.append(f"{table}.{col}->FLOAT")
+                            logger.info(f"Auto-migrated {table}.{col}: converted {current_type} to FLOAT")
+                except Exception as e:
+                    logger.warning(f"Could not migrate column {table}.{col} to FLOAT: {e}")
+
+        # 5. Ensure stock_movements has ON DELETE CASCADE on preset_id foreign key
+        if "stock_movements" in existing_tables:
+            try:
+                fks = conn.execute(text("PRAGMA foreign_key_list('stock_movements')")).fetchall()
+                has_cascade = any(row[2] == "presets" and (row[6] or "").upper() == "CASCADE" for row in fks)
+                if not has_cascade:
+                    conn.execute(text("PRAGMA foreign_keys=OFF;"))
+                    conn.execute(text("""
+                        CREATE TABLE stock_movements_new (
+                            id VARCHAR NOT NULL PRIMARY KEY,
+                            preset_id VARCHAR NOT NULL REFERENCES presets(id) ON DELETE CASCADE,
+                            movement_type VARCHAR NOT NULL,
+                            quantity_delta FLOAT NOT NULL,
+                            unit_cost FLOAT NOT NULL,
+                            supplier_ico VARCHAR,
+                            supplier_name VARCHAR,
+                            document_ref VARCHAR,
+                            note VARCHAR,
+                            timestamp DATETIME NOT NULL
+                        );
+                    """))
+                    conn.execute(text("""
+                        INSERT INTO stock_movements_new (id, preset_id, movement_type, quantity_delta, unit_cost, supplier_ico, supplier_name, document_ref, note, timestamp)
+                        SELECT id, preset_id, movement_type, quantity_delta, unit_cost, supplier_ico, supplier_name, document_ref, note, timestamp FROM stock_movements;
+                    """))
+                    conn.execute(text("DROP TABLE stock_movements;"))
+                    conn.execute(text("ALTER TABLE stock_movements_new RENAME TO stock_movements;"))
+                    conn.execute(text("CREATE INDEX IF NOT EXISTS ix_stock_movements_preset_id ON stock_movements (preset_id);"))
+                    conn.execute(text("CREATE INDEX IF NOT EXISTS ix_stock_movements_movement_type ON stock_movements (movement_type);"))
+                    conn.execute(text("CREATE INDEX IF NOT EXISTS ix_stock_movements_supplier_ico ON stock_movements (supplier_ico);"))
+                    conn.execute(text("CREATE INDEX IF NOT EXISTS ix_stock_movements_timestamp ON stock_movements (timestamp);"))
+                    conn.execute(text("PRAGMA foreign_keys=ON;"))
+                    conn.commit()
+                    added_columns.append("stock_movements->ON_DELETE_CASCADE")
+                    logger.info("Migrated stock_movements: added ON DELETE CASCADE to foreign key")
+            except Exception as e:
+                logger.warning(f"Could not migrate stock_movements foreign key: {e}")
 
     if added_columns:
         logger.info(f"Schema migrations completed: {len(added_columns)} columns added: {', '.join(added_columns)}")

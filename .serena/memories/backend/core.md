@@ -11,8 +11,9 @@ Python FastAPI backend structure located in `/backend`.
 - `models.py`: Database tables (`SaleModel` with compound indexes on `timestamp` and `payment_method`, `SaleItemModel`, `StoreConfigModel`, `PresetModel`, `ReceiptSequenceModel`).
 
 ## Routers (`/backend/routers`)
-- `system.py`: System endpoints (`/api/v1/system/litestream-status`, `/api/v1/system/backup-status`, `/api/v1/system/trigger-backup`, `/api/v1/system/shutdown` with loopback check, offline EET flush, and graceful termination).
-- `sales.py`: Transaction creation with thread-safe `BoundedTTLIdempotencyCache`, paginated sales history retrieval with default limit (50, capped at 500), `doc_type` ('sales' | 'refunds'), `include_items` (noload support), text search (receipt number, original receipt number, item name), date/payment filtering (`X-Total-Count` header), aggregation endpoints (`GET /api/v1/sales/stats/daily` with sargable date boundary filter and `MonthlyStatsCache`, `GET /api/v1/sales/stats/shift`), `BoundedTTLReceiptCache` for single sale and receipt lookups with mutation invalidation, admin deletion, EET signing, and refund status updates.
+- `system.py`: System endpoints (`/api/v1/system/litestream-status`, `/api/v1/system/backup-status`, `/api/v1/system/trigger-backup`, `/api/v1/system/shutdown` with loopback check, offline EET flush, and graceful termination; `GET /api/v1/system/ares/{ico}` Czech State ARES entity verification).
+- `stock.py`: Stock management endpoints (`POST /api/v1/inventory/intake` atomic batch stock intake and cost updating, `GET /api/v1/inventory/movements` § 7b ZDP stock movement ledger with pagination and filtering).
+- `sales.py`: Transaction creation with thread-safe `BoundedTTLIdempotencyCache`, paginated sales history retrieval with default limit (50, capped at 500), `doc_type` ('sales' | 'refunds'), `include_items` (noload support), text search (receipt number, original receipt number, item name), date/payment filtering (`X-Total-Count` header), aggregation endpoints (`GET /api/v1/sales/stats/daily` with sargable date boundary filter and `MonthlyStatsCache`, `GET /api/v1/sales/stats/shift`), `BoundedTTLReceiptCache` for single sale and receipt lookups with mutation invalidation, admin deletion, EET signing, refund status updates, automatic `StockMovementModel` logging on sale deduction and refund restock, and Stormware POHODA 2.0 XML accounting export (`GET /api/v1/sales/export/pohoda`).
 - `config.py`: Store configuration GET/POST API endpoints (`/api/v1/config`) for full SQLite database persistence.
 - `printer.py`: Hardware device discovery (`/api/v1/printer/devices` memoized with 15s TTL) and ESC/POS thermal print triggers.
 - `eet.py`: Certificate validation, status check, manual payload test, PKCS#12 upload.
@@ -24,6 +25,7 @@ Python FastAPI backend structure located in `/backend`.
 ## Services (`/backend/services`)
 - Hardware Profiler: `hardware_profile.py` (`get_hardware_profile()`, detects system RAM via `psutil` and returns Tier 1/2/3 parameters).
 - Security & Cryptography: `security_utils.py` (Fernet password encryption, timezone-aware ISO parser, `Decimal` currency rounding).
+- Stormware POHODA 2.0 XML Bridge: `pohoda_export.py` (`generate_pohoda_datapack_xml()`, issued invoices with 21%, 12%, 0% VAT breakdowns, cash drawer vouchers, and XML escaping).
 - Czech EET 2.0 signing and SOAP transmission: `mem:backend/eet`
 - ESC/POS printing: `escpos_service.py` with `_hardware_printer_lock` (`threading.RLock`) for thread-safe serialized printing and cash drawer kicks.
 - Hardware discovery, QR payment generation, WS customer display: `mem:backend/hardware`

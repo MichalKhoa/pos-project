@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 import threading
 import logging
+import httpx
 from datetime import datetime
 from typing import Optional
 
@@ -895,3 +896,106 @@ def shutdown_system(request: Request):
     timer = threading.Timer(0.5, terminate)
     timer.start()
     return {"status": "SUCCESS", "message": "Pokladní systém byl úspěšně ukončen."}
+
+
+class AresResponseSchema(BaseModel):
+    ico: str
+    name: str
+    dic: Optional[str] = ""
+    street: str
+    city: str
+    zip: str
+    formattedAddress: str
+
+
+@router.get("/ares/{ico}", response_model=AresResponseSchema)
+async def lookup_ares(ico: str):
+    """
+    Lookup Czech company/sole-trader in the official Czech State ARES REST API.
+    Validates 8-digit IČO, fetches entity legal name, DIČ, and headquarters address.
+    """
+    clean_ico = ico.strip()
+    if not clean_ico.isdigit() or len(clean_ico) != 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Neplatný formát IČO (musí obsahovat přesně 8 číslic)."
+        )
+
+    ares_url = f"https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/{clean_ico}"
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "VoltFlowPOS/1.0"
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(ares_url, headers=headers)
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Registr ARES neodpověděl v časovém limitu 5 sekund."
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Chyba při komunikaci s registrem ARES: {str(exc)}"
+        )
+
+    if resp.status_code == 404:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"IČO {clean_ico} nenalezeno v registru ARES."
+        )
+    elif resp.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Registr ARES vrátil neočekávanou odpověď (HTTP {resp.status_code})."
+        )
+
+    try:
+        res_json = resp.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Neplatná JSON odpověď z registru ARES."
+        )
+
+    name = res_json.get("obchodniJmeno") or ""
+    dic = res_json.get("dic") or ""
+    sidlo = res_json.get("sidlo") or {}
+
+    street = sidlo.get("nazevUlice") or sidlo.get("nazevObce") or ""
+    house_number = sidlo.get("cisloDomovni")
+    orientation_number = sidlo.get("cisloOrientacni")
+    city = sidlo.get("nazevObce") or ""
+    zip_raw = sidlo.get("psc")
+    zip_code = str(zip_raw) if zip_raw is not None else ""
+
+    number_parts = []
+    if house_number:
+        number_parts.append(str(house_number))
+    if orientation_number:
+        number_parts.append(str(orientation_number))
+
+    number_str = "/".join(number_parts)
+    street_line = f"{street} {number_str}".strip() if number_str else street
+
+    addr_parts = []
+    if street_line:
+        addr_parts.append(street_line)
+    city_part = f"{zip_code} {city}".strip() if (zip_code or city) else ""
+    if city_part:
+        addr_parts.append(city_part)
+
+    formatted_address = ", ".join(addr_parts)
+
+    return AresResponseSchema(
+        ico=clean_ico,
+        name=name,
+        dic=dic,
+        street=street_line,
+        city=city,
+        zip=zip_code,
+        formattedAddress=formatted_address
+    )
+

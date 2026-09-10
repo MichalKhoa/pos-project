@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
-import { savePresetBackend, bulkSavePresetsBackend } from '../api/posApi';
+import { savePresetBackend, bulkSavePresetsBackend, fetchPresetsBackend } from '../api/posApi';
 import PresetModal from './PresetModal';
 import InventoryMetricsBar from './inventory/InventoryMetricsBar.jsx';
 import InventoryStockTable from './inventory/InventoryStockTable.jsx';
 import StockKeypadModal from './inventory/StockKeypadModal.jsx';
 import InventoryImportModal from './inventory/InventoryImportModal.jsx';
 import BarcodeLabelModal from './inventory/BarcodeLabelModal.jsx';
+import StockIntakeModal from './inventory/StockIntakeModal.jsx';
+import StockMovementLedgerModal from './inventory/StockMovementLedgerModal.jsx';
 import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
 export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin, storeConfig = {} }) {
@@ -31,6 +33,27 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   // Add & Edit Item Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingPresetTarget, setEditingPresetTarget] = useState(null);
+
+  // Stock Intake & Movement Ledger state
+  const [isStockIntakeOpen, setIsStockIntakeOpen] = useState(false);
+  const [isMovementLedgerOpen, setIsMovementLedgerOpen] = useState(false);
+  const [ledgerInitialPresetId, setLedgerInitialPresetId] = useState(null);
+
+  const handleIntakeCompleted = async (itemsCount) => {
+    try {
+      const refreshed = await fetchPresetsBackend();
+      if (onUpdatePresets && Array.isArray(refreshed)) {
+        onUpdatePresets(refreshed);
+      }
+      setStatusMessage({
+        type: 'success',
+        text: t('stock_intake.intake_success', { count: itemsCount }) || `Zboží bylo úspěšně naskladněno (${itemsCount} položek).`
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to refresh presets after intake:', err);
+    }
+  };
 
   // Stock Keypad Modal state
   const [stockKeypadTarget, setStockKeypadTarget] = useState(null);
@@ -301,6 +324,11 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         setShowLowStockOnly={setShowLowStockOnly}
         onExportCSV={handleExportCSV}
         onImportCSVClick={handleImportCSVClick}
+        onOpenStockIntake={() => setIsStockIntakeOpen(true)}
+        onOpenStockMovements={() => {
+          setLedgerInitialPresetId(null);
+          setIsMovementLedgerOpen(true);
+        }}
       />
 
       {statusMessage && (
@@ -390,6 +418,22 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         onClose={() => setLabelPrintTarget(null)}
         preset={labelPrintTarget}
         storeConfig={storeConfig}
+      />
+
+      {/* Stock Intake (Příjemka zboží) Modal */}
+      <StockIntakeModal
+        isOpen={isStockIntakeOpen}
+        onClose={() => setIsStockIntakeOpen(false)}
+        presets={presets}
+        onIntakeCompleted={handleIntakeCompleted}
+      />
+
+      {/* Stock Movement Ledger (§ 7b ZDP) Modal */}
+      <StockMovementLedgerModal
+        isOpen={isMovementLedgerOpen}
+        onClose={() => setIsMovementLedgerOpen(false)}
+        presets={presets}
+        initialPresetId={ledgerInitialPresetId}
       />
     </div>
   );

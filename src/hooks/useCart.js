@@ -69,12 +69,14 @@ export function useCart() {
       let updated;
       if (existingIndex > -1) {
         updated = [...prev];
+        const newQty = Math.round((updated[existingIndex].quantity + quantity) * 1000) / 1000;
         updated[existingIndex] = {
           ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity
+          quantity: newQty
         };
       } else {
-        updated = [...prev, { ...item, quantity }];
+        const initialQty = Math.round(quantity * 1000) / 1000;
+        updated = [...prev, { ...item, quantity: initialQty }];
       }
 
       // Trigger undo toast for addition
@@ -103,7 +105,8 @@ export function useCart() {
         triggerUndoToast('REMOVE', itemToUpdate.name || 'Položka', currentSnapshot);
         return prev.filter((_, idx) => idx !== index);
       } else {
-        const clampedQty = Math.min(9999, newQty);
+        const roundedQty = Math.round(newQty * 1000) / 1000;
+        const clampedQty = Math.min(9999, roundedQty);
         const updated = [...prev];
         updated[index] = { ...updated[index], quantity: clampedQty };
         return updated;
@@ -132,7 +135,8 @@ export function useCart() {
 
       if (index === -1) return prev;
       const existingItem = prev[index];
-      const newQty = updates.quantity !== undefined ? updates.quantity : existingItem.quantity;
+      const rawQty = updates.quantity !== undefined ? updates.quantity : existingItem.quantity;
+      const newQty = Math.round(rawQty * 1000) / 1000;
 
       const currentSnapshot = {
         cartItems: prev,
@@ -249,7 +253,7 @@ export function useCart() {
       cartDiscountPercent,
       itemMultiplier,
       totalAmount: total,
-      itemCount: cartItems.reduce((sum, i) => sum + i.quantity, 0)
+      itemCount: Math.round(cartItems.reduce((sum, i) => sum + i.quantity, 0) * 1000) / 1000
     };
 
     setParkedCarts(prev => [newHold, ...prev]);
@@ -288,7 +292,7 @@ export function useCart() {
           cartDiscountPercent,
           itemMultiplier,
           totalAmount: total,
-          itemCount: cartItems.reduce((sum, i) => sum + i.quantity, 0)
+          itemCount: Math.round(cartItems.reduce((sum, i) => sum + i.quantity, 0) * 1000) / 1000
         };
 
         remaining = [autoHold, ...remaining];

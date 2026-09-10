@@ -13,6 +13,8 @@ import UnknownBarcodeModal from '../UnknownBarcodeModal';
 import PriceCheckModal from '../PriceCheckModal';
 import CustomItemModal from '../CustomItemModal';
 import ParkedCartsDrawer from '../keypad/ParkedCartsDrawer';
+import CashDrawerMovementModal from '../cash/CashDrawerMovementModal';
+import ZReportModal from '../cash/ZReportModal';
 
 export default function AppModals({
   // Custom Item Modal (2-column mode / quick action)
@@ -94,7 +96,18 @@ export default function AppModals({
   unknownPriceCheckBarcode,
   setUnknownPriceCheckBarcode,
   onAddToCartFromPriceCheck,
-  onCreateProductFromPriceCheck
+  onCreateProductFromPriceCheck,
+
+  // Cash Drawer Movement Modal
+  isCashMovementModalOpen = false,
+  setIsCashMovementModalOpen = null,
+  onMovementRecorded = null,
+
+  // Z-Report Modal
+  isZReportModalOpen = false,
+  setIsZReportModalOpen = null,
+  onShiftClosed = null,
+  currentShift = null
 }) {
   const computedTotal = Math.round((cartItems.reduce((sum, item) => {
     const disc = item.discountPercent || 0;
@@ -251,6 +264,35 @@ export default function AppModals({
           onRestoreParkedCart={onRestoreParkedCart}
           onDeleteParkedCart={onDeleteParkedCart}
           onUpdateParkedCartNote={onUpdateParkedCartNote}
+        />
+      )}
+
+      {/* Cash Drawer Movement Modal (Vklad / Výběr) */}
+      {isCashMovementModalOpen && (
+        <CashDrawerMovementModal
+          isOpen={isCashMovementModalOpen}
+          onClose={() => {
+            if (setIsCashMovementModalOpen) setIsCashMovementModalOpen(false);
+          }}
+          onMovementRecorded={(res) => {
+            if (onMovementRecorded) onMovementRecorded(res);
+          }}
+          currentShift={currentShift}
+          storeConfig={storeConfig}
+        />
+      )}
+
+      {/* Z-Report Modal (Denní Z-Uzávěrka) */}
+      {isZReportModalOpen && (
+        <ZReportModal
+          isOpen={isZReportModalOpen}
+          onClose={() => {
+            if (setIsZReportModalOpen) setIsZReportModalOpen(false);
+          }}
+          onShiftClosed={(res) => {
+            if (onShiftClosed) onShiftClosed(res);
+          }}
+          storeConfig={storeConfig}
         />
       )}
     </>

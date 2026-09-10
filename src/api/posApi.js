@@ -419,6 +419,54 @@ export async function fetchDailySalesStats({ month = null, fromDate = null, toDa
 }
 
 /**
+ * Download Stormware POHODA 2.0 XML accounting dataPack for a given month or date range.
+ * @param {string|Object} monthOrParams - Month string ('YYYY-MM') or object { month, fromDate, toDate }
+ */
+export async function downloadPohodaXml(monthOrParams) {
+  try {
+    const params = new URLSearchParams();
+    if (typeof monthOrParams === 'string') {
+      if (monthOrParams.trim()) params.append('month', monthOrParams.trim());
+    } else if (monthOrParams && typeof monthOrParams === 'object') {
+      if (monthOrParams.month) params.append('month', monthOrParams.month);
+      if (monthOrParams.fromDate) params.append('from_date', monthOrParams.fromDate);
+      if (monthOrParams.toDate) params.append('to_date', monthOrParams.toDate);
+    }
+
+    const queryStr = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/sales/export/pohoda${queryStr}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP error ${res.status}`);
+    }
+
+    let filename = 'pohoda_export.xml';
+    const disposition = res.headers.get('content-disposition');
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      if (match && match[1]) filename = match[1].trim();
+    }
+
+    const blob = await res.blob();
+    if (typeof window !== 'undefined' && window.URL && window.URL.createObjectURL) {
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      if (link.parentNode) link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    }
+
+    return { success: true, filename };
+  } catch (err) {
+    console.error('Failed to download POHODA XML:', err);
+    throw err;
+  }
+}
+
+/**
  * Fetch shift / today sales statistics (for ShiftStatsWidget)
  */
 export async function fetchShiftStats(dateStr = null) {
@@ -1339,6 +1387,154 @@ export async function openSystemKeyboard() {
     return { status: 'ERROR', message: err.message };
   }
 }
+
+/**
+ * Fetch current active shift session & calculated expected cash
+ */
+export async function getCurrentShift() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/cash/current-shift`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch current shift:', err);
+    return null;
+  }
+}
+
+/**
+ * Record a cash drawer movement (FLOAT_IN, PAYOUT, SAFE_DROP)
+ */
+export async function recordCashMovement({ movement_type, amount, reason = '', print_slip = false }) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/cash/movement`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        movement_type,
+        amount: parseFloat(amount),
+        reason,
+        print_slip
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to record cash movement:', err);
+    throw err;
+  }
+}
+
+/**
+ * Close current shift and calculate final discrepancy
+ */
+export async function closeShift({ actual_cash, notes = '' }) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/cash/close-shift`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actual_cash: parseFloat(actual_cash),
+        notes
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP error ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to close shift:', err);
+    throw err;
+  }
+}
+
+/**
+ * Print cash movement slip on thermal printer
+ */
+export async function printCashMovementSlip(movementData, storeConfig = {}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/cash/print-movement-slip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ movementData, storeConfig })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to print cash movement slip:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Print official Z-report thermal closing slip
+ */
+export async function printZReport(zReportData, storeConfig = {}, openDrawer = true) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/cash/print-z-report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zReportData, storeConfig, openDrawer })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to print Z-report:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Look up Czech company / sole trader in official state ARES REST API
+ */
+export async function lookupAres(ico) {
+  const cleanIco = (ico || '').trim();
+  const res = await fetch(`${API_BASE_URL}/system/ares/${encodeURIComponent(cleanIco)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `ARES error ${res.status}`);
+  }
+  return await res.json();
+}
+
+/**
+ * Submit inventory stock intake (příjemka zboží)
+ */
+export async function submitStockIntake(intakeData) {
+  const res = await fetch(`${API_BASE_URL}/inventory/intake`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(intakeData)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Stock intake error ${res.status}`);
+  }
+  invalidateApiCache('presets');
+  return await res.json();
+}
+
+/**
+ * Get inventory stock movements (§ 7b ZDP movement ledger)
+ */
+export async function getStockMovements(presetId = null, limit = 100, offset = 0) {
+  let url = `${API_BASE_URL}/inventory/movements?limit=${limit}&offset=${offset}`;
+  if (presetId) {
+    url += `&preset_id=${encodeURIComponent(presetId)}`;
+  }
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Stock movements error ${res.status}`);
+  }
+  return await res.json();
+}
+
+
 
 
 

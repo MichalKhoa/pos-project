@@ -78,9 +78,25 @@ export function useTranslation() {
     return {
       language: 'cs',
       setLanguage: () => {},
-      t: (key) => key,
+      t: (keyPath, params = {}) => {
+        let val = translations.cs;
+        for (const k of keyPath.split('.')) {
+          val = val ? val[k] : null;
+        }
+        if (!val) return keyPath;
+        if (typeof val === 'string' && Object.keys(params).length > 0) {
+          let result = val;
+          for (const [pKey, pVal] of Object.entries(params)) {
+            result = result.replace(new RegExp(`\\{${pKey}\\}`, 'g'), pVal);
+          }
+          return result;
+        }
+        return val;
+      },
       languages: LANGUAGES
     };
   }
   return ctx;
 }
+
+export const useLanguage = useTranslation;

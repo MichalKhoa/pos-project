@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload } from 'lucide-react';
+import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function InventoryMetricsBar({
@@ -15,7 +15,9 @@ export default function InventoryMetricsBar({
   showLowStockOnly = false,
   setShowLowStockOnly,
   onExportCSV,
-  onImportCSVClick
+  onImportCSVClick,
+  onOpenStockIntake,
+  onOpenStockMovements
 }) {
   const { t } = useTranslation();
 
@@ -146,6 +148,58 @@ export default function InventoryMetricsBar({
 
         {/* Right: CSV Actions & Stock Health summary */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginLeft: 'auto' }}>
+          {onOpenStockIntake && (
+            <button
+              type="button"
+              onClick={onOpenStockIntake}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '38px',
+                padding: '0 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--accent-blue)',
+                background: 'rgba(59, 130, 246, 0.12)',
+                color: 'var(--accent-blue)',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Naskladnit zboží z faktury / dodacího listu s ARES ověřením"
+            >
+              <PackagePlus size={15} />
+              <span>{t('stock_intake.btn_open') || 'Příjemka zboží'}</span>
+            </button>
+          )}
+
+          {onOpenStockMovements && (
+            <button
+              type="button"
+              onClick={onOpenStockMovements}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '38px',
+                padding: '0 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-input)',
+                color: 'var(--text-primary)',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Zobrazit knihu pohybů zásob (§ 7b ZDP)"
+            >
+              <History size={15} />
+              <span>{t('stock_movements.btn_open') || 'Kniha pohybů'}</span>
+            </button>
+          )}
+
           {onExportCSV && (
             <button
               type="button"
