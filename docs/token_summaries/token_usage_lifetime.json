@@ -1,14 +1,14 @@
 {
-  "workspace": "C:\\Users\\micha\\Documents\\GitHub\\pos-project-himmel",
-  "first_activity": "2026-07-28 19:54:57",
-  "last_activity": "2026-09-05 23:24:29",
-  "conversations": 58,
-  "total_model_calls": 4564,
-  "total_prompt_tokens": 712430189,
-  "total_output_tokens": 1396073,
-  "total_tokens": 713826262,
-  "est_flash_usd": 130.8011,
-  "est_sonnet_usd": 523.2044,
-  "committed_calls": 22464,
-  "uncommitted_calls": 0
+  "workspace": "/home/misko/Documents/pos-eet-himmel",
+  "first_activity": "2026-07-28 12:56:03",
+  "last_activity": "2026-09-10 19:35:30",
+  "conversations": 42,
+  "total_model_calls": 5561,
+  "total_prompt_tokens": 1383658080,
+  "total_output_tokens": 1745926,
+  "total_tokens": 1385404006,
+  "est_flash_usd": 250.417,
+  "est_sonnet_usd": 1001.6678,
+  "committed_calls": 5507,
+  "uncommitted_calls": 54
 }

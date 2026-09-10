@@ -12,6 +12,9 @@ import glob
 import json
 import shutil
 import subprocess
+import sqlite3
+import re
+import urllib.parse
 from datetime import datetime
 
 BASE_SYSTEM_TOKENS = 6000  # Avg system prompt + schema overhead per call
@@ -30,53 +33,164 @@ SONNET_OUT         = 15.00 / 1_000_000
 
 def get_repo_path():
     try:
-        return subprocess.check_output(
+        raw = subprocess.check_output(
             ["git", "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL
         ).decode().strip()
+        return os.path.normpath(raw)
     except Exception:
-        return os.getcwd()
+        return os.path.normpath(os.getcwd())
+
+
+def get_antigravity_base_dirs(custom_logs_dir=None):
+    candidates = []
+    if custom_logs_dir and os.path.exists(custom_logs_dir):
+        candidates.append(os.path.normpath(custom_logs_dir))
+
+    user_home = os.path.expanduser("~")
+    user_prof = os.environ.get("USERPROFILE", user_home)
+
+    search_roots = [user_prof, user_home]
+    sub_names = ["antigravity", "antigravity-cli", "antigravity-ide"]
+
+    for root in search_roots:
+        for sub in sub_names:
+            p = os.path.join(root, ".gemini", sub)
+            if os.path.exists(p) and p not in candidates:
+                candidates.append(os.path.normpath(p))
+
+    repo_agent_logs = os.path.join(get_repo_path(), ".agent_logs")
+    if os.path.exists(repo_agent_logs) and repo_agent_logs not in candidates:
+        candidates.append(os.path.normpath(repo_agent_logs))
+
+    return candidates
+
+
+def get_repo_needles(repo_path):
+    needles = set()
+    norm = repo_path.replace("\\", "/").rstrip("/").lower()
+    needles.add(norm)
+    base_name = os.path.basename(norm)
+    if base_name:
+        needles.add(base_name)
+
+    try:
+        remote = subprocess.check_output(
+            ["git", "config", "--get", "remote.origin.url"], stderr=subprocess.DEVNULL
+        ).decode().strip().lower()
+        if remote:
+            needles.add(remote)
+            cleaned = remote.replace(".git", "").rstrip("/")
+            parts = cleaned.split("/")
+            if len(parts) >= 2:
+                needles.add(f"{parts[-2]}/{parts[-1]}")
+    except Exception:
+        pass
+
+    return needles
 
 
 def get_matching_conversation_ids(repo_path, custom_logs_dir=None):
     """Finds conversation IDs that belong to the current repo workspace."""
     matched = set()
-    repo_name = os.path.basename(repo_path)
+    needles = get_repo_needles(repo_path)
+    base_dirs = get_antigravity_base_dirs(custom_logs_dir)
 
-    # 1. history.jsonl
-    hist_candidates = [
-        os.path.expanduser("~/.gemini/antigravity-cli/history.jsonl"),
-    ]
-    if custom_logs_dir:
-        hist_candidates.append(os.path.join(custom_logs_dir, "history.jsonl"))
+    # 1. Inspect conversations/*.db (SQLite trajectory metadata)
+    for b in base_dirs:
+        conv_dir = os.path.join(b, "conversations")
+        if not os.path.exists(conv_dir):
+            continue
+        for db_file in glob.glob(os.path.join(conv_dir, "*.db")):
+            cid = os.path.splitext(os.path.basename(db_file))[0]
+            if cid in matched:
+                continue
+            try:
+                con = sqlite3.connect(db_file)
+                rows = con.execute("SELECT data FROM trajectory_metadata_blob").fetchall()
+                con.close()
+                for (blob,) in rows:
+                    if not blob:
+                        continue
+                    blob_lower = blob.lower()
+                    if any(n.encode() in blob_lower for n in needles):
+                        matched.add(cid)
+                        break
+            except Exception:
+                pass
 
-    for hist_path in hist_candidates:
-        if os.path.exists(hist_path):
-            with open(hist_path, "r", encoding="utf-8", errors="ignore") as f:
-                for line in f:
+    # 2. Inspect agyhub_summaries_proto.pb (Protobuf summary index)
+    uuid_re = re.compile(rb"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})")
+    for b in base_dirs:
+        pb_path = os.path.join(b, "agyhub_summaries_proto.pb")
+        if not os.path.exists(pb_path):
+            continue
+        try:
+            with open(pb_path, "rb") as f:
+                data = f.read().lower()
+            for n in needles:
+                nb = n.encode()
+                pos = 0
+                while True:
+                    idx = data.find(nb, pos)
+                    if idx == -1:
+                        break
+                    sub = data[max(0, idx - 300):idx]
+                    found = uuid_re.findall(sub)
+                    if found:
+                        matched.add(found[-1].decode("ascii"))
+                    pos = idx + len(nb)
+        except Exception:
+            pass
+
+    # 3. Direct head scan of transcripts in brain/
+    for b in base_dirs:
+        brain_dir = os.path.join(b, "brain") if not b.endswith("brain") else b
+        if not os.path.exists(brain_dir):
+            continue
+        for session_dir in glob.glob(os.path.join(brain_dir, "*")):
+            cid = os.path.basename(session_dir)
+            if cid in matched:
+                continue
+            for fname in ["transcript.jsonl", "transcript_full.jsonl"]:
+                log_file = os.path.join(session_dir, ".system_generated", "logs", fname)
+                if os.path.exists(log_file):
                     try:
-                        d = json.loads(line)
-                        ws = str(d.get("workspace", ""))
-                        cid = d.get("conversationId")
-                        if cid and (repo_path in ws or ws in repo_path or repo_name in ws):
-                            matched.add(cid)
+                        with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+                            for _ in range(15):
+                                line = f.readline().lower()
+                                if not line:
+                                    break
+                                if any(n in line for n in needles):
+                                    matched.add(cid)
+                                    break
                     except Exception:
                         pass
+                    if cid in matched:
+                        break
 
-    # 2. conversation_summaries.db
-    db_candidates = [
-        os.path.expanduser("~/.gemini/antigravity-cli/conversation_summaries.db"),
-    ]
-    if custom_logs_dir:
-        db_candidates.append(os.path.join(custom_logs_dir, "conversation_summaries.db"))
-
-    for db_path in db_candidates:
-        if os.path.exists(db_path):
+    # 4. Fallback: check legacy history.jsonl & conversation_summaries.db if present
+    for b in base_dirs:
+        hist = os.path.join(b, "history.jsonl")
+        if os.path.exists(hist):
             try:
-                import sqlite3
-                con = sqlite3.connect(db_path)
+                with open(hist, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        d = json.loads(line)
+                        ws = str(d.get("workspace", "")).lower()
+                        cid = d.get("conversationId")
+                        if cid and any(n in ws for n in needles):
+                            matched.add(cid)
+            except Exception:
+                pass
+
+        db = os.path.join(b, "conversation_summaries.db")
+        if os.path.exists(db):
+            try:
+                con = sqlite3.connect(db)
                 rows = con.execute("SELECT conversation_id, workspace_uris FROM conversation_summaries").fetchall()
                 for cid, uris in rows:
-                    if cid and (repo_path in uris or repo_name in uris):
+                    uris_lower = str(uris).lower()
+                    if cid and any(n in uris_lower for n in needles):
                         matched.add(cid)
                 con.close()
             except Exception:
@@ -86,27 +200,38 @@ def get_matching_conversation_ids(repo_path, custom_logs_dir=None):
 
 
 def find_transcript_paths(conv_ids, custom_logs_dir=None):
-    """Finds transcript_full.jsonl files across local and custom directories."""
+    """Finds transcript log files for matched conversation IDs."""
     paths = []
-    search_dirs = [
-        os.path.expanduser("~/.gemini/antigravity-cli/brain"),
-        os.path.join(get_repo_path(), ".agent_logs"),
-    ]
-    if custom_logs_dir:
-        search_dirs.append(custom_logs_dir)
-        search_dirs.append(os.path.join(custom_logs_dir, "brain"))
+    base_dirs = get_antigravity_base_dirs(custom_logs_dir)
+    brain_dirs = []
 
-    for sdir in search_dirs:
-        if not os.path.exists(sdir):
-            continue
+    for b in base_dirs:
+        b_dir = os.path.join(b, "brain") if not b.endswith("brain") else b
+        if os.path.exists(b_dir) and b_dir not in brain_dirs:
+            brain_dirs.append(b_dir)
+
+    for b_dir in brain_dirs:
         for cid in conv_ids:
-            p = os.path.join(sdir, cid, ".system_generated", "logs", "transcript_full.jsonl")
-            if os.path.exists(p) and p not in paths:
-                paths.append(p)
-        # Also include any transcript_full.jsonl directly placed in explicit custom directories
-        if sdir != os.path.expanduser("~/.gemini/antigravity-cli/brain"):
-            for p in glob.glob(os.path.join(sdir, "**", "transcript_full.jsonl"), recursive=True):
-                if p not in paths:
+            p_full = os.path.join(b_dir, cid, ".system_generated", "logs", "transcript_full.jsonl")
+            p_norm = os.path.join(b_dir, cid, ".system_generated", "logs", "transcript.jsonl")
+            p_chunk = os.path.join(b_dir, cid, ".system_generated", "logs", "chunks", "transcript_full", "00000000.jsonl")
+
+            chosen = None
+            if os.path.exists(p_full) and os.path.getsize(p_full) > 0:
+                chosen = p_full
+            elif os.path.exists(p_norm) and os.path.getsize(p_norm) > 0:
+                chosen = p_norm
+            elif os.path.exists(p_chunk) and os.path.getsize(p_chunk) > 0:
+                chosen = p_chunk
+
+            if chosen and chosen not in paths:
+                paths.append(chosen)
+
+    # Include any transcripts placed directly in custom_logs_dir or .agent_logs
+    for explicit_dir in [custom_logs_dir, os.path.join(get_repo_path(), ".agent_logs")]:
+        if explicit_dir and os.path.exists(explicit_dir):
+            for p in glob.glob(os.path.join(explicit_dir, "**", "transcript_full.jsonl"), recursive=True):
+                if p not in paths and os.path.getsize(p) > 0:
                     paths.append(p)
 
     return paths
