@@ -15,6 +15,15 @@ SQLite persistence layer located at `backend/data/pos_store.db`.
 - **Standalone CLI & Script Integration**: `backend/migrations.py` provides `if __name__ == "__main__":` entry point. Executed automatically before starting backend across all Linux (`.sh`) and Windows (`.bat`) launcher and updater scripts.
 - **Directory Security**: Database housed in `backend/data/pos_store.db` with `0o700` restricted directory permissions and legacy DB path auto-migration.
 - **WAL & Concurrency**: Enabled `PRAGMA journal_mode = WAL;`, `PRAGMA foreign_keys = ON;`, `PRAGMA busy_timeout = 15000;`.
+- **Dynamic Hardware PRAGMA Tuning (`backend/services/hardware_profile.py`)**: Sized according to detected physical RAM via `psutil`:
+  - Tier 1 (<6 GB RAM): `PRAGMA cache_size = -16384` (16 MB), `PRAGMA mmap_size = 67108864` (64 MB), 200 LRU receipts, 6 mos pre-warm.
+  - Tier 2 (6–16 GB RAM): `PRAGMA cache_size = -65536` (64 MB), `PRAGMA mmap_size = 268435456` (256 MB), 1,000 LRU receipts, 12 mos pre-warm.
+  - Tier 3 (>16 GB RAM): `PRAGMA cache_size = -131072` (128 MB), `PRAGMA mmap_size = 536870912` (512 MB), 2,500 LRU receipts, 36 mos pre-warm.
+  - `PRAGMA temp_store = MEMORY;` applied on connection to accelerate in-memory temporary index and aggregation sorting.
+- **Sargable Indexed Date Queries**: Monthly statistics aggregation (`get_daily_sales_stats`) uses boundary comparisons (`timestamp >= start_dt AND timestamp < end_dt`) instead of `strftime()` to utilize index `ix_sales_timestamp` without table scanning.
+- **In-Memory Query Caches**:
+  - `BoundedTTLReceiptCache`: Thread-safe LRU cache with 600s TTL for receipt and ID lookups, invalidated on refund status updates or new stornos.
+  - `MonthlyStatsCache`: Closed past months cached indefinitely (immutable), active month invalidated on new sales/refunds.
 - **Self-Healing**: Startup `PRAGMA quick_check;` and 15-minute periodic `PRAGMA wal_checkpoint(PASSIVE);` daemon.
 - **Atomic Transactions**: `atomic_transaction(db)` context manager wrapping checkout and stock deduction.
 - **Automated Backups & Restore**:

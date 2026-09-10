@@ -20,3 +20,15 @@
 - **2-Column Mode (`layout-two-column`)**: Default modern touch layout. Left: auto-scaling wide preset grid (`pos-col-presets`, ~65–70% width, 4–6 columns), Right: cart (`pos-col-cart`, ~30–35% width). Keypad replaced with uncataloged item popover (`CustomItemModal.jsx`).
 - **3-Column Mode (`layout-three-column`)**: Classic register layout (Left: `ManualKeypad`, Center: presets grid, Right: cart).
 - **Store Config Attributes**: `storeConfig.registerLayout` (`'two_column'` | `'three_column'`), `storeConfig.shiftWidgetPosition` (`'bottom_presets'` | `'under_cart'` | `'keypad'`).
+ 
+## In-Memory Caching & Performance Throttling
+- **API Cache (`src/api/posApi.js`)**:
+  - `cachedFetch(url, options, { ttlMs, tag })`: In-memory Map cache with TTL, response cloning, and in-flight promise deduplication for concurrent callers.
+  - `invalidateApiCache(tag)`: Tag-scoped or global cache eviction.
+  - Wrapped endpoints: `fetchCategoriesBackend` (`catalog`, 5m TTL), `fetchPresetsBackend` (`catalog`, 5m TTL), `fetchStoreConfigBackend` (`config`, 10m TTL).
+  - Mutating operations invalidate `'catalog'` (category/preset save, delete, reorder, pin toggle) and `'config'` (store config save).
+- **Catalog Hook (`src/hooks/usePosCatalog.js`)**:
+  - Focus refetch throttled: skips reload on window focus if last fetch was <60s ago and not dirty. Initial mount forces reload. Local mutations mark `isDirtyRef = true`.
+  - O(1) in-memory barcode index (`barcodeMap`) mapping lowercase trimmed barcodes to presets; provides `findPresetByBarcode(barcode)` callback and `lookupPresetByBarcode(presets, barcode)` utility.
+- **Sales History Search (`src/components/SalesHistoryView.jsx`)**:
+  - 300ms debounce on `searchTerm` to prevent keystroke query spam against backend.
