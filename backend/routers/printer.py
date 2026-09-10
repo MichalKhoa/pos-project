@@ -13,10 +13,41 @@ class PrintReceiptRequest(BaseModel):
     storeConfig: dict
 
 
+import threading
+import time
+from typing import Optional, List, Dict, Any
+
+_devices_cache: Optional[List[Dict[str, Any]]] = None
+_devices_cache_expiry: float = 0.0
+_devices_lock = threading.Lock()
+
+
+def get_cached_printer_devices(ttl_seconds: float = 15.0, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    """Thread-safe memoization for connected hardware printer devices."""
+    global _devices_cache, _devices_cache_expiry
+    now = time.time()
+    with _devices_lock:
+        if not force_refresh and _devices_cache is not None and now < _devices_cache_expiry:
+            return _devices_cache
+
+        devices = detect_connected_printers()
+        _devices_cache = devices
+        _devices_cache_expiry = now + ttl_seconds
+        return _devices_cache
+
+
+def invalidate_printer_devices_cache():
+    """Clear printer devices cache to force fresh scan."""
+    global _devices_cache, _devices_cache_expiry
+    with _devices_lock:
+        _devices_cache = None
+        _devices_cache_expiry = 0.0
+
+
 @router.get("/devices")
 def get_printer_devices():
     """Scan and list connected hardware printer devices."""
-    devices = detect_connected_printers()
+    devices = get_cached_printer_devices(ttl_seconds=15.0)
     return {"devices": devices}
 
 

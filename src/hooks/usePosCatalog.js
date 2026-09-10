@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { DEFAULT_CATEGORIES, DEFAULT_PRESETS } from '../data/initialData';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 import {
@@ -23,7 +23,37 @@ export const sanitizePresets = (list) => {
   });
 };
 
+/**
+ * Standalone utility to find a preset by barcode in an array of presets or Map
+ */
+export function lookupPresetByBarcode(presets, barcode) {
+  if (!presets || !barcode) return null;
+  const target = String(barcode).trim().toLowerCase();
+  if (!target) return null;
+
+  if (presets instanceof Map) {
+    return presets.get(target) || null;
+  }
+
+  if (Array.isArray(presets)) {
+    for (const p of presets) {
+      if (!p || !p.barcode) continue;
+      const codes = String(p.barcode)
+        .split(',')
+        .map(b => b.trim().toLowerCase())
+        .filter(Boolean);
+      if (codes.includes(target)) {
+        return p;
+      }
+    }
+  }
+  return null;
+}
+
 export function usePosCatalog() {
+  const lastBackendFetchRef = useRef(0);
+  const isDirtyRef = useRef(false);
+
   const [categories, setCategories] = useState(() => {
     try {
       const saved = getStorageItem('categories');
@@ -55,7 +85,13 @@ export function usePosCatalog() {
   }, [presets]);
 
   // Load from backend on mount and handle storage/focus sync
-  const reloadBackendCatalog = useCallback(() => {
+  const reloadBackendCatalog = useCallback((force = false) => {
+    if (!force && !isDirtyRef.current && (Date.now() - lastBackendFetchRef.current < 60000)) {
+      return;
+    }
+    lastBackendFetchRef.current = Date.now();
+    isDirtyRef.current = false;
+
     fetchCategoriesBackend().then(data => {
       if (Array.isArray(data) && data.length > 0) setCategories(data);
     });
@@ -65,7 +101,7 @@ export function usePosCatalog() {
   }, []);
 
   useEffect(() => {
-    reloadBackendCatalog();
+    reloadBackendCatalog(true);
 
     const handleStorageChange = (e) => {
       if (!e.key || !e.newValue) return;
@@ -82,7 +118,7 @@ export function usePosCatalog() {
     };
 
     const handleFocus = () => {
-      reloadBackendCatalog();
+      reloadBackendCatalog(false);
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -97,6 +133,7 @@ export function usePosCatalog() {
   // Category handlers
   const handleAddCategory = useCallback((name) => {
     if (!name.trim()) return;
+    isDirtyRef.current = true;
     const newCat = {
       id: `cat-${Date.now()}`,
       name: name.trim(),
@@ -109,6 +146,7 @@ export function usePosCatalog() {
 
   const handleEditCategory = useCallback((catId, newName) => {
     if (!newName.trim() || catId === 'all') return;
+    isDirtyRef.current = true;
     setCategories(prev => prev.map(c => {
       if (c.id !== catId) return c;
       const updated = { ...c, name: newName.trim() };
@@ -119,6 +157,7 @@ export function usePosCatalog() {
 
   const handleDeleteCategory = useCallback((catId) => {
     if (catId === 'all') return;
+    isDirtyRef.current = true;
     setCategories(prev => prev.filter(c => c.id !== catId));
     deleteCategoryBackend(catId);
     const fallbackCategory = categories.find(c => c.id !== 'all' && c.id !== catId)?.id || 'all';
@@ -131,6 +170,7 @@ export function usePosCatalog() {
   }, [categories]);
 
   const handleReorderCategories = useCallback(async (reordered) => {
+    isDirtyRef.current = true;
     setCategories(reordered);
     setStorageItem('categories', reordered);
     await reorderCategoriesBackend(reordered);
@@ -138,6 +178,7 @@ export function usePosCatalog() {
 
   // Preset handlers
   const handleAddPreset = useCallback(async (presetData) => {
+    isDirtyRef.current = true;
     const newPreset = {
       ...presetData,
       id: `preset-${Date.now()}`
@@ -147,21 +188,25 @@ export function usePosCatalog() {
   }, []);
 
   const handleUpdatePreset = useCallback(async (updated) => {
+    isDirtyRef.current = true;
     setPresets(prev => sanitizePresets(prev.map(p => p.id === updated.id ? updated : p)));
     await savePresetBackend(updated);
   }, []);
 
   const handleDeletePreset = useCallback(async (presetId) => {
+    isDirtyRef.current = true;
     setPresets(prev => prev.filter(p => p.id !== presetId));
     await deletePresetBackend(presetId);
   }, []);
 
   const handleReorderPresets = useCallback(async (reordered) => {
+    isDirtyRef.current = true;
     setPresets(sanitizePresets(reordered));
     await reorderPresetsBackend(reordered);
   }, []);
 
   const handleTogglePresetPin = useCallback(async (presetId) => {
+    isDirtyRef.current = true;
     setPresets(prev => sanitizePresets(prev.map(p => {
       if (p.id === presetId) {
         const currentPin = p.showInPresets !== undefined ? !!p.showInPresets : (p.show_in_presets !== undefined ? !!p.show_in_presets : true);
@@ -173,11 +218,39 @@ export function usePosCatalog() {
     await togglePresetPinBackend(presetId);
   }, []);
 
+  // In-memory barcode lookup Map (lowercase trimmed barcode -> preset)
+  const barcodeMap = useMemo(() => {
+    const map = new Map();
+    if (!Array.isArray(presets)) return map;
+    for (const p of presets) {
+      if (!p || !p.barcode) continue;
+      const codes = String(p.barcode)
+        .split(',')
+        .map(b => b.trim().toLowerCase())
+        .filter(Boolean);
+      for (const code of codes) {
+        if (!map.has(code)) {
+          map.set(code, p);
+        }
+      }
+    }
+    return map;
+  }, [presets]);
+
+  const findPresetByBarcode = useCallback((barcode) => {
+    if (!barcode) return null;
+    const target = String(barcode).trim().toLowerCase();
+    if (!target) return null;
+    return barcodeMap.get(target) || null;
+  }, [barcodeMap]);
+
   return {
     categories,
     setCategories,
     presets,
     setPresets,
+    barcodeMap,
+    findPresetByBarcode,
     handleAddCategory,
     handleEditCategory,
     handleDeleteCategory,

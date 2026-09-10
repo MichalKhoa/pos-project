@@ -23,6 +23,15 @@ export default function SalesHistoryView({
 }) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const [activeSale, setActiveSale] = useState(null);
   const [fullModalSale, setFullModalSale] = useState(null);
   const {
@@ -56,7 +65,7 @@ export default function SalesHistoryView({
   // Reset pagination when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, periodFilter, referenceDate, fromDate, toDate, pageSize, docTypeFilter]);
+  }, [debouncedSearchTerm, periodFilter, referenceDate, fromDate, toDate, pageSize, docTypeFilter]);
 
   // Fetch paginated sales from backend with automatic fallback to local salesHistory
   useEffect(() => {
@@ -70,7 +79,7 @@ export default function SalesHistoryView({
       fromDate: fromIso,
       toDate: toIso,
       docType: docTypeFilter,
-      search: searchTerm.trim() || null,
+      search: debouncedSearchTerm.trim() || null,
       returnDetails: true
     }).then(res => {
       if (isCancelled) return;
@@ -89,7 +98,7 @@ export default function SalesHistoryView({
     });
 
     return () => { isCancelled = true; };
-  }, [currentPage, pageSize, docTypeFilter, searchTerm, periodFilter, computedDateRange, salesHistory]);
+  }, [currentPage, pageSize, docTypeFilter, debouncedSearchTerm, periodFilter, computedDateRange, salesHistory]);
 
   // Apply document type filter and search query for local fallback
   const searchFilteredSales = useMemo(() => {
@@ -98,7 +107,7 @@ export default function SalesHistoryView({
       if (docTypeFilter === 'sales' && (sale.isRefund || sale.is_refund)) return false;
       if (docTypeFilter === 'refunds' && !(sale.isRefund || sale.is_refund)) return false;
 
-      const term = searchTerm.toLowerCase();
+      const term = debouncedSearchTerm.toLowerCase();
       const rNum = (sale.receiptNumber || sale.receipt_number || '').toString().toLowerCase();
       const origNum = (sale.originalReceiptNumber || sale.original_receipt_number || '').toString().toLowerCase();
       const pMethod = (sale.paymentMethod || sale.payment_method || '').toLowerCase();
@@ -112,7 +121,7 @@ export default function SalesHistoryView({
         (Array.isArray(sale.items) && sale.items.some(i => i.name && i.name.toLowerCase().includes(term)))
       );
     });
-  }, [periodFilteredSales, docTypeFilter, searchTerm]);
+  }, [periodFilteredSales, docTypeFilter, debouncedSearchTerm]);
 
   // Pagination Math (Server-driven if serverSales available, otherwise client-side fallback)
   const isServerDriven = serverSales !== null;

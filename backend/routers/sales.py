@@ -3,11 +3,12 @@ import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session, selectinload, noload
 from sqlalchemy import func, case
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from database import get_db
 from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel
 from services.eet_service import CzechEETService
 from services.security_utils import parse_iso_timestamp, round_currency
+from services.hardware_profile import get_hardware_profile
 from pydantic import BaseModel
 
 from datetime import datetime
@@ -207,6 +208,160 @@ class BoundedTTLIdempotencyCache:
 idempotency_cache = BoundedTTLIdempotencyCache(max_size=1000, ttl_seconds=300.0)
 
 
+class BoundedTTLReceiptCache:
+    """Thread-safe bounded LRU cache with TTL eviction for receipt lookups and sales."""
+    def __init__(self, max_size: Optional[int] = None, ttl_seconds: float = 600.0):
+        if max_size is None:
+            try:
+                hw = get_hardware_profile()
+                max_size = hw.lru_receipt_cache_size
+            except Exception:
+                max_size = 1000
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self._cache = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key: str) -> Optional[Any]:
+        with self._lock:
+            if key not in self._cache:
+                return None
+            res, expire_time = self._cache[key]
+            if time.time() > expire_time:
+                del self._cache[key]
+                return None
+            self._cache.move_to_end(key)
+            return res
+
+    def set(self, key: str, value: Any):
+        with self._lock:
+            now = time.time()
+            if key in self._cache:
+                self._cache[key] = (value, now + self.ttl_seconds)
+                self._cache.move_to_end(key)
+                return
+
+            if len(self._cache) >= self.max_size:
+                expired_keys = [k for k, (_, exp) in self._cache.items() if now > exp]
+                for k in expired_keys:
+                    del self._cache[k]
+                while len(self._cache) >= self.max_size:
+                    self._cache.popitem(last=False)
+            self._cache[key] = (value, now + self.ttl_seconds)
+
+    def delete(self, key: str):
+        with self._lock:
+            self._cache.pop(key, None)
+
+    def invalidate(self, *keys):
+        with self._lock:
+            for k in keys:
+                if not k:
+                    continue
+                k_str = str(k).strip()
+                self._cache.pop(k_str, None)
+                self._cache.pop(k_str.lower(), None)
+                self._cache.pop(f"receipt:{k_str.lower()}", None)
+                self._cache.pop(f"id:{k_str}", None)
+
+    def clear(self):
+        with self._lock:
+            self._cache.clear()
+
+    def inspect(self) -> dict:
+        with self._lock:
+            now = time.time()
+            valid_keys = [k for k, (_, exp) in self._cache.items() if exp > now]
+            return {
+                "max_size": self.max_size,
+                "ttl_seconds": self.ttl_seconds,
+                "current_size": len(self._cache),
+                "active_items": len(valid_keys),
+                "keys": list(self._cache.keys())
+            }
+
+
+class MonthlyStatsCache:
+    """Thread-safe cache for get_daily_sales_stats aggregated by month."""
+    def __init__(self, max_size: int = 120):
+        self.max_size = max_size
+        self._immutable_cache = {}  # past months: YYYY-MM -> stats dict
+        self._current_cache = {}    # current / future months: YYYY-MM -> stats dict
+        self._lock = threading.Lock()
+
+    def get(self, month: str) -> Optional[dict]:
+        with self._lock:
+            if month in self._immutable_cache:
+                return self._immutable_cache[month]
+            if month in self._current_cache:
+                return self._current_cache[month]
+            return None
+
+    def set(self, month: str, value: dict, is_immutable: bool = False):
+        with self._lock:
+            if is_immutable:
+                if len(self._immutable_cache) >= self.max_size:
+                    first_key = next(iter(self._immutable_cache))
+                    del self._immutable_cache[first_key]
+                self._immutable_cache[month] = value
+            else:
+                self._current_cache[month] = value
+
+    def invalidate_current(self):
+        with self._lock:
+            self._current_cache.clear()
+
+    def clear(self):
+        with self._lock:
+            self._immutable_cache.clear()
+            self._current_cache.clear()
+
+    def inspect(self) -> dict:
+        with self._lock:
+            return {
+                "immutable_months": list(self._immutable_cache.keys()),
+                "current_months": list(self._current_cache.keys()),
+                "total_entries": len(self._immutable_cache) + len(self._current_cache)
+            }
+
+
+receipt_cache = BoundedTTLReceiptCache()
+monthly_stats_cache = MonthlyStatsCache(max_size=120)
+
+
+def invalidate_sales_caches(
+    sale_id: Optional[str] = None,
+    receipt_number: Optional[str] = None,
+    original_receipt_number: Optional[str] = None,
+    clear_all: bool = False
+):
+    """Helper to invalidate receipt and monthly stats caches."""
+    if clear_all:
+        receipt_cache.clear()
+        monthly_stats_cache.clear()
+        return
+
+    keys = []
+    if sale_id:
+        keys.append(sale_id)
+    if receipt_number:
+        keys.append(receipt_number)
+    if original_receipt_number:
+        keys.append(original_receipt_number)
+    if keys:
+        receipt_cache.invalidate(*keys)
+
+    monthly_stats_cache.invalidate_current()
+
+
+def get_sales_cache_stats() -> dict:
+    """Helper for inspecting in-memory sales caches."""
+    return {
+        "receipt_cache": receipt_cache.inspect(),
+        "monthly_stats_cache": monthly_stats_cache.inspect()
+    }
+
+
 @router.get("/", response_model=List[SaleResponseSchema])
 def get_sales_history(
     response: Response,
@@ -308,6 +463,13 @@ def get_daily_sales_stats(
     Aggregate daily sales statistics (count, revenue, cash, card, refunds) grouped by date.
     Optimized for CalendarModal and high-level ledger overviews without downloading line items.
     """
+    is_cacheable_monthly = bool(month and not from_date and not to_date)
+    clean_month = month.strip() if month else ""
+    if is_cacheable_monthly:
+        cached = monthly_stats_cache.get(clean_month)
+        if cached is not None:
+            return cached
+
     date_col = func.date(SaleModel.timestamp)
     query = db.query(
         date_col.label("date"),
@@ -328,7 +490,16 @@ def get_daily_sales_stats(
     )
 
     if month:
-        query = query.filter(func.strftime('%Y-%m', SaleModel.timestamp) == month)
+        try:
+            parts = clean_month.split("-")
+            y = int(parts[0])
+            m = int(parts[1])
+            start_dt = datetime(y, m, 1)
+            end_dt = datetime(y + 1, 1, 1) if m == 12 else datetime(y, m + 1, 1)
+            query = query.filter(SaleModel.timestamp >= start_dt, SaleModel.timestamp < end_dt)
+        except Exception:
+            query = query.filter(func.strftime('%Y-%m', SaleModel.timestamp) == month)
+
     if from_date:
         dt_from = parse_iso_timestamp(from_date)
         query = query.filter(SaleModel.timestamp >= dt_from)
@@ -348,6 +519,11 @@ def get_daily_sales_stats(
             "refundCount": r.refund_count or 0,
             "refundTotal": round_currency(r.refund_total or 0.0)
         }
+
+    if is_cacheable_monthly:
+        current_month = datetime.now().strftime("%Y-%m")
+        monthly_stats_cache.set(clean_month, result, is_immutable=(clean_month < current_month))
+
     return result
 
 
@@ -390,6 +566,11 @@ def get_sale_by_receipt_number(receipt_number: str, db: Session = Depends(get_db
     refunded and remaining refundable quantities per item line.
     """
     clean_receipt = receipt_number.strip()
+    cache_key = f"receipt:{clean_receipt.lower()}"
+    cached = receipt_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     sale = (
         db.query(SaleModel)
         .options(selectinload(SaleModel.items))
@@ -481,16 +662,25 @@ def get_sale_by_receipt_number(receipt_number: str, db: Session = Depends(get_db
         "items": enhanced_items
     }
 
+    receipt_cache.set(cache_key, sale_dict)
     return sale_dict
 
 
 @router.get("/{sale_id}", response_model=SaleResponseSchema)
 def get_sale_by_id(sale_id: str, db: Session = Depends(get_db)):
     """Fetch single sales transaction by ID with full itemized line items."""
-    sale = db.query(SaleModel).options(selectinload(SaleModel.items)).filter(SaleModel.id == sale_id).first()
+    clean_id = sale_id.strip()
+    cache_key = f"id:{clean_id}"
+    cached = receipt_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    sale = db.query(SaleModel).options(selectinload(SaleModel.items)).filter(SaleModel.id == clean_id).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
-    return sale
+    res = SaleResponseSchema.model_validate(sale)
+    receipt_cache.set(cache_key, res)
+    return res
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -597,6 +787,11 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
 
     db.refresh(db_sale)
 
+    if sale.isRefund and sale.originalReceiptNumber:
+        invalidate_sales_caches(original_receipt_number=sale.originalReceiptNumber)
+    else:
+        monthly_stats_cache.invalidate_current()
+
     res = {
         "status": "SUCCESS",
         "sale_id": db_sale.id,
@@ -636,7 +831,17 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
                 if preset and preset.track_stock:
                     preset.stock_quantity += item.quantity
 
+    rec_num = sale.receipt_number
+    orig_rec_num = sale.original_receipt_number
+
     db.commit()
+
+    invalidate_sales_caches(
+        sale_id=sale_id,
+        receipt_number=rec_num,
+        original_receipt_number=orig_rec_num
+    )
+
     return {"status": "UPDATED", "sale_id": sale_id}
 
 
@@ -703,6 +908,9 @@ def purge_all_sales(request: Request, db: Session = Depends(get_db)):
     db.query(SaleItemModel).delete()
     db.query(SaleModel).delete()
     db.commit()
+
+    invalidate_sales_caches(clear_all=True)
+
     return {"status": "DELETED_ALL"}
 
 
@@ -715,8 +923,18 @@ def delete_sale(sale_id: str, request: Request, db: Session = Depends(get_db)):
     if not sale:
         raise HTTPException(status_code=404, detail="Sale not found")
     
+    rec_num = sale.receipt_number
+    orig_rec_num = sale.original_receipt_number
+
     db.delete(sale)
     db.commit()
+
+    invalidate_sales_caches(
+        sale_id=sale_id,
+        receipt_number=rec_num,
+        original_receipt_number=orig_rec_num
+    )
+
     return {"status": "DELETED", "sale_id": sale_id}
 
 

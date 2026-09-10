@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 logger = logging.getLogger("pos-database")
 
 from paths import DATA_DIR, DB_PATH, APP_DIR, ROOT_DIR
+from services.hardware_profile import get_hardware_profile
 
 BASE_DIR = APP_DIR
 
@@ -46,12 +47,16 @@ engine = create_engine(
 
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    """Enable Write-Ahead Logging (WAL) mode and Foreign Key enforcement."""
+    """Enable Write-Ahead Logging (WAL) mode, hardware-tuned PRAGMAs, and Foreign Key enforcement."""
+    profile = get_hardware_profile()
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL;")
     cursor.execute("PRAGMA synchronous=NORMAL;")
     cursor.execute("PRAGMA foreign_keys=ON;")
     cursor.execute("PRAGMA busy_timeout=15000;")
+    cursor.execute(f"PRAGMA cache_size={profile.sqlite_cache_size};")
+    cursor.execute(f"PRAGMA mmap_size={profile.mmap_size};")
+    cursor.execute("PRAGMA temp_store=MEMORY;")
     cursor.close()
 
 

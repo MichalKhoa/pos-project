@@ -191,6 +191,8 @@ def restore_database_from_backup(zip_filename: str) -> dict:
 
         # 3. Close open connections and replace DB
         from database import engine
+        from sqlalchemy.orm import close_all_sessions
+        close_all_sessions()
         engine.dispose()
 
         import shutil

@@ -98,6 +98,46 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to start EET resend daemon: {e}")
 
+    # 4. In-memory cache prewarm daemon
+    def _prewarm_cache_worker():
+        from database import SessionLocal
+        from models import CategoryModel, PresetModel
+        from routers.sales import get_daily_sales_stats
+        from services.hardware_profile import get_hardware_profile
+        from datetime import datetime
+
+        db = SessionLocal()
+        try:
+            profile = get_hardware_profile()
+            logger.info(f"Starting in-memory cache prewarm (Tier {profile.tier}, {profile.prewarm_months} months)...")
+
+            # 1. Warm SQLite buffers for catalog
+            _ = db.query(CategoryModel).all()
+            _ = db.query(PresetModel).all()
+
+            # 2. Warm sales daily stats for recent profile.prewarm_months
+            now = datetime.now()
+            for i in range(max(1, profile.prewarm_months)):
+                y = now.year
+                m = now.month - i
+                while m <= 0:
+                    m += 12
+                    y -= 1
+                month_str = f"{y:04d}-{m:02d}"
+                try:
+                    get_daily_sales_stats(month=month_str, db=db)
+                except Exception as ex:
+                    logger.debug(f"Prewarm stats for {month_str} encountered: {ex}")
+
+            logger.info(f"Cache prewarm completed successfully for {profile.prewarm_months} months.")
+        except Exception as e:
+            logger.warning(f"Error during backend cache prewarm: {e}")
+        finally:
+            db.close()
+
+    prewarm_thread = threading.Thread(target=_prewarm_cache_worker, daemon=True, name="pos-prewarm-worker")
+    prewarm_thread.start()
+
     yield
 
     # Graceful shutdown sequence
@@ -164,11 +204,17 @@ app.mount("/assets", StaticFiles(directory=assets_dir), name="static_assets")
 @app.get("/api/v1/status")
 @app.get("/api/status")
 def status_check():
+    from services.hardware_profile import get_hardware_profile
+    profile = get_hardware_profile()
     return {
         "status": "ONLINE",
         "app": "VoltFlow POS Python FastAPI Backend",
         "docs_url": "/docs",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "hardware_tier": profile.tier,
+        "ram_gb": profile.ram_gb,
+        "sqlite_cache_size": profile.sqlite_cache_size,
+        "mmap_size": profile.mmap_size
     }
 
 @app.get("/{full_path:path}", include_in_schema=False)

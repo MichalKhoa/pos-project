@@ -11,6 +11,95 @@ const API_HOST = getApiHost();
 const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
 
 /**
+ * In-memory API cache & in-flight promise tracker
+ */
+export const _apiCache = new Map();
+const _inFlightRequests = new Map();
+let _lastInvalidateAll = 0;
+const _tagInvalidations = new Map();
+
+function cloneData(data) {
+  if (data === undefined || data === null) return data;
+  if (typeof structuredClone === 'function') {
+    try {
+      return structuredClone(data);
+    } catch {
+      return JSON.parse(JSON.stringify(data));
+    }
+  }
+  return JSON.parse(JSON.stringify(data));
+}
+
+/**
+ * Invalidate API cache by tag or clear all
+ */
+export function invalidateApiCache(tag = null) {
+  const now = Date.now();
+  if (!tag) {
+    _apiCache.clear();
+    _inFlightRequests.clear();
+    _lastInvalidateAll = now;
+    return;
+  }
+  _tagInvalidations.set(tag, now);
+  for (const [key, entry] of _apiCache.entries()) {
+    if (entry.tag === tag) {
+      _apiCache.delete(key);
+    }
+  }
+}
+
+/**
+ * Cached fetch wrapper for GET requests with TTL and in-flight promise deduplication
+ */
+export async function cachedFetch(url, options = {}, { ttlMs = 60000, tag = 'default' } = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  if (method !== 'GET') {
+    const res = await fetch(url, options);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  }
+
+  const cacheKey = url;
+  const now = Date.now();
+  const cached = _apiCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    return cloneData(cached.data);
+  }
+
+  if (_inFlightRequests.has(cacheKey)) {
+    const data = await _inFlightRequests.get(cacheKey);
+    return cloneData(data);
+  }
+
+  const fetchStartTime = Date.now();
+  const inFlightPromise = (async () => {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const data = await res.json();
+
+      const tagInvalidated = _tagInvalidations.get(tag) || 0;
+      if (fetchStartTime >= _lastInvalidateAll && fetchStartTime >= tagInvalidated) {
+        _apiCache.set(cacheKey, {
+          data,
+          expiresAt: Date.now() + ttlMs,
+          tag
+        });
+      }
+      return data;
+    } finally {
+      _inFlightRequests.delete(cacheKey);
+    }
+  })();
+
+  _inFlightRequests.set(cacheKey, inFlightPromise);
+  const data = await inFlightPromise;
+  return cloneData(data);
+}
+
+
+/**
  * Fetch backend root status
  */
 export async function fetchBackendRoot() {
@@ -455,9 +544,7 @@ export async function fetchPrinterDevices() {
  */
 export async function fetchCategoriesBackend() {
   try {
-    const res = await fetch(`${API_BASE_URL}/catalog/categories`);
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    return await cachedFetch(`${API_BASE_URL}/catalog/categories`, {}, { ttlMs: 300000, tag: 'catalog' });
   } catch (err) {
     console.warn('Backend categories unavailable:', err);
     return null;
@@ -475,7 +562,9 @@ export async function saveCategoryBackend(category) {
       body: JSON.stringify(category)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to save category to backend:', err);
     return null;
@@ -491,7 +580,9 @@ export async function deleteCategoryBackend(catId) {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to delete category in backend:', err);
     return null;
@@ -509,7 +600,9 @@ export async function reorderCategoriesBackend(categories) {
       body: JSON.stringify({ categories })
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to reorder categories in backend:', err);
     return null;
@@ -521,9 +614,7 @@ export async function reorderCategoriesBackend(categories) {
  */
 export async function fetchPresetsBackend() {
   try {
-    const res = await fetch(`${API_BASE_URL}/catalog/presets`);
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    return await cachedFetch(`${API_BASE_URL}/catalog/presets`, {}, { ttlMs: 300000, tag: 'catalog' });
   } catch (err) {
     console.warn('Backend presets unavailable:', err);
     return null;
@@ -541,7 +632,9 @@ export async function savePresetBackend(preset) {
       body: JSON.stringify(preset)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to save preset to backend:', err);
     return null;
@@ -559,7 +652,9 @@ export async function bulkSavePresetsBackend(presets) {
       body: JSON.stringify(presets)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to bulk save presets to backend:', err);
     return null;
@@ -577,7 +672,9 @@ export async function reorderPresetsBackend(presets) {
       body: JSON.stringify({ presets })
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to reorder presets in backend:', err);
     return null;
@@ -593,7 +690,9 @@ export async function deletePresetBackend(presetId) {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to delete preset in backend:', err);
     return null;
@@ -609,7 +708,9 @@ export async function togglePresetPinBackend(presetId) {
       method: 'PATCH'
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('catalog');
+    return data;
   } catch (err) {
     console.warn('Failed to toggle preset pin in backend:', err);
     return null;
@@ -732,9 +833,7 @@ export async function reconcileTerminal() {
  */
 export async function fetchStoreConfigBackend() {
   try {
-    const res = await fetch(`${API_BASE_URL}/config`);
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    return await cachedFetch(`${API_BASE_URL}/config`, {}, { ttlMs: 600000, tag: 'config' });
   } catch (err) {
     console.warn('Backend store config unavailable:', err);
     return null;
@@ -752,7 +851,9 @@ export async function saveStoreConfigBackend(storeConfig) {
       body: JSON.stringify(storeConfig)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    invalidateApiCache('config');
+    return data;
   } catch (err) {
     console.warn('Failed to save store config to backend DB:', err);
     return { status: 'ERROR', message: err.message };
