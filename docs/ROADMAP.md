@@ -9,49 +9,42 @@ _Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka
 
 ## 1. Immediate Active Priorities (Nejbližší úkoly k realizaci) 🎯
 
-Phase 1 (**Daňová evidence a inventury pro OSVČ**) a **Backend Audit P0/P1** jsou **dokončeny** ✅.  
-Aktivní prioritou pro realizaci je nyní **Phase 2: Remote Home Administration Dashboard & Owner Back-Office** spolu s technickou stabilizací tiskáren a robustnosti (Backend Audit P2 Correctness).
+Phase 1 (**Daňová evidence a inventury pro OSVČ**) a **Kompletní Backend Audit (P0–P3)** jsou **100 % dokončeny** ✅.  
+Jedinou a hlavní aktivní prioritou pro realizaci je nyní **Phase 2: Remote Home Administration Dashboard & Owner Back-Office**.
 
 ```mermaid
 graph TD
     subgraph P2["🎯 Phase 2: Remote Home Administration Dashboard (Next Immediate Tasks)"]
-        T1["1. Cloud Sync API & Bezpečné párování domova 🔐<br/>(Šifrovaný S3/R2 sync / WebSocket bridge)"]
-        T2["2. Web Dashboard pro vzdálenou správu z domova 🌐<br/>(Tržby, marže, Z-reporty a audit)"]
+        T1["1. Cloud Sync API & Bezpečné párování domova 🔐<br/>(Šifrovaný S3/R2 sync / REST/WebSocket bridge)"]
+        T2["2. Web Dashboard pro vzdálenou správu z domova 🌐<br/>(Tržby, marže, Z-reporty a audit z PC/mobilu)"]
         T3["3. Vzdálené zadávání příjemek a ARES párování 📥<br/>(Nahrávání dodavatelských faktur & PDF z domova)"]
-        T4["4. Vzdálená správa katalogu, cenotvorby a dlaždic 🏷️<br/>(1-klik aktualizace cen a sortimentu)"]
+        T4["4. Vzdálená správa katalogu, cenotvorby a dlaždic 🏷️<br/>(1-klik vzdálená aktualizace cen a sortimentu)"]
         T1 --> T2 --> T3 --> T4
     end
 
-    subgraph Prereq["🛡️ Technický základ & stabilizace (In Progress / Parallel)"]
-        Audit["Backend Audit Phase 3: P2 Correctness & Thermal Printing<br/>(PRN-C1/H2 CP852/CP1258, PRN-H1 Reconnect, FIN-H2 Decimal)"]
-    end
-
-    subgraph Done["Dokončeno z Phase 1 & Audit P0/P1 ✅ (100 % Complete)"]
+    subgraph Done["Dokončeno z Phase 1 & Backend Audit P0–P3 ✅ (100 % Complete)"]
         D1["Fyzická inventura k 31.12. a narovnání mank/přebytků (§ 29, 30 ZoÚ)"]
         D2["Daňové výkazy DPFO Příloha 1 & DPH přehled (§ 7b ZDP / MOJE daně)"]
         D3["B2B fakturace z pokladny s ARES ověřením (> 10 000 Kč)"]
         D4["Kniha zálohovaných vratných obalů (Lahve & Přepravky)"]
         D5["Skladové odpisy a likvidační protokoly (§ 25 ZoÚ)"]
-        D6["FIN-C1 VAT Recalc, EET-C1 C14N Podpis, DB-C1 Atomic Tx, FIN-H1 Numeric(10,2)"]
+        D6["Backend Audit P0–P3 (FIN-C1, EET-C1 C14N, DB-C1, DB-H1, FIN-H1 Numeric, PRN, EET Hardening)"]
     end
 ```
 
 ### 1.1 🌐 Web Dashboard pro vzdálenou správu z domova (*Vzdálená správa & Back-Office*)
-- **Store Reality**: Majitel večerky nebo prodejny tráví celý den za pultem obsluhou zákazníků. Večer nebo z domova potřebuje na notebooku či telefonu přehled o tržbách, maržích, stavu hotovosti a možnost zkontrolovat uzavřené Z-Reporty.
+- **Store Reality**: Majitel večerky nebo prodejny tráví celý den za pultem obsluhou zákazníků. Večer nebo z domova potřebuje na notebooku či telefonu přehled o tržbách, maržích, stavu hotovosti a možnost zkontrolovat uzavřené Z-Reporty bez nutnosti sedět u pokladny v obchodě.
 - **Functionality**:
-  - **Vzdálený přehled tržeb a marží**: Živý i historický přehled denních tržeb, platebních metod, marží a archivovaných Z-Reportů.
-  - **Zadávání příjemek z domova**: Majitel pohodlně na notebooku naťuká faktury od dodavatelů s ARES vyhledáváním a nahráním fotky/PDF dokladu. Automatická asynchronní synchronizace na pokladnu v obchodě.
-  - **Vzdálená správa katalogu a cenotvorby**: Změna prodejních cen, správa dlaždic a sledování skladových zásob.
-  - **Exporty daňových podkladů z domova**: Stažení knihy příjmů a výdajů, přiznání k DPH a DPFO přílohy č. 1.
-  - **Architektura & Bezpečnost**: Využívá existující šifrovaný sync engine (`cloud_sync_service.py` / S3 / Cloudflare R2), 2FA přihlášení majitele.
-
-### 1.2 🛡️ Technický základ: Backend Audit Remediation (P2 Correctness & Hardening)
-> ⚠️ **Status: P2 CORRECTNESS & PRINTING** — Návaznost na [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
-- **Phase 3 Correctness & Printing Gates**:
-  - **PRN-C1 / PRN-H2**: Podpora nativního kódování CP852 (čeština) a CP1258 (vietnamština) pro ESC/POS tisk místo ASCII transliterace.
-  - **PRN-H1**: Aplikace `@with_printer_reconnect` dekorátoru na všechny tiskové metody pro robustnost proti odpojení USB.
-  - **FIN-H2**: Důsledné sčítání přes `Decimal` v `routers/cash.py`.
-  - **EET-H2**: Exponenciální backoff + jitter pro resend daemon (`services/eet_resend_daemon.py`).
+  - **1. Cloud Sync API & Bezpečné párování domova (`cloud_sync_service.py`)**:
+    - Šifrovaná asynchronní replikace databáze a dokladů mezi pokladnou a cloudem (S3 / Cloudflare R2).
+    - 2FA / API token autentizace a zabezpečené párování domácího prohlížeče s pokladnou.
+  - **2. Vzdálený přehled tržeb, marží a uzávěrek**:
+    - Živý i historický přehled denních tržeb, platebních metod, marží, pokladní knihy a archivovaných Z-Reportů.
+    - Exporty daňových podkladů z domova (kniha příjmů a výdajů, přehled DPH, DPFO příloha č. 1).
+  - **3. Zadávání příjemek z domova**:
+    - Majitel pohodlně na notebooku naťuká faktury od dodavatelů s ARES vyhledáváním a přiložením fotky/PDF dokladu. Automatická synchronizace na pokladnu.
+  - **4. Vzdálená správa katalogu a cenotvorby**:
+    - Změna prodejních cen, správa dlaždic rychlé volby a sledování skladových zásob v reálném čase.
 
 ---
 
@@ -146,6 +139,22 @@ flowchart TD
 
 ---
 
+### Plán verzování a budoucích tagů (SemVer Tagging Plan) 🏷️
+
+| Tag | Fáze / Milník | Hlavní obsah vydání | Status |
+|---|---|---|---|
+| **`v0.1.0`** | Baseline Core | Základní offline-first pokladna, Tauri v2 desktop shell, ESC/POS tisk, EET 2.0 SOAP engine. | ✅ Vydáno |
+| **`v0.2.0`** | Phase 1 & Audit | Daňová evidence pro OSVČ (§ 7b ZDP), inventura k 31.12. (§ 29, 30 ZoÚ), vratné obaly, odpisy (§ 25 ZoÚ), váhové zboží, kompletní audit P0–P3 (FIN-C1, EET-C1 C14N, DB-C1). | ✅ Vydáno |
+| **`v0.3.0`** | **Phase 2 (Aktivní)** | **Remote Home Admin Dashboard**: Šifrovaný Cloud Sync (S3/R2), webové rozhraní pro správu z domova, vzdálené zadávání příjemek z notebooku/mobilu, vzdálená úprava cen a sledování tržeb. | 🎯 **Další na řadě** |
+| **`v0.4.0`** | Phase 3 | **CRM & Účetní můstky**: Zákaznická věrnost (kartičky, slevové hladiny), bezpapírové QR/e-mail účtenky, exportní můstky pro podvojné účetnictví (Money S3, Abra Flexi). | 📋 Plánováno |
+| **`v0.5.0`** | Phase 4 | **Multi-User & Enterprise**: Rychlé přepínání pokladních profilů s PIN/RFID, oddělené zásuvky per pokladní, multi-store synchronizace více poboček s centrálním katalogem. | 📋 Plánováno |
+| **`v0.6.0`** | Phase 5 | **Hardware & Platební terminály**: Automatické vratky na terminál ČSOB (Ingenico Move 3500 TCP storno), integrace SumUp čtečky (až bude k dispozici HW). | ⏸️ Pozastaveno |
+| **`v1.0.0`** | **Production Store Pilot** | **První ostré nasazení**: Zmrazené databázové schéma, ověřený ostrý provoz na fyzické večerce, kompletní instalátor, zálohovací a obnovovací postupy, EET certifikace. | 🚀 Cíl |
+
+*(Poznámka: Mezi verzemi se mohou objevit opravné patch tagy `v0.2.1`, `v0.3.1` atd. pro okamžité hotfixy nalezené při testování bez nových funkcí).*
+
+---
+
 ## 3. Completed Baseline Capabilities & Archive (Dokončené funkce ✅)
 
 Již implementované, plně ověřené a funkční moduly v systému VoltFlow POS:
@@ -216,8 +225,10 @@ Již implementované, plně ověřené a funkční moduly v systému VoltFlow PO
   - Protokol o výdeji zálohovaných obalů pivovaru s tiskem stvrzenky pro řidiče.
 - **26. Server-side rekalkulace DPH — FIN-C1 (`routers/sales.py`)**:
   - Striktní přepočet a ověření základu daně a DPH per sazba na straně serveru (`Σ(base + vat) == totalAmount`) bránící zaokrouhlovacím neshodám a klientským anomáliím.
-- **27. Databázová a EET integrita — Backend Audit P1 (`DB-C1`, `EET-C2`, `DB-H1`, `FIN-H1`)**:
-  - Sloučení číslování účtenek do atomické transakce (`DB-C1`), expirace certifikátu EET v UTC (`EET-C2`), atomické SQL odečty zásob bez race conditions (`DB-H1`) a migrace všech finančních sloupců na `Numeric(10,2)` (`FIN-H1`).
+- **27. Kompletní Backend Audit Remediation & Hardening — P0 až P3 (`docs/backend_audit_2026-09-11.md`)**:
+  - **P0**: W3C Exclusive C14N XML-DSig podpis (`EET-C1`), serverová DPH validace (`FIN-C1`).
+  - **P1**: Atomické sekvence účtenek/faktur v prodejní transakci (`DB-C1`), UTC validace certifikátu EET (`EET-C2`), atomické SQL odečty zásob bez race conditions (`DB-H1`), migrace všech peněžních sloupců na `Numeric(10,2)` (`FIN-H1`).
+  - **P2 / P3**: Ochrana proti odpojení tiskárny (`PRN-H1`), CP852/CP1258 kódování, exponenciální backoff daemonu EET (`EET-H2`), Pydantic validace sazeb DPH (`FIN-L1`), ochrana sítě a limit velikosti loga (`PRN-H3`), pokrývající index `ix_sales_timestamp` (`DB-L1`).
 
 ---
 
