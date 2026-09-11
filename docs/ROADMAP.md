@@ -13,29 +13,21 @@ Concrete, high-impact counter and payment features scheduled for immediate imple
 
 ```mermaid
 graph TD
-    A["1. Vratky na platební terminál ČSOB 💳<br/>(Ingenico Move 3500 TCP Reversals)"] --> B["2. Záložní terminál SumUp 📶<br/>(SumUp Air / Solo Integration)"]
-    B --> C["3. Skladové odpisy a likvidační protokoly 🗑️<br/>[Done ✅ § 25 ZoÚ]"]
+    Audit["1. Backend Audit Remediation (P0 Criticals) 🛡️<br/>(FIN-C1, FIN-C2, DB-C1)"] --> Inv["2. Fyzická inventura k 31.12. 📋<br/>(§ 29, 30 ZoÚ Vyrovnání mank/přebytků)"]
     
-    subgraph AuditTrack["Backend Audit Remediation Track 🛡️"]
-        Crit["P0 Critical Fixes (FIN-C1, FIN-C2, DB-C1)<br/>[EET-C1 Done ✅]"]
-        Crit -.->|"BLOCKED UNTIL COMPLETE"| NonCrit["P1 Data Integrity, P2 Correctness, P3 Hardening<br/>(Atomic DB, Codepages, Backoff, Validators)"]
+    subgraph DoneItems["Dokončeno nedávno ✅"]
+        D1["Skladové odpisy (§ 25 ZoÚ) 🗑️"]
+        D2["EET-C1 C14N Podpis ✍️"]
+    end
+
+    subgraph PausedItems["Odloženo do budoucna (Chybí HW) ⏸️"]
+        P1["ČSOB Card Refunds (Není kompatibilní terminál)"]
+        P2["SumUp Integrace (Není Bluetooth v PC)"]
     end
 ```
 
-### 1.1 💳 Automatické vratky platební kartou na terminál ČSOB (ČSOB Terminal Automated Reversals / Refunds)
-- **Scope**: Automated TCP card refund/storno command dispatch to the Ingenico Move 3500 terminal (`POST /api/v1/payments/card-refund`).
-- **Workflow**: Initiating refund in Sales History prompts terminal to display "Přiložte kartu pro vrácení" -> Customer taps card -> Terminal returns authorization code (`RRN`/`AuthCode`) -> Storno receipt printed with terminal reference.
-
-### 1.2 📶 Záložní terminál SumUp (SumUp Air / Solo Integration)
-- **Scope**: Connect register to SumUp Bluetooth and Cloud REST API as an affordable, wire-free card terminal alternative for retail pop-ups or backup card processing.
-- **Workflow**: Selecting "Karta" with SumUp enabled pushes transaction to paired SumUp reader; register awaits live webhook/polling approval and auto-completes transaction.
-
-### 1.3 🗑️ Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ) [DONE ✅]
-- **Scope**: Formal stock write-off workflow (`POST /api/v1/inventory/write-off`) with reasons (`EXSPIRACE`, `ZKÁZA`, `ROZBITÍ`, `KRÁDEŽ`).
-- **Accounting & Tax**: Categorized loss norms (§ 25 ZoÚ, e.g. produce shrinkage 3-5%) with tax-deductible status vs. non-deductible taxable loss requiring VAT adjustment (§ 77/78 ZDPH). Thermal write-off protocol slip with manager signature.
-
-### 1.4 🛡️ Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
-> ⚠️ **Status: BLOCKED** until the most critical legal & financial fixes (P0 Criticals) are completed and verified.
+### 1.1 🛡️ Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
+> ⚠️ **Status: P0 CRITICAL** — Okamžitá priorita pro zajištění finanční a právní integrity pokladny.
 - **Reference**: [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
 - **Phase 1 — Critical Prerequisite Gates (Must complete first)**:
   - **EET-C1**: W3C Exclusive C14N XML-DSig signing via `lxml` + `xmlsec` (DONE ✅ in commit `be330d0`).
@@ -47,6 +39,17 @@ graph TD
   - **P2 (Correctness)**: Codepage-aware ESC/POS thermal printing (CP852 Czech, CP1258 Vietnamese), printer auto-reconnect decorator, Decimal math in cash register.
   - **P3 (Hardening)**: Pydantic VAT rate validators (`vat in {0, 12, 21}`), sales timestamp indexing, logo payload size limiter.
 
+### 1.2 📋 Fyzická inventura k 31.12. a vyrovnání rozdílů (*Inventura skladu* — § 29, 30 ZoÚ)
+- **Store Reality**: Zákon ukládá povinnost provést k rozvahovému dni (31.12.) fyzickou inventuru zásob. Majitel vezme bezdrátovou čtečku čárových kódů a pípá regály.
+- **Functionality**:
+  - **Inventurní režim čtečky**: Skenování položek do dočasného inventurního archu (sčítání kusů v reálném čase).
+  - **Porovnání evidenčního a skutečného stavu**:
+    - Automatické vyčíslení inventarizačních rozdílů:
+      - **Manko**: skutečný stav < evidenční (rozdělení na normu úbytků vs. zaviněné).
+      - **Přebytek**: skutečný stav > evidenční (ocenění reprodukční pořizovací cenou).
+  - **1-Klik zúčtování a narovnání skladu**: Zápis vyrovnávacích pohybů (`ADJUSTMENT`) do `stock_movements` a uzamčení stavu k 31.12.
+  - Generování oficiálního tiskového **Protokolu o inventarizaci**.
+
 ---
 
 ## 2. Strategic Expansion Phases (Střednědobý a dlouhodobý plán) 🚀
@@ -56,7 +59,7 @@ graph TD
 ```mermaid
 flowchart TD
     subgraph Phase1["Phase 1: Daňová evidence a inventury (§ 7b ZDP & ZoÚ)"]
-        P1["1. Odpisy, likvidace a normy přirozených úbytků (§ 25 ZoÚ)"]
+        P1["1. Odpisy a likvidace (§ 25 ZoÚ) [Done ✅]"]
         P2["2. Fyzická inventura k 31.12. a vyrovnání mank/přebytků (§ 29 ZoÚ)"]
         P3["3. Daňové výkazy DPFO Příloha 1 a přiznání k DPH (§ 7b ZDP)"]
         P4["4. B2B fakturace z pokladny s ARES ověřením odběratele"]
@@ -77,6 +80,11 @@ flowchart TD
         P10["10. Řetězcová synchronizace více poboček"]
     end
 
+    subgraph Phase5["Phase 5: Hardware & Platební terminály (Pozastaveno ⏸️)"]
+        P11["11. Automatické vratky ČSOB (Ingenico Move 3500)"]
+        P12["12. Záložní terminál SumUp (Bluetooth / Cloud)"]
+    end
+
     Phase1 --> Phase2
     Phase2 --> Phase3
     Phase3 --> Phase4
@@ -84,9 +92,9 @@ flowchart TD
 
 ### Phase 1: Daňová evidence a inventury pro OSVČ (Remaining Scope — § 7b ZDP & ZoÚ)
 
-*Poznámka: Základní stavební kameny daňové evidence (Deník příjmů a výdajů, Pokladní kniha, Vklady/Výběry, Směnové uzávěrky X/Z-Report, Příjemky s ARES a Výdejky prodejem) jsou již plně implementovány v produkční verzi viz Sekce 3.*
+*Poznámka: Základní stavební kameny daňové evidence (Deník příjmů a výdajů, Pokladní kniha, Vklady/Výběry, Směnové uzávěrky X/Z-Report, Příjemky s ARES, Výdejky prodejem a Skladové odpisy § 25 ZoÚ) jsou již plně implementovány v produkční verzi viz Sekce 3.*
 
-#### 1. Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ)
+#### 1. Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ) [DONE ✅]
 - **Store Reality**: V potravinách dochází ke zkáze zeleniny, prošlému pečivu, rozbitým lahvím od piva a drobným krádežím. Pokud se tyto odpisy neevidují formálně, zkreslují sklad a berňák je může penalizovat doměřením DPH.
 - **Functionality**:
   - Samostatný formulář pro **Odpis zboží / Likvidační protokol** (`POST /api/v1/inventory/write-off`).
@@ -171,6 +179,22 @@ flowchart TD
 #### 10. Multi-Store řetězcová synchronizace
 - Lokální pokladny běží offline na SQLite; asynchronně synchronizují do centrální cloudové databáze.
 - Centrální katalog zboží, sdílené ceny, přehled skladů napříč pobočkami.
+
+---
+
+### Phase 5: Hardware & Platební terminály (Backlog — Pozastaveno z důvodu chybějícího HW ⏸️)
+
+*Praktické překážky pro realizaci: V současnosti není k dispozici kompatibilní bankovní terminál pro testování storen ani Bluetooth rozhraní / BLE adaptér na pokladním PC.*
+
+#### 11. 💳 Automatické vratky platební kartou na terminál ČSOB (ČSOB Terminal Automated Reversals / Refunds)
+- **Status**: ⏸️ Pozastaveno (není k dispozici kompatibilní bankovní terminál pro živé testování storno protokolu).
+- **Scope**: Automatické odeslání storno příkazu na Ingenico Move 3500 terminál přes TCP socket (`POST /api/v1/payments/card-refund`).
+- **Workflow**: Zahájení vratky v historii prodejů -> výzva terminálu "Přiložte kartu pro vrácení" -> zákazník přiloží kartu -> terminál vrátí autorizační kód (`RRN`/`AuthCode`) -> vytištění storno dokladu s referencí na terminál.
+
+#### 12. 📶 Záložní terminál SumUp (SumUp Air / Solo Integration)
+- **Status**: ⏸️ Pozastaveno (pokladní PC nedisponuje vestavěným Bluetooth ani USB BLE adaptérem).
+- **Scope**: Připojení pokladny k SumUp Bluetooth a Cloud REST API jako levná bezdrátová alternativa platebního terminálu pro stánkový prodej nebo záložní zpracování karet.
+- **Workflow**: Výběr "Karta" se zapnutým SumUp odešle platbu do spárované čtečky; pokladna čeká na potvrzení přes polling/webhook a automaticky uzavře prodej.
 
 ---
 
