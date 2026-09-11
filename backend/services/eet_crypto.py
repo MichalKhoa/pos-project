@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import logging
+from datetime import datetime, timezone
 from typing import Tuple, Optional
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.hazmat.primitives import hashes
@@ -43,6 +44,13 @@ class EETCryptoManager:
             self.additional_certs = additional_certs or []
             self.p12_path = p12_path
             self.password = password
+
+            if cert.not_valid_after_utc < datetime.now(timezone.utc):
+                raise ValueError(
+                    f"EET certificate expired on {cert.not_valid_after_utc.isoformat()}. "
+                    "Renew the PKCS#12 certificate before sending fiscal data."
+                )
+
             logger.info(f"Successfully loaded EET .p12 certificate from {p12_path}")
             return True
         except Exception as e:

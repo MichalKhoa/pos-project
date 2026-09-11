@@ -155,7 +155,7 @@ class TestVAPAndWeight(unittest.TestCase):
 
         self.db.expire_all()
         updated = self.db.query(PresetModel).filter(PresetModel.id == pid).first()
-        self.assertAlmostEqual(updated.price, 139.90, places=2)
+        self.assertAlmostEqual(float(updated.price), 139.90, places=2)
 
         # Intake without new_selling_price leaves preset selling price unchanged
         payload_no_change = {
@@ -173,7 +173,7 @@ class TestVAPAndWeight(unittest.TestCase):
 
         self.db.expire_all()
         updated2 = self.db.query(PresetModel).filter(PresetModel.id == pid).first()
-        self.assertAlmostEqual(updated2.price, 139.90, places=2)
+        self.assertAlmostEqual(float(updated2.price), 139.90, places=2)
 
     def test_price_history_endpoint_and_trend(self):
         """GET /api/v1/inventory/price-history/{preset_id} returns chronological receipts and accurate trends."""

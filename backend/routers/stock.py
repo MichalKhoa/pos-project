@@ -87,10 +87,11 @@ def submit_stock_intake(payload: StockIntakeSchema, db: Session = Depends(get_db
                 )
 
             # Moving Weighted Average Cost (VAP) formula (§ 25 ZoÚ / § 7b ZDP)
-            cur_stock = preset.stock_quantity or 0.0
-            cur_cost = preset.cost_price or 0.0
-            intake_qty = item.quantity
-            intake_cost = item.cost_price
+            # float() casts: cost_price/price are Numeric(10,2)->Decimal after FIN-H1; full Decimal WAC is P2/FIN-H2
+            cur_stock = float(preset.stock_quantity or 0.0)
+            cur_cost = float(preset.cost_price or 0.0)
+            intake_qty = float(item.quantity)
+            intake_cost = float(item.cost_price)
             if cur_stock <= 0:
                 new_vap = intake_cost
             else:
@@ -102,7 +103,7 @@ def submit_stock_intake(payload: StockIntakeSchema, db: Session = Depends(get_db
             # Atomic selling price update if provided
             sell_price = item.effective_new_selling_price
             if sell_price is not None and sell_price > 0:
-                preset.price = round(sell_price, 2)
+                preset.price = round(float(sell_price), 2)
 
             # Create StockMovementModel entry
             movement = StockMovementModel(

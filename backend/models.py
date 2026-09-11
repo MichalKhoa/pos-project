@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean, Index, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, JSON, Numeric, DateTime, ForeignKey, Index, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -11,12 +11,12 @@ class SaleModel(Base):
     id = Column(String, primary_key=True, index=True)
     receipt_number = Column(String, index=True, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-    total_amount = Column(Float, nullable=False)
-    cart_discount_percent = Column(Float, default=0.0)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+    cart_discount_percent = Column(Numeric(10, 2), default=0.0)
     payment_method = Column(String, nullable=False)  # 'cash', 'card', 'qr', 'split'
     split_details = Column(JSON, nullable=True)     # {'cash': 500, 'card': 1000}
-    tendered_amount = Column(Float, default=0.0)
-    change_due = Column(Float, default=0.0)
+    tendered_amount = Column(Numeric(10, 2), default=0.0)
+    change_due = Column(Numeric(10, 2), default=0.0)
     tax_summary = Column(JSON, nullable=False)       # Grouped VAT breakdown
     fik_code = Column(String, nullable=True)          # Czech EET FIK code
     bkp_code = Column(String, nullable=True)          # Czech EET BKP code
@@ -31,7 +31,7 @@ class SaleModel(Base):
     original_receipt_number = Column(String, nullable=True)
     refund_reason = Column(String, nullable=True)
     refund_status = Column(String, default="NONE", index=True)    # 'NONE', 'PARTIAL', 'FULL'
-    refunded_amount = Column(Float, default=0.0)
+    refunded_amount = Column(Numeric(10, 2), default=0.0)
 
     # B2B Invoicing Fields (> 10 000 CZK or customer requested)
     is_invoice = Column(Boolean, default=False, nullable=False, index=True)
@@ -56,10 +56,10 @@ class SaleItemModel(Base):
     sale_id = Column(String, ForeignKey("sales.id"), nullable=False)
     item_id = Column(String, nullable=True)
     name = Column(String, nullable=False)
-    price = Column(Float, nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
     quantity = Column(Float, nullable=False, default=1.0)
     vat = Column(Integer, nullable=False, default=21)
-    discount_percent = Column(Float, default=0.0)
+    discount_percent = Column(Numeric(10, 2), default=0.0)
 
     sale = relationship("SaleModel", back_populates="items")
 
@@ -217,7 +217,7 @@ class PresetModel(Base):
 
     id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    price = Column(Float, nullable=False, default=0.0)
+    price = Column(Numeric(10, 2), nullable=False, default=0.0)
     category = Column(String, nullable=False, default="custom")
     vat = Column(Integer, default=21)
     color = Column(String, nullable=True)
@@ -231,7 +231,7 @@ class PresetModel(Base):
     icon = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
     show_in_presets = Column(Boolean, default=True, nullable=False)
-    cost_price = Column(Float, default=0.0, nullable=False)
+    cost_price = Column(Numeric(10, 2), default=0.0, nullable=False)
     unit = Column(String, default="ks", nullable=False)
     is_weighted = Column(Boolean, default=False, nullable=False)
     margin_coefficient = Column(Float, nullable=True)
@@ -269,7 +269,7 @@ class CashMovementModel(Base):
     id = Column(String, primary_key=True, index=True)
     shift_id = Column(String, index=True, nullable=True)
     movement_type = Column(String, nullable=False)  # 'FLOAT_IN' (vklad), 'PAYOUT' (výběr/dodavatel), 'SAFE_DROP' (odvod do trezoru)
-    amount = Column(Float, nullable=False)          # Always positive float
+    amount = Column(Numeric(10, 2), nullable=False)          # Always positive float
     reason = Column(String, nullable=True)          # e.g. "Ranní vklad do pokladny", "Pekárna hotovost"
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -282,10 +282,10 @@ class ShiftSessionModel(Base):
     shift_number = Column(Integer, default=1)
     opened_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     closed_at = Column(DateTime, nullable=True)
-    opening_cash = Column(Float, default=0.0, nullable=False)
-    expected_cash = Column(Float, default=0.0, nullable=False)
-    actual_cash = Column(Float, default=0.0, nullable=True)
-    discrepancy = Column(Float, default=0.0, nullable=True)  # actual - expected (negative = manko, positive = přebytek)
+    opening_cash = Column(Numeric(10, 2), default=0.0, nullable=False)
+    expected_cash = Column(Numeric(10, 2), default=0.0, nullable=False)
+    actual_cash = Column(Numeric(10, 2), default=0.0, nullable=True)
+    discrepancy = Column(Numeric(10, 2), default=0.0, nullable=True)  # actual - expected (negative = manko, positive = přebytek)
     is_closed = Column(Boolean, default=False, nullable=False)
     z_seq = Column(Integer, default=1, nullable=False)       # Sequential Z-Report closure counter
 
@@ -298,7 +298,7 @@ class StockMovementModel(Base):
     preset_id = Column(String, ForeignKey("presets.id", ondelete="CASCADE"), index=True, nullable=False)
     movement_type = Column(String, nullable=False, index=True)  # 'RECEIPT', 'SALE', 'RETURN', 'WRITE_OFF', 'ADJUSTMENT'
     quantity_delta = Column(Float, nullable=False)  # Positive for RECEIPT/RETURN, negative for SALE/WRITE_OFF
-    unit_cost = Column(Float, default=0.0, nullable=False)  # Purchase cost price without VAT
+    unit_cost = Column(Numeric(10, 2), default=0.0, nullable=False)  # Purchase cost price without VAT
     supplier_ico = Column(String, nullable=True, index=True)  # Czech IČO
     supplier_name = Column(String, nullable=True)
     document_ref = Column(String, nullable=True)  # Invoice or delivery note number
@@ -325,8 +325,8 @@ class StockWriteOffModel(Base):
     reason = Column(String, nullable=False, index=True)  # 'EXSPIRACE', 'ZKAZA', 'ROZBITI', 'KRADEZ', 'OTHER'
     responsible_person = Column(String, nullable=True)  # Cashier / Manager name
     note = Column(String, nullable=True)
-    total_cost_value = Column(Float, default=0.0, nullable=False)  # Total cost price sum
-    total_retail_value = Column(Float, default=0.0, nullable=False)  # Total selling price sum
+    total_cost_value = Column(Numeric(10, 2), default=0.0, nullable=False)  # Total cost price sum
+    total_retail_value = Column(Numeric(10, 2), default=0.0, nullable=False)  # Total selling price sum
     is_tax_deductible = Column(Boolean, default=True, nullable=False)  # True if within norm § 25 ZoÚ, False if theft/culpable
     vat_adjustment_required = Column(Boolean, default=False, nullable=False)  # § 77/78 ZDPH correction indicator
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
@@ -344,11 +344,11 @@ class StockWriteOffItemModel(Base):
     preset_name = Column(String, nullable=False)
     quantity = Column(Float, nullable=False)
     unit = Column(String, default="ks", nullable=False)
-    unit_cost = Column(Float, default=0.0, nullable=False)
-    unit_price = Column(Float, default=0.0, nullable=False)
+    unit_cost = Column(Numeric(10, 2), default=0.0, nullable=False)
+    unit_price = Column(Numeric(10, 2), default=0.0, nullable=False)
     vat = Column(Integer, default=21, nullable=False)
-    total_cost = Column(Float, default=0.0, nullable=False)
-    total_price = Column(Float, default=0.0, nullable=False)
+    total_cost = Column(Numeric(10, 2), default=0.0, nullable=False)
+    total_price = Column(Numeric(10, 2), default=0.0, nullable=False)
     is_norm_loss = Column(Boolean, default=True, nullable=False)
 
     write_off = relationship("StockWriteOffModel", back_populates="items")
@@ -398,8 +398,8 @@ class InventoryAuditItemModel(Base):
     physical_quantity = Column(Float, nullable=False)    # Skutečný zjištěný stav
     difference = Column(Float, nullable=False)           # physical - system (pos = přebytek, neg = manko)
     unit = Column(String, default="ks", nullable=False)
-    unit_cost = Column(Float, default=0.0, nullable=False)  # Pořizovací cena / VAP
-    total_cost_impact = Column(Float, default=0.0, nullable=False)  # difference * unit_cost
+    unit_cost = Column(Numeric(10, 2), default=0.0, nullable=False)  # Pořizovací cena / VAP
+    total_cost_impact = Column(Numeric(10, 2), default=0.0, nullable=False)  # difference * unit_cost
 
     audit = relationship("InventoryAuditModel", back_populates="items")
 
@@ -411,10 +411,10 @@ class DepositMovementModel(Base):
     id = Column(String, primary_key=True, index=True)
     container_type = Column(String, nullable=False, index=True)  # 'BOTTLE_3CZK', 'CRATE_100CZK', etc.
     container_name = Column(String, nullable=False)              # "Pivní lahev 0.5l", "Přepravka piva"
-    deposit_value = Column(Float, default=3.0, nullable=False)   # 3.0 or 100.0
+    deposit_value = Column(Numeric(10, 2), default=3.0, nullable=False)   # 3.0 or 100.0
     movement_type = Column(String, nullable=False, index=True)   # 'SUPPLIER_INTAKE', 'CUSTOMER_RETURN', 'SUPPLIER_DISPATCH', 'ADJUSTMENT'
     quantity_delta = Column(Float, nullable=False)               # + intake/customer return, - dispatch to brewery
-    total_value = Column(Float, nullable=False)                  # quantity_delta * deposit_value
+    total_value = Column(Numeric(10, 2), nullable=False)                  # quantity_delta * deposit_value
     document_ref = Column(String, nullable=True)                 # Delivery note or receipt ref
     supplier_ico = Column(String, nullable=True)
     note = Column(String, nullable=True)

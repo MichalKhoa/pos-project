@@ -144,7 +144,7 @@ class TestAresAndStockLedger(unittest.TestCase):
         preset = self.db.query(PresetModel).filter(PresetModel.id == self.test_preset_id).first()
         self.assertAlmostEqual(preset.stock_quantity, 25.0, places=2)
         # VAP: ((10.0 * 120.0) + (15.0 * 135.50)) / 25.0 = 129.30 Kč
-        self.assertAlmostEqual(preset.cost_price, 129.30, places=2)
+        self.assertAlmostEqual(float(preset.cost_price), 129.30, places=2)
 
         # Verify RECEIPT movement recorded in ledger
         movement = (

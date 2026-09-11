@@ -3,7 +3,7 @@ import uuid
 import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session, selectinload, noload
-from sqlalchemy import func, case
+from sqlalchemy import func, case, text
 from typing import List, Optional, Any, Dict
 import re
 from database import get_db
@@ -28,7 +28,7 @@ def generate_next_receipt_number(db: Session, year: Optional[int] = None) -> str
     if not year:
         year = datetime.now().year
 
-    seq_obj = db.query(ReceiptSequenceModel).filter(ReceiptSequenceModel.year == year).first()
+    seq_obj = db.query(ReceiptSequenceModel).filter(ReceiptSequenceModel.year == year).with_for_update().first()
     if not seq_obj:
         year_prefix = f"{year}-"
         max_num = 0
@@ -46,7 +46,7 @@ def generate_next_receipt_number(db: Session, year: Optional[int] = None) -> str
 
     seq_obj.last_seq += 1
     next_num = seq_obj.last_seq
-    db.commit()
+    db.flush()
 
     return f"{year}-{next_num:06d}"
 
@@ -59,7 +59,7 @@ def generate_next_invoice_number(db: Session, year: Optional[int] = None) -> str
     if not year:
         year = datetime.now().year
 
-    seq_obj = db.query(InvoiceSequenceModel).filter(InvoiceSequenceModel.year == year).first()
+    seq_obj = db.query(InvoiceSequenceModel).filter(InvoiceSequenceModel.year == year).with_for_update().first()
     if not seq_obj:
         year_prefix = f"FA-{year}-"
         max_num = 0
@@ -77,7 +77,7 @@ def generate_next_invoice_number(db: Session, year: Optional[int] = None) -> str
 
     seq_obj.last_seq += 1
     next_num = seq_obj.last_seq
-    db.commit()
+    db.flush()
 
     return f"FA-{year}-{next_num:04d}"
 
@@ -1012,7 +1012,12 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             if item.id:
                 preset = db.query(PresetModel).filter(PresetModel.id == item.id).first()
                 if preset and preset.track_stock:
-                    preset.stock_quantity = round((preset.stock_quantity or 0.0) - item.quantity, 3)
+                    db.execute(
+                        text("UPDATE presets SET stock_quantity = ROUND(COALESCE(stock_quantity, 0.0) - :qty, 3) WHERE id = :id"),
+                        {"qty": item.quantity, "id": item.id}
+                    )
+                    db.flush()
+                    db.refresh(preset)
                     movement_type = 'RETURN' if sale.isRefund else 'SALE'
                     qty_delta = round(abs(item.quantity) if sale.isRefund else -abs(item.quantity), 3)
                     doc_ref = assigned_receipt_number or sale.receiptNumber
@@ -1077,7 +1082,12 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
             if item.item_id:
                 preset = db.query(PresetModel).filter(PresetModel.id == item.item_id).first()
                 if preset and preset.track_stock:
-                    preset.stock_quantity = round((preset.stock_quantity or 0.0) + item.quantity, 3)
+                    db.execute(
+                        text("UPDATE presets SET stock_quantity = ROUND(COALESCE(stock_quantity, 0.0) + :qty, 3) WHERE id = :id"),
+                        {"qty": item.quantity, "id": item.item_id}
+                    )
+                    db.flush()
+                    db.refresh(preset)
                     smov = StockMovementModel(
                         id=f"smov_{uuid.uuid4().hex[:12]}",
                         preset_id=preset.id,
@@ -1227,10 +1237,10 @@ def get_sale_invoice_html(sale_id: str, db: Session = Depends(get_db)):
     rows_html = ""
     for it in sale.items:
         vat_pct = it.vat
-        unit_price_vat = it.price
+        unit_price_vat = float(it.price)  # Numeric(10,2)->Decimal after FIN-H1
         unit_price_base = round(unit_price_vat / (1 + vat_pct / 100), 2)
-        total_base = round(unit_price_base * it.quantity, 2)
-        total_with_vat = round(unit_price_vat * it.quantity, 2)
+        total_base = round(unit_price_base * float(it.quantity), 2)
+        total_with_vat = round(unit_price_vat * float(it.quantity), 2)
         rows_html += f"""
         <tr>
             <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">{it.name}</td>

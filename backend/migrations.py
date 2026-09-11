@@ -110,7 +110,13 @@ def _get_column_sql_def(col) -> str:
         if col.default is not None and hasattr(col.default, "arg"):
             val = 1 if col.default.arg else 0
         return f"{sql_type} DEFAULT {val}"
-    elif any(k in type_name for k in ("FLOAT", "NUMERIC", "DECIMAL")):
+    elif any(k in type_name for k in ("NUMERIC", "DECIMAL")):
+        sql_type = "DECIMAL(10,2)"
+        default = " DEFAULT 0.00"
+        if col.default is not None and hasattr(col.default, "arg") and isinstance(col.default.arg, (int, float)):
+            default = f" DEFAULT {col.default.arg}"
+        return f"{sql_type}{default}"
+    elif "FLOAT" in type_name:
         sql_type = "FLOAT"
         default = " DEFAULT 0.0"
         if col.default is not None and hasattr(col.default, "arg") and isinstance(col.default.arg, (int, float)):
@@ -127,6 +133,240 @@ def _get_column_sql_def(col) -> str:
             escaped = col.default.arg.replace("'", "''")
             default = f" DEFAULT '{escaped}'"
         return f"{sql_type}{default}"
+
+
+# Per-table DDL with DECIMAL(10,2) for all monetary columns.
+# quantity_delta / quantity / stock_quantity / min_stock_alert remain FLOAT.
+_MONETARY_TABLE_DDL = {
+    "sales": """\
+        CREATE TABLE sales (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            receipt_number VARCHAR NOT NULL,
+            timestamp DATETIME NOT NULL,
+            total_amount DECIMAL(10,2) NOT NULL,
+            cart_discount_percent DECIMAL(10,2) DEFAULT 0.0,
+            payment_method VARCHAR NOT NULL,
+            split_details TEXT,
+            tendered_amount DECIMAL(10,2) DEFAULT 0.0,
+            change_due DECIMAL(10,2) DEFAULT 0.0,
+            tax_summary TEXT NOT NULL,
+            fik_code VARCHAR,
+            bkp_code VARCHAR,
+            pkp_code VARCHAR,
+            eet_status VARCHAR DEFAULT 'EVD_OK',
+            eic_popl VARCHAR,
+            id_provozovny VARCHAR DEFAULT '11',
+            id_pokl VARCHAR DEFAULT '1',
+            is_sent_to_eet BOOLEAN DEFAULT 1,
+            eet_retry_count INTEGER DEFAULT 0,
+            is_refund BOOLEAN DEFAULT 0,
+            original_receipt_number VARCHAR,
+            refund_reason VARCHAR,
+            refund_status VARCHAR DEFAULT 'NONE',
+            refunded_amount DECIMAL(10,2) DEFAULT 0.0,
+            is_invoice BOOLEAN DEFAULT 0 NOT NULL,
+            invoice_number VARCHAR,
+            customer_ico VARCHAR,
+            customer_dic VARCHAR,
+            customer_name VARCHAR,
+            customer_address VARCHAR
+        )""",
+    "sale_items": """\
+        CREATE TABLE sale_items (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            sale_id VARCHAR NOT NULL REFERENCES sales(id),
+            item_id VARCHAR,
+            name VARCHAR NOT NULL,
+            price DECIMAL(10,2) NOT NULL,
+            quantity FLOAT NOT NULL DEFAULT 1.0,
+            vat INTEGER NOT NULL DEFAULT 21,
+            discount_percent DECIMAL(10,2) DEFAULT 0.0
+        )""",
+    "presets": """\
+        CREATE TABLE presets (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            name VARCHAR NOT NULL,
+            price DECIMAL(10,2) NOT NULL DEFAULT 0.0,
+            category VARCHAR NOT NULL DEFAULT 'custom',
+            vat INTEGER DEFAULT 21,
+            color VARCHAR,
+            is_open_price BOOLEAN DEFAULT 0,
+            is_general BOOLEAN DEFAULT 0 NOT NULL,
+            position INTEGER DEFAULT 0,
+            stock_quantity FLOAT DEFAULT 0.0 NOT NULL,
+            track_stock BOOLEAN DEFAULT 0 NOT NULL,
+            min_stock_alert FLOAT DEFAULT 5.0 NOT NULL,
+            barcode VARCHAR,
+            icon VARCHAR,
+            image_url VARCHAR,
+            show_in_presets BOOLEAN DEFAULT 1 NOT NULL,
+            cost_price DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            unit VARCHAR DEFAULT 'ks' NOT NULL,
+            is_weighted BOOLEAN DEFAULT 0 NOT NULL,
+            margin_coefficient FLOAT
+        )""",
+    "cash_movements": """\
+        CREATE TABLE cash_movements (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            shift_id VARCHAR,
+            movement_type VARCHAR NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            reason VARCHAR,
+            created_at DATETIME NOT NULL
+        )""",
+    "shift_sessions": """\
+        CREATE TABLE shift_sessions (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            shift_number INTEGER DEFAULT 1,
+            opened_at DATETIME NOT NULL,
+            closed_at DATETIME,
+            opening_cash DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            expected_cash DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            actual_cash DECIMAL(10,2) DEFAULT 0.0,
+            discrepancy DECIMAL(10,2) DEFAULT 0.0,
+            is_closed BOOLEAN DEFAULT 0 NOT NULL,
+            z_seq INTEGER DEFAULT 1 NOT NULL
+        )""",
+    "stock_movements": """\
+        CREATE TABLE stock_movements (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            preset_id VARCHAR NOT NULL REFERENCES presets(id) ON DELETE CASCADE,
+            movement_type VARCHAR NOT NULL,
+            quantity_delta FLOAT NOT NULL,
+            unit_cost DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            supplier_ico VARCHAR,
+            supplier_name VARCHAR,
+            document_ref VARCHAR,
+            note VARCHAR,
+            timestamp DATETIME NOT NULL
+        )""",
+    "stock_write_offs": """\
+        CREATE TABLE stock_write_offs (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            protocol_number VARCHAR NOT NULL UNIQUE,
+            reason VARCHAR NOT NULL,
+            responsible_person VARCHAR,
+            note VARCHAR,
+            total_cost_value DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            total_retail_value DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            is_tax_deductible BOOLEAN DEFAULT 1 NOT NULL,
+            vat_adjustment_required BOOLEAN DEFAULT 0 NOT NULL,
+            timestamp DATETIME NOT NULL
+        )""",
+    "stock_write_off_items": """\
+        CREATE TABLE stock_write_off_items (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            write_off_id VARCHAR NOT NULL REFERENCES stock_write_offs(id) ON DELETE CASCADE,
+            preset_id VARCHAR NOT NULL REFERENCES presets(id),
+            preset_name VARCHAR NOT NULL,
+            quantity FLOAT NOT NULL,
+            unit VARCHAR DEFAULT 'ks' NOT NULL,
+            unit_cost DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            unit_price DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            vat INTEGER DEFAULT 21 NOT NULL,
+            total_cost DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            total_price DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            is_norm_loss BOOLEAN DEFAULT 1 NOT NULL
+        )""",
+    "inventory_audit_items": """\
+        CREATE TABLE inventory_audit_items (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            audit_id VARCHAR NOT NULL REFERENCES inventory_audits(id) ON DELETE CASCADE,
+            preset_id VARCHAR NOT NULL REFERENCES presets(id),
+            preset_name VARCHAR NOT NULL,
+            system_quantity FLOAT NOT NULL,
+            physical_quantity FLOAT NOT NULL,
+            difference FLOAT NOT NULL,
+            unit VARCHAR DEFAULT 'ks' NOT NULL,
+            unit_cost DECIMAL(10,2) DEFAULT 0.0 NOT NULL,
+            total_cost_impact DECIMAL(10,2) DEFAULT 0.0 NOT NULL
+        )""",
+    "deposit_movements": """\
+        CREATE TABLE deposit_movements (
+            id VARCHAR NOT NULL PRIMARY KEY,
+            container_type VARCHAR NOT NULL,
+            container_name VARCHAR NOT NULL,
+            deposit_value DECIMAL(10,2) DEFAULT 3.0 NOT NULL,
+            movement_type VARCHAR NOT NULL,
+            quantity_delta FLOAT NOT NULL,
+            total_value DECIMAL(10,2) NOT NULL,
+            document_ref VARCHAR,
+            supplier_ico VARCHAR,
+            note VARCHAR,
+            timestamp DATETIME NOT NULL
+        )""",
+}
+
+# (table, monetary_col) — used for the idempotency check only.
+_MONETARY_CHECK_COL = {
+    "sales": "total_amount",
+    "sale_items": "price",
+    "presets": "price",
+    "cash_movements": "amount",
+    "shift_sessions": "opening_cash",
+    "stock_movements": "unit_cost",
+    "stock_write_offs": "total_cost_value",
+    "stock_write_off_items": "unit_cost",
+    "inventory_audit_items": "unit_cost",
+    "deposit_movements": "deposit_value",
+}
+
+
+def migrate_monetary_columns_to_decimal(db_path: str) -> list[str]:
+    """
+    Recreate each affected table with DECIMAL(10,2) for all monetary columns.
+    Idempotent: skips tables that already report DECIMAL type for the sentinel column.
+    Uses PRAGMA foreign_keys = OFF / ON around each recreation.
+    Raises on failure — never silently swallows migration errors.
+    """
+    import sqlite3
+
+    migrated: list[str] = []
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("PRAGMA foreign_keys = OFF")
+        try:
+            for table, ddl in _MONETARY_TABLE_DDL.items():
+                check_col = _MONETARY_CHECK_COL[table]
+                try:
+                    rows = conn.execute(
+                        f"SELECT type FROM pragma_table_info('{table}') WHERE name = '{check_col}'"
+                    ).fetchall()
+                except Exception:
+                    rows = []
+
+                if not rows:
+                    # Table doesn't exist yet — will be created by create_all; skip.
+                    logger.debug(f"migrate_monetary: {table} not found, skipping")
+                    continue
+
+                current_type = (rows[0][0] or "").upper()
+                if "DECIMAL" in current_type:
+                    logger.debug(f"migrate_monetary: {table}.{check_col} already DECIMAL, skipping")
+                    continue
+
+                logger.info(f"migrate_monetary: recreating {table} ({check_col} is {current_type!r} → DECIMAL(10,2))")
+                try:
+                    conn.execute("BEGIN")
+                    conn.execute(f"ALTER TABLE {table} RENAME TO _{table}_old")
+                    conn.execute(ddl)
+                    # Copy columns that exist in both old and new schema
+                    cols_old = [r[1] for r in conn.execute(f"PRAGMA table_info('_{table}_old')").fetchall()]
+                    cols_new = [r[1] for r in conn.execute(f"PRAGMA table_info('{table}')").fetchall()]
+                    shared = ", ".join(c for c in cols_new if c in cols_old)
+                    conn.execute(f"INSERT INTO {table} ({shared}) SELECT {shared} FROM _{table}_old")
+                    conn.execute(f"DROP TABLE _{table}_old")
+                    conn.execute("COMMIT")
+                    migrated.append(table)
+                    logger.info(f"migrate_monetary: {table} recreated successfully")
+                except Exception as exc:
+                    conn.execute("ROLLBACK")
+                    logger.error(f"migrate_monetary: failed recreating {table}: {exc}")
+                    raise RuntimeError(f"migrate_monetary_columns_to_decimal: {table} failed") from exc
+        finally:
+            conn.execute("PRAGMA foreign_keys = ON")
+
+    return migrated
 
 
 def run_schema_migrations(engine=None):
@@ -146,6 +386,18 @@ def run_schema_migrations(engine=None):
 
     # 1. Create any brand new tables
     Base.metadata.create_all(bind=engine)
+
+    # 1b. Migrate monetary columns to DECIMAL(10,2) via table recreation (idempotent)
+    db_url = str(engine.url)
+    if db_url.startswith("sqlite:///"):
+        db_path = db_url[len("sqlite:///"):]
+        try:
+            recreated = migrate_monetary_columns_to_decimal(db_path)
+            if recreated:
+                logger.info(f"Monetary DECIMAL migration: recreated tables: {', '.join(recreated)}")
+        except Exception as e:
+            logger.error(f"Monetary DECIMAL migration failed: {e}")
+            raise
 
     added_columns = []
 
