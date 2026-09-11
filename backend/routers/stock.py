@@ -16,7 +16,8 @@ from models import (
     StockWriteOffItemModel,
     InventoryAuditSequenceModel,
     InventoryAuditModel,
-    InventoryAuditItemModel
+    InventoryAuditItemModel,
+    DepositMovementModel
 )
 
 router = APIRouter(prefix="/api/v1/inventory", tags=["Inventory & Stock Ledger"])
@@ -727,3 +728,176 @@ def get_inventory_audit_detail(protocol_id: str, db: Session = Depends(get_db)):
             detail=f"Protokol o inventuře {protocol_id} nebyl nalezen."
         )
     return record
+
+
+# =========================================================================
+# Deposit Packaging Book / Kniha zálohovaných vratných obalů (Lahve & Přepravky)
+# =========================================================================
+
+STANDARD_DEPOSIT_TYPES = {
+    "BOTTLE_3CZK": {"name": "Pivní lahev 0,5l", "value": 3.0},
+    "CRATE_100CZK": {"name": "Pivní přepravka / basa", "value": 100.0}
+}
+
+
+class DepositMovementRequestSchema(BaseModel):
+    container_type: str  # 'BOTTLE_3CZK', 'CRATE_100CZK', or custom
+    container_name: Optional[str] = None
+    deposit_value: Optional[float] = None
+    movement_type: str  # 'SUPPLIER_INTAKE', 'CUSTOMER_RETURN', 'SUPPLIER_DISPATCH', 'ADJUSTMENT'
+    quantity: float
+    document_ref: Optional[str] = None
+    supplier_ico: Optional[str] = None
+    note: Optional[str] = None
+
+
+class DepositMovementResponseSchema(BaseModel):
+    id: str
+    container_type: str
+    container_name: str
+    deposit_value: float
+    movement_type: str
+    quantity_delta: float
+    total_value: float
+    document_ref: Optional[str] = None
+    supplier_ico: Optional[str] = None
+    note: Optional[str] = None
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DepositContainerBalanceSchema(BaseModel):
+    container_type: str
+    container_name: str
+    deposit_value: float
+    current_quantity: float
+    total_deposit_value: float
+    intake_quantity: float
+    customer_returned_quantity: float
+    supplier_dispatched_quantity: float
+
+
+class DepositSummaryResponseSchema(BaseModel):
+    balances: List[DepositContainerBalanceSchema]
+    total_deposit_locked_value: float
+    recent_movements: List[DepositMovementResponseSchema]
+
+
+@router.post("/deposits/movement", status_code=status.HTTP_201_CREATED, response_model=DepositMovementResponseSchema)
+def record_deposit_movement(payload: DepositMovementRequestSchema, db: Session = Depends(get_db)):
+    """
+    Record a movement in the returnable deposit packaging ledger.
+    Types:
+    - SUPPLIER_INTAKE: bottles/crates received from brewery (+)
+    - CUSTOMER_RETURN: bottles/crates returned by retail customers at counter (+)
+    - SUPPLIER_DISPATCH: empty bottles/crates loaded back to brewery delivery truck (-)
+    - ADJUSTMENT: inventory correction for breakage or discrepancies (+/-)
+    """
+    valid_movements = {"SUPPLIER_INTAKE", "CUSTOMER_RETURN", "SUPPLIER_DISPATCH", "ADJUSTMENT"}
+    m_type = (payload.movement_type or "").strip().upper()
+    if m_type not in valid_movements:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Neplatný typ pohybu vratných obalů. Povolené hodnoty: {', '.join(sorted(valid_movements))}"
+        )
+
+    if payload.quantity == 0 and m_type != "ADJUSTMENT":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Množství obalů musí být nenulové."
+        )
+
+    c_type = (payload.container_type or "BOTTLE_3CZK").strip().upper()
+    std = STANDARD_DEPOSIT_TYPES.get(c_type, {})
+    c_name = (payload.container_name or std.get("name") or c_type).strip()
+    dep_val = float(payload.deposit_value if payload.deposit_value is not None else std.get("value", 3.0))
+
+    if m_type in ("SUPPLIER_INTAKE", "CUSTOMER_RETURN"):
+        qty_delta = abs(payload.quantity)
+    elif m_type == "SUPPLIER_DISPATCH":
+        qty_delta = -abs(payload.quantity)
+    else:  # ADJUSTMENT
+        qty_delta = payload.quantity
+
+    total_val = round(qty_delta * dep_val, 2)
+    now = datetime.utcnow()
+    mov_id = f"dep_{uuid.uuid4().hex[:12]}"
+
+    with atomic_transaction(db):
+        mov = DepositMovementModel(
+            id=mov_id,
+            container_type=c_type,
+            container_name=c_name,
+            deposit_value=dep_val,
+            movement_type=m_type,
+            quantity_delta=qty_delta,
+            total_value=total_val,
+            document_ref=(payload.document_ref or "").strip() or None,
+            supplier_ico=(payload.supplier_ico or "").strip() or None,
+            note=(payload.note or "").strip() or None,
+            timestamp=now
+        )
+        db.add(mov)
+        db.flush()
+        db.refresh(mov)
+        return mov
+
+
+@router.get("/deposits/summary", response_model=DepositSummaryResponseSchema)
+def get_deposit_summary(db: Session = Depends(get_db)):
+    """
+    Get current stock balance and financial valuation of returnable deposit containers (Lahve & Přepravky).
+    """
+    movements = db.query(DepositMovementModel).order_by(desc(DepositMovementModel.timestamp)).all()
+
+    types_found = dict(STANDARD_DEPOSIT_TYPES)
+    for m in movements:
+        if m.container_type not in types_found:
+            types_found[m.container_type] = {"name": m.container_name, "value": m.deposit_value}
+
+    balances = []
+    total_locked = 0.0
+
+    for c_type, info in types_found.items():
+        type_movs = [m for m in movements if m.container_type == c_type]
+        cur_qty = sum(m.quantity_delta for m in type_movs)
+        intake_qty = sum(m.quantity_delta for m in type_movs if m.movement_type == "SUPPLIER_INTAKE")
+        cust_ret_qty = sum(m.quantity_delta for m in type_movs if m.movement_type == "CUSTOMER_RETURN")
+        disp_qty = sum(abs(m.quantity_delta) for m in type_movs if m.movement_type == "SUPPLIER_DISPATCH")
+        dep_val = info["value"]
+        tot_val = round(cur_qty * dep_val, 2)
+        total_locked += tot_val
+
+        balances.append(DepositContainerBalanceSchema(
+            container_type=c_type,
+            container_name=info["name"],
+            deposit_value=dep_val,
+            current_quantity=cur_qty,
+            total_deposit_value=tot_val,
+            intake_quantity=intake_qty,
+            customer_returned_quantity=cust_ret_qty,
+            supplier_dispatched_quantity=disp_qty
+        ))
+
+    recent = movements[:50]
+    return DepositSummaryResponseSchema(
+        balances=balances,
+        total_deposit_locked_value=round(total_locked, 2),
+        recent_movements=recent
+    )
+
+
+@router.get("/deposits/movements", response_model=List[DepositMovementResponseSchema])
+def get_deposit_movements(
+    container_type: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """Fetch paginated audit log of deposit packaging movements."""
+    query = db.query(DepositMovementModel)
+    if container_type:
+        query = query.filter(DepositMovementModel.container_type == container_type.strip().upper())
+    records = query.order_by(desc(DepositMovementModel.timestamp)).offset(offset).limit(min(max(1, limit), 200)).all()
+    return records
