@@ -10,6 +10,8 @@ import BarcodeLabelModal from './inventory/BarcodeLabelModal.jsx';
 import StockIntakeModal from './inventory/StockIntakeModal.jsx';
 import StockMovementLedgerModal from './inventory/StockMovementLedgerModal.jsx';
 import StockWriteOffModal from './inventory/StockWriteOffModal.jsx';
+import PhysicalInventoryModal from './inventory/PhysicalInventoryModal.jsx';
+import DepositPackagingModal from './inventory/DepositPackagingModal.jsx';
 import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
 export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin, storeConfig = {} }) {
@@ -43,6 +45,26 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   // Stock Write-Off state
   const [isWriteOffOpen, setIsWriteOffOpen] = useState(false);
   const [writeOffInitialPresetId, setWriteOffInitialPresetId] = useState(null);
+
+  // Physical Inventory (31.12.) & Returnable Deposits state
+  const [isPhysicalAuditOpen, setIsPhysicalAuditOpen] = useState(false);
+  const [isDepositPackagingOpen, setIsDepositPackagingOpen] = useState(false);
+
+  const handleAuditCompleted = async (protocol) => {
+    try {
+      const refreshed = await fetchPresetsBackend();
+      if (onUpdatePresets && Array.isArray(refreshed)) {
+        onUpdatePresets(refreshed);
+      }
+      setStatusMessage({
+        type: 'success',
+        text: `Fyzická inventura (${protocol.audit_number}) byla úspěšně zaúčtována.`
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to refresh presets after audit:', err);
+    }
+  };
 
   const handleOpenWriteOff = (preset = null) => {
     setWriteOffInitialPresetId(preset ? preset.id : null);
@@ -356,6 +378,8 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
           setLedgerInitialPresetId(null);
           setIsMovementLedgerOpen(true);
         }}
+        onOpenPhysicalAudit={() => setIsPhysicalAuditOpen(true)}
+        onOpenDepositPackaging={() => setIsDepositPackagingOpen(true)}
       />
 
       {statusMessage && (
@@ -474,6 +498,21 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         onWriteOffCompleted={handleWriteOffCompleted}
         storeConfig={storeConfig}
         initialPresetId={writeOffInitialPresetId}
+      />
+
+      {/* Physical Inventory (§ 29, 30 ZoÚ) Modal */}
+      <PhysicalInventoryModal
+        isOpen={isPhysicalAuditOpen}
+        onClose={() => setIsPhysicalAuditOpen(false)}
+        presets={presets}
+        onAuditCompleted={handleAuditCompleted}
+        storeConfig={storeConfig}
+      />
+
+      {/* Returnable Deposit Packaging Book Modal */}
+      <DepositPackagingModal
+        isOpen={isDepositPackagingOpen}
+        onClose={() => setIsDepositPackagingOpen(false)}
       />
     </div>
   );

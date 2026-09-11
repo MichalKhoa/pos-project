@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History, Trash2 } from 'lucide-react';
+import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History, Trash2, ClipboardCheck, Wine } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function InventoryMetricsBar({
@@ -18,7 +18,9 @@ export default function InventoryMetricsBar({
   onImportCSVClick,
   onOpenStockIntake,
   onOpenStockMovements,
-  onOpenStockWriteOff
+  onOpenStockWriteOff,
+  onOpenPhysicalAudit,
+  onOpenDepositPackaging
 }) {
   const { t } = useTranslation();
 
@@ -224,6 +226,58 @@ export default function InventoryMetricsBar({
             >
               <History size={15} />
               <span>{t('stock_movements.btn_open') || 'Kniha pohybů'}</span>
+            </button>
+          )}
+
+          {onOpenPhysicalAudit && (
+            <button
+              type="button"
+              onClick={onOpenPhysicalAudit}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '38px',
+                padding: '0 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--accent-emerald)',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: 'var(--accent-emerald)',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Fyzická inventura skladu k 31.12. a narovnání mank/přebytků (§ 29, 30 ZoÚ)"
+            >
+              <ClipboardCheck size={15} />
+              <span>{t('inventory.audit_btn') || 'Inventura 31.12.'}</span>
+            </button>
+          )}
+
+          {onOpenDepositPackaging && (
+            <button
+              type="button"
+              onClick={onOpenDepositPackaging}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '38px',
+                padding: '0 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--accent-amber)',
+                background: 'rgba(245, 158, 11, 0.12)',
+                color: 'var(--accent-amber)',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Kniha zálohovaných vratných obalů (Lahve 3 Kč, Přepravky 100 Kč)"
+            >
+              <Wine size={15} />
+              <span>{t('inventory.deposits_btn') || 'Vratné obaly'}</span>
             </button>
           )}
 
