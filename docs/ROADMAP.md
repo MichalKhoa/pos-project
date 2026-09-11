@@ -9,74 +9,49 @@ _Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka
 
 ## 1. Immediate Active Priorities (Nejbližší úkoly k realizaci) 🎯
 
-Phase 1 Expansion: **Daňová evidence a inventury pro OSVČ (§ 7b ZDP & ZoÚ)** je nyní bezprostřední aktivní prioritou pro realizaci.
+Phase 1 (**Daňová evidence a inventury pro OSVČ**) a **Backend Audit P0/P1** jsou **dokončeny** ✅.  
+Aktivní prioritou pro realizaci je nyní **Phase 2: Remote Home Administration Dashboard & Owner Back-Office** spolu s technickou stabilizací tiskáren a robustnosti (Backend Audit P2 Correctness).
 
 ```mermaid
 graph TD
-    subgraph P1["🎯 Phase 1: Daňová evidence a inventury pro OSVČ (Next Immediate Tasks)"]
-        T1["1. Fyzická inventura k 31.12. a vyrovnání mank/přebytků 📋<br/>(§ 29, 30 ZoÚ)"]
-        T2["2. Daňové výkazy DPFO Příloha 1 & DPH přehled 📊<br/>(§ 7b ZDP / MOJE daně)"]
-        T3["3. B2B fakturace z pokladny s ARES ověřením 🏢<br/>(Faktury vydané > 10 000 Kč)"]
-        T4["4. Kniha zálohovaných vratných obalů 🍾<br/>(Lahve & Přepravky)"]
+    subgraph P2["🎯 Phase 2: Remote Home Administration Dashboard (Next Immediate Tasks)"]
+        T1["1. Cloud Sync API & Bezpečné párování domova 🔐<br/>(Šifrovaný S3/R2 sync / WebSocket bridge)"]
+        T2["2. Web Dashboard pro vzdálenou správu z domova 🌐<br/>(Tržby, marže, Z-reporty a audit)"]
+        T3["3. Vzdálené zadávání příjemek a ARES párování 📥<br/>(Nahrávání dodavatelských faktur & PDF z domova)"]
+        T4["4. Vzdálená správa katalogu, cenotvorby a dlaždic 🏷️<br/>(1-klik aktualizace cen a sortimentu)"]
         T1 --> T2 --> T3 --> T4
     end
 
     subgraph Prereq["🛡️ Technický základ & stabilizace (In Progress / Parallel)"]
-        Audit["Backend Audit Remediation (FIN-C1, FIN-C2, DB-C1)"]
+        Audit["Backend Audit Phase 3: P2 Correctness & Thermal Printing<br/>(PRN-C1/H2 CP852/CP1258, PRN-H1 Reconnect, FIN-H2 Decimal)"]
     end
 
-    subgraph Done["Dokončeno z Phase 1 ✅"]
-        D1["Skladové odpisy a likvidační protokoly (§ 25 ZoÚ)"]
-        D2["EET-C1 C14N XML Podpis"]
+    subgraph Done["Dokončeno z Phase 1 & Audit P0/P1 ✅ (100 % Complete)"]
+        D1["Fyzická inventura k 31.12. a narovnání mank/přebytků (§ 29, 30 ZoÚ)"]
+        D2["Daňové výkazy DPFO Příloha 1 & DPH přehled (§ 7b ZDP / MOJE daně)"]
+        D3["B2B fakturace z pokladny s ARES ověřením (> 10 000 Kč)"]
+        D4["Kniha zálohovaných vratných obalů (Lahve & Přepravky)"]
+        D5["Skladové odpisy a likvidační protokoly (§ 25 ZoÚ)"]
+        D6["FIN-C1 VAT Recalc, EET-C1 C14N Podpis, DB-C1 Atomic Tx, FIN-H1 Numeric(10,2)"]
     end
 ```
 
-### 1.1 📋 Fyzická inventura k 31.12. a vyrovnání rozdílů (*Inventura skladu* — § 29, 30 ZoÚ)
-- **Store Reality**: Zákon ukládá povinnost provést k rozvahovému dni (31.12.) fyzickou inventuru zásob. Majitel vezme bezdrátovou čtečku čárových kódů a pípá regály.
+### 1.1 🌐 Web Dashboard pro vzdálenou správu z domova (*Vzdálená správa & Back-Office*)
+- **Store Reality**: Majitel večerky nebo prodejny tráví celý den za pultem obsluhou zákazníků. Večer nebo z domova potřebuje na notebooku či telefonu přehled o tržbách, maržích, stavu hotovosti a možnost zkontrolovat uzavřené Z-Reporty.
 - **Functionality**:
-  - **Inventurní režim čtečky**: Skenování položek do dočasného inventurního archu (sčítání kusů v reálném čase).
-  - **Porovnání evidenčního a skutečného stavu**:
-    - Automatické vyčíslení inventarizačních rozdílů:
-      - **Manko**: skutečný stav < evidenční (rozdělení na normu úbytků vs. zaviněné).
-      - **Přebytek**: skutečný stav > evidenční (ocenění reprodukční pořizovací cenou).
-  - **1-Klik zúčtování a narovnání skladu**: Zápis vyrovnávacích pohybů (`ADJUSTMENT`) do `stock_movements` a uzamčení stavu k 31.12.
-  - Generování oficiálního tiskového **Protokolu o inventarizaci**.
+  - **Vzdálený přehled tržeb a marží**: Živý i historický přehled denních tržeb, platebních metod, marží a archivovaných Z-Reportů.
+  - **Zadávání příjemek z domova**: Majitel pohodlně na notebooku naťuká faktury od dodavatelů s ARES vyhledáváním a nahráním fotky/PDF dokladu. Automatická asynchronní synchronizace na pokladnu v obchodě.
+  - **Vzdálená správa katalogu a cenotvorby**: Změna prodejních cen, správa dlaždic a sledování skladových zásob.
+  - **Exporty daňových podkladů z domova**: Stažení knihy příjmů a výdajů, přiznání k DPH a DPFO přílohy č. 1.
+  - **Architektura & Bezpečnost**: Využívá existující šifrovaný sync engine (`cloud_sync_service.py` / S3 / Cloudflare R2), 2FA přihlášení majitele.
 
-### 1.2 📊 Podklady pro Daňové přiznání (DPFO Příloha č. 1) a DPH výkazy (§ 7b ZDP)
-- **Store Reality**: Majitel večerky na konci roku nosí účetní krabici papírů. Systém má vygenerovat přesná čísla přímo do formulářů Finanční správy.
-- **Functionality**:
-  - **Příloha č. 1 DPFO (Příjmy a výdaje ze SVČ dle § 7 ZDP)**:
-    - Příjmy: Celkové zdanitelné tržby z pokladny (očistěné o vratky).
-    - Výdaje: Nákup zboží (z příjemek dodavatelů) + Provozní režie (z pokladních výběrů/payouts).
-    - Zásoby: Počáteční stav k 1.1. a konečný stav k 31.12.
-  - **Měsíční / Kvartální DPH přehled**:
-    - Rozpis základu daně a daně na výstupu (21 %, 12 %, 0 %).
-    - Vstupní DPH ze zaevidovaných příjemek od dodavatelů.
-    - Export do formátu připraveného pro portál MOJE daně (DIS+ / EPO).
-
-### 1.3 🏢 B2B Fakturace z pokladny s ARES lookupem (Faktury vydané > 10 000 Kč)
-- **Store Reality**: Řemeslník nebo jiný živnostník nakoupí materiál/občerstvení nad 10 000 Kč a potřebuje řádnou fakturu / daňový doklad s uvedením svého IČO, DIČ a sídla.
-- **Functionality**:
-  - Přepínač v platebním okně: `[🏢 Firemní faktura / B2B]`.
-  - Zadání IČO odběratele -> bleskový dotaz na Czech ARES REST API (<1s) -> automatické vyplnění názvu firmy a adresy.
-  - Tisk prodlouženého termálního daňového dokladu s náležitostmi faktury + možnost exportu A4 PDF.
-
-### 1.4 🍾 Kniha zálohovaných vratných obalů (Lahve & Přepravky)
-- **Store Reality**: Hospodaření s vratnými pivními lahvemi (3 Kč) a přepravkami (100 Kč) podléhá specifickému režimu DPH a vyžaduje sledování stavu vratných obalů na prodejně.
-- **Functionality**:
-  - Samostatná podrozvaha pro zálohované obaly v modulu Sklad.
-  - Výpočet stavu vratných obalů: naskladněné obaly z příjemek vs. vyplacené zálohy zákazníkům vs. vrácené obaly pivovaru.
-
-### 1.5 🛡️ Technický základ: Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
-> ⚠️ **Status: P0 CRITICAL PREREQUISITE** — Zajištění finanční a datové integrity pokladny.
-- **Reference**: [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
-- **Phase 1 Gates**:
-  - **EET-C1**: W3C Exclusive C14N XML-DSig signing via `lxml` + `xmlsec` (DONE ✅ in commit `be330d0`).
-  - **FIN-C1**: Server-side VAT recalculation in `routers/sales.py:create_sale` (`Σ(base + vat) == totalAmount`).
-  - **FIN-C2**: Sales immutability (block hard deletes of completed sales, enforce reverse refunds).
-  - **DB-C1**: Atomic transaction for receipt sequence number generation + sale insertion.
-- **Phase 2–4 Remediation**:
-  - Atomic stock decrements (`UPDATE ... SET qty = qty - ?`), `Numeric(10,2)` DB migration, Codepage-aware thermal printing (CP852 / CP1258).
+### 1.2 🛡️ Technický základ: Backend Audit Remediation (P2 Correctness & Hardening)
+> ⚠️ **Status: P2 CORRECTNESS & PRINTING** — Návaznost na [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
+- **Phase 3 Correctness & Printing Gates**:
+  - **PRN-C1 / PRN-H2**: Podpora nativního kódování CP852 (čeština) a CP1258 (vietnamština) pro ESC/POS tisk místo ASCII transliterace.
+  - **PRN-H1**: Aplikace `@with_printer_reconnect` dekorátoru na všechny tiskové metody pro robustnost proti odpojení USB.
+  - **FIN-H2**: Důsledné sčítání přes `Decimal` v `routers/cash.py`.
+  - **EET-H2**: Exponenciální backoff + jitter pro resend daemon (`services/eet_resend_daemon.py`).
 
 ---
 
@@ -86,12 +61,12 @@ graph TD
 
 ```mermaid
 flowchart TD
-    subgraph Active["🎯 Aktivní priorita (viz Sekce 1)"]
-        Phase1["Phase 1: Daňová evidence a inventury (§ 7b ZDP & ZoÚ)<br/><i>(Inventura 31.12., DPFO/DPH výkazy, B2B fakturace, Vratné obaly)</i>"]
+    subgraph Phase1Done["Phase 1: Daňová evidence a inventury (§ 7b ZDP & ZoÚ) [HOTOVO ✅]"]
+        P1Done["Inventura 31.12., DPFO/DPH výkazy, B2B faktury, Vratné obaly, Odpisy"]
     end
 
-    subgraph Phase2["Phase 2: Remote Home Administration Dashboard"]
-        P6["6. Web Dashboard pro vzdálenou správu z domova"]
+    subgraph Active["🎯 Aktivní priorita (viz Sekce 1)"]
+        Phase2["Phase 2: Remote Home Administration Dashboard<br/><i>(Web dashboard, vzdálené příjemky, správa cen a sync)</i>"]
     end
 
     subgraph Phase3["Phase 3: Customer CRM & Accounting Bridges"]
@@ -109,69 +84,18 @@ flowchart TD
         P12["12. Záložní terminál SumUp (Bluetooth / Cloud)"]
     end
 
-    Phase1 --> Phase2
+    Phase1Done --> Phase2
     Phase2 --> Phase3
     Phase3 --> Phase4
 ```
 
-### Phase 1: Daňová evidence a inventury pro OSVČ (Aktivně rozpracováno v Sekci 1 🎯)
-
-*Poznámka: Detailní specifikace jednotlivých kroků Phase 1 byla povýšena přímo do **Sekce 1 (Immediate Active Priorities)** jako bezprostřední fronta úkolů k realizaci. Skladové odpisy (§ 25 ZoÚ) jsou již hotové.*
-
-#### 1. Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ) [DONE ✅]
-- **Store Reality**: V potravinách dochází ke zkáze zeleniny, prošlému pečivu, rozbitým lahvím od piva a drobným krádežím. Pokud se tyto odpisy neevidují formálně, zkreslují sklad a berňák je může penalizovat doměřením DPH.
-- **Functionality**:
-  - Samostatný formulář pro **Odpis zboží / Likvidační protokol** (`POST /api/v1/inventory/write-off`).
-  - Důvody odpisu: `EXSPIRACE`, `ZKÁZA`, `ROZBITÍ`, `KRÁDEŽ / NEZJIŠTĚNÉ MANKO`.
-  - **Normy přirozených úbytků (§ 25 ZoÚ)**:
-    - Nastavitelné procentuální normy úbytků per kategorie (např. 3–5 % na vysychání ovoce/zeleniny, 1.5 % uzeniny).
-    - Úbytky do normy systém automaticky zaúčtuje jako daňově uznatelný výdaj bez nutnosti dodanění DPH.
-    - Úbytky nad normu (zaviněné manko) označí příznakem pro korekci odpočtu DPH dle § 77/78 ZDPH.
-  - Tisk formálního protokolu o likvidaci podepsaného odpovědnou osobou.
-
-#### 2. Fyzická inventura k 31.12. a vyrovnání rozdílů (*Inventura skladu* — § 29, 30 ZoÚ)
-- **Store Reality**: Zákon ukládá povinnost provést k rozvahovému dni (31.12.) fyzickou inventuru zásob. Majitel vezme bezdrátovou čtečku čárových kódů a pípá regály.
-- **Functionality**:
-  - **Inventurní režim čtečky**: Skenování položek do dočasného inventurního archu (sčítání kusů v reálném čase).
-  - **Porovnání evidenčního a skutečného stavu**:
-    - Automatické vyčíslení inventarizačních rozdílů:
-      - **Manko**: skutečný stav < evidenční (rozdělení na normu úbytků vs. zaviněné).
-      - **Přebytek**: skutečný stav > evidenční (ocenění reprodukční pořizovací cenou).
-  - **1-Klik zúčtování a narovnání skladu**: Zápis vyrovnávacích pohybů (`ADJUSTMENT`) do `stock_movements` a uzamčení stavu k 31.12.
-  - Generování oficiálního tiskového **Protokolu o inventarizaci**.
-
-#### 3. Podklady pro Daňové přiznání (DPFO Příloha č. 1) a DPH výkazy
-- **Store Reality**: Majitel večerky na konci roku nosí účetní krabici papírů. Systém má vygenerovat přesná čísla přímo do formulářů Finanční správy.
-- **Functionality**:
-  - **Příloha č. 1 DPFO (Příjmy a výdaje ze SVČ dle § 7 ZDP)**:
-    - Příjmy: Celkové zdanitelné tržby z pokladny (očistěné o vratky).
-    - Výdaje: Nákup zboží (z příjemek dodavatelů) + Provozní režie (z pokladních výběrů/payouts).
-    - Zásoby: Počáteční stav k 1.1. a konečný stav k 31.12.
-  - **Měsíční / Kvartální DPH přehled**:
-    - Rozpis základu daně a daně na výstupu (21 %, 12 %, 0 %).
-    - Vstupní DPH ze zaevidovaných příjemek od dodavatelů.
-    - Export do formátu připraveného pro portál MOJE daně (DIS+ / EPO).
-
-#### 4. B2B Fakturace z pokladny s ARES lookupem (Faktury vydané > 10 000 Kč)
-- **Store Reality**: Řemeslník nebo jiný živnostník nakoupí materiál/občerstvení nad 10 000 Kč a potřebuje řádnou fakturu / daňový doklad s uvedením svého IČO, DIČ a sídla.
-- **Functionality**:
-  - Přepínač v platebním okně: `[🏢 Firemní faktura / B2B]`.
-  - Zadání IČO odběratele -> bleskový dotaz na Czech ARES REST API (<1s) -> automatické vyplnění názvu firmy a adresy.
-  - Tisk prodlouženého termálního daňového dokladu s náležitostmi faktury + možnost exportu A4 PDF.
-
-#### 5. Kniha zálohovaných vratných obalů (Lahve & Přepravky)
-- **Store Reality**: Hospodaření s vratnými pivními lahvemi (3 Kč) a přepravkami (100 Kč) podléhá specifickému režimu DPH a vyžaduje sledování stavu vratných obalů na prodejně.
-- **Functionality**:
-  - Samostatná podrozvaha pro zálohované obaly v modulu Sklad.
-  - Výpočet stavu vratných obalů: naskladněné obaly z příjemek vs. vyplacené zálohy zákazníkům vs. vrácené obaly pivovaru.
-
 ---
 
-### Phase 2: Remote Home Administration Dashboard & Owner Back-Office 🌐
+### Phase 2: Remote Home Administration Dashboard & Owner Back-Office 🌐 (Aktivní priorita)
 
 *Rationale: Shop owners spend all day at the counter serving customers. In the evening or from home, they need a dedicated web portal on their home PC/laptop/phone to manage accounting, enter invoices, inspect stock, and adjust prices without disturbing counter operations.*
 
-#### 6. Web Dashboard pro vzdálenou správu z domova (*Vzdálená správa*)
+#### 1. Web Dashboard pro vzdálenou správu z domova (*Vzdálená správa*)
 - **Vzdálený přehled tržeb a marží**: Živý i historický přehled denních tržeb, platebních metod, marží a archivovaných Z-Reportů.
 - **Zadávání příjemek z domova**: Majitel pohodlně na notebooku naťuká faktury od dodavatelů s ARES vyhledáváním a nahráním fotky/PDF dokladu. Automatická synchronizace na pokladnu v obchodě.
 - **Vzdálená správa katalogu a cenotvorby**: Změna prodejních cen, správa dlaždic a sledování skladových zásob.
@@ -182,12 +106,12 @@ flowchart TD
 
 ### Phase 3: Zákaznický systém & Účetní můstky pro s.r.o.
 
-#### 7. Zákaznická věrnost a bezpapírové účtenky
+#### 2. Zákaznická věrnost a bezpapírové účtenky
 - CRM zákazníků (telefonní číslo / čárový kód věrnostní kartičky).
 - Bodový systém a VIP slevové hladiny.
 - Bezpapírová účtenka přes QR kód na zákaznickém displeji nebo odeslání na e-mail.
 
-#### 8. Rozšířené účetní můstky (Podvojné účetnictví pro s.r.o.)
+#### 3. Rozšířené účetní můstky (Podvojné účetnictví pro s.r.o.)
 - POHODA 2.0 XML bridge je již hotov ✅.
 - Rozšíření o exportní můstky pro: **Money S3**, **Abra Flexi (REST / XML)**, a **Helios Inuvio**.
 
@@ -195,12 +119,12 @@ flowchart TD
 
 ### Phase 4: Multi-User Scaling, Řetězce & SaaS (Backlog)
 
-#### 9. Více pokladních profilů s PIN/RFID (RBAC)
+#### 4. Více pokladních profilů s PIN/RFID (RBAC)
 - Přepínání pokladních mezi prodeji (<1s) bez restartu aplikace.
 - Role: `Pokladní`, `Vedoucí směny`, `Majitel`, `Účetní`.
 - Sledování tržeb a hotovosti v zásuvce per pokladní.
 
-#### 10. Multi-Store řetězcová synchronizace
+#### 5. Multi-Store řetězcová synchronizace
 - Lokální pokladny běží offline na SQLite; asynchronně synchronizují do centrální cloudové databáze.
 - Centrální katalog zboží, sdílené ceny, přehled skladů napříč pobočkami.
 
@@ -210,12 +134,12 @@ flowchart TD
 
 *Praktické překážky pro realizaci: V současnosti není k dispozici kompatibilní bankovní terminál pro testování storen ani Bluetooth rozhraní / BLE adaptér na pokladním PC.*
 
-#### 11. 💳 Automatické vratky platební kartou na terminál ČSOB (ČSOB Terminal Automated Reversals / Refunds)
+#### 6. 💳 Automatické vratky platební kartou na terminál ČSOB (ČSOB Terminal Automated Reversals / Refunds)
 - **Status**: ⏸️ Pozastaveno (není k dispozici kompatibilní bankovní terminál pro živé testování storno protokolu).
 - **Scope**: Automatické odeslání storno příkazu na Ingenico Move 3500 terminál přes TCP socket (`POST /api/v1/payments/card-refund`).
 - **Workflow**: Zahájení vratky v historii prodejů -> výzva terminálu "Přiložte kartu pro vrácení" -> zákazník přiloží kartu -> terminál vrátí autorizační kód (`RRN`/`AuthCode`) -> vytištění storno dokladu s referencí na terminál.
 
-#### 12. 📶 Záložní terminál SumUp (SumUp Air / Solo Integration)
+#### 7. 📶 Záložní terminál SumUp (SumUp Air / Solo Integration)
 - **Status**: ⏸️ Pozastaveno (pokladní PC nedisponuje vestavěným Bluetooth ani USB BLE adaptérem).
 - **Scope**: Připojení pokladny k SumUp Bluetooth a Cloud REST API jako levná bezdrátová alternativa platebního terminálu pro stánkový prodej nebo záložní zpracování karet.
 - **Workflow**: Výběr "Karta" se zapnutým SumUp odešle platbu do spárované čtečky; pokladna čeká na potvrzení přes polling/webhook a automaticky uzavře prodej.
@@ -248,7 +172,7 @@ Již implementované, plně ověřené a funkční moduly v systému VoltFlow PO
 - **10. Fiskální soulad (České EET 2.0)**:
   - PKCS#12 (`.p12`) podpis, RSA-SHA256 PKP, SHA-1 BKP, SOAP dispečer a asynchronní offline fronta.
 
-### Účetnictví, Hotovost & Sklad ✅
+### Účetnictví, Hotovost, Daně & Sklad ✅
 - **11. Pokladní kniha & Pohyby v zásuvce (`CashMovementModel`, `routers/cash.py`)**:
   - 1-tap záznam pohybů: **Vklad hotovosti** (Float In), **Výběr / Platba dodavateli** (Payout), **Odvod do trezoru** (Safe Drop).
   - Tisk formálních stvrzenek o pohybu hotovosti na termotiskárně.
@@ -277,6 +201,23 @@ Již implementované, plně ověřené a funkční moduly v systému VoltFlow PO
 - **21. Skladové odpisy, likvidační protokoly a normy úbytků (§ 25 ZoÚ / § 77, 78 ZDPH) (`StockWriteOffModal.jsx`, `routers/stock.py`, `services/escpos_service.py`)**:
   - Formální vyřazení zásob z důvodu exspirace, zkázy, rozbití nebo manka s automatickým posouzením daňové uznatelnosti dle procentuálních norem úbytků per kategorie.
   - Zápis `WRITE_OFF` pohybů do knihy zásob, sekvenční číslování protokolů `ODP-YYYY-XXXX` a tisk oficiálního likvidačního protokolu na termotiskárně s podpisovou kolonkou.
+- **22. Fyzická inventura k 31.12. a vyrovnání rozdílů (§ 29, 30 ZoÚ) (`PhysicalInventoryModal.jsx`, `routers/stock.py`, `services/escpos_service.py`)**:
+  - Skenování a přepočet položek do inventurního archu v reálném čase, automatické vyčíslení mank a přebytků.
+  - 1-klik zúčtování a narovnání skladu zápisem `ADJUSTMENT` pohybů, uzamčení inventury k datu a tisk oficiálního inventurního protokolu s podpisovými řádky.
+- **23. Daňové výkazy DPFO Příloha č. 1 a DPH přehled (§ 7b ZDP) (`TaxReportsModal.jsx`, `routers/reports.py`, `services/escpos_service.py`)**:
+  - Oficiální podklady pro daňové přiznání k dani z příjmů fyzických osob (příjmy ze SVČ, nákup zásob, provozní režie, počáteční a konečné zásoby).
+  - Měsíční/kvartální DPH přehled (výstupní DPH dle sazeb 21 %, 12 %, 0 % vs. vstupní DPH z příjemek).
+  - Tisk souhrnů na termotiskárně + generování a tisk standardizovaného A4 daňového protokolu.
+- **24. B2B Fakturace z pokladny s ARES ověřením (§ 29 ZoDPH) (`PaymentModal.jsx`, `ReceiptPreviewPaper.jsx`, `routers/sales.py`, `services/escpos_service.py`)**:
+  - Režim firemní faktury při platbě s bleskovým ARES lookupem (<1s) názvu firmy a sídla dle IČO.
+  - Sekvenční číslování faktur `FA-YYYY-XXXX`, tisk prodlouženého termálního daňového dokladu s rozpadem DPH i náhledem na obrazovce s možností A4 tisku.
+- **25. Kniha zálohovaných vratných obalů (`DepositPackagingModal.jsx`, `routers/stock.py`, `services/escpos_service.py`)**:
+  - Evidence pivních lahví a přepravek: naskladnění, vyplacené zálohy zákazníkům, odvoz do pivovaru a zůstatek na prodejně.
+  - Protokol o výdeji zálohovaných obalů pivovaru s tiskem stvrzenky pro řidiče.
+- **26. Server-side rekalkulace DPH — FIN-C1 (`routers/sales.py`)**:
+  - Striktní přepočet a ověření základu daně a DPH per sazba na straně serveru (`Σ(base + vat) == totalAmount`) bránící zaokrouhlovacím neshodám a klientským anomáliím.
+- **27. Databázová a EET integrita — Backend Audit P1 (`DB-C1`, `EET-C2`, `DB-H1`, `FIN-H1`)**:
+  - Sloučení číslování účtenek do atomické transakce (`DB-C1`), expirace certifikátu EET v UTC (`EET-C2`), atomické SQL odečty zásob bez race conditions (`DB-H1`) a migrace všech finančních sloupců na `Numeric(10,2)` (`FIN-H1`).
 
 ---
 
