@@ -9,67 +9,43 @@ _Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka
 
 ## 1. Immediate Active Priorities (Nejbližší úkoly k realizaci) 🎯
 
-Concrete, high-impact counter and stock management features scheduled for immediate implementation.
+Concrete, high-impact counter and payment features scheduled for immediate implementation.
 
 ```mermaid
 graph TD
-    A["1. Váhové zboží na pokladně ⚖️<br/>(Touch Weight Modal & Unit Support)"] --> B["2. VAP skladové ocenění a Hlídač marže 📈<br/>(Weighted Average Cost & Margin Monitor)"]
-    B --> C["3. Tisk regálových cenovek 🏷️<br/>(Thermal Shelf Price Tag Generator)"]
-    C --> D["4. Vratky na platební terminál ČSOB 💳<br/>(Ingenico Move 3500 TCP Reversals)"]
-    D --> E["5. Záložní terminál SumUp 📶<br/>(SumUp Air / Solo Integration)"]
+    A["1. Vratky na platební terminál ČSOB 💳<br/>(Ingenico Move 3500 TCP Reversals)"] --> B["2. Záložní terminál SumUp 📶<br/>(SumUp Air / Solo Integration)"]
+    B --> C["3. Skladové odpisy a likvidační protokoly 🗑️<br/>(Write-offs & Natural Losses § 25 ZoÚ)"]
+    
+    subgraph AuditTrack["Backend Audit Remediation Track 🛡️"]
+        Crit["P0 Critical Fixes (FIN-C1, FIN-C2, DB-C1)<br/>[EET-C1 Done ✅]"]
+        Crit -.->|"BLOCKED UNTIL COMPLETE"| NonCrit["P1 Data Integrity, P2 Correctness, P3 Hardening<br/>(Atomic DB, Codepages, Backoff, Validators)"]
+    end
 ```
 
-### 1.1 ⚖️ Váhové zboží na pokladně s dotykovým zadáním (Cashier Touch Weight Modal & Unit Support)
-- **Store Reality**: Customers bring loose produce (bananas, apples, tomatoes, bulk confectionery) to the register without pre-printed barcodes. Cashier reads weight on digital counter scale and needs to enter grams/kg directly on the touchscreen in <2 seconds.
-- **Functionality & Implementation**:
-  - **Catalog Schema**: Add `unit` (`'ks'`, `'kg'`, `'g'`) and `is_weighted: boolean` to `PresetModel` / preset editors (`PresetModal.jsx`).
-  - **1-Tap Weight Modal (`WeightEntryModal.jsx`)**:
-    - Tapping a weighted tile in `QuickPresetGrid` or entering its barcode prompts a large high-contrast touch numpad modal.
-    - Displays unit price (e.g. `39 Kč / kg`) and calculates line total in real time as weight is entered (e.g. `0.650 kg × 39 Kč = 25.35 Kč`).
-    - Quick Tare subtraction shortcuts: `[-5 g]` (plastic bag / mikrotenový sáček), `[-15 g]` (punnet / vanička), or manual tare.
-    - 1-tap `[+ Vložit do košíku]` (or pressing `Enter`).
-  - **Cart & Thermal Slip Display**: Clearly renders line item with weight and unit: `0.650 kg × 39.00 Kč = 25.35 Kč`.
-  - **Stock Deductions**: Automatically decrements stock inventory in exact decimal precision (e.g. `-0.650 kg`).
-
-### 1.2 📈 Klouzavý vážený průměr (VAP) a Hlídač marže dle koeficientu (VAP Stock Valuation & Margin Monitor)
-- **Store Reality**: Wholesale supplier prices fluctuate weekly (dairy, beer, seasonal vegetables). Overwriting `cost_price` with the latest invoice erases historical intake costs, distorts inventory valuation, and prevents the owner from tracking whether margins are shrinking.
-- **Functionality & Implementation**:
-  - **Automated VAP Recalculation (§ 25 ZoÚ / § 7b ZDP)**:
-    - In `POST /api/v1/inventory/intake`, calculate new moving weighted average cost:
-      $$VAP_{\text{new}} = \frac{(Q_{\text{stock}} \times VAP_{\text{current}}) + (Q_{\text{intake}} \times Cost_{\text{intake}})}{Q_{\text{stock}} + Q_{\text{intake}}}$$
-    - If current stock $\le 0$, new $VAP = Cost_{\text{intake}}$.
-    - Sales decrements in `stock_movements` record accurate $VAP_{\text{current}}$ at time of sale.
-  - **Supplier Price History Timeline**:
-    - Manager modal / tab in `Sklad` showing chronological intake history per item from `stock_movements` (`RECEIPT` movements: date, supplier IČO/name, document/invoice number, purchase unit price).
-    - Visual trend indicator (price rose ↗, stable →, fell ↘).
-  - **Margin Alert & Price Adjustment Assistant (Hlídač marže na bázi koeficientu)**:
-    - **Nastavitelný přirážkový koeficient ($k_{\text{marže}}$)**:
-      - Globální výchozí koeficient v nastavení prodejny (např. `1.30` = +30 % přirážka).
-      - Volitelný individuální koeficient na kartě zboží / kategorie (např. cigarety `1.08`, nápoje `1.35`, ovoce/zelenina `1.45`).
-    - **Automatická kontrola při naskladnění**:
-      - Vzorec minimální doporučené ceny s DPH:
-        $$\text{Doporučená cena}_{\text{s DPH}} = \text{roundCZK}(\text{Cena nákup}_{\text{bez DPH}} \times k_{\text{marže}} \times (1 + \text{DPH}))$$
-      - Pokud aktuální prodejní cena klesne pod doporučenou mez (nebo je pod nákupní cenou), příjemka položku zvýrazní oranžovým/červeným odznakem:
-        *"⚠️ Nízká marže: Nákup 100 Kč × koef. 1.35 = doporučeno 163 Kč s DPH (současná cena 140 Kč)"*.
-      - 1-klik tlačítko `[Nastavit doporučenou cenu]` pro okamžitou aktualizaci prodejní ceny přímo v příjemce.
-
-### 1.3 🏷️ Tisk regálových cenovek na termotiskárně (Thermal Shelf Price Tag Generator)
-- **Store Reality**: When suppliers change prices or new goods arrive, shop owners hand-write paper tags with markers.
-- **Functionality**:
-  - In `Sklad` / `Katalog`, add 1-click action: `[🏷️ Tisk cenovky]`.
-  - Spits out a compact 80mm / 58mm shelf price label on the thermal printer with:
-    - Large Bold Price (e.g. **49 Kč**)
-    - Product Name
-    - EAN-13 Barcode + Unit (e.g. 1 ks / 0.5L / 1 kg)
-    - Date of price validity.
-
-### 1.4 💳 Automatické vratky platební kartou na terminál ČSOB (ČSOB Terminal Automated Reversals / Refunds)
+### 1.1 💳 Automatické vratky platební kartou na terminál ČSOB (ČSOB Terminal Automated Reversals / Refunds)
 - **Scope**: Automated TCP card refund/storno command dispatch to the Ingenico Move 3500 terminal (`POST /api/v1/payments/card-refund`).
 - **Workflow**: Initiating refund in Sales History prompts terminal to display "Přiložte kartu pro vrácení" -> Customer taps card -> Terminal returns authorization code (`RRN`/`AuthCode`) -> Storno receipt printed with terminal reference.
 
-### 1.5 📶 Záložní terminál SumUp (SumUp Air / Solo Integration)
+### 1.2 📶 Záložní terminál SumUp (SumUp Air / Solo Integration)
 - **Scope**: Connect register to SumUp Bluetooth and Cloud REST API as an affordable, wire-free card terminal alternative for retail pop-ups or backup card processing.
 - **Workflow**: Selecting "Karta" with SumUp enabled pushes transaction to paired SumUp reader; register awaits live webhook/polling approval and auto-completes transaction.
+
+### 1.3 🗑️ Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ)
+- **Scope**: Formal stock write-off workflow (`POST /api/v1/inventory/write-off`) with reasons (`EXSPIRACE`, `ZKÁZA`, `ROZBITÍ`, `KRÁDEŽ`).
+- **Accounting & Tax**: Categorized loss norms (§ 25 ZoÚ, e.g. produce shrinkage 3-5%) with tax-deductible status vs. non-deductible taxable loss requiring VAT adjustment (§ 77/78 ZDPH). Thermal write-off protocol slip.
+
+### 1.4 🛡️ Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
+> ⚠️ **Status: BLOCKED** until the most critical legal & financial fixes (P0 Criticals) are completed and verified.
+- **Reference**: [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
+- **Phase 1 — Critical Prerequisite Gates (Must complete first)**:
+  - **EET-C1**: W3C Exclusive C14N XML-DSig signing via `lxml` + `xmlsec` (DONE ✅ in commit `be330d0`).
+  - **FIN-C1**: Server-side VAT recalculation in `routers/sales.py:create_sale` (`Σ(base + vat) == totalAmount`).
+  - **FIN-C2**: Sales immutability (block hard deletes of completed sales, enforce reverse refunds).
+  - **DB-C1**: Atomic transaction for receipt sequence number generation + sale insertion.
+- **Phase 2–4 — Subsequent Remediation (Unblocks once Criticals pass)**:
+  - **P1 (Data Integrity)**: Atomic stock decrements (`UPDATE ... SET qty = qty - ?`), `Numeric(10,2)` DB migration for monetary columns, EET certificate validity check (`not_valid_after_utc`).
+  - **P2 (Correctness)**: Codepage-aware ESC/POS thermal printing (CP852 Czech, CP1258 Vietnamese), printer auto-reconnect decorator, Decimal math in cash register.
+  - **P3 (Hardening)**: Pydantic VAT rate validators (`vat in {0, 12, 21}`), sales timestamp indexing, logo payload size limiter.
 
 ---
 
@@ -241,6 +217,15 @@ Již implementované, plně ověřené a funkční moduly v systému VoltFlow PO
   - 1-klik měsíční export vydaných faktur s rozpadem DPH 21 %, 12 %, 0 % a pokladních dokladů v oficiálním XML formátu dataPack.
 - **16. Šifrovaná záloha do cloudu (`services/cloud_sync_service.py`)**:
   - Automatické šifrované S3 / Cloudflare R2 zálohy SQLite databáze s retencí a diagnostikou.
+- **17. Váhové zboží a otevřená cena na pokladně (`WeightEntryModal.jsx`, `PresetModal.jsx`)**:
+  - Zadávání hmotnosti na dotykovém numpadu s rychlou tárou (-5 g, -15 g), volbou jednotek (`kg`, `g`, `ks`), výpočtem ceny v reálném čase a tiskem přesného množství na účtenku.
+  - Podpora otevřené ceny (Open Price) pro vážené i kusové položky bez nutnosti předchozí pevné cenotvorby.
+- **18. Klouzavý vážený průměr (VAP) a Hlídač marže (`routers/stock.py`, `StockIntakeModal.jsx`, `SupplierPriceHistoryModal.jsx`)**:
+  - Automatické přepočítávání VAP při každé příjemce (§ 25 ZoÚ), auditní chronologie nákupních cen dodavatelů a výstraha minimální marže dle nastavitelného přirážkového koeficientu ($k_{\text{marže}}$) s 1-klik aktualizací prodejní ceny.
+- **19. Tisk regálových cenovek na termotiskárně (`BarcodeLabelModal.jsx`, `services/escpos_service.py`)**:
+  - Generátor a tisk 80mm/58mm regálových cenovek se zvýrazněnou cenou, názvem, EAN čárovým kódem, jednotkovou cenou (Kč/kg, Kč/l) a datem platnosti přímo z modulu Sklad.
+- **20. W3C Exclusive C14N kanonikalizace pro EET 2.0 (`services/eet_soap.py`)**:
+  - Plná shoda s XML-DSig specifikací Finanční správy ČR pomocí standardizované C14N kanonikalizace SOAP zpráv.
 
 ---
 
