@@ -79,6 +79,13 @@ MIGRATIONS = [
     ("stock_movements", "supplier_name", "VARCHAR DEFAULT ''"),
     ("stock_movements", "document_ref", "VARCHAR DEFAULT ''"),
     ("stock_movements", "note", "VARCHAR DEFAULT ''"),
+    # Table: sales B2B fields
+    ("sales", "is_invoice", "BOOLEAN DEFAULT 0"),
+    ("sales", "invoice_number", "VARCHAR DEFAULT ''"),
+    ("sales", "customer_ico", "VARCHAR DEFAULT ''"),
+    ("sales", "customer_dic", "VARCHAR DEFAULT ''"),
+    ("sales", "customer_name", "VARCHAR DEFAULT ''"),
+    ("sales", "customer_address", "VARCHAR DEFAULT ''"),
 ]
 
 FLOAT_COLUMN_MIGRATIONS = [
