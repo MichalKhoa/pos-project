@@ -54,6 +54,15 @@ def print_receipt_logo(printer, logo_base64: str, is_58mm: bool):
     """Prints monochrome raster store logo via python-escpos image command."""
     if not logo_base64 or not hasattr(printer, 'image'):
         return
+
+    # PRN-H3: Cap logo base64 size before decode to prevent OOM
+    MAX_LOGO_B64_SIZE = 2 * 1024 * 1024  # 2MB max string length
+    if len(logo_base64) > MAX_LOGO_B64_SIZE:
+        logger.warning(
+            f"Receipt logo base64 payload exceeds size limit ({len(logo_base64)} > {MAX_LOGO_B64_SIZE} bytes), skipping logo"
+        )
+        return
+
     try:
         import base64
         import io

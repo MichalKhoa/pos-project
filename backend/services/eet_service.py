@@ -29,12 +29,15 @@ class CzechEETService:
         Calculates PKP & BKP codes, formats EET v4.1 XML message,
         and submits to Financial Administration API (or stores offline).
         """
-        eic_popl = store_config.get("eic_popl") or store_config.get("dic") or "CZ00000019"
+        eic_popl = store_config.get("eic_popl") or store_config.get("dic")
+        if not eic_popl:
+            raise ValueError("Missing DIC configuration (eic_popl or dic required for EET)")
         id_jednotky = str(store_config.get("id_jednotky") or store_config.get("id_provozovny") or "11")
         id_pokl = str(store_config.get("id_pokl") or "1")
         cert_path = store_config.get("eet_cert_path") or ""
         cert_password = store_config.get("eet_cert_password") or ""
         environment = store_config.get("eet_environment") or "playground"
+        offline_mode = bool(store_config.get("offline_mode") or store_config.get("eet_mode") == 1)
 
         current_year = datetime.now(timezone.utc).strftime("%Y")
         receipt_number = sale_data.get("receiptNumber") or sale_data.get("receipt_number") or f"{current_year}-000001"
@@ -57,7 +60,7 @@ class CzechEETService:
         )
 
         # 2. Submit WS-Security Signed SOAP XML message
-        soap_client = EETSoapClient(environment=environment)
+        soap_client = EETSoapClient(environment=environment, offline_mode=offline_mode)
         eet_res = soap_client.send_sale_to_eet(
             eic_popl=eic_popl,
             id_jednotky=id_jednotky,
@@ -70,7 +73,8 @@ class CzechEETService:
             prvni_zaslani=True,
             overeni=False,
             private_key=crypto_mgr.private_key,
-            certificate=crypto_mgr.certificate
+            certificate=crypto_mgr.certificate,
+            offline_mode=offline_mode
         )
 
         return {
@@ -86,7 +90,9 @@ class CzechEETService:
         """
         Sends verification message (overeni = true) to test server connectivity & certificate.
         """
-        eic_popl = store_config.get("eic_popl") or store_config.get("dic") or "CZ00000019"
+        eic_popl = store_config.get("eic_popl") or store_config.get("dic")
+        if not eic_popl:
+            raise ValueError("Missing DIC configuration (eic_popl or dic required for EET)")
         id_jednotky = str(store_config.get("id_jednotky") or store_config.get("id_provozovny") or "11")
         id_pokl = str(store_config.get("id_pokl") or "1")
         cert_path = store_config.get("eet_cert_path") or ""

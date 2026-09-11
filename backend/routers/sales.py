@@ -12,7 +12,7 @@ from services.eet_service import CzechEETService
 from services.security_utils import parse_iso_timestamp, round_currency
 from services.hardware_profile import get_hardware_profile
 from services.pohoda_export import generate_pohoda_datapack_xml
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from datetime import datetime
 
@@ -90,6 +90,13 @@ class SaleItemSchema(BaseModel):
     vat: int = 21
     discount_percent: Optional[float] = 0.0
     discountPercent: Optional[float] = 0.0
+
+    @field_validator("vat")
+    @classmethod
+    def validate_vat(cls, v: int) -> int:
+        if v not in {0, 12, 21}:
+            raise ValueError(f"Invalid VAT rate {v}. Statutory tiers are 0, 12, 21.")
+        return v
 
 
 
@@ -913,14 +920,16 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     config = db.query(StoreConfigModel).first()
     store_dict = {
         "storeName": config.store_name if config else "VoltFlow Store s.r.o.",
-        "eic_popl": config.dic if config else "CZ00000019",
-        "dic": config.dic if config else "CZ00000019",
+        "eic_popl": config.dic if config and config.dic else None,
+        "dic": config.dic if config and config.dic else None,
         "id_jednotky": config.id_provozovny if config else "11",
         "id_provozovny": config.id_provozovny if config else "11",
         "id_pokl": config.id_pokl if config else "1",
         "eet_cert_path": config.eet_cert_path if config else "",
         "eet_cert_password": config.get_decrypted_cert_password() if config else "",
-        "eet_environment": config.eet_environment if config else "playground"
+        "eet_environment": config.eet_environment if config else "playground",
+        "eet_mode": config.eet_mode if config else 0,
+        "offline_mode": (config.eet_mode == 1) if config else False,
     }
 
     # FIN-C1: Server-side VAT recalculation — reject tampered totals, always store server values

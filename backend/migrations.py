@@ -356,6 +356,9 @@ def migrate_monetary_columns_to_decimal(db_path: str) -> list[str]:
                     shared = ", ".join(c for c in cols_new if c in cols_old)
                     conn.execute(f"INSERT INTO {table} ({shared}) SELECT {shared} FROM _{table}_old")
                     conn.execute(f"DROP TABLE _{table}_old")
+                    if table == "sales":
+                        conn.execute("CREATE INDEX IF NOT EXISTS ix_sales_timestamp ON sales (timestamp);")
+                        conn.execute("CREATE INDEX IF NOT EXISTS ix_sales_timestamp_payment_method ON sales (timestamp, payment_method);")
                     conn.execute("COMMIT")
                     migrated.append(table)
                     logger.info(f"migrate_monetary: {table} recreated successfully")
@@ -497,6 +500,16 @@ def run_schema_migrations(engine=None):
                     logger.info("Migrated stock_movements: added ON DELETE CASCADE to foreign key")
             except Exception as e:
                 logger.warning(f"Could not migrate stock_movements foreign key: {e}")
+
+        # 6. Ensure covering index on sales.timestamp (DB-L1)
+        if "sales" in existing_tables:
+            try:
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_sales_timestamp ON sales (timestamp);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_sales_timestamp_payment_method ON sales (timestamp, payment_method);"))
+                conn.commit()
+                logger.info("Ensured covering indexes ix_sales_timestamp on sales")
+            except Exception as e:
+                logger.warning(f"Could not ensure index on sales.timestamp: {e}")
 
     if added_columns:
         logger.info(f"Schema migrations completed: {len(added_columns)} columns added: {', '.join(added_columns)}")

@@ -30,15 +30,21 @@ def resend_pending_offline_sales():
 
         logger.info(f"EET Resend Daemon: Processing batch of {len(pending_sales)} pending offline sales...")
 
+        if not config.dic:
+            logger.error("EET Resend Daemon: Missing DIC in store config")
+            raise ValueError("Missing DIC configuration (dic required for EET)")
+
         store_dict = {
-            "eic_popl": config.dic or "CZ00000019",
-            "dic": config.dic or "CZ00000019",
+            "eic_popl": config.dic,
+            "dic": config.dic,
             "id_jednotky": config.id_provozovny or "11",
             "id_provozovny": config.id_provozovny or "11",
             "id_pokl": config.id_pokl or "1",
             "eet_cert_path": config.eet_cert_path or "",
             "eet_cert_password": config.get_decrypted_cert_password() if config else "",
-            "eet_environment": config.eet_environment or "playground"
+            "eet_environment": config.eet_environment or "playground",
+            "eet_mode": getattr(config, "eet_mode", 0),
+            "offline_mode": False
         }
 
         processed_count = 0
@@ -109,7 +115,7 @@ def resend_pending_offline_sales():
     except Exception as e:
         logger.error(f"EET Resend Daemon error in resend_pending_offline_sales: {e}")
         db.rollback()
-        return 0
+        raise
     finally:
         db.close()
 

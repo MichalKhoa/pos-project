@@ -30,10 +30,11 @@ class EETSoapClient:
     """
 
 
-    def __init__(self, environment: str = "playground", timeout: float = 3.0):
+    def __init__(self, environment: str = "playground", timeout: float = 3.0, offline_mode: bool = False):
         self.environment = environment
         self.url = PRODUCTION_URL if environment == "production" else PLAYGROUND_URL
         self.timeout = timeout
+        self.offline_mode = offline_mode
 
     def _build_lxml_envelope(
         self,
@@ -220,11 +221,15 @@ class EETSoapClient:
         prvni_zaslani: bool = True,
         overeni: bool = False,
         private_key: Optional[Any] = None,
-        certificate: Optional[Any] = None
+        certificate: Optional[Any] = None,
+        offline_mode: Optional[bool] = None
     ) -> Dict[str, Any]:
         """
         Sends transaction payload to EET SOAP Endpoint and parses response POK code.
         """
+        if offline_mode is None:
+            offline_mode = self.offline_mode
+
         payload = self.build_soap_payload(
             eic_popl=eic_popl,
             id_jednotky=id_jednotky,
@@ -245,6 +250,7 @@ class EETSoapClient:
             "SOAPAction": "http://fs.gov.cz/eet/OdeslaniTrzby"
         }
 
+        network_error = None
         try:
             logger.info(f"Submitting EET v4.1 transaction to {self.url} (overeni={overeni})")
             response = requests.post(self.url, data=payload.encode("utf-8"), headers=headers, timeout=self.timeout)
@@ -278,24 +284,17 @@ class EETSoapClient:
                     }
 
             logger.warning(f"EET SOAP Endpoint returned status {response.status_code}")
+            network_error = f"EET SOAP Endpoint returned status {response.status_code}"
         except Exception as e:
             logger.warning(f"EET SOAP Request unreachable/timed out: {e}")
+            network_error = str(e)
 
-        # Simulated POK for local development, testing, or offline fallback
+        # EET-M1: Raise on network failure even in non-prod when offline_mode=False
+        if not offline_mode:
+            raise ConnectionError(f"EET communication failed: {network_error}")
+
+        # Simulated POK for offline fallback
         simulated_pok = f"{uuid.uuid4()}-ff"
-
-        # In testing/playground or unreachable server fallback mode, complete fiscalization locally with valid PKP & BKP
-        if self.environment != "production":
-            logger.info("Playground/Test testing environment: successfully fiscalized with test FIK/BKP/PKP.")
-            return {
-                "status": "EVD_OK",
-                "pok": simulated_pok,
-                "fik": simulated_pok,
-                "bkp": bkp,
-                "pkp": pkp,
-                "is_sent_to_eet": True,
-                "detail": "Testovací provoz: Tržba byla úspěšně podepsána s PKP/BKP."
-            }
 
         return {
             "status": "OFFLINE_PENDING" if not overeni else "VERIFIED_OFFLINE",
@@ -303,7 +302,8 @@ class EETSoapClient:
             "fik": simulated_pok,
             "bkp": bkp,
             "pkp": pkp,
-            "error": "Endpoint unreachable or certificate absent, fallback to local BKP/PKP"
+            "is_sent_to_eet": False,
+            "error": f"Endpoint unreachable ({network_error}), fallback to local BKP/PKP"
         }
 
     def parse_response(self, response_xml: str) -> Dict[str, Any]:
