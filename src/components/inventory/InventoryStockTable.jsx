@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check, ArrowUpDown, ArrowUp, ArrowDown, Printer } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import SupplierPriceHistoryModal from './SupplierPriceHistoryModal';
 
 export default function InventoryStockTable({
   searchTerm,
@@ -27,6 +28,7 @@ export default function InventoryStockTable({
 }) {
   const { t } = useTranslation();
 
+  const [historyModalPreset, setHistoryModalPreset] = useState(null);
   const [sortField, setSortField] = useState('name'); // 'name' | 'pinned' | 'stock' | 'minStock'
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
 
@@ -295,13 +297,34 @@ export default function InventoryStockTable({
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                      {categoryMap[preset.category] || preset.category} • <span style={{ fontWeight: '700', color: 'var(--accent-emerald)' }}>{preset.price} Kč</span> s DPH
+                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+                      <span>{categoryMap[preset.category] || preset.category} • <span style={{ fontWeight: '700', color: 'var(--accent-emerald)' }}>{preset.price} Kč</span> s DPH</span>
                       {cost > 0 && (
-                        <span style={{ marginLeft: '0.35rem', color: 'var(--text-muted)' }}>
+                        <span>
                           • Nákup: <strong style={{ color: 'var(--text-secondary)' }}>{cost.toFixed(2)} Kč</strong>
                         </span>
                       )}
+                      <button
+                        type="button"
+                        data-testid={`inventory-history-btn-${preset.id}`}
+                        onClick={() => setHistoryModalPreset(preset)}
+                        style={{
+                          background: 'rgba(59, 130, 246, 0.1)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          borderRadius: 'var(--radius-sm)',
+                          color: 'var(--accent-blue)',
+                          cursor: 'pointer',
+                          padding: '1px 5px',
+                          fontSize: '0.72rem',
+                          fontWeight: '800',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.2rem'
+                        }}
+                        title={t('inventory.history_tooltip') || 'Historie nákupních cen dodavatelů'}
+                      >
+                        <span>📈</span>
+                      </button>
                     </div>
                   </td>
 
@@ -346,9 +369,14 @@ export default function InventoryStockTable({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
                       <input
                         type="number"
+                        step="any"
                         className="input-field"
                         value={currentStock}
-                        onChange={e => handleStockChange(preset.id, 'stockQuantity', parseInt(e.target.value || '0', 10))}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value || '0');
+                          const rounded = isNaN(val) ? 0 : Math.round(val * 1000) / 1000;
+                          handleStockChange(preset.id, 'stockQuantity', rounded);
+                        }}
                         style={{ width: '70px', height: '38px', textAlign: 'center', fontWeight: '900', fontSize: '1rem', color: isOut ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : 'inherit' }}
                       />
                       <button
@@ -417,7 +445,7 @@ export default function InventoryStockTable({
                           flexShrink: 0
                         }}
                         onClick={() => onPrintLabel && onPrintLabel(preset)}
-                        title={t('inventory.print_label_tooltip') || 'Vytisknout štítek s čárovým kódem'}
+                        title={t('inventory.print_shelf_label') || 'Vytisknout regálovou cenovku'}
                       >
                         <Printer size={16} />
                       </button>
@@ -476,6 +504,13 @@ export default function InventoryStockTable({
           </tbody>
         </table>
       </div>
+
+      {/* Supplier Price History Modal */}
+      <SupplierPriceHistoryModal
+        isOpen={!!historyModalPreset}
+        onClose={() => setHistoryModalPreset(null)}
+        preset={historyModalPreset}
+      />
     </div>
   );
 }

@@ -16,6 +16,12 @@ class IntakeItemSchema(BaseModel):
     preset_id: str
     quantity: float
     cost_price: float
+    new_selling_price: Optional[float] = None
+    newSellingPrice: Optional[float] = None
+
+    @property
+    def effective_new_selling_price(self) -> Optional[float]:
+        return self.new_selling_price if self.new_selling_price is not None else self.newSellingPrice
 
 
 class StockIntakeSchema(BaseModel):
@@ -69,9 +75,23 @@ def submit_stock_intake(payload: StockIntakeSchema, db: Session = Depends(get_db
                     detail=f"Položka se zadaným ID {item.preset_id} nebyla nalezena."
                 )
 
-            # Update preset stock quantity and cost price
-            preset.stock_quantity = round((preset.stock_quantity or 0.0) + item.quantity, 3)
-            preset.cost_price = round(item.cost_price, 2)
+            # Moving Weighted Average Cost (VAP) formula (§ 25 ZoÚ / § 7b ZDP)
+            cur_stock = preset.stock_quantity or 0.0
+            cur_cost = preset.cost_price or 0.0
+            intake_qty = item.quantity
+            intake_cost = item.cost_price
+            if cur_stock <= 0:
+                new_vap = intake_cost
+            else:
+                new_vap = ((cur_stock * cur_cost) + (intake_qty * intake_cost)) / (cur_stock + intake_qty)
+
+            preset.stock_quantity = round(cur_stock + intake_qty, 3)
+            preset.cost_price = round(new_vap, 2)
+
+            # Atomic selling price update if provided
+            sell_price = item.effective_new_selling_price
+            if sell_price is not None and sell_price > 0:
+                preset.price = round(sell_price, 2)
 
             # Create StockMovementModel entry
             movement = StockMovementModel(
@@ -154,3 +174,63 @@ def get_stock_movements(
         )
         for r in results
     ]
+
+
+class PriceHistoryItemSchema(BaseModel):
+    id: str
+    timestamp: datetime
+    supplier_ico: Optional[str] = None
+    supplier_name: Optional[str] = None
+    document_ref: Optional[str] = None
+    unit_cost: float
+    quantity_delta: float
+    note: Optional[str] = None
+    trend: str
+
+    model_config = {"from_attributes": True}
+
+
+@router.get("/price-history/{preset_id}", response_model=List[PriceHistoryItemSchema])
+def get_price_history(preset_id: str, db: Session = Depends(get_db)):
+    """
+    Fetch chronological purchase price history for a given preset (§ 25 ZoÚ).
+    Calculates cost trend relative to previous receipt ('stable', 'rose', 'fell').
+    """
+    movements = (
+        db.query(StockMovementModel)
+        .filter(
+            StockMovementModel.preset_id == preset_id,
+            StockMovementModel.movement_type == "RECEIPT"
+        )
+        .order_by(StockMovementModel.timestamp.asc())
+        .all()
+    )
+
+    history = []
+    prev_cost = None
+    for idx, m in enumerate(movements):
+        unit_cost = float(m.unit_cost or 0.0)
+        if idx == 0 or prev_cost is None:
+            trend = "stable"
+        elif unit_cost > prev_cost:
+            trend = "rose"
+        elif unit_cost < prev_cost:
+            trend = "fell"
+        else:
+            trend = "stable"
+        prev_cost = unit_cost
+
+        history.append(
+            PriceHistoryItemSchema(
+                id=m.id,
+                timestamp=m.timestamp,
+                supplier_ico=m.supplier_ico,
+                supplier_name=m.supplier_name,
+                document_ref=m.document_ref,
+                unit_cost=unit_cost,
+                quantity_delta=m.quantity_delta,
+                note=m.note,
+                trend=trend
+            )
+        )
+    return history

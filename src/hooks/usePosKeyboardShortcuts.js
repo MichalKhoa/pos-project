@@ -21,7 +21,8 @@ export function usePosKeyboardShortcuts({
   isPriceCheckActive = false,
   onTogglePriceCheck = null,
   onInspectPrice = null,
-  onPriceCheckUnknown = null
+  onPriceCheckUnknown = null,
+  onOpenWeightModal = null
 }) {
   const barcodeBufferRef = useRef('');
   const lastCharTimeRef = useRef(0);
@@ -153,14 +154,27 @@ export function usePosKeyboardShortcuts({
             }
           }
 
-          // 3. Standard EAN Barcode Matching
+          // 3. Standard EAN Barcode & PLU Matching
           const matchedPreset = (presets || []).find(p => {
-            if (!p || !p.barcode) return false;
-            const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
-            return codes.includes(buffer.toLowerCase());
+            if (!p) return false;
+            if (p.barcode) {
+              const codes = String(p.barcode).split(',').map(b => b.trim().toLowerCase());
+              if (codes.includes(buffer.toLowerCase())) return true;
+            }
+            if (p.plu && String(p.plu).toLowerCase() === buffer.toLowerCase()) return true;
+            if (p.sku && String(p.sku).toLowerCase() === buffer.toLowerCase()) return true;
+            return false;
           });
 
           if (matchedPreset) {
+            const isWeightedItem = matchedPreset.isWeighted || matchedPreset.is_weighted;
+            if (isWeightedItem && onOpenWeightModal) {
+              soundFx.playScanChime();
+              onOpenWeightModal(matchedPreset);
+              if (itemMultiplier !== 1) setItemMultiplier(1);
+              return;
+            }
+
             const qty = Math.max(1, Math.abs(itemMultiplier || 1));
             handleAddToCart({ ...matchedPreset, quantity: qty });
             soundFx.playScanChime();
@@ -273,5 +287,5 @@ export function usePosKeyboardShortcuts({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, presets, onUnknownBarcode, onBarcodeScanned, onReceiptScanned, isPriceCheckActive, onTogglePriceCheck, onInspectPrice, onPriceCheckUnknown]);
+  }, [activeTab, keypadAmount, setKeypadAmount, setItemMultiplier, cartItems, paymentModalMethod, setPaymentModalMethod, storeConfig, isAppLocked, handleAddToCart, itemMultiplier, presets, onUnknownBarcode, onBarcodeScanned, onReceiptScanned, isPriceCheckActive, onTogglePriceCheck, onInspectPrice, onPriceCheckUnknown, onOpenWeightModal]);
 }

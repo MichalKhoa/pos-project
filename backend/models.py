@@ -100,6 +100,9 @@ class StoreConfigModel(Base):
     # Default POS Language Configuration ('cs', 'vi', 'en')
     default_language = Column(String, default="cs")
 
+    # Default Margin Coefficient for Cost-Plus pricing
+    default_margin_coefficient = Column(Float, default=1.30, nullable=False)
+
     # Register Layout Configuration ('left' or 'right' for cart column)
     cart_position = Column(String, default="left")
 
@@ -220,6 +223,9 @@ class PresetModel(Base):
     image_url = Column(String, nullable=True)
     show_in_presets = Column(Boolean, default=True, nullable=False)
     cost_price = Column(Float, default=0.0, nullable=False)
+    unit = Column(String, default="ks", nullable=False)
+    is_weighted = Column(Boolean, default=False, nullable=False)
+    margin_coefficient = Column(Float, nullable=True)
 
     stock_movements = relationship("StockMovementModel", back_populates="preset", cascade="all, delete-orphan", passive_deletes=True)
 

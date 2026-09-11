@@ -56,6 +56,7 @@ class StoreConfigSchema(BaseModel):
     presetDensity: Optional[str] = None
     presetButtonStyle: Optional[str] = None
     showPresetVat: Optional[bool] = None
+    defaultMarginCoefficient: Optional[float] = None
 
     # Receipt Customization
     receiptTopMargin: Optional[int] = None
@@ -135,6 +136,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "customerDisplayAutoSleep": getattr(config, 'customer_display_auto_sleep', True) if getattr(config, 'customer_display_auto_sleep', None) is not None else True,
         "customerDisplayStandbyDelay": getattr(config, 'customer_display_standby_delay', 10) or 10,
         "showPresetVat": getattr(config, 'show_preset_vat', True) if getattr(config, 'show_preset_vat', None) is not None else True,
+        "defaultMarginCoefficient": getattr(config, 'default_margin_coefficient', 1.30) if getattr(config, 'default_margin_coefficient', None) is not None else 1.30,
         # Receipt Overhaul Fields
         "receiptTopMargin": getattr(config, 'receipt_top_margin', 1) if getattr(config, 'receipt_top_margin', None) is not None else 1,
         "receiptBottomMargin": getattr(config, 'receipt_bottom_margin', 3) if getattr(config, 'receipt_bottom_margin', None) is not None else 3,
@@ -217,6 +219,7 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.defaultLanguage is not None: config.default_language = data.defaultLanguage
     if data.cartPosition is not None: config.cart_position = data.cartPosition
     if data.showPresetVat is not None: config.show_preset_vat = data.showPresetVat
+    if data.defaultMarginCoefficient is not None: config.default_margin_coefficient = data.defaultMarginCoefficient
     # Receipt Overhaul Fields
     if data.receiptTopMargin is not None: config.receipt_top_margin = data.receiptTopMargin
     if data.receiptBottomMargin is not None: config.receipt_bottom_margin = data.receiptBottomMargin

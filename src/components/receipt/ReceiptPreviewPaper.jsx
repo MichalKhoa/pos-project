@@ -263,6 +263,10 @@ export default function ReceiptPreviewPaper({
           {resolvedItems.map((item, idx) => {
             const itemDisc = item.discountPercent || 0;
             const unitPrice = item.price * (1 - itemDisc / 100);
+            const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
+            const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
+            const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
+
             return (
               <tr key={idx}>
                 <td style={{ wordBreak: 'break-word', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
@@ -276,6 +280,11 @@ export default function ReceiptPreviewPaper({
                   >
                     {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
                   </div>
+                  {isWeighted && (
+                    <div style={{ fontSize: '9.5px', color: '#555' }}>
+                      {qtyFormatted} {unitStr} × {parseFloat(item.price).toFixed(2)} Kč
+                    </div>
+                  )}
                   {showSku && (item.barcode || item.sku) && (
                     <div style={{ fontSize: '9.92px', color: '#777' }}>Kód: {item.barcode || item.sku}</div>
                   )}
@@ -283,7 +292,9 @@ export default function ReceiptPreviewPaper({
                     <div className="receipt-item-sub">DPH {item.vat}%</div>
                   )}
                 </td>
-                <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>{item.quantity}</td>
+                <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
+                  {qtyFormatted}{isWeighted ? ' ' + unitStr : ''}
+                </td>
                 <td style={{
                   textAlign: 'right',
                   fontWeight: boldPrices ? '900' : '400',

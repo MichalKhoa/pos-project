@@ -20,9 +20,11 @@ function parseSaleItems(saleData) {
     id: item.id || item.item_id || `item-${idx}`,
     name: item.name || item.title || item.item_name || 'Položka',
     price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
-    quantity: item.quantity !== undefined ? parseInt(item.quantity, 10) : (item.qty !== undefined ? parseInt(item.qty, 10) : 1),
+    quantity: item.quantity !== undefined ? parseFloat(item.quantity) : (item.qty !== undefined ? parseFloat(item.qty) : 1),
     vat: item.vat !== undefined ? parseInt(item.vat, 10) : (item.vat_rate !== undefined ? parseInt(item.vat_rate, 10) : 21),
-    discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0)
+    discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0),
+    unit: item.unit || (item.isWeighted || item.is_weighted ? 'kg' : undefined),
+    isWeighted: !!(item.isWeighted || item.is_weighted || item.unit === 'kg' || item.unit === 'g')
   }));
 }
 

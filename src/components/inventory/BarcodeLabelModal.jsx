@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Printer, X, Plus, Minus, Check, FileText } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Printer, X, Plus, Minus, Check, FileText, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { generateBarcodeSVG } from '../../utils/barcodeGenerator';
 import { printBarcodeLabelBackend } from '../../api/posApi';
@@ -8,33 +8,73 @@ export default function BarcodeLabelModal({
   isOpen,
   onClose,
   preset,
+  presets,
   storeConfig = {}
 }) {
   const { t } = useTranslation();
+
+  const itemsToPrint = useMemo(() => {
+    if (Array.isArray(presets) && presets.length > 0) {
+      return presets;
+    }
+    if (preset) {
+      return [preset];
+    }
+    return [];
+  }, [preset, presets]);
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [copies, setCopies] = useState(1);
   const [isPrinting, setIsPrinting] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
 
-  if (!isOpen || !preset) return null;
+  const getTodayCzechDate = () => {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
 
-  const barcodeVal = String(preset.barcode || preset.id || '').trim();
+  const [validityDate, setValidityDate] = useState(getTodayCzechDate);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedIndex(0);
+      setValidityDate(getTodayCzechDate());
+      setStatusMsg(null);
+    }
+  }, [isOpen, preset, presets]);
+
+  if (!isOpen || itemsToPrint.length === 0) return null;
+
+  const currentPreset = itemsToPrint[selectedIndex] || itemsToPrint[0];
+  const isBatch = itemsToPrint.length > 1;
+
+  const barcodeVal = String(currentPreset.barcode || currentPreset.id || '').trim();
   const barcodeData = generateBarcodeSVG(barcodeVal, { height: 50, barWidth: 2, quietZone: 10 });
   const storeName = storeConfig.storeName || storeConfig.store_name || 'VoltFlow POS';
+
+  const isWeighted = Boolean(currentPreset.isWeighted || currentPreset.is_weighted || currentPreset.unit === 'kg');
+  const unit = currentPreset.unit || 'ks';
 
   const handleEscposPrint = async () => {
     setIsPrinting(true);
     setStatusMsg(null);
     try {
-      const res = await printBarcodeLabelBackend(preset, copies, storeConfig);
-      if (res && res.success) {
-        setStatusMsg({ type: 'success', text: t('inventory.label_printed_success') || `Vytištěno ${copies} ks štítků na termální tiskárně.` });
-        setTimeout(() => {
-          setStatusMsg(null);
-          onClose();
-        }, 1800);
-      } else {
-        setStatusMsg({ type: 'error', text: t('inventory.label_printed_error') || 'Nepodařilo se vytisknout štítek na tiskárně.' });
+      for (const p of itemsToPrint) {
+        await printBarcodeLabelBackend(p, copies, storeConfig, validityDate);
       }
+      setStatusMsg({
+        type: 'success',
+        text: isBatch
+          ? (t('inventory.batch_labels_printed_success') || `Vytištěno ${itemsToPrint.length} cenovek (${copies}x) na termální tiskárně.`)
+          : (t('inventory.label_printed_success') || `Vytištěno ${copies} ks štítků na termální tiskárně.`)
+      });
+      setTimeout(() => {
+        setStatusMsg(null);
+        onClose();
+      }, 1800);
     } catch (err) {
       setStatusMsg({ type: 'error', text: err.message });
     } finally {
@@ -67,7 +107,7 @@ export default function BarcodeLabelModal({
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-lg)',
           width: '100%',
-          maxWidth: '460px',
+          maxWidth: '500px',
           maxHeight: '90dvh',
           display: 'flex',
           flexDirection: 'column',
@@ -103,10 +143,14 @@ export default function BarcodeLabelModal({
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                {t('inventory.label_modal_title') || 'Tisk čárového štítku'}
+                {isBatch
+                  ? (t('inventory.batch_shelf_tags_title') || 'Hromadný tisk regálových cenovek')
+                  : (t('inventory.label_modal_title') || 'Tisk regálové cenovky')}
               </h3>
               <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                {preset.name}
+                {isBatch
+                  ? `${itemsToPrint.length} ${t('inventory.items_in_batch') || 'položek v dávce'}`
+                  : currentPreset.name}
               </p>
             </div>
           </div>
@@ -119,7 +163,12 @@ export default function BarcodeLabelModal({
               border: 'none',
               color: 'var(--text-muted)',
               cursor: 'pointer',
-              padding: '0.25rem'
+              padding: '0.25rem',
+              minWidth: '40px',
+              minHeight: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
             <X size={20} />
@@ -148,13 +197,74 @@ export default function BarcodeLabelModal({
             </div>
           )}
 
-          {/* Realistic Label Card Preview */}
+          {/* Batch Navigation Selector */}
+          {isBatch && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.5rem 0.75rem',
+                background: 'var(--bg-input)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                fontSize: '0.84rem',
+                fontWeight: '700'
+              }}
+            >
+              <button
+                type="button"
+                data-testid="batch-prev-btn"
+                disabled={selectedIndex === 0}
+                onClick={() => setSelectedIndex(prev => Math.max(0, prev - 1))}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: selectedIndex === 0 ? 'var(--text-muted)' : 'var(--accent-blue)',
+                  cursor: selectedIndex === 0 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px'
+                }}
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                <Layers size={15} style={{ color: 'var(--accent-blue)' }} />
+                <span>
+                  {selectedIndex + 1} / {itemsToPrint.length}: <strong style={{ color: 'var(--accent-blue)' }}>{currentPreset.name}</strong>
+                </span>
+              </div>
+
+              <button
+                type="button"
+                data-testid="batch-next-btn"
+                disabled={selectedIndex >= itemsToPrint.length - 1}
+                onClick={() => setSelectedIndex(prev => Math.min(itemsToPrint.length - 1, prev + 1))}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: selectedIndex >= itemsToPrint.length - 1 ? 'var(--text-muted)' : 'var(--accent-blue)',
+                  cursor: selectedIndex >= itemsToPrint.length - 1 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px'
+                }}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+
+          {/* Realistic Shelf Label Card Preview */}
           <div
             id="printable-barcode-label"
+            data-testid="printable-barcode-label"
             style={{
               background: '#ffffff',
               color: '#000000',
-              padding: '1rem',
+              padding: '1.25rem 1rem',
               borderRadius: 'var(--radius-md)',
               border: '2px dashed #cbd5e1',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -168,14 +278,51 @@ export default function BarcodeLabelModal({
             <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {storeName}
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: '900', color: '#0f172a', margin: '0.25rem 0 0.4rem 0', lineHeight: 1.2 }}>
-              {preset.name}
+            <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#0f172a', margin: '0.35rem 0 0.25rem 0', lineHeight: 1.2 }}>
+              {currentPreset.name}
             </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#047857', marginBottom: '0.4rem' }}>
-              {(preset.price || 0).toFixed(2)} Kč
-              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginLeft: '0.35rem' }}>
+
+            {/* Selling Price with Unit and VAT */}
+            <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#047857', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+              <span>{(currentPreset.price || 0).toFixed(2)} Kč</span>
+              <span data-testid="label-unit" style={{ fontSize: '0.88rem', fontWeight: '700', color: '#475569' }}>
+                / {unit}
+              </span>
+              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b' }}>
                 s DPH
               </span>
+            </div>
+
+            {/* Weighted Item Price per 1 kg */}
+            {isWeighted && (
+              <div
+                data-testid="label-weighted-price"
+                style={{
+                  fontSize: '0.88rem',
+                  fontWeight: '800',
+                  color: '#047857',
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  padding: '2px 10px',
+                  borderRadius: '999px',
+                  marginBottom: '0.35rem'
+                }}
+              >
+                Cena za 1 kg: {(currentPreset.price || 0).toFixed(2)} Kč
+              </div>
+            )}
+
+            {/* Price Validity Date */}
+            <div
+              data-testid="label-validity-date"
+              style={{
+                fontSize: '0.74rem',
+                fontWeight: '700',
+                color: '#64748b',
+                marginBottom: '0.45rem'
+              }}
+            >
+              Platnost od: {validityDate}
             </div>
 
             {/* SVG Barcode Graphic */}
@@ -211,101 +358,106 @@ export default function BarcodeLabelModal({
             )}
 
             <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-              {preset.category} • DPH {preset.vat || 21}%
+              {currentPreset.category} • DPH {currentPreset.vat !== undefined ? currentPreset.vat : 21}%
             </div>
           </div>
 
-          {/* Copies Control */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-              {t('inventory.label_copies') || 'Počet kopií k vytištění'}:
-            </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <button
-                type="button"
-                onClick={() => setCopies(prev => Math.max(1, prev - 1))}
+          {/* Controls: Validity Date & Copies */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', alignItems: 'end' }}>
+            {/* Validity Date Input */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                {t('inventory.label_validity_date') || 'Platnost ceny od:'}
+              </label>
+              <input
+                type="text"
+                data-testid="validity-date-input"
+                value={validityDate}
+                onChange={e => setValidityDate(e.target.value)}
+                placeholder="DD.MM.YYYY"
                 style={{
-                  width: '42px',
+                  width: '100%',
                   height: '42px',
+                  padding: '0 0.75rem',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
                   background: 'var(--bg-input)',
                   color: 'var(--text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                <Minus size={18} />
-              </button>
-
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={copies}
-                onChange={e => setCopies(Math.max(1, parseInt(e.target.value || '1', 10)))}
-                style={{
-                  width: '70px',
-                  height: '42px',
-                  textAlign: 'center',
-                  fontSize: '1.15rem',
-                  fontWeight: '900',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-input)',
-                  color: 'var(--text-primary)'
+                  fontSize: '0.9rem',
+                  fontWeight: '700',
+                  boxSizing: 'border-box'
                 }}
               />
+            </div>
 
-              <button
-                type="button"
-                onClick={() => setCopies(prev => Math.min(100, prev + 1))}
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-input)',
-                  color: 'var(--text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                <Plus size={18} />
-              </button>
+            {/* Copies Control */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                {t('inventory.label_copies') || 'Kopií na položku'}:
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setCopies(prev => Math.max(1, prev - 1))}
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Minus size={18} />
+                </button>
 
-              {/* Quick count chips */}
-              <div style={{ display: 'flex', gap: '0.35rem', marginLeft: 'auto' }}>
-                {[1, 2, 5, 10].map(cnt => (
-                  <button
-                    key={cnt}
-                    type="button"
-                    onClick={() => setCopies(cnt)}
-                    style={{
-                      height: '42px',
-                      padding: '0 0.65rem',
-                      borderRadius: 'var(--radius-md)',
-                      border: copies === cnt ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
-                      background: copies === cnt ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-input)',
-                      color: copies === cnt ? 'var(--accent-blue)' : 'var(--text-secondary)',
-                      fontSize: '0.84rem',
-                      fontWeight: '800',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {cnt}x
-                  </button>
-                ))}
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={copies}
+                  onChange={e => setCopies(Math.max(1, parseInt(e.target.value || '1', 10)))}
+                  style={{
+                    width: '60px',
+                    height: '42px',
+                    textAlign: 'center',
+                    fontSize: '1.05rem',
+                    fontWeight: '900',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setCopies(prev => Math.min(100, prev + 1))}
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Plus size={18} />
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer Actions */}
         <div
           style={{
             padding: '0.85rem 1.25rem',
@@ -343,6 +495,7 @@ export default function BarcodeLabelModal({
 
           <button
             type="button"
+            data-testid="thermal-print-submit-btn"
             onClick={handleEscposPrint}
             disabled={isPrinting}
             style={{
@@ -365,7 +518,9 @@ export default function BarcodeLabelModal({
             <span>
               {isPrinting
                 ? (t('common.saving') || 'Tisknu...')
-                : `${t('inventory.label_thermal_print') || 'Vytisknout štítek'} (${copies}x)`}
+                : isBatch
+                  ? `${t('inventory.batch_print_btn') || 'Vytisknout cenovky'} (${itemsToPrint.length} ks × ${copies}x)`
+                  : `${t('inventory.label_thermal_print') || 'Vytisknout štítek'} (${copies}x)`}
             </span>
           </button>
         </div>
@@ -373,3 +528,4 @@ export default function BarcodeLabelModal({
     </div>
   );
 }
+

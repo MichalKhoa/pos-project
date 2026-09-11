@@ -58,7 +58,7 @@ export default function CartItemInspector({
   const effectiveUnitPrice = (parseFloat(item.price) || 0) * (1 - currentDisc / 100);
   const lineTotal = effectiveUnitPrice * (item.quantity || 1);
 
-  const isWeighed = item?.unit === 'kg' || item?.unit === 'g';
+  const isWeighed = item?.unit === 'kg' || item?.unit === 'g' || item?.isWeighted || item?.is_weighted;
   const qtyStep = isWeighed ? 0.1 : 1;
 
   const handleQtyChange = (newQty) => {
@@ -113,7 +113,7 @@ export default function CartItemInspector({
               {item.name}
             </div>
             <div className="inspector-subtitle">
-              {parseFloat(item.price).toFixed(2)} Kč / ks • DPH {itemVat}%
+              {parseFloat(item.price).toFixed(2)} Kč / {item?.unit || (isWeighed ? 'kg' : 'ks')} • DPH {itemVat}%
             </div>
           </div>
           <button

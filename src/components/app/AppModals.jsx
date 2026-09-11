@@ -15,8 +15,14 @@ import CustomItemModal from '../CustomItemModal';
 import ParkedCartsDrawer from '../keypad/ParkedCartsDrawer';
 import CashDrawerMovementModal from '../cash/CashDrawerMovementModal';
 import ZReportModal from '../cash/ZReportModal';
+import WeightEntryModal from '../presets/WeightEntryModal';
 
 export default function AppModals({
+  // Weight Entry Modal (Váhové zboží)
+  weightModalPreset = null,
+  setWeightModalPreset = null,
+  onAddToCartFromWeightModal = null,
+
   // Custom Item Modal (2-column mode / quick action)
   isCustomItemModalOpen = false,
   setIsCustomItemModalOpen = null,
@@ -293,6 +299,23 @@ export default function AppModals({
             if (onShiftClosed) onShiftClosed(res);
           }}
           storeConfig={storeConfig}
+        />
+      )}
+
+      {/* Weight Entry Modal (Váhové zboží) */}
+      {weightModalPreset && (
+        <WeightEntryModal
+          isOpen={!!weightModalPreset}
+          preset={weightModalPreset}
+          onClose={() => {
+            if (setWeightModalPreset) setWeightModalPreset(null);
+          }}
+          onAddToCart={(item) => {
+            if (onAddToCartFromWeightModal) {
+              onAddToCartFromWeightModal(item);
+            }
+            if (setWeightModalPreset) setWeightModalPreset(null);
+          }}
         />
       )}
     </>

@@ -4,6 +4,7 @@ import logging
 import threading
 import time
 from datetime import datetime
+from typing import Optional
 
 logger = logging.getLogger("pos-escpos")
 
@@ -335,30 +336,46 @@ class ESCPOSPrinterService:
                         # Line Items
                         name_w = 14 if is_58mm else 28
                         for item in sale_data.get('items', []):
-                            qty = item.get('quantity', 1)
+                            qty = float(item.get('quantity', 1))
                             disc = item.get('discountPercent') or item.get('discount_percent') or 0
                             price = item.get('price', 0) * (1 - disc / 100)
                             tot = price * qty
                             tot_str = f"{tot:.0f} Kč"
                             name_raw = item.get('name', '')
+                            unit_val = item.get('unit') or ('kg' if (item.get('is_weighted') or item.get('isWeighted')) else 'ks')
+                            is_weighted = bool(item.get('is_weighted') or item.get('isWeighted') or (qty % 1 != 0) or (unit_val in ['kg', 'g']))
 
-                            printer.set(align='left', font='a', width=1, height=1, bold=bold_items)
-                            if len(name_raw) > name_w:
+                            if is_weighted:
+                                # Weighted or decimal quantity item: format "  {qty:.3f} {unit} × {price:.2f} Kč" and right-aligned total
+                                printer.set(align='left', font='a', width=1, height=1, bold=bold_items)
                                 write_receipt_text(printer, f"{name_raw[:line_width]}\n", strip_diacritics, encoding)
+
+                                detail_line = f"  {qty:.3f} {unit_val} × {price:.2f} Kč"
+                                tot_val_str = f"{tot:.2f} Kč" if tot % 1 != 0 else f"{tot:.0f} Kč"
+                                space_w = max(1, line_width - len(detail_line) - len(tot_val_str))
+                                formatted_calc = f"{detail_line}{' ' * space_w}{tot_val_str}\n"
+
                                 printer.set(align='left', font='a', width=1, height=1, bold=bold_prices)
-                                if is_58mm:
-                                    printer.text(f"{'':<14} {qty:^4} {tot_str:>12}\n")
-                                else:
-                                    printer.text(f"{'':<28} {qty:^5} {tot_str:>13}\n")
+                                write_receipt_text(printer, formatted_calc, strip_diacritics, encoding)
                             else:
-                                if is_58mm:
-                                    write_receipt_text(printer, f"{name_raw:<14}", strip_diacritics, encoding)
+                                qty_int = int(qty)
+                                printer.set(align='left', font='a', width=1, height=1, bold=bold_items)
+                                if len(name_raw) > name_w:
+                                    write_receipt_text(printer, f"{name_raw[:line_width]}\n", strip_diacritics, encoding)
                                     printer.set(align='left', font='a', width=1, height=1, bold=bold_prices)
-                                    printer.text(f" {qty:^4} {tot_str:>12}\n")
+                                    if is_58mm:
+                                        printer.text(f"{'':<14} {qty_int:^4} {tot_str:>12}\n")
+                                    else:
+                                        printer.text(f"{'':<28} {qty_int:^5} {tot_str:>13}\n")
                                 else:
-                                    write_receipt_text(printer, f"{name_raw:<28}", strip_diacritics, encoding)
-                                    printer.set(align='left', font='a', width=1, height=1, bold=bold_prices)
-                                    printer.text(f" {qty:^5} {tot_str:>13}\n")
+                                    if is_58mm:
+                                        write_receipt_text(printer, f"{name_raw:<14}", strip_diacritics, encoding)
+                                        printer.set(align='left', font='a', width=1, height=1, bold=bold_prices)
+                                        printer.text(f" {qty_int:^4} {tot_str:>12}\n")
+                                    else:
+                                        write_receipt_text(printer, f"{name_raw:<28}", strip_diacritics, encoding)
+                                        printer.set(align='left', font='a', width=1, height=1, bold=bold_prices)
+                                        printer.text(f" {qty_int:^5} {tot_str:>13}\n")
 
                             printer.set(align='left', font='a', width=1, height=1, bold=False)
                             if show_sku and (item.get('barcode') or item.get('sku')):
@@ -1052,59 +1069,85 @@ class ESCPOSPrinterService:
             logger.error(f"Failed to open cash drawer: {err}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
 
-    def print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1) -> dict:
+    def print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1, validity_date: Optional[str] = None) -> dict:
         """
         Prints one or more physical ESC/POS thermal barcode shelf labels.
         Each label contains store name, item name, price, native hardware barcode, and code text.
         """
         with _hardware_printer_lock:
-            return self._do_print_barcode_label(item_data, store_config, copies)
+            return self._do_print_barcode_label(item_data, store_config, copies, validity_date)
 
-    def _do_print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1) -> dict:
+    def _do_print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1, validity_date: Optional[str] = None) -> dict:
         copies = max(1, min(100, int(copies or 1)))
         store_name = store_config.get("storeName", store_config.get("store_name", "VoltFlow POS"))
         item_name = item_data.get("name", "Položka")
         price = float(item_data.get("price", 0.0))
         vat = item_data.get("vat", 21)
         barcode_val = str(item_data.get("barcode") or item_data.get("id") or "").strip()
+        unit = item_data.get("unit") or ("kg" if (item_data.get("is_weighted") or item_data.get("isWeighted")) else "ks")
+        is_weighted = bool(item_data.get("is_weighted") or item_data.get("isWeighted") or unit in ["kg", "g"])
+
+        # Determine date of price validity: Platnost od: DD.MM.YYYY
+        val_date_raw = validity_date or item_data.get("validityDate") or item_data.get("validity_date")
+        if val_date_raw:
+            try:
+                if "." in str(val_date_raw) and len(str(val_date_raw).split(".")) == 3:
+                    validity_str = str(val_date_raw).strip()
+                else:
+                    dt = datetime.fromisoformat(str(val_date_raw).replace("Z", "+00:00"))
+                    validity_str = dt.strftime("%d.%m.%Y")
+            except Exception:
+                validity_str = str(val_date_raw).strip()
+        else:
+            validity_str = datetime.now().strftime("%d.%m.%Y")
 
         logger.info(f"Printing {copies} barcode label(s) for '{item_name}' (barcode: {barcode_val}) via {self.interface_type}")
 
         try:
             printer = None
-            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                from escpos.printer import Win32Raw
-                target_name = self.address
-                if not target_name or target_name.startswith('/dev/'):
-                    target_name = ""
-                    try:
-                        import win32print
-                        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                        pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                        if pos_printers:
-                            target_name = pos_printers[0]
-                        elif printers:
-                            target_name = printers[0]
-                    except Exception:
-                        pass
-                printer = Win32Raw(target_name)
-            elif self.interface_type == "USB":
-                from escpos.printer import Usb, File
-                if os.path.exists(self.address):
-                    printer = File(self.address)
-                else:
-                    printer = Usb(0x04b8, 0x0e15, 0)
-            elif self.interface_type == "NETWORK" and self.address:
-                from escpos.printer import Network
-                printer = Network(self.address, port=9100, timeout=3.0)
-            elif self.interface_type == "SERIAL" and self.address:
-                from escpos.printer import Serial
-                printer = Serial(self.address, baudrate=9600)
+            try:
+                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                    from escpos.printer import Win32Raw
+                    target_name = self.address
+                    if not target_name or target_name.startswith('/dev/'):
+                        target_name = ""
+                        try:
+                            import win32print
+                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                            if pos_printers:
+                                target_name = pos_printers[0]
+                            elif printers:
+                                target_name = printers[0]
+                        except Exception:
+                            pass
+                    printer = Win32Raw(target_name)
+                elif self.interface_type == "USB":
+                    from escpos.printer import Usb, File
+                    if os.path.exists(self.address):
+                        printer = File(self.address)
+                    else:
+                        printer = Usb(0x04b8, 0x0e15, 0)
+                elif self.interface_type == "NETWORK" and self.address:
+                    from escpos.printer import Network
+                    printer = Network(self.address, port=9100, timeout=3.0)
+                elif self.interface_type == "SERIAL" and self.address:
+                    from escpos.printer import Serial
+                    printer = Serial(self.address, baudrate=9600)
+            except Exception as conn_err:
+                logger.info(f"Physical printer offline ({conn_err}), using simulation fallback.")
+                printer = None
 
             if printer:
                 try:
                     if hasattr(printer, 'open'):
                         printer.open("VoltFlow_POS_Label_Print")
+                except Exception as open_err:
+                    logger.warning(f"Failed to open label printer device ({open_err}), falling back to simulation.")
+                    printer = None
+
+            if printer:
+                try:
 
                     for _ in range(copies):
                         printer.set(align='center', font='a')
@@ -1118,6 +1161,12 @@ class ESCPOSPrinterService:
                         # Price prominent
                         printer.set(align='center', bold=True, double_height=True, double_width=True)
                         printer.text(f"{price:.2f} Kč\n")
+
+                        # Unit and weighted price reference
+                        printer.set(align='center', font='b')
+                        printer.text(f"1 {unit}\n")
+                        if is_weighted:
+                            printer.text(f"Cena za 1 kg: {price:.2f} Kč\n")
 
                         # Barcode
                         printer.set(align='center')
@@ -1135,10 +1184,11 @@ class ESCPOSPrinterService:
                         
                         printer.set(align='center', font='b')
                         printer.text(f"DPH {vat}%\n")
+                        printer.text(f"Platnost od: {validity_str}\n")
                         printer.text("\n\n")
                         printer.cut()
 
-                    return {"success": True, "physical": True, "status": "PRINTED", "copies": copies}
+                    return {"success": True, "physical": True, "status": "PRINTED", "copies": copies, "validityDate": validity_str, "unit": unit, "isWeighted": is_weighted}
                 finally:
                     try:
                         if hasattr(printer, 'close'):
@@ -1146,8 +1196,12 @@ class ESCPOSPrinterService:
                     except Exception:
                         pass
 
-            print(f"--- BARCODE LABEL SIMULATED: {item_name} | {price:.2f} Kč | {barcode_val} (x{copies}) ---")
-            return {"success": True, "physical": False, "status": "SIMULATED", "copies": copies}
+            sim_str = f"--- BARCODE LABEL SIMULATED: {item_name} | {price:.2f} Kč | 1 {unit}"
+            if is_weighted:
+                sim_str += f" | Cena za 1 kg: {price:.2f} Kč"
+            sim_str += f" | Platnost od: {validity_str} | {barcode_val} (x{copies}) ---"
+            print(sim_str)
+            return {"success": True, "physical": False, "status": "SIMULATED", "copies": copies, "validityDate": validity_str, "unit": unit, "isWeighted": is_weighted}
         except Exception as err:
             logger.error(f"Failed to print barcode label: {err}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}

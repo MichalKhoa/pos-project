@@ -177,6 +177,26 @@ export default function StoreProfileSection({
 
         <div className="settings-field">
           <label className="settings-label">
+            {t('settings.default_margin_coefficient') || 'Výchozí přirážkový koeficient marže (k_marže)'}
+          </label>
+          <input
+            type="number"
+            step="0.05"
+            min="1.0"
+            className="settings-input"
+            value={config.defaultMarginCoefficient !== undefined && config.defaultMarginCoefficient !== null ? config.defaultMarginCoefficient : 1.30}
+            placeholder="1.30"
+            onChange={e => setConfig({ ...config, defaultMarginCoefficient: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+            onBlur={e => handleBlurField('defaultMarginCoefficient', parseFloat(e.target.value) || 1.30)}
+            style={{ fontFamily: 'var(--font-mono)' }}
+          />
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            {t('settings.default_margin_desc') || 'např. 1.30 pro 30% obchodní přirážku'}
+          </span>
+        </div>
+
+        <div className="settings-field">
+          <label className="settings-label">
             {t('settings.bank_account_iban') || 'Bankovní účet (IBAN pro okamžité QR platby)'}
           </label>
           <input

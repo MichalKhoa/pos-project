@@ -81,7 +81,8 @@ function formatQty(qty) {
 
 function formatQtyWithUnit(item) {
   const formatted = formatQty(item.quantity);
-  const defaultUnit = Number.isInteger(Number(item.quantity)) ? 'ks' : 'kg';
+  const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted;
+  const defaultUnit = (isWeighted || !Number.isInteger(Number(item.quantity))) ? 'kg' : 'ks';
   const unit = item.unit || defaultUnit;
   return `${formatted} ${unit}`;
 }
@@ -430,6 +431,8 @@ function Cart({
             const lineTotal = effectiveUnitPrice * item.quantity;
             const isItemReturn = item.price < 0 || lineTotal < 0;
             const isSelected = selectedItemId === item.id;
+            const isItemWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted;
+            const step = isItemWeighted ? 0.1 : 1;
 
             return (
               <div
@@ -470,10 +473,9 @@ function Cart({
                         className="cart-stepper-btn cart-stepper-btn-minus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const step = item.unit === 'kg' ? 0.1 : 1;
                           onUpdateQty(item.id, Math.round((item.quantity - step) * 1000) / 1000);
                         }}
-                        title={item.unit === 'kg' ? "-0.1 kg" : "-1 ks"}
+                        title={isItemWeighted ? "-0.1 kg" : "-1 ks"}
                       >
                         <Minus size={15} strokeWidth={2.5} />
                       </button>
@@ -483,10 +485,9 @@ function Cart({
                         className="cart-stepper-btn cart-stepper-btn-plus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const step = item.unit === 'kg' ? 0.1 : 1;
                           onUpdateQty(item.id, Math.round((item.quantity + step) * 1000) / 1000);
                         }}
-                        title={item.unit === 'kg' ? "+0.1 kg" : "+1 ks"}
+                        title={isItemWeighted ? "+0.1 kg" : "+1 ks"}
                       >
                         <Plus size={15} strokeWidth={2.5} />
                       </button>
@@ -510,21 +511,30 @@ function Cart({
                 {/* Row 2 Bottom: Unit Price breakdown (Left) & Line Total Price (Right) */}
                 <div className="cart-item-row-bottom">
                   <div className="cart-item-unit-details">
-                    {itemDisc > 0 ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <s style={{ opacity: 0.5, fontSize: '0.72rem' }}>
-                          {parseFloat(item.price).toFixed(2)} Kč
-                        </s>
-                        <span style={{ color: isItemReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800' }}>
-                          {effectiveUnitPrice.toFixed(2)} Kč
-                        </span>
+                    {isItemWeighted ? (
+                      <span>
+                        {formatQty(item.quantity)} {item.unit || 'kg'} × {effectiveUnitPrice.toFixed(2)} Kč = {lineTotal.toFixed(2)} Kč
+                        <span style={{ opacity: 0.6, fontSize: '0.78rem' }}> ({t('cart.vat')} {itemVat}%)</span>
                       </span>
                     ) : (
-                      <span style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined, fontWeight: isItemReturn ? '800' : 'normal' }}>
-                        {parseFloat(item.price).toFixed(2)} Kč
-                      </span>
+                      <>
+                        {itemDisc > 0 ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <s style={{ opacity: 0.5, fontSize: '0.72rem' }}>
+                              {parseFloat(item.price).toFixed(2)} Kč
+                            </s>
+                            <span style={{ color: isItemReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800' }}>
+                              {effectiveUnitPrice.toFixed(2)} Kč
+                            </span>
+                          </span>
+                        ) : (
+                          <span style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined, fontWeight: isItemReturn ? '800' : 'normal' }}>
+                            {parseFloat(item.price).toFixed(2)} Kč
+                          </span>
+                        )}
+                        <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)} ({t('cart.vat')} {itemVat}%)</span>
+                      </>
                     )}
-                    <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)} ({t('cart.vat')} {itemVat}%)</span>
                   </div>
 
                   <div className="cart-item-line-total-price" style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined }}>

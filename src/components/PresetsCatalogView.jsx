@@ -3,6 +3,7 @@ import { Tag, Plus, Search, Edit3, Trash2, Grid, List, Calculator, Settings2 } f
 import { DEFAULT_CATEGORIES } from '../data/initialData';
 import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
+import BarcodeLabelModal from './inventory/BarcodeLabelModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { getPresetIconComponent } from '../utils/presetIcons';
 
@@ -24,6 +25,7 @@ export default function PresetsCatalogView({
   const [activeModal, setActiveModal] = useState(null); // 'add' | 'edit' | null
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState(null);
+  const [shelfLabelPreset, setShelfLabelPreset] = useState(null);
 
   const filteredPresets = presets.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,6 +207,16 @@ export default function PresetsCatalogView({
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <button
+                          type="button"
+                          className="nav-tab"
+                          style={{ padding: '0.35rem 0.75rem', display: 'inline-flex', marginRight: '0.5rem', alignItems: 'center', gap: '0.25rem' }}
+                          onClick={() => setShelfLabelPreset(preset)}
+                          title={t('presets.print_shelf_label_tooltip') || 'Vytisknout regálovou cenovku'}
+                        >
+                          <span>🏷️</span>
+                          <span>{t('presets.print_shelf_label') || 'Tisk cenovky'}</span>
+                        </button>
+                        <button
                           className="nav-tab"
                           style={{ padding: '0.35rem 0.75rem', display: 'inline-flex', marginRight: '0.5rem' }}
                           onClick={() => handleOpenEditModal(preset)}
@@ -248,6 +260,31 @@ export default function PresetsCatalogView({
                         )}
                       </div>
                     )}
+                    <button
+                      type="button"
+                      data-testid={`grid-print-label-btn-${preset.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShelfLabelPreset(preset);
+                      }}
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        border: '1px solid rgba(59, 130, 246, 0.25)',
+                        borderRadius: '4px',
+                        color: 'var(--accent-blue)',
+                        cursor: 'pointer',
+                        padding: '2px 6px',
+                        fontSize: '0.72rem',
+                        fontWeight: '800',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.2rem'
+                      }}
+                      title={t('presets.print_shelf_label_tooltip') || 'Vytisknout regálovou cenovku'}
+                    >
+                      <span>🏷️</span>
+                      <span>{t('presets.print_shelf_label') || 'Tisk cenovky'}</span>
+                    </button>
                     <Edit3 size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   </div>
                 </div>
@@ -300,6 +337,14 @@ export default function PresetsCatalogView({
           onSelectCategory={(id) => setActiveCategory(id)}
         />
       )}
+
+      {/* Shelf Label Print Modal */}
+      <BarcodeLabelModal
+        isOpen={!!shelfLabelPreset}
+        preset={shelfLabelPreset}
+        onClose={() => setShelfLabelPreset(null)}
+        storeConfig={storeConfig}
+      />
     </div>
   );
 }

@@ -31,6 +31,23 @@ class PresetSchema(BaseModel):
     imageUrl: Optional[str] = None
     showInPresets: Optional[bool] = True
     costPrice: Optional[float] = 0.0
+    unit: Optional[str] = 'ks'
+    isWeighted: Optional[bool] = False
+    marginCoefficient: Optional[float] = None
+    is_weighted: Optional[bool] = None
+    margin_coefficient: Optional[float] = None
+
+    @property
+    def effective_is_weighted(self) -> bool:
+        if self.isWeighted is not None:
+            return self.isWeighted
+        if self.is_weighted is not None:
+            return self.is_weighted
+        return False
+
+    @property
+    def effective_margin_coefficient(self) -> Optional[float]:
+        return self.marginCoefficient if self.marginCoefficient is not None else self.margin_coefficient
 
 class RestockPresetSchema(BaseModel):
     quantity_add: float
@@ -47,13 +64,20 @@ DEFAULT_CATEGORIES_DATA = [
 ]
 
 DEFAULT_PRESETS_DATA = [
-    {"id": "preset-clothes", "name": "Oblečení", "icon": "Shirt", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
-    {"id": "preset-shoes", "name": "Boty", "icon": "Footprints", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
-    {"id": "preset-socks", "name": "Ponožky", "icon": "Layers", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
-    {"id": "preset-underwear", "name": "Spodní prádlo", "icon": "Heart", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
-    {"id": "preset-home", "name": "Domácí potřeby", "icon": "Home", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
-    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "icon": "Package", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""},
-    {"id": "preset-open-2", "name": "Dárkový Poukaz", "icon": "Gift", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": ""}
+    {"id": "preset-clothes", "name": "Oblečení", "icon": "Shirt", "price": 0, "vat": 21, "category": "all", "color": "#3b82f6", "is_open_price": True, "is_general": True, "position": 0, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    {"id": "preset-shoes", "name": "Boty", "icon": "Footprints", "price": 0, "vat": 21, "category": "all", "color": "#8b5cf6", "is_open_price": True, "is_general": True, "position": 1, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    {"id": "preset-socks", "name": "Ponožky", "icon": "Layers", "price": 0, "vat": 21, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 2, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    {"id": "preset-underwear", "name": "Spodní prádlo", "icon": "Heart", "price": 0, "vat": 21, "category": "all", "color": "#ec4899", "is_open_price": True, "is_general": True, "position": 3, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    {"id": "preset-home", "name": "Domácí potřeby", "icon": "Home", "price": 0, "vat": 21, "category": "all", "color": "#06b6d4", "is_open_price": True, "is_general": True, "position": 4, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    {"id": "preset-open-1", "name": "Volný Prodej Zboží", "icon": "Package", "price": 0, "vat": 21, "category": "all", "color": "#f59e0b", "is_open_price": True, "is_general": True, "position": 5, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    {"id": "preset-open-2", "name": "Dárkový Poukaz", "icon": "Gift", "price": 0, "vat": 0, "category": "all", "color": "#f43f5e", "is_open_price": True, "is_general": True, "position": 6, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "ks", "is_weighted": False, "cost_price": 0.0},
+    # Realistic test items for Tasks 1.1, 1.2, 1.3
+    {"id": "preset-banana", "name": "Banány volné", "icon": "Banana", "price": 39.90, "cost_price": 24.50, "vat": 12, "category": "all", "color": "#eab308", "is_open_price": False, "is_general": False, "position": 7, "stock_quantity": 45.5, "track_stock": True, "min_stock_alert": 10.0, "barcode": "2900001000000", "unit": "kg", "is_weighted": True, "margin_coefficient": 1.35},
+    {"id": "preset-apples", "name": "Jablka Gala", "icon": "Apple", "price": 42.00, "cost_price": 26.00, "vat": 12, "category": "all", "color": "#ef4444", "is_open_price": False, "is_general": False, "position": 8, "stock_quantity": 32.0, "track_stock": True, "min_stock_alert": 10.0, "barcode": "2900002000000", "unit": "kg", "is_weighted": True, "margin_coefficient": 1.35},
+    {"id": "preset-open-weighted", "name": "Volné ovoce / zelenina (váha)", "icon": "Scale", "price": 0.0, "cost_price": 0.0, "vat": 12, "category": "all", "color": "#10b981", "is_open_price": True, "is_general": True, "position": 9, "stock_quantity": 0.0, "track_stock": False, "min_stock_alert": 5.0, "barcode": "", "unit": "kg", "is_weighted": True, "margin_coefficient": None},
+    {"id": "preset-bread-roll", "name": "Rohlík tukový", "icon": "Wheat", "price": 3.50, "cost_price": 2.10, "vat": 12, "category": "all", "color": "#d97706", "is_open_price": False, "is_general": False, "position": 10, "stock_quantity": 150.0, "track_stock": True, "min_stock_alert": 30.0, "barcode": "8594000001234", "unit": "ks", "is_weighted": False, "margin_coefficient": 1.40},
+    {"id": "preset-coffee-beans", "name": "Zrnková Káva Espresso 1kg", "icon": "Coffee", "price": 249.00, "cost_price": 145.00, "vat": 21, "category": "all", "color": "#78350f", "is_open_price": False, "is_general": False, "position": 11, "stock_quantity": 12.0, "track_stock": True, "min_stock_alert": 5.0, "barcode": "8594000005678", "unit": "ks", "is_weighted": False, "margin_coefficient": 1.40},
+    {"id": "preset-plzen-beer", "name": "Pilsner Urquell 0.5l", "icon": "Beer", "price": 36.90, "cost_price": 23.50, "vat": 21, "category": "all", "color": "#15803d", "is_open_price": False, "is_general": False, "position": 12, "stock_quantity": 72.0, "track_stock": True, "min_stock_alert": 24.0, "barcode": "8594000009999", "unit": "ks", "is_weighted": False, "margin_coefficient": 1.35}
 ]
 
 # --- CATEGORIES ENDPOINTS ---
@@ -136,7 +160,11 @@ def get_presets(db: Session = Depends(get_db)):
                     min_stock_alert=p.get("min_stock_alert", 5.0),
                     barcode=p.get("barcode", ""),
                     icon=p.get("icon", None),
-                    image_url=p.get("imageUrl", None)
+                    image_url=p.get("imageUrl", None),
+                    cost_price=p.get("cost_price", 0.0),
+                    unit=p.get("unit", "ks"),
+                    is_weighted=p.get("is_weighted", False),
+                    margin_coefficient=p.get("margin_coefficient", None)
                 )
                 db.add(db_preset)
         db.commit()
@@ -160,7 +188,10 @@ def get_presets(db: Session = Depends(get_db)):
             "icon": getattr(p, 'icon', None),
             "imageUrl": getattr(p, 'image_url', None),
             "showInPresets": p.show_in_presets if getattr(p, 'show_in_presets', None) is not None else True,
-            "costPrice": getattr(p, 'cost_price', 0.0) or 0.0
+            "costPrice": getattr(p, 'cost_price', 0.0) or 0.0,
+            "unit": getattr(p, 'unit', 'ks') or 'ks',
+            "isWeighted": getattr(p, 'is_weighted', False) if getattr(p, 'is_weighted', None) is not None else False,
+            "marginCoefficient": getattr(p, 'margin_coefficient', None)
         }
         for p in presets
     ]
@@ -199,7 +230,10 @@ def get_preset_by_barcode(code: str, db: Session = Depends(get_db)):
         "icon": getattr(preset, 'icon', None),
         "imageUrl": getattr(preset, 'image_url', None),
         "showInPresets": preset.show_in_presets if getattr(preset, 'show_in_presets', None) is not None else True,
-        "costPrice": getattr(preset, 'cost_price', 0.0) or 0.0
+        "costPrice": getattr(preset, 'cost_price', 0.0) or 0.0,
+        "unit": getattr(preset, 'unit', 'ks') or 'ks',
+        "isWeighted": getattr(preset, 'is_weighted', False) if getattr(preset, 'is_weighted', None) is not None else False,
+        "marginCoefficient": getattr(preset, 'margin_coefficient', None)
     }
 
 
@@ -222,6 +256,9 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         existing.barcode = preset.barcode or ""
         existing.show_in_presets = preset.showInPresets if preset.showInPresets is not None else True
         existing.cost_price = preset.costPrice if preset.costPrice is not None else 0.0
+        existing.unit = preset.unit or "ks"
+        existing.is_weighted = preset.effective_is_weighted
+        existing.margin_coefficient = preset.effective_margin_coefficient
         if hasattr(existing, 'icon'): existing.icon = preset.icon
         if hasattr(existing, 'image_url'): existing.image_url = preset.imageUrl
     else:
@@ -242,7 +279,10 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
             icon=preset.icon,
             image_url=preset.imageUrl,
             show_in_presets=preset.showInPresets if preset.showInPresets is not None else True,
-            cost_price=preset.costPrice if preset.costPrice is not None else 0.0
+            cost_price=preset.costPrice if preset.costPrice is not None else 0.0,
+            unit=preset.unit or "ks",
+            is_weighted=preset.effective_is_weighted,
+            margin_coefficient=preset.effective_margin_coefficient
         )
         db.add(existing)
     db.commit()
@@ -264,7 +304,10 @@ def save_preset(preset: PresetSchema, db: Session = Depends(get_db)):
         "icon": getattr(existing, 'icon', None),
         "imageUrl": getattr(existing, 'image_url', None),
         "showInPresets": getattr(existing, 'show_in_presets', True),
-        "costPrice": getattr(existing, 'cost_price', 0.0)
+        "costPrice": getattr(existing, 'cost_price', 0.0),
+        "unit": getattr(existing, 'unit', 'ks') or 'ks',
+        "isWeighted": getattr(existing, 'is_weighted', False) if getattr(existing, 'is_weighted', None) is not None else False,
+        "marginCoefficient": getattr(existing, 'margin_coefficient', None)
     }
 
 
@@ -289,6 +332,9 @@ def bulk_save_presets(presets: List[PresetSchema], db: Session = Depends(get_db)
             existing.barcode = p.barcode or ""
             existing.show_in_presets = p.showInPresets if p.showInPresets is not None else True
             existing.cost_price = p.costPrice if p.costPrice is not None else 0.0
+            existing.unit = p.unit or "ks"
+            existing.is_weighted = p.effective_is_weighted
+            existing.margin_coefficient = p.effective_margin_coefficient
             if hasattr(existing, 'icon'): existing.icon = p.icon
             if hasattr(existing, 'image_url'): existing.image_url = p.imageUrl
         else:
@@ -309,7 +355,10 @@ def bulk_save_presets(presets: List[PresetSchema], db: Session = Depends(get_db)
                 icon=p.icon,
                 image_url=p.imageUrl,
                 show_in_presets=p.showInPresets if p.showInPresets is not None else True,
-                cost_price=p.costPrice if p.costPrice is not None else 0.0
+                cost_price=p.costPrice if p.costPrice is not None else 0.0,
+                unit=p.unit or "ks",
+                is_weighted=p.effective_is_weighted,
+                margin_coefficient=p.effective_margin_coefficient
             )
             db.add(new_item)
         saved_count += 1

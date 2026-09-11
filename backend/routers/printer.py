@@ -122,6 +122,7 @@ class PrintBarcodeLabelRequest(BaseModel):
     itemData: dict
     storeConfig: dict = {}
     copies: int = 1
+    validityDate: Optional[str] = None
 
 
 @router.post("/print-label")
@@ -136,7 +137,7 @@ def print_barcode_label(req: PrintBarcodeLabelRequest, db: Session = Depends(get
         store_config["storeName"] = config.store_name
 
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
-    res = printer_service.print_barcode_label(req.itemData, store_config, copies=req.copies)
+    res = printer_service.print_barcode_label(req.itemData, store_config, copies=req.copies, validity_date=req.validityDate)
 
     if isinstance(res, dict) and not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to print barcode label"))

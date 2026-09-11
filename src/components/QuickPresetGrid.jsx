@@ -9,6 +9,7 @@ import { usePresetDragDrop } from '../hooks/usePresetDragDrop';
 import CategoryFilterBar from './presets/CategoryFilterBar.jsx';
 import PresetTileCard from './presets/PresetTileCard.jsx';
 import OpenPriceModal from './presets/OpenPriceModal.jsx';
+import WeightEntryModal from './presets/WeightEntryModal.jsx';
 
 function QuickPresetGrid({
   presets,
@@ -31,7 +32,8 @@ function QuickPresetGrid({
   isPriceCheckActive = false,
   onTogglePriceCheck = null,
   onInspectPrice = null,
-  onOpenCustomModal = null
+  onOpenCustomModal = null,
+  onOpenWeightModal = null
 }) {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -43,6 +45,7 @@ function QuickPresetGrid({
   const [editingPreset, setEditingPreset] = useState(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [isInternalCustomModalOpen, setIsInternalCustomModalOpen] = useState(false);
+  const [internalWeightPreset, setInternalWeightPreset] = useState(null);
 
   const handleOpenCustomItem = () => {
     if (onOpenCustomModal) {
@@ -172,6 +175,23 @@ function QuickPresetGrid({
     const parsedKeypad = parseFloat(currentKeypad);
     const hasNumericKeypad = !isNaN(parsedKeypad) && parsedKeypad !== 0;
 
+    if (preset.isWeighted || preset.is_weighted) {
+      const presetWithPrice = hasNumericKeypad
+        ? { ...preset, initialUnitPrice: Math.abs(parsedKeypad) }
+        : preset;
+
+      if (hasNumericKeypad && onClearKeypadAmount) {
+        onClearKeypadAmount();
+      }
+
+      if (onOpenWeightModal) {
+        onOpenWeightModal(presetWithPrice);
+      } else {
+        setInternalWeightPreset(presetWithPrice);
+      }
+      return;
+    }
+
     if (hasNumericKeypad) {
       const customPrice = isReturn ? -Math.abs(parsedKeypad) : Math.abs(parsedKeypad);
       onAddToCart({
@@ -202,7 +222,7 @@ function QuickPresetGrid({
     if (setItemMultiplier && currentMultiplier !== 1) {
       setItemMultiplier(1);
     }
-  }, [onAddToCart, onClearKeypadAmount, setItemMultiplier, onInspectPrice, isDraggingRef]);
+  }, [onAddToCart, onClearKeypadAmount, setItemMultiplier, onInspectPrice, isDraggingRef, onOpenWeightModal]);
 
   const handleOpenPriceSubmit = (e) => {
     e.preventDefault();
@@ -576,6 +596,19 @@ function QuickPresetGrid({
           initialMultiplier={itemMultiplier}
           autoOpenTouchKeyboard={storeConfig?.autoOpenTouchKeyboard}
           storeConfig={storeConfig}
+        />
+      )}
+
+      {/* Weight Entry Modal (when used standalone without external coordinator) */}
+      {internalWeightPreset && (
+        <WeightEntryModal
+          isOpen={!!internalWeightPreset}
+          preset={internalWeightPreset}
+          onClose={() => setInternalWeightPreset(null)}
+          onAddToCart={(item) => {
+            onAddToCart(item);
+            setInternalWeightPreset(null);
+          }}
         />
       )}
     </div>

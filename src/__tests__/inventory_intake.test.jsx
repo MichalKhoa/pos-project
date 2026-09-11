@@ -133,8 +133,9 @@ describe('Stock Intake & ARES Modal Tests', () => {
 
     // Change second quantity to 10
     const updatedSpinbuttons = screen.getAllByRole('spinbutton');
-    // Row 1 qty: index 0, cost: index 1. Row 2 qty: index 2, cost: index 3.
-    fireEvent.change(updatedSpinbuttons[2], { target: { value: '10' } });
+    // Row 1 qty: index 0, cost: index 1, new_selling_price: index 2.
+    // Row 2 qty: index 3, cost: index 4, new_selling_price: index 5.
+    fireEvent.change(updatedSpinbuttons[3], { target: { value: '10' } });
 
     // Verify summary calculation:
     // Coffee: 5 * 150 = 750 Kč
@@ -156,12 +157,20 @@ describe('Stock Intake & ARES Modal Tests', () => {
         document_ref: 'FAK-2026-001',
         note: null,
         items: [
-          { preset_id: 'prod-coffee-1', quantity: 5, cost_price: 150 },
-          { preset_id: 'prod-tea-1', quantity: 10, cost_price: 55 }
+          { preset_id: 'prod-coffee-1', quantity: 5, cost_price: 150, new_selling_price: null },
+          { preset_id: 'prod-tea-1', quantity: 10, cost_price: 55, new_selling_price: null }
         ]
       });
       expect(handleIntakeCompleted).toHaveBeenCalledWith(2);
-      expect(handleClose).toHaveBeenCalled();
     });
+
+    // Verify post-intake confirmation screen appears with shelf tag print button
+    expect(screen.getByText(/Příjemka byla úspěšně naskladněna!/i)).toBeInTheDocument();
+    expect(screen.getByTestId('print-intake-shelf-labels-btn')).toBeInTheDocument();
+    
+    // Close modal via success view close button
+    const closeSuccessBtn = screen.getByTestId('close-intake-success-btn');
+    fireEvent.click(closeSuccessBtn);
+    expect(handleClose).toHaveBeenCalled();
   });
 });

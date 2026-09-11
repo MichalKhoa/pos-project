@@ -540,12 +540,16 @@ export async function printDailySummaryBackend(summaryData, storeConfig, openDra
 /**
  * Send print barcode shelf label request to backend hardware thermal printer service
  */
-export async function printBarcodeLabelBackend(itemData, copies = 1, storeConfig = {}) {
+export async function printBarcodeLabelBackend(itemData, copies = 1, storeConfig = {}, validityDate = null) {
   try {
+    const payload = { itemData, storeConfig, copies };
+    if (validityDate) {
+      payload.validityDate = validityDate;
+    }
     const res = await fetch(`${API_BASE_URL}/printer/print-label`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemData, storeConfig, copies })
+      body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -1533,6 +1537,19 @@ export async function getStockMovements(presetId = null, limit = 100, offset = 0
   }
   return await res.json();
 }
+
+/**
+ * Fetch chronological purchase price history for a given preset (§ 25 ZoÚ)
+ */
+export async function fetchSupplierPriceHistory(presetId) {
+  const res = await fetch(`${API_BASE_URL}/inventory/price-history/${encodeURIComponent(presetId)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Price history error ${res.status}`);
+  }
+  return await res.json();
+}
+
 
 
 

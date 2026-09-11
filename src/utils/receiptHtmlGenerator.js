@@ -93,16 +93,20 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
     const effPrice = item.price * (1 - disc / 100);
     const itemName = escapeHtml(item.name);
     const barcode = escapeHtml(item.barcode || item.sku || '');
+    const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
+    const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
+    const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
+    const lineTotalStr = (effPrice * item.quantity).toFixed(2);
 
     if (isA4) {
       return `
         <tr style="border-bottom: 1px solid #e5e7eb;">
           <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
           <td style="padding: 6px 8px; text-align: left; font-weight: ${boldItems ? '700' : '500'};">${itemName} ${showSku && barcode ? `<span style="font-size:9px; color:#6b7280;">(${barcode})</span>` : ''}</td>
-          <td style="padding: 6px 8px; text-align: center;">${item.quantity} ks</td>
+          <td style="padding: 6px 8px; text-align: center;">${qtyFormatted} ${unitStr}</td>
           <td style="padding: 6px 8px; text-align: right;">${item.price.toFixed(2)} Kč</td>
           <td style="padding: 6px 8px; text-align: center;">${item.vat}%</td>
-          <td style="padding: 6px 8px; text-align: right; font-weight: ${boldPrices ? '800' : '600'};">${(effPrice * item.quantity).toFixed(2)} Kč</td>
+          <td style="padding: 6px 8px; text-align: right; font-weight: ${boldPrices ? '800' : '600'};">${lineTotalStr} Kč</td>
         </tr>
       `;
     }
@@ -113,11 +117,12 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
           <div style="font-weight: ${boldItems ? '800' : '500'}; font-size: ${is58mm ? '9.5px' : '12px'}; color: #000;">
             ${itemName} ${showDisc && disc > 0 ? `<span style="font-style: italic; color: #dc2626;">(-${disc}%)</span>` : ''}
           </div>
+          ${isWeighted ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">${qtyFormatted} ${unitStr} × ${item.price.toFixed(2)} Kč</div>` : ''}
           ${showSku && barcode ? `<div style="font-size: ${is58mm ? '7px' : '8px'}; color: #777;">Kód: ${barcode}</div>` : ''}
           ${itemDensity === 'standard' && showVat ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">DPH ${item.vat}%</div>` : ''}
         </td>
-        <td style="text-align: center; width: 14%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: 800; font-size: ${is58mm ? '9.5px' : '12px'};">${item.quantity}</td>
-        <td style="text-align: right; width: 34%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: ${boldPrices ? '900' : '500'}; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${(effPrice * item.quantity).toFixed(0)}&nbsp;Kč</td>
+        <td style="text-align: center; width: 14%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: 800; font-size: ${is58mm ? '9.5px' : '12px'};">${qtyFormatted}${isWeighted ? ' ' + unitStr : ''}</td>
+        <td style="text-align: right; width: 34%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: ${boldPrices ? '900' : '500'}; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${lineTotalStr}&nbsp;Kč</td>
       </tr>
     `;
   }).join('');

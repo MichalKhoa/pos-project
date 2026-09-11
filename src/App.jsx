@@ -165,6 +165,7 @@ export default function App() {
   const [isCustomItemModalOpen, setIsCustomItemModalOpen] = useState(false);
   const [isCashMovementModalOpen, setIsCashMovementModalOpen] = useState(false);
   const [isZReportModalOpen, setIsZReportModalOpen] = useState(false);
+  const [weightModalPreset, setWeightModalPreset] = useState(null);
   const [currentShift, setCurrentShift] = useState(null);
 
   const fetchShiftData = useCallback(async () => {
@@ -655,7 +656,8 @@ export default function App() {
     isPriceCheckActive,
     onTogglePriceCheck: handleTogglePriceCheck,
     onInspectPrice: handleInspectPrice,
-    onPriceCheckUnknown: handleInspectPriceUnknown
+    onPriceCheckUnknown: handleInspectPriceUnknown,
+    onOpenWeightModal: (preset) => setWeightModalPreset(preset)
   });
 
   const handleOpenCustomDiscountModal = useCallback((item = null) => {
@@ -958,6 +960,7 @@ export default function App() {
                         onTogglePriceCheck={handleTogglePriceCheck}
                         onInspectPrice={handleInspectPrice}
                         onOpenCustomModal={() => setIsCustomItemModalOpen(true)}
+                        onOpenWeightModal={(preset) => setWeightModalPreset(preset)}
                       />
                     </div>
                   </div>
@@ -1171,6 +1174,9 @@ export default function App() {
         onShiftClosed={() => {
           fetchShiftData();
         }}
+        weightModalPreset={weightModalPreset}
+        setWeightModalPreset={setWeightModalPreset}
+        onAddToCartFromWeightModal={handleAddToCart}
       />
     </div>
   );

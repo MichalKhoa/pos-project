@@ -57,10 +57,14 @@ MIGRATIONS = [
     ("presets", "min_stock_alert", "FLOAT DEFAULT 5.0"),
     ("presets", "barcode", "VARCHAR DEFAULT ''"),
     ("presets", "cost_price", "FLOAT DEFAULT 0.0"),
+    ("presets", "unit", "VARCHAR DEFAULT 'ks'"),
+    ("presets", "is_weighted", "BOOLEAN DEFAULT 0"),
+    ("presets", "margin_coefficient", "FLOAT DEFAULT NULL"),
     # Table: store_config
     ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
     ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),
     ("store_config", "receipt_show_barcode", "BOOLEAN DEFAULT 1"),
+    ("store_config", "default_margin_coefficient", "FLOAT DEFAULT 1.30"),
     # Table: cash_movements
     ("cash_movements", "shift_id", "VARCHAR DEFAULT ''"),
     ("cash_movements", "reason", "VARCHAR DEFAULT ''"),

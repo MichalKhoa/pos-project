@@ -38,7 +38,10 @@ export default function PresetModal({
     trackStock: !defaultShowInPresets,
     stockQuantity: 0,
     minStockAlert: 5,
-    showInPresets: defaultShowInPresets
+    showInPresets: defaultShowInPresets,
+    unit: 'ks',
+    isWeighted: false,
+    marginCoefficient: ''
   });
 
   const [scannedFeedback, setScannedFeedback] = useState(false);
@@ -51,6 +54,12 @@ export default function PresetModal({
         const isGen = !!preset.isGeneralPreset;
         const isPinned = preset.showInPresets !== undefined ? !!preset.showInPresets : (preset.show_in_presets !== undefined ? !!preset.show_in_presets : true);
         const cost = preset.costPrice !== undefined ? preset.costPrice : (preset.cost_price !== undefined ? preset.cost_price : '');
+        const weighted = preset.isWeighted !== undefined ? !!preset.isWeighted : (preset.is_weighted !== undefined ? !!preset.is_weighted : false);
+        const unitVal = preset.unit || (weighted ? 'kg' : 'ks');
+        const marginCoeff = preset.marginCoefficient !== undefined && preset.marginCoefficient !== null
+          ? preset.marginCoefficient.toString()
+          : (preset.margin_coefficient !== undefined && preset.margin_coefficient !== null ? preset.margin_coefficient.toString() : '');
+
         setFormData({
           name: preset.name || '',
           price: preset.isOpenPrice ? '' : (preset.price !== undefined ? preset.price.toString() : ''),
@@ -66,7 +75,10 @@ export default function PresetModal({
           trackStock: isGen ? false : (preset.trackStock !== undefined ? preset.trackStock : false),
           stockQuantity: isGen ? 0 : (preset.stockQuantity !== undefined ? preset.stockQuantity : 0),
           minStockAlert: preset.minStockAlert !== undefined ? preset.minStockAlert : 5,
-          showInPresets: isPinned
+          showInPresets: isPinned,
+          unit: unitVal,
+          isWeighted: weighted,
+          marginCoefficient: marginCoeff
         });
       } else {
         setFormData({
@@ -84,7 +96,10 @@ export default function PresetModal({
           trackStock: !defaultShowInPresets,
           stockQuantity: 0,
           minStockAlert: 5,
-          showInPresets: defaultShowInPresets
+          showInPresets: defaultShowInPresets,
+          unit: 'ks',
+          isWeighted: false,
+          marginCoefficient: ''
         });
       }
     }
@@ -147,6 +162,10 @@ export default function PresetModal({
     }
 
     const isGen = !!formData.isGeneralPreset;
+    const marginCoeffVal = formData.marginCoefficient !== '' && !isNaN(parseFloat(formData.marginCoefficient))
+      ? parseFloat(formData.marginCoefficient)
+      : null;
+
     const result = {
       ...(preset || {}),
       id: mode === 'edit' && preset ? preset.id : `preset-${Date.now()}`,
@@ -161,10 +180,15 @@ export default function PresetModal({
       imageUrl: formData.imageUrl || null,
       barcode: formData.barcode.trim(),
       trackStock: isGen ? false : formData.trackStock,
-      stockQuantity: isGen ? 0 : parseInt(formData.stockQuantity || '0', 10),
-      minStockAlert: parseInt(formData.minStockAlert || '5', 10),
+      stockQuantity: isGen ? 0 : parseFloat(formData.stockQuantity || '0'),
+      minStockAlert: parseFloat(formData.minStockAlert || '5'),
       showInPresets: formData.showInPresets,
-      costPrice: parseFloat(formData.costPrice) || 0.0
+      costPrice: parseFloat(formData.costPrice) || 0.0,
+      unit: formData.unit || 'ks',
+      isWeighted: !!formData.isWeighted,
+      is_weighted: !!formData.isWeighted,
+      marginCoefficient: marginCoeffVal,
+      margin_coefficient: marginCoeffVal
     };
 
     onSave(result);
@@ -478,6 +502,103 @@ export default function PresetModal({
                       Kč
                     </span>
                   </div>
+                </div>
+
+                {/* Margin Coefficient (Koeficient marže k_marže) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
+                    {t('presets.margin_coefficient') || 'Koeficient marže k_marže, např. 1.35'} ({t('common.optional') || 'volitelné'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="1.35"
+                    value={formData.marginCoefficient}
+                    onChange={e => setFormData({ ...formData, marginCoefficient: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.8rem',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontWeight: '700',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.95rem'
+                    }}
+                  />
+                </div>
+
+                {/* Unit of Measure Selection */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.35rem' }}>
+                    {t('presets.unit') || 'Měrná jednotka'}
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    {[
+                      { id: 'ks', label: t('presets.unit_pcs') || 'ks (kusy)' },
+                      { id: 'kg', label: t('presets.unit_kg') || 'kg (kilogramy)' },
+                      { id: 'g', label: t('presets.unit_g') || 'g (gramy)' }
+                    ].map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        className={`nav-tab ${formData.unit === u.id ? 'active' : ''}`}
+                        style={{
+                          flex: 1,
+                          padding: '0.45rem 0.2rem',
+                          fontSize: '0.82rem',
+                          fontWeight: '800',
+                          justifyContent: 'center',
+                          background: formData.unit === u.id ? 'var(--accent-blue)' : 'var(--bg-input)'
+                        }}
+                        onClick={() => {
+                          const newUnit = u.id;
+                          setFormData(prev => ({
+                            ...prev,
+                            unit: newUnit,
+                            isWeighted: newUnit === 'kg' || newUnit === 'g' ? true : prev.isWeighted
+                          }));
+                        }}
+                      >
+                        {u.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weighted Goods Switch */}
+                <div style={{
+                  padding: '0.65rem 0.85rem',
+                  background: formData.isWeighted ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-input)',
+                  border: formData.isWeighted ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  marginTop: '0.2rem'
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                        {t('presets.weighted_goods') || '⚖️ Váhové zboží (dotykové zadání hmotnosti)'}
+                      </span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                        {t('presets.weighted_goods_desc') || 'Při výběru položky se automaticky otevře dotykový dialog pro zadání hmotnosti a táry.'}
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={formData.isWeighted}
+                      onChange={e => {
+                        const checked = e.target.checked;
+                        setFormData(prev => ({
+                          ...prev,
+                          isWeighted: checked,
+                          unit: checked && prev.unit === 'ks' ? 'kg' : prev.unit
+                        }));
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--accent-blue)', flexShrink: 0 }}
+                    />
+                  </label>
                 </div>
               </div>
 

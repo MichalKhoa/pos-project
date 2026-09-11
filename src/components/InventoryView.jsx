@@ -426,6 +426,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         onClose={() => setIsStockIntakeOpen(false)}
         presets={presets}
         onIntakeCompleted={handleIntakeCompleted}
+        storeConfig={storeConfig}
       />
 
       {/* Stock Movement Ledger (§ 7b ZDP) Modal */}
