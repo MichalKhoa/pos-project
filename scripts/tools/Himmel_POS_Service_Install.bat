@@ -8,7 +8,7 @@ echo.
 
 cd /d "%~dp0"
 
-set "BACKEND_DIR=%~dp0backend"
+set "BACKEND_DIR=%~dp0..\..\backend"
 set "LOGS_DIR=%BACKEND_DIR%\logs"
 set "NSSM_EXE=%~dp0nssm.exe"
 

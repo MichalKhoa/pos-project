@@ -6,29 +6,30 @@ echo   Starting Himmel POS in Dedicated Touch Kiosk Mode...
 echo ========================================================
 echo.
 
-cd /d "%~dp0"
+set "ROOT_DIR=%~dp0..\.."
+cd /d "%ROOT_DIR%"
 
 REM 1. Resolve Python Executable
 set "PYTHON_EXE=python"
-if exist "%~dp0backend\venv\Scripts\python.exe" (
-    set "PYTHON_EXE=%~dp0backend\venv\Scripts\python.exe"
+if exist "%ROOT_DIR%\backend\venv\Scripts\python.exe" (
+    set "PYTHON_EXE=%ROOT_DIR%\backend\venv\Scripts\python.exe"
 )
 
 REM 2. Ensure dist/ exists
-if not exist "%~dp0dist\index.html" (
+if not exist "%ROOT_DIR%\dist\index.html" (
     where npm >nul 2>&1
-    if %errorlevel% equ 0 (
+    if !errorlevel! equ 0 (
         call npm run build
     )
 )
 
 REM 3. Check if backend is already running on port 8000
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo [INFO] Checking database migrations and schema changes...
-    "%PYTHON_EXE%" "%~dp0backend\migrations.py"
+    "%PYTHON_EXE%" "%ROOT_DIR%\backend\migrations.py"
     echo Starting Himmel POS Backend Service...
-    start "Himmel POS Backend" /min /D "%~dp0backend" cmd /c "%~dp0backend\run_backend.bat"
+    start "Himmel POS Backend" /min /D "%ROOT_DIR%\backend" cmd /c "%ROOT_DIR%\backend\run_backend.bat"
     ping -n 3 127.0.0.1 >nul 2>&1
 )
 
@@ -44,7 +45,7 @@ if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
     set "EDGE_EXE=%LocalAppData%\Microsoft\Edge\Application\msedge.exe"
 ) else (
     where msedge >nul 2>&1
-    if %errorlevel% equ 0 set "EDGE_EXE=msedge"
+    if !errorlevel! equ 0 set "EDGE_EXE=msedge"
 )
 
 if not "!EDGE_EXE!"=="" (

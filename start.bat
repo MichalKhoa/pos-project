@@ -8,17 +8,29 @@ echo.
 
 cd /d "%~dp0"
 
-REM 1. Ensure frontend UI is built and synced
-where npm >nul 2>&1
-if !errorlevel! equ 0 (
-    echo [INFO] Building latest frontend UI bundle...
-    call npm run build
-) else (
-    if not exist "%~dp0dist\index.html" (
+REM 1. Build frontend UI if missing or explicitly requested (--rebuild)
+set "NEED_BUILD=0"
+if "%~1"=="--build" set "NEED_BUILD=1"
+if "%~1"=="--rebuild" set "NEED_BUILD=1"
+if not exist "%~dp0dist\index.html" set "NEED_BUILD=1"
+
+if "!NEED_BUILD!"=="1" (
+    where npm >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [INFO] Building latest frontend UI bundle...
+        call npm run build
+        if !errorlevel! neq 0 (
+            echo [ERROR] Frontend build failed!
+            pause
+            exit /b 1
+        )
+    ) else (
         echo [ERROR] npm is required to build the frontend.
         pause
         exit /b 1
     )
+) else (
+    echo [INFO] Production frontend bundle found: dist\index.html. Skipping rebuild.
 )
 
 REM Sync built assets to standalone distribution if present
@@ -31,8 +43,8 @@ if exist "%~dp0backend\dist_standalone\pos-backend\dist" (
 
 REM 2. Check if backend is already listening on port 8000
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [INFO] Backend is active on port 8000.
+if !errorlevel! equ 0 (
+    echo [INFO] Backend is already active on port 8000.
     goto :BACKEND_READY
 )
 
@@ -41,18 +53,44 @@ set "STANDALONE_EXE=%~dp0backend\dist_standalone\pos-backend\pos-backend.exe"
 set "VENV_PYTHON=%~dp0backend\venv\Scripts\python.exe"
 
 if exist "%VENV_PYTHON%" (
+    echo [INFO] Checking Python backend dependencies...
+    "%VENV_PYTHON%" -c "import lxml, xmlsec, fastapi, uvicorn" >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo [WARNING] Missing backend packages detected. Installing requirements...
+        "%VENV_PYTHON%" -m pip install -r "%~dp0backend\requirements.txt"
+    )
+    echo [INFO] Applying database migrations...
+    "%VENV_PYTHON%" "%~dp0backend\migrations.py"
+    if !errorlevel! neq 0 (
+        echo [ERROR] Database migration failed.
+        pause
+        exit /b 1
+    )
     echo [INFO] Launching backend via Python virtual environment...
-    "%VENV_PYTHON%" "%~dp0backend\migrations.py" >nul 2>&1
-    start "VoltFlow POS Backend" /min /D "%~dp0backend" "%VENV_PYTHON%" main.py
+    cd /d "%~dp0backend"
+    set "ENV=production"
+    start "VoltFlow POS Backend" /min cmd /c "run_backend.bat"
+    cd /d "%~dp0"
 ) else (
     where python >nul 2>&1
     if !errorlevel! equ 0 (
+        echo [INFO] Applying database migrations...
+        python "%~dp0backend\migrations.py"
+        if !errorlevel! neq 0 (
+            echo [ERROR] Database migration failed.
+            pause
+            exit /b 1
+        )
         echo [INFO] Launching backend via system Python...
-        python "%~dp0backend\migrations.py" >nul 2>&1
-        start "VoltFlow POS Backend" /min /D "%~dp0backend" python main.py
+        cd /d "%~dp0backend"
+        set "ENV=production"
+        start "VoltFlow POS Backend" /min cmd /c "run_backend.bat"
+        cd /d "%~dp0"
     ) else if exist "%STANDALONE_EXE%" (
         echo [INFO] Launching standalone backend binary...
+        cd /d "%~dp0backend"
         start "VoltFlow POS Backend" /min "%STANDALONE_EXE%"
+        cd /d "%~dp0"
     ) else (
         echo [ERROR] Neither Python nor standalone executable found.
         echo Please run install.bat or install Python.
@@ -62,18 +100,26 @@ if exist "%VENV_PYTHON%" (
 )
 
 REM 4. Wait for backend server on port 8000
-echo [INFO] Waiting for backend server...
+echo [INFO] Waiting for backend server on port 8000...
 set /a RETRY=0
+set "BACKEND_READY=0"
+
 :WAIT_BACKEND
 ping -n 2 127.0.0.1 >nul 2>&1
 netstat -ano | findstr /C:":8000 " | findstr /i "LISTENING" >nul 2>&1
 if !errorlevel! equ 0 (
     echo [OK] Backend server active on port 8000.
+    set "BACKEND_READY=1"
     goto :BACKEND_READY
 )
 set /a RETRY+=1
 if !RETRY! lss 15 goto :WAIT_BACKEND
-echo [WARNING] Backend startup took longer than 15 seconds.
+
+echo.
+echo [ERROR] Backend server failed to respond on port 8000 within 15 seconds.
+echo Please check backend\logs\pos_backend.log or test directly with backend\run_backend.bat.
+pause
+exit /b 1
 
 :BACKEND_READY
 
@@ -92,7 +138,7 @@ echo --------------------------------------------------------
 echo.
 
 where qrencode >nul 2>&1
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     echo Scan with phone for customer screen:
     qrencode -t ANSI256 "http://!LOCAL_IP!:8000/#/customer-display"
     echo.
@@ -118,5 +164,7 @@ if not "!EDGE_EXE!"=="" (
 )
 
 echo [SUCCESS] VoltFlow POS running!
-echo To stop all services: stop.bat (or scripts\tools\Himmel_POS_Stop.bat)
+echo To stop all services: run stop.bat
 echo.
+ping -n 4 127.0.0.1 >nul 2>&1
+
