@@ -182,3 +182,35 @@ def print_write_off_protocol_slip(req: PrintWriteOffRequest, db: Session = Depen
     }
 
 
+class PrintInventoryRequest(BaseModel):
+    protocolData: dict
+    storeConfig: dict = {}
+
+
+@router.post("/print-inventory")
+def print_inventory_protocol_slip(req: PrintInventoryRequest, db: Session = Depends(get_db)):
+    """Trigger physical ESC/POS thermal physical inventory protocol slip print job (§ 29, 30 ZoÚ)."""
+    config = db.query(StoreConfigModel).first()
+    interface = config.printer_interface if config else "USB"
+    address = config.printer_address if config else "/dev/usb/lp0"
+
+    store_config = req.storeConfig or {}
+    if config and not store_config.get("storeName"):
+        store_config["storeName"] = config.store_name
+    if config and not store_config.get("ico"):
+        store_config["ico"] = config.ico
+
+    printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
+    res = printer_service.print_inventory_protocol(req.protocolData, store_config)
+
+    if isinstance(res, dict) and not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to print inventory protocol"))
+
+    return {
+        "status": res.get("status", "PRINTED") if isinstance(res, dict) else "PRINTED",
+        "physical": res.get("physical", False) if isinstance(res, dict) else True,
+        "protocol_number": res.get("protocol_number"),
+        "success": True
+    }
+
+

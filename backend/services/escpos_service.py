@@ -1409,4 +1409,151 @@ class ESCPOSPrinterService:
             "protocol_number": protocol_num
         }
 
+    def print_inventory_protocol(self, protocol_data: dict, store_config: dict) -> dict:
+        """
+        Prints a formal physical stock inventory protocol slip (§ 29, 30 ZoÚ).
+        Includes protocol number, date, responsible person, item discrepancy list,
+        surplus/shortage summary, and employee signature lines.
+        """
+        with _hardware_printer_lock:
+            return self._do_print_inventory_protocol(protocol_data, store_config)
+
+    def _do_print_inventory_protocol(self, protocol_data: dict, store_config: dict) -> dict:
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_58mm = paper_width in ["58", "48"]
+        line_width = 32 if is_58mm else 48
+        name_width = 16 if is_58mm else 24
+
+        sep_line = "-" * line_width
+        double_line = "=" * line_width
+        encoding = store_config.get("receiptEncoding", "CP852")
+        strip_diacritics = bool(store_config.get("stripDiacritics", False))
+
+        store_name = store_config.get("storeName") or store_config.get("store_name") or "VoltFlow POS"
+        store_ico = store_config.get("ico") or ""
+        protocol_num = protocol_data.get("protocol_number") or protocol_data.get("protocolNumber") or "INV-XXXX"
+        person = protocol_data.get("responsible_person") or protocol_data.get("responsiblePerson") or "Komise / Vedoucí prodejny"
+        total_items = protocol_data.get("total_items_counted", 0)
+        total_surplus = float(protocol_data.get("total_surplus_value", protocol_data.get("totalSurplusValue", 0.0)))
+        total_shortage = float(protocol_data.get("total_shortage_value", protocol_data.get("totalShortageValue", 0.0)))
+        net_diff = total_surplus - total_shortage
+        items = protocol_data.get("items", [])
+
+        ts_raw = protocol_data.get("timestamp")
+        try:
+            if isinstance(ts_raw, str):
+                ts = datetime.fromisoformat(ts_raw.replace("Z", ""))
+            elif isinstance(ts_raw, datetime):
+                ts = ts_raw
+            else:
+                ts = datetime.now()
+            date_str = ts.strftime("%d.%m.%Y %H:%M")
+        except Exception:
+            date_str = str(ts_raw or "")
+
+        logger.info(f"Printing inventory audit protocol slip {protocol_num} via {self.interface_type}")
+
+        printer = None
+        try:
+            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                from escpos.printer import Win32Raw
+                target_name = self.address if not self.address.startswith('/dev/') else ""
+                printer = Win32Raw(target_name)
+            elif self.interface_type == "USB":
+                from escpos.printer import Usb, File
+                if os.path.exists(self.address):
+                    printer = File(self.address)
+                else:
+                    printer = Usb(0x04b8, 0x0e15, 0)
+            elif self.interface_type == "NETWORK" and self.address:
+                from escpos.printer import Network
+                printer = Network(self.address, port=9100, timeout=3.0)
+            elif self.interface_type == "SERIAL" and self.address:
+                from escpos.printer import Serial
+                printer = Serial(self.address, baudrate=9600)
+        except Exception as e:
+            logger.info(f"Printer offline ({e}), simulating inventory protocol.")
+            printer = None
+
+        if printer:
+            try:
+                if hasattr(printer, 'open'):
+                    printer.open(f"VoltFlow_Inventory_{protocol_num}")
+            except Exception:
+                printer = None
+
+        if printer:
+            try:
+                if hasattr(printer, 'charcode'):
+                    printer.charcode(encoding if encoding in ['CP852', 'CP1250'] else 'CP852')
+            except Exception:
+                pass
+
+            try:
+                printer.set(align='center', font='a', width=1, height=1, bold=True)
+                write_receipt_text(printer, f"{store_name}\n", strip_diacritics, encoding)
+                if store_ico:
+                    printer.set(align='center', font='a', width=1, height=1, bold=False)
+                    write_receipt_text(printer, f"IČO: {store_ico}\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"{double_line}\n", strip_diacritics, encoding)
+
+                printer.set(align='center', font='a', width=2, height=1, bold=True)
+                write_receipt_text(printer, "PROTOKOL O INVENTUŘE\n", strip_diacritics, encoding)
+                printer.set(align='center', font='a', width=1, height=1, bold=False)
+                write_receipt_text(printer, f"č. {protocol_num} (§ 29, 30 ZoÚ)\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"{double_line}\n", strip_diacritics, encoding)
+
+                printer.set(align='left', font='a', width=1, height=1, bold=False)
+                write_receipt_text(printer, f"Datum a čas:  {date_str}\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"Odpov. osoba: {person}\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"Položek celk: {total_items}\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"{sep_line}\n", strip_diacritics, encoding)
+
+                for it in items:
+                    p_name = it.get("preset_name") or it.get("presetName") or "Neznámá"
+                    diff = float(it.get("difference", 0.0))
+                    phys = float(it.get("physical_quantity", it.get("physicalQuantity", 0.0)))
+                    sys_q = float(it.get("system_quantity", it.get("systemQuantity", 0.0)))
+                    unit = it.get("unit", "ks")
+                    cost_imp = float(it.get("total_cost_impact", it.get("totalCostImpact", 0.0)))
+
+                    diff_str = f"+{diff:.1f}" if diff > 0 else f"{diff:.1f}"
+                    printer.set(align='left', font='a', bold=True)
+                    write_receipt_text(printer, f"{p_name[:name_width]}\n", strip_diacritics, encoding)
+                    printer.set(align='left', font='a', bold=False)
+                    line_detail = f"  Evid:{sys_q:.1f} Fyz:{phys:.1f} Diff:{diff_str}{unit} ({cost_imp:+.2f} Kc)\n"
+                    write_receipt_text(printer, line_detail, strip_diacritics, encoding)
+
+                write_receipt_text(printer, f"{sep_line}\n", strip_diacritics, encoding)
+                printer.set(align='left', font='a', bold=False)
+                write_receipt_text(printer, f"Celkový přebytek:  +{total_surplus:.2f} Kč\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"Celkové manko:     -{total_shortage:.2f} Kč\n", strip_diacritics, encoding)
+                printer.set(align='left', font='a', bold=True)
+                write_receipt_text(printer, f"Čistá bilance:     {net_diff:+.2f} Kč\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"{double_line}\n\n", strip_diacritics, encoding)
+
+                write_receipt_text(printer, "Podpis odpovědné osoby: ...................\n\n", strip_diacritics, encoding)
+                printer.cut()
+                return {
+                    "success": True,
+                    "physical": True,
+                    "status": "PRINTED",
+                    "protocol_number": protocol_num
+                }
+            finally:
+                try:
+                    if hasattr(printer, 'close'):
+                        printer.close()
+                except Exception:
+                    pass
+
+        sim_str = f"=== INVENTORY PROTOCOL SIMULATED: {protocol_num} | Položek: {total_items} | Přebytek: +{total_surplus:.2f} Kč | Manko: -{total_shortage:.2f} Kč ==="
+        print(sim_str)
+        return {
+            "success": True,
+            "physical": False,
+            "status": "SIMULATED",
+            "protocol_number": protocol_num
+        }
+
 
