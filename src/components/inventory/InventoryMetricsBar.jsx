@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History } from 'lucide-react';
+import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function InventoryMetricsBar({
@@ -17,7 +17,8 @@ export default function InventoryMetricsBar({
   onExportCSV,
   onImportCSVClick,
   onOpenStockIntake,
-  onOpenStockMovements
+  onOpenStockMovements,
+  onOpenStockWriteOff
 }) {
   const { t } = useTranslation();
 
@@ -171,6 +172,32 @@ export default function InventoryMetricsBar({
             >
               <PackagePlus size={15} />
               <span>{t('stock_intake.btn_open') || 'Příjemka zboží'}</span>
+            </button>
+          )}
+
+          {onOpenStockWriteOff && (
+            <button
+              type="button"
+              onClick={onOpenStockWriteOff}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '38px',
+                padding: '0 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: 'var(--accent-rose)',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title={t('inventory.write_off_btn_title') || 'Vystavit protokol o likvidaci a odpisu zásob (§ 25 ZoÚ)'}
+            >
+              <Trash2 size={15} />
+              <span>{t('inventory.write_off_btn') || 'Odpis zásob'}</span>
             </button>
           )}
 

@@ -7,7 +7,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from database import get_db, atomic_transaction
-from models import PresetModel, StockMovementModel
+from models import (
+    PresetModel,
+    StockMovementModel,
+    CategoryModel,
+    WriteOffSequenceModel,
+    StockWriteOffModel,
+    StockWriteOffItemModel
+)
 
 router = APIRouter(prefix="/api/v1/inventory", tags=["Inventory & Stock Ledger"])
 
@@ -234,3 +241,265 @@ def get_price_history(preset_id: str, db: Session = Depends(get_db)):
             )
         )
     return history
+
+
+def generate_next_write_off_number(db: Session, year: Optional[int] = None) -> str:
+    """
+    Atomically increments and retrieves the next write-off protocol sequence number (§ 25 ZoÚ).
+    Format: ODP-YYYY-XXXX (e.g. ODP-2026-0001)
+    """
+    if not year:
+        year = datetime.now().year
+
+    seq_obj = db.query(WriteOffSequenceModel).filter(WriteOffSequenceModel.year == year).first()
+    if not seq_obj:
+        year_prefix = f"ODP-{year}-"
+        max_num = 0
+        existing_write_offs = db.query(StockWriteOffModel.protocol_number).filter(StockWriteOffModel.protocol_number.like(f"{year_prefix}%")).all()
+        for (pn,) in existing_write_offs:
+            try:
+                num = int(pn.split("-")[2])
+                if num > max_num:
+                    max_num = num
+            except Exception:
+                pass
+        seq_obj = WriteOffSequenceModel(year=year, last_seq=max_num)
+        db.add(seq_obj)
+        db.flush()
+
+    seq_obj.last_seq += 1
+    next_num = seq_obj.last_seq
+    return f"ODP-{year}-{next_num:04d}"
+
+
+class WriteOffItemRequestSchema(BaseModel):
+    preset_id: str
+    quantity: float
+    is_norm_loss: Optional[bool] = None  # None = auto-detect by category norm and reason
+
+
+class WriteOffRequestSchema(BaseModel):
+    reason: str  # 'EXSPIRACE', 'ZKAZA', 'ROZBITI', 'KRADEZ', 'OTHER'
+    responsible_person: Optional[str] = None
+    note: Optional[str] = None
+    items: List[WriteOffItemRequestSchema]
+
+
+class WriteOffItemResponseSchema(BaseModel):
+    id: str
+    preset_id: str
+    preset_name: str
+    quantity: float
+    unit: str
+    unit_cost: float
+    unit_price: float
+    vat: int
+    total_cost: float
+    total_price: float
+    is_norm_loss: bool
+
+    model_config = {"from_attributes": True}
+
+
+class WriteOffResponseSchema(BaseModel):
+    id: str
+    protocol_number: str
+    reason: str
+    responsible_person: Optional[str] = None
+    note: Optional[str] = None
+    total_cost_value: float
+    total_retail_value: float
+    is_tax_deductible: bool
+    vat_adjustment_required: bool
+    timestamp: datetime
+    items: List[WriteOffItemResponseSchema]
+
+    model_config = {"from_attributes": True}
+
+
+@router.post("/write-off", status_code=status.HTTP_201_CREATED, response_model=WriteOffResponseSchema)
+def submit_stock_write_off(payload: WriteOffRequestSchema, db: Session = Depends(get_db)):
+    """
+    Process formal stock write-off & liquidation protocol (§ 25 ZoÚ / § 77, 78 ZDPH).
+    In a single atomic transaction:
+    - Verifies items and stock quantities (quantity must be positive).
+    - Checks category natural loss norm and write-off reason to determine tax deductibility.
+    - Decrements preset stock quantity.
+    - Inserts WRITE_OFF movement into stock_movements ledger.
+    - Generates sequential protocol number (ODP-YYYY-XXXX).
+    - Persists StockWriteOffModel and StockWriteOffItemModel records.
+    """
+    if not payload.items:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Odpisový protokol musí obsahovat alespoň jednu položku."
+        )
+
+    valid_reasons = {"EXSPIRACE", "ZKAZA", "ROZBITI", "KRADEZ", "OTHER"}
+    clean_reason = (payload.reason or "").strip().upper()
+    if clean_reason not in valid_reasons:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Neplatný důvod odpisu. Povolené hodnoty: {', '.join(sorted(valid_reasons))}"
+        )
+
+    for it in payload.items:
+        if it.quantity is None or it.quantity <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Množství k odpisu musí být kladné číslo (zadáno: {it.quantity})."
+            )
+
+    now = datetime.utcnow()
+    protocol_id = f"wroff_{uuid.uuid4().hex[:12]}"
+
+    with atomic_transaction(db):
+        protocol_num = generate_next_write_off_number(db, year=now.year)
+
+        # Cache category norms
+        categories = {c.id: (c.natural_loss_norm or 0.0) for c in db.query(CategoryModel).all()}
+
+        created_items = []
+        total_cost_sum = 0.0
+        total_retail_sum = 0.0
+        has_non_deductible_item = False
+
+        # If reason is theft (KRADEZ), it is by tax law always non-deductible shortage requiring VAT adjustment
+        force_non_deductible_by_reason = clean_reason in {"KRADEZ"}
+
+        for it in payload.items:
+            preset = db.query(PresetModel).filter(PresetModel.id == it.preset_id).first()
+            if not preset:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Položka se zadaným ID {it.preset_id} nebyla nalezena."
+                )
+
+            item_qty = round(float(it.quantity), 3)
+            unit_cost = round(float(preset.cost_price or 0.0), 2)
+            unit_price = round(float(preset.price or 0.0), 2)
+            vat_rate = int(preset.vat or 21)
+            line_cost = round(item_qty * unit_cost, 2)
+            line_retail = round(item_qty * unit_price, 2)
+
+            total_cost_sum += line_cost
+            total_retail_sum += line_retail
+
+            # Determine if this line item is a natural loss within norm
+            cat_norm = categories.get(preset.category, 0.0)
+            if force_non_deductible_by_reason:
+                is_norm = False
+            elif it.is_norm_loss is not None:
+                is_norm = bool(it.is_norm_loss)
+            else:
+                # Perishable reasons (EXSPIRACE, ZKAZA) with positive category norm qualify as natural loss
+                is_norm = (cat_norm > 0 and clean_reason in {"EXSPIRACE", "ZKAZA"})
+
+            if not is_norm:
+                has_non_deductible_item = True
+
+            # Decrement preset stock quantity
+            cur_stock = preset.stock_quantity or 0.0
+            preset.stock_quantity = round(cur_stock - item_qty, 3)
+
+            # Record WRITE_OFF movement in stock ledger
+            reason_labels = {
+                "EXSPIRACE": "Exspirace",
+                "ZKAZA": "Zkáza / Poškození",
+                "ROZBITI": "Rozbití",
+                "KRADEZ": "Krádež / Manko",
+                "OTHER": "Jiné"
+            }
+            reason_text = reason_labels.get(clean_reason, clean_reason)
+            norm_text = "v normě §25" if is_norm else "nad normu / zaviněné"
+            movement_note = f"Odpis {protocol_num}: {reason_text} ({norm_text})"
+            if payload.note:
+                movement_note += f" - {payload.note.strip()}"
+
+            movement = StockMovementModel(
+                id=f"smov_{uuid.uuid4().hex[:12]}",
+                preset_id=preset.id,
+                movement_type="WRITE_OFF",
+                quantity_delta=-item_qty,
+                unit_cost=unit_cost,
+                document_ref=protocol_num,
+                note=movement_note,
+                timestamp=now
+            )
+            db.add(movement)
+
+            # Create protocol item
+            write_off_item = StockWriteOffItemModel(
+                id=f"wroi_{uuid.uuid4().hex[:12]}",
+                write_off_id=protocol_id,
+                preset_id=preset.id,
+                preset_name=preset.name,
+                quantity=item_qty,
+                unit=preset.unit or "ks",
+                unit_cost=unit_cost,
+                unit_price=unit_price,
+                vat=vat_rate,
+                total_cost=line_cost,
+                total_price=line_retail,
+                is_norm_loss=is_norm
+            )
+            db.add(write_off_item)
+            created_items.append(write_off_item)
+
+        # Protocol is tax-deductible only if all items qualify within norm and not theft
+        is_tax_deductible = not has_non_deductible_item
+        vat_adjustment_required = not is_tax_deductible
+
+        write_off_record = StockWriteOffModel(
+            id=protocol_id,
+            protocol_number=protocol_num,
+            reason=clean_reason,
+            responsible_person=payload.responsible_person.strip() if payload.responsible_person else None,
+            note=payload.note.strip() if payload.note else None,
+            total_cost_value=round(total_cost_sum, 2),
+            total_retail_value=round(total_retail_sum, 2),
+            is_tax_deductible=is_tax_deductible,
+            vat_adjustment_required=vat_adjustment_required,
+            timestamp=now
+        )
+        db.add(write_off_record)
+
+    db.refresh(write_off_record)
+    return write_off_record
+
+
+@router.get("/write-offs", response_model=List[WriteOffResponseSchema])
+def get_stock_write_offs(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """Fetch chronological stock write-off protocols."""
+    effective_limit = min(max(1, limit), 200)
+    records = (
+        db.query(StockWriteOffModel)
+        .order_by(desc(StockWriteOffModel.timestamp))
+        .offset(offset)
+        .limit(effective_limit)
+        .all()
+    )
+    return records
+
+
+@router.get("/write-offs/{protocol_id}", response_model=WriteOffResponseSchema)
+def get_stock_write_off_detail(protocol_id: str, db: Session = Depends(get_db)):
+    """Fetch detail of a single write-off protocol by ID or protocol_number."""
+    record = (
+        db.query(StockWriteOffModel)
+        .filter(
+            (StockWriteOffModel.id == protocol_id) |
+            (StockWriteOffModel.protocol_number == protocol_id)
+        )
+        .first()
+    )
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Protokol o odpisu {protocol_id} nebyl nalezen."
+        )
+    return record

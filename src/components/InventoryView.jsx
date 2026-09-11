@@ -9,6 +9,7 @@ import InventoryImportModal from './inventory/InventoryImportModal.jsx';
 import BarcodeLabelModal from './inventory/BarcodeLabelModal.jsx';
 import StockIntakeModal from './inventory/StockIntakeModal.jsx';
 import StockMovementLedgerModal from './inventory/StockMovementLedgerModal.jsx';
+import StockWriteOffModal from './inventory/StockWriteOffModal.jsx';
 import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
 export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin, storeConfig = {} }) {
@@ -38,6 +39,31 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   const [isStockIntakeOpen, setIsStockIntakeOpen] = useState(false);
   const [isMovementLedgerOpen, setIsMovementLedgerOpen] = useState(false);
   const [ledgerInitialPresetId, setLedgerInitialPresetId] = useState(null);
+
+  // Stock Write-Off state
+  const [isWriteOffOpen, setIsWriteOffOpen] = useState(false);
+  const [writeOffInitialPresetId, setWriteOffInitialPresetId] = useState(null);
+
+  const handleOpenWriteOff = (preset = null) => {
+    setWriteOffInitialPresetId(preset ? preset.id : null);
+    setIsWriteOffOpen(true);
+  };
+
+  const handleWriteOffCompleted = async (protocol) => {
+    try {
+      const refreshed = await fetchPresetsBackend();
+      if (onUpdatePresets && Array.isArray(refreshed)) {
+        onUpdatePresets(refreshed);
+      }
+      setStatusMessage({
+        type: 'success',
+        text: t('stock_write_off.success_toast') || `Skladový odpis byl úspěšně proveden (${protocol.protocol_number}).`
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to refresh presets after write-off:', err);
+    }
+  };
 
   const handleIntakeCompleted = async (itemsCount) => {
     try {
@@ -325,6 +351,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         onExportCSV={handleExportCSV}
         onImportCSVClick={handleImportCSVClick}
         onOpenStockIntake={() => setIsStockIntakeOpen(true)}
+        onOpenStockWriteOff={() => handleOpenWriteOff(null)}
         onOpenStockMovements={() => {
           setLedgerInitialPresetId(null);
           setIsMovementLedgerOpen(true);
@@ -360,6 +387,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         categoryMap={categoryMap}
         onTogglePin={onTogglePin}
         onPrintLabel={setLabelPrintTarget}
+        onOpenWriteOff={handleOpenWriteOff}
       />
 
       {/* Add Modal - defaults to unpinned warehouse item when added from Inventory! */}
@@ -435,6 +463,17 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         onClose={() => setIsMovementLedgerOpen(false)}
         presets={presets}
         initialPresetId={ledgerInitialPresetId}
+      />
+
+      {/* Stock Write-Off & Liquidation Protocol (§ 25 ZoÚ) Modal */}
+      <StockWriteOffModal
+        isOpen={isWriteOffOpen}
+        onClose={() => setIsWriteOffOpen(false)}
+        presets={presets}
+        categories={categories}
+        onWriteOffCompleted={handleWriteOffCompleted}
+        storeConfig={storeConfig}
+        initialPresetId={writeOffInitialPresetId}
       />
     </div>
   );

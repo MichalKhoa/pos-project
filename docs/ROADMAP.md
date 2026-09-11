@@ -14,7 +14,7 @@ Concrete, high-impact counter and payment features scheduled for immediate imple
 ```mermaid
 graph TD
     A["1. Vratky na platební terminál ČSOB 💳<br/>(Ingenico Move 3500 TCP Reversals)"] --> B["2. Záložní terminál SumUp 📶<br/>(SumUp Air / Solo Integration)"]
-    B --> C["3. Skladové odpisy a likvidační protokoly 🗑️<br/>(Write-offs & Natural Losses § 25 ZoÚ)"]
+    B --> C["3. Skladové odpisy a likvidační protokoly 🗑️<br/>[Done ✅ § 25 ZoÚ]"]
     
     subgraph AuditTrack["Backend Audit Remediation Track 🛡️"]
         Crit["P0 Critical Fixes (FIN-C1, FIN-C2, DB-C1)<br/>[EET-C1 Done ✅]"]
@@ -30,9 +30,9 @@ graph TD
 - **Scope**: Connect register to SumUp Bluetooth and Cloud REST API as an affordable, wire-free card terminal alternative for retail pop-ups or backup card processing.
 - **Workflow**: Selecting "Karta" with SumUp enabled pushes transaction to paired SumUp reader; register awaits live webhook/polling approval and auto-completes transaction.
 
-### 1.3 🗑️ Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ)
+### 1.3 🗑️ Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ) [DONE ✅]
 - **Scope**: Formal stock write-off workflow (`POST /api/v1/inventory/write-off`) with reasons (`EXSPIRACE`, `ZKÁZA`, `ROZBITÍ`, `KRÁDEŽ`).
-- **Accounting & Tax**: Categorized loss norms (§ 25 ZoÚ, e.g. produce shrinkage 3-5%) with tax-deductible status vs. non-deductible taxable loss requiring VAT adjustment (§ 77/78 ZDPH). Thermal write-off protocol slip.
+- **Accounting & Tax**: Categorized loss norms (§ 25 ZoÚ, e.g. produce shrinkage 3-5%) with tax-deductible status vs. non-deductible taxable loss requiring VAT adjustment (§ 77/78 ZDPH). Thermal write-off protocol slip with manager signature.
 
 ### 1.4 🛡️ Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
 > ⚠️ **Status: BLOCKED** until the most critical legal & financial fixes (P0 Criticals) are completed and verified.
@@ -226,6 +226,9 @@ Již implementované, plně ověřené a funkční moduly v systému VoltFlow PO
   - Generátor a tisk 80mm/58mm regálových cenovek se zvýrazněnou cenou, názvem, EAN čárovým kódem, jednotkovou cenou (Kč/kg, Kč/l) a datem platnosti přímo z modulu Sklad.
 - **20. W3C Exclusive C14N kanonikalizace pro EET 2.0 (`services/eet_soap.py`)**:
   - Plná shoda s XML-DSig specifikací Finanční správy ČR pomocí standardizované C14N kanonikalizace SOAP zpráv.
+- **21. Skladové odpisy, likvidační protokoly a normy úbytků (§ 25 ZoÚ / § 77, 78 ZDPH) (`StockWriteOffModal.jsx`, `routers/stock.py`, `services/escpos_service.py`)**:
+  - Formální vyřazení zásob z důvodu exspirace, zkázy, rozbití nebo manka s automatickým posouzením daňové uznatelnosti dle procentuálních norem úbytků per kategorie.
+  - Zápis `WRITE_OFF` pohybů do knihy zásob, sekvenční číslování protokolů `ODP-YYYY-XXXX` a tisk oficiálního likvidačního protokolu na termotiskárně s podpisovou kolonkou.
 
 ---
 

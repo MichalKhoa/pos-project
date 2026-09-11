@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check, ArrowUpDown, ArrowUp, ArrowDown, Printer } from 'lucide-react';
+import { Search, AlertTriangle, Plus, Barcode, Calculator, Edit3, Check, ArrowUpDown, ArrowUp, ArrowDown, Printer, Trash2 } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 import SupplierPriceHistoryModal from './SupplierPriceHistoryModal';
 
@@ -24,7 +24,8 @@ export default function InventoryStockTable({
   isSaving,
   categoryMap,
   onTogglePin,
-  onPrintLabel
+  onPrintLabel,
+  onOpenWriteOff
 }) {
   const { t } = useTranslation();
 
@@ -454,6 +455,29 @@ export default function InventoryStockTable({
 
                   <td style={{ padding: '0.55rem 0.85rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      {onOpenWriteOff && (
+                        <button
+                          type="button"
+                          className="key-btn"
+                          style={{
+                            height: '38px',
+                            width: '38px',
+                            padding: 0,
+                            aspectRatio: 'auto',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(239, 68, 68, 0.08)',
+                            color: 'var(--accent-rose)',
+                            borderColor: 'rgba(239, 68, 68, 0.3)'
+                          }}
+                          onClick={() => onOpenWriteOff(preset)}
+                          title={t('inventory.write_off_btn_title') || 'Odpis zásob (§ 25 ZoÚ)'}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         className="key-btn"

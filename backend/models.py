@@ -200,6 +200,7 @@ class CategoryModel(Base):
     id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False)
     position = Column(Integer, default=0)
+    natural_loss_norm = Column(Float, default=0.0, nullable=False)  # Natural loss norm % (§ 25 ZoÚ, e.g. 3.0 for 3%)
 
 
 class PresetModel(Base):
@@ -299,5 +300,47 @@ class StockMovementModel(Base):
     preset = relationship("PresetModel", back_populates="stock_movements")
 
 
+class WriteOffSequenceModel(Base):
+    """DB Model for Atomic Write-Off Protocol Sequence Counters per Year."""
+    __tablename__ = "write_off_sequences"
+
+    year = Column(Integer, primary_key=True)
+    last_seq = Column(Integer, default=0, nullable=False)
 
 
+class StockWriteOffModel(Base):
+    """DB Model for Stock Write-Off / Liquidation Protocols (§ 25 ZoÚ)."""
+    __tablename__ = "stock_write_offs"
+
+    id = Column(String, primary_key=True, index=True)
+    protocol_number = Column(String, unique=True, index=True, nullable=False)  # e.g. ODP-2026-0001
+    reason = Column(String, nullable=False, index=True)  # 'EXSPIRACE', 'ZKAZA', 'ROZBITI', 'KRADEZ', 'OTHER'
+    responsible_person = Column(String, nullable=True)  # Cashier / Manager name
+    note = Column(String, nullable=True)
+    total_cost_value = Column(Float, default=0.0, nullable=False)  # Total cost price sum
+    total_retail_value = Column(Float, default=0.0, nullable=False)  # Total selling price sum
+    is_tax_deductible = Column(Boolean, default=True, nullable=False)  # True if within norm § 25 ZoÚ, False if theft/culpable
+    vat_adjustment_required = Column(Boolean, default=False, nullable=False)  # § 77/78 ZDPH correction indicator
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    items = relationship("StockWriteOffItemModel", back_populates="write_off", cascade="all, delete-orphan")
+
+
+class StockWriteOffItemModel(Base):
+    """DB Model for individual line items in a Write-Off Protocol."""
+    __tablename__ = "stock_write_off_items"
+
+    id = Column(String, primary_key=True, index=True)
+    write_off_id = Column(String, ForeignKey("stock_write_offs.id", ondelete="CASCADE"), index=True, nullable=False)
+    preset_id = Column(String, ForeignKey("presets.id"), nullable=False)
+    preset_name = Column(String, nullable=False)
+    quantity = Column(Float, nullable=False)
+    unit = Column(String, default="ks", nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    unit_price = Column(Float, default=0.0, nullable=False)
+    vat = Column(Integer, default=21, nullable=False)
+    total_cost = Column(Float, default=0.0, nullable=False)
+    total_price = Column(Float, default=0.0, nullable=False)
+    is_norm_loss = Column(Boolean, default=True, nullable=False)
+
+    write_off = relationship("StockWriteOffModel", back_populates="items")

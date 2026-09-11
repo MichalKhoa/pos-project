@@ -1206,4 +1206,207 @@ class ESCPOSPrinterService:
             logger.error(f"Failed to print barcode label: {err}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
 
+    def print_write_off_protocol(self, protocol_data: dict, store_config: dict) -> dict:
+        """
+        Prints a formal stock write-off & liquidation protocol slip (§ 25 ZoÚ / § 77, 78 ZDPH).
+        Includes protocol number, date, responsible person, reason, item table, tax deductible status,
+        and employee signature line.
+        """
+        with _hardware_printer_lock:
+            return self._do_print_write_off_protocol(protocol_data, store_config)
+
+    def _do_print_write_off_protocol(self, protocol_data: dict, store_config: dict) -> dict:
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_58mm = paper_width in ["58", "48"]
+        line_width = 32 if is_58mm else 48
+        name_width = 16 if is_58mm else 26
+
+        sep_line = "-" * line_width
+        double_line = "=" * line_width
+        encoding = store_config.get("receiptEncoding", "CP852")
+        strip_diacritics = bool(store_config.get("stripDiacritics", False))
+
+        store_name = store_config.get("storeName") or store_config.get("store_name") or "VoltFlow POS"
+        store_ico = store_config.get("ico") or ""
+        protocol_num = protocol_data.get("protocol_number") or protocol_data.get("protocolNumber") or "ODP-XXXX"
+        reason = protocol_data.get("reason", "EXSPIRACE")
+        reason_labels = {
+            "EXSPIRACE": "Exspirace (Projité zboží)",
+            "ZKAZA": "Zkáza / Poškození",
+            "ROZBITI": "Rozbití při manipulaci",
+            "KRADEZ": "Krádež / Nezjištěné manko",
+            "OTHER": "Jiné důvody"
+        }
+        reason_desc = reason_labels.get(reason, reason)
+        person = protocol_data.get("responsible_person") or protocol_data.get("responsiblePerson") or "Obsluha pokladny"
+        is_deductible = bool(protocol_data.get("is_tax_deductible", protocol_data.get("isTaxDeductible", True)))
+        vat_adjust = bool(protocol_data.get("vat_adjustment_required", protocol_data.get("vatAdjustmentRequired", False)))
+        total_cost = float(protocol_data.get("total_cost_value", protocol_data.get("totalCostValue", 0.0)))
+        total_retail = float(protocol_data.get("total_retail_value", protocol_data.get("totalRetailValue", 0.0)))
+        items = protocol_data.get("items", [])
+
+        ts_raw = protocol_data.get("timestamp")
+        try:
+            if isinstance(ts_raw, str):
+                ts = datetime.fromisoformat(ts_raw.replace("Z", ""))
+            elif isinstance(ts_raw, datetime):
+                ts = ts_raw
+            else:
+                ts = datetime.now()
+            date_str = ts.strftime("%d.%m.%Y %H:%M")
+        except Exception:
+            date_str = str(ts_raw or "")
+
+        logger.info(f"Printing write-off protocol slip {protocol_num} via {self.interface_type}")
+
+        printer = None
+        try:
+            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                from escpos.printer import Win32Raw
+                target_name = self.address
+                if not target_name or target_name.startswith('/dev/'):
+                    target_name = ""
+                    try:
+                        import win32print
+                        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                        pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
+                        if pos_printers:
+                            target_name = pos_printers[0]
+                        elif printers:
+                            target_name = printers[0]
+                    except Exception:
+                        pass
+                printer = Win32Raw(target_name)
+            elif self.interface_type == "USB":
+                from escpos.printer import Usb, File
+                if os.path.exists(self.address):
+                    printer = File(self.address)
+                else:
+                    printer = Usb(0x04b8, 0x0e15, 0)
+            elif self.interface_type == "NETWORK" and self.address:
+                from escpos.printer import Network
+                printer = Network(self.address, port=9100, timeout=3.0)
+            elif self.interface_type == "SERIAL" and self.address:
+                from escpos.printer import Serial
+                printer = Serial(self.address, baudrate=9600)
+        except Exception as conn_err:
+            logger.info(f"Physical printer offline ({conn_err}), using simulation fallback.")
+            printer = None
+
+        if printer:
+            try:
+                if hasattr(printer, 'open'):
+                    printer.open(f"VoltFlow_POS_WriteOff_{protocol_num}")
+            except Exception as open_err:
+                logger.warning(f"Failed to open printer device ({open_err}), falling back to simulation.")
+                printer = None
+
+        if printer:
+            try:
+                try:
+                    if hasattr(printer, 'charcode'):
+                        printer.charcode(encoding if encoding in ['CP852', 'CP1250'] else 'CP852')
+                except Exception:
+                    pass
+
+                # Header
+                printer.set(align='center', font='a', bold=True)
+                write_receipt_text(printer, f"{store_name}\n", strip_diacritics, encoding)
+                if store_ico:
+                    printer.set(align='center', font='b')
+                    write_receipt_text(printer, f"IČO: {store_ico}\n", strip_diacritics, encoding)
+
+                printer.text(double_line + "\n")
+                printer.set(align='center', bold=True, double_height=True)
+                write_receipt_text(printer, "PROTOKOL O LIKVIDACI\n", strip_diacritics, encoding)
+                printer.set(align='center', bold=True)
+                write_receipt_text(printer, "A ODPISU ZÁSOB (§ 25 ZoÚ)\n", strip_diacritics, encoding)
+                printer.set(align='center', font='a', bold=True)
+                write_receipt_text(printer, f"Číslo dokladu: {protocol_num}\n", strip_diacritics, encoding)
+                printer.text(sep_line + "\n")
+
+                # Meta details
+                printer.set(align='left', font='a')
+                write_receipt_text(printer, f"Datum: {date_str}\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"Důvod: {reason_desc}\n", strip_diacritics, encoding)
+                write_receipt_text(printer, f"Odpovědná osoba: {person}\n", strip_diacritics, encoding)
+
+                # Items table header
+                printer.text(sep_line + "\n")
+                if is_58mm:
+                    printer.set(align='left', font='b', bold=True)
+                    write_receipt_text(printer, f"{'POLOŽKA':<16}{'MN.':>6}{'CENA':>10}\n", strip_diacritics, encoding)
+                else:
+                    printer.set(align='left', font='a', bold=True)
+                    write_receipt_text(printer, f"{'POLOŽKA':<24}{'MNOŽSTVÍ':>10}{'NÁKUP CELK.':>14}\n", strip_diacritics, encoding)
+                printer.text(sep_line + "\n")
+
+                # Items rows
+                printer.set(align='left', font='b' if is_58mm else 'a')
+                for it in items:
+                    p_name = (it.get("preset_name") or it.get("presetName") or "Položka")[:name_width]
+                    qty = float(it.get("quantity", 0))
+                    unit = it.get("unit", "ks")
+                    cost_tot = float(it.get("total_cost", it.get("totalCost", 0)))
+                    qty_str = f"{qty:g} {unit}"
+                    cost_str = f"{cost_tot:.2f} Kč"
+
+                    if is_58mm:
+                        line = f"{p_name:<16}{qty_str:>6}{cost_str:>10}\n"
+                    else:
+                        line = f"{p_name:<24}{qty_str:>10}{cost_str:>14}\n"
+                    write_receipt_text(printer, line, strip_diacritics, encoding)
+
+                printer.text(sep_line + "\n")
+
+                # Totals & Accounting evaluation
+                printer.set(align='left', font='a', bold=True)
+                write_receipt_text(printer, f"Nákupní hodnota celkem: {total_cost:.2f} Kč\n", strip_diacritics, encoding)
+                printer.set(align='left', font='b')
+                write_receipt_text(printer, f"Prodejní hodnota s DPH: {total_retail:.2f} Kč\n", strip_diacritics, encoding)
+                printer.text(sep_line + "\n")
+
+                # Tax evaluation notice
+                printer.set(align='left', font='a', bold=True)
+                if is_deductible:
+                    write_receipt_text(printer, "DAŇOVÝ REŽIM: DAŇOVĚ UZNATELNÝ\n", strip_diacritics, encoding)
+                    printer.set(align='left', font='b')
+                    write_receipt_text(printer, "(Přirozený úbytek v normě dle § 25 odst. 2 ZoÚ)\n", strip_diacritics, encoding)
+                else:
+                    write_receipt_text(printer, "DAŇOVÝ REŽIM: NEDAŇOVÝ ODPIS / MANKO\n", strip_diacritics, encoding)
+                    printer.set(align='left', font='b')
+                    if vat_adjust:
+                        write_receipt_text(printer, "⚠️ Nutná korekce odpočtu DPH dle § 77/78 ZDPH!\n", strip_diacritics, encoding)
+
+                printer.text(double_line + "\n")
+                printer.set(align='left', font='b')
+                write_receipt_text(printer, "\n\nPodpis odpovědné osoby: ........................\n\n", strip_diacritics, encoding)
+                write_receipt_text(printer, "Schválil (vedoucí prodejny): ....................\n\n", strip_diacritics, encoding)
+
+                printer.text("\n\n")
+                printer.cut()
+
+                return {
+                    "success": True,
+                    "physical": True,
+                    "status": "PRINTED",
+                    "protocol_number": protocol_num
+                }
+            finally:
+                try:
+                    if hasattr(printer, 'close'):
+                        printer.close()
+                except Exception:
+                    pass
+
+        # Simulation fallback
+        sim_str = f"=== WRITE-OFF PROTOCOL SIMULATED: {protocol_num} | {reason_desc} | Nákup: {total_cost:.2f} Kč | Deductible: {is_deductible} ==="
+        print(sim_str)
+        return {
+            "success": True,
+            "physical": False,
+            "status": "SIMULATED",
+            "protocol_number": protocol_num
+        }
+
 

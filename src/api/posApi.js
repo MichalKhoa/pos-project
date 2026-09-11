@@ -1550,8 +1550,47 @@ export async function fetchSupplierPriceHistory(presetId) {
   return await res.json();
 }
 
+/**
+ * Submit inventory stock write-off & liquidation protocol (§ 25 ZoÚ)
+ */
+export async function submitStockWriteOff(writeOffData) {
+  const res = await fetch(`${API_BASE_URL}/inventory/write-off`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(writeOffData)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Stock write-off error ${res.status}`);
+  }
+  invalidateApiCache('presets');
+  return await res.json();
+}
 
+/**
+ * Fetch chronological stock write-off protocols (§ 25 ZoÚ)
+ */
+export async function fetchStockWriteOffs(limit = 50, offset = 0) {
+  const res = await fetch(`${API_BASE_URL}/inventory/write-offs?limit=${limit}&offset=${offset}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Write-offs fetch error ${res.status}`);
+  }
+  return await res.json();
+}
 
-
-
-
+/**
+ * Trigger physical ESC/POS thermal write-off protocol slip print job
+ */
+export async function printWriteOffProtocol(protocolData, storeConfig = {}) {
+  const res = await fetch(`${API_BASE_URL}/printer/print-write-off`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ protocolData, storeConfig })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Print write-off error ${res.status}`);
+  }
+  return await res.json();
+}

@@ -150,3 +150,35 @@ def print_barcode_label(req: PrintBarcodeLabelRequest, db: Session = Depends(get
     }
 
 
+class PrintWriteOffRequest(BaseModel):
+    protocolData: dict
+    storeConfig: dict = {}
+
+
+@router.post("/print-write-off")
+def print_write_off_protocol_slip(req: PrintWriteOffRequest, db: Session = Depends(get_db)):
+    """Trigger physical ESC/POS thermal write-off & liquidation protocol slip print job."""
+    config = db.query(StoreConfigModel).first()
+    interface = config.printer_interface if config else "USB"
+    address = config.printer_address if config else "/dev/usb/lp0"
+
+    store_config = req.storeConfig or {}
+    if config and not store_config.get("storeName"):
+        store_config["storeName"] = config.store_name
+    if config and not store_config.get("ico"):
+        store_config["ico"] = config.ico
+
+    printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
+    res = printer_service.print_write_off_protocol(req.protocolData, store_config)
+
+    if isinstance(res, dict) and not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to print write-off protocol"))
+
+    return {
+        "status": res.get("status", "PRINTED") if isinstance(res, dict) else "PRINTED",
+        "physical": res.get("physical", False) if isinstance(res, dict) else True,
+        "protocol_number": res.get("protocol_number"),
+        "success": True
+    }
+
+

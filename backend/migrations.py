@@ -60,6 +60,8 @@ MIGRATIONS = [
     ("presets", "unit", "VARCHAR DEFAULT 'ks'"),
     ("presets", "is_weighted", "BOOLEAN DEFAULT 0"),
     ("presets", "margin_coefficient", "FLOAT DEFAULT NULL"),
+    # Table: categories
+    ("categories", "natural_loss_norm", "FLOAT DEFAULT 0.0"),
     # Table: store_config
     ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
     ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),

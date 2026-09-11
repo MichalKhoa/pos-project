@@ -12,6 +12,16 @@ class CategorySchema(BaseModel):
     id: str
     name: str
     position: Optional[int] = 0
+    naturalLossNorm: Optional[float] = None
+    natural_loss_norm: Optional[float] = None
+
+    @property
+    def effective_natural_loss_norm(self) -> float:
+        if self.naturalLossNorm is not None:
+            return float(self.naturalLossNorm)
+        if self.natural_loss_norm is not None:
+            return float(self.natural_loss_norm)
+        return 0.0
 
 class PresetSchema(BaseModel):
     id: str
@@ -92,7 +102,15 @@ def get_categories(db: Session = Depends(get_db)):
             db.add(db_cat)
         db.commit()
         cats = db.query(CategoryModel).order_by(CategoryModel.position.asc()).all()
-    return [{"id": c.id, "name": c.name, "position": c.position} for c in cats]
+    return [
+        {
+            "id": c.id,
+            "name": c.name,
+            "position": c.position,
+            "naturalLossNorm": getattr(c, "natural_loss_norm", 0.0) or 0.0
+        }
+        for c in cats
+    ]
 
 @router.post("/categories", status_code=status.HTTP_201_CREATED)
 def save_category(cat: CategorySchema, db: Session = Depends(get_db)):
@@ -101,12 +119,23 @@ def save_category(cat: CategorySchema, db: Session = Depends(get_db)):
     if existing:
         existing.name = cat.name
         existing.position = cat.position
+        existing.natural_loss_norm = cat.effective_natural_loss_norm
     else:
-        existing = CategoryModel(id=cat.id, name=cat.name, position=cat.position)
+        existing = CategoryModel(
+            id=cat.id,
+            name=cat.name,
+            position=cat.position,
+            natural_loss_norm=cat.effective_natural_loss_norm
+        )
         db.add(existing)
     db.commit()
     db.refresh(existing)
-    return {"id": existing.id, "name": existing.name, "position": existing.position}
+    return {
+        "id": existing.id,
+        "name": existing.name,
+        "position": existing.position,
+        "naturalLossNorm": existing.natural_loss_norm
+    }
 
 @router.delete("/categories/{cat_id}")
 def delete_category(cat_id: str, db: Session = Depends(get_db)):
