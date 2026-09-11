@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Banknote, CreditCard, QrCode, Split } from 'lucide-react';
+import { Banknote, CreditCard, QrCode, Split, Building2, Search } from 'lucide-react';
 import CashDrawerIcon from './CashDrawerIcon';
-import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay } from '../api/posApi';
+import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay, lookupAres } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { soundFx } from '../utils/audio.js';
 import CashPaymentPanel from './payment/CashPaymentPanel.jsx';
@@ -21,6 +21,44 @@ export default function PaymentModal({
   const { t } = useTranslation();
   const [tenderedStr, setTenderedStr] = useState('0');
   const [activeMethod, setActiveMethod] = useState(initialMethod || method || 'cash');
+
+  // B2B Invoicing state (§ 28 ZDPH > 10 000 CZK)
+  const [isB2B, setIsB2B] = useState(false);
+  const [customerIco, setCustomerIco] = useState('');
+  const [customerDic, setCustomerDic] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [isAresLoading, setIsAresLoading] = useState(false);
+  const [aresStatus, setAresStatus] = useState(null);
+
+  const handleAresLookup = async () => {
+    const cleanIco = customerIco.trim();
+    if (!cleanIco) {
+      setAresStatus({ type: 'error', text: 'Zadejte IČO pro vyhledání v ARES.' });
+      return;
+    }
+    setIsAresLoading(true);
+    setAresStatus(null);
+    try {
+      const data = await lookupAres(cleanIco);
+      if (data) {
+        if (data.obchodni_jmeno) setCustomerName(data.obchodni_jmeno);
+        if (data.dic) setCustomerDic(data.dic);
+        if (data.full_address) setCustomerAddress(data.full_address);
+        setAresStatus({
+          type: 'success',
+          text: `Ověřeno v ARES: ${data.obchodni_jmeno}${data.platce_dph ? ' (Plátce DPH)' : ''}`
+        });
+      }
+    } catch (err) {
+      setAresStatus({
+        type: 'error',
+        text: `ARES: ${err.message || 'Subjekt nenalezen. Zadejte údaje ručně.'}`
+      });
+    } finally {
+      setIsAresLoading(false);
+    }
+  };
 
   // Terminal state
   const [termConfig, setTermConfig] = useState(null);
@@ -165,8 +203,25 @@ export default function PaymentModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMethod, tenderedStr, tenderedVal, splitCashStr, changeDue, totalAmount, effectiveCashTotal]);
 
+  const getB2bPayload = () => {
+    if (!isB2B) return { isInvoice: false, is_invoice: false };
+    return {
+      isInvoice: true,
+      is_invoice: true,
+      customerIco: customerIco.trim() || null,
+      customer_ico: customerIco.trim() || null,
+      customerDic: customerDic.trim() || null,
+      customer_dic: customerDic.trim() || null,
+      customerName: customerName.trim() || null,
+      customer_name: customerName.trim() || null,
+      customerAddress: customerAddress.trim() || null,
+      customer_address: customerAddress.trim() || null
+    };
+  };
+
   const handleComplete = (options = {}) => {
     const printReceipt = typeof options === 'boolean' ? options : (options?.printReceipt !== false);
+    const b2bData = getB2bPayload();
 
     if (activeMethod === 'cash') {
       if (tenderedVal > 0 && changeDue < 0) return;
@@ -179,7 +234,8 @@ export default function PaymentModal({
         tenderedAmount: finalTendered,
         change: finalChange,
         changeDue: finalChange,
-        printReceipt
+        printReceipt,
+        ...b2bData
       });
       return;
     }
@@ -191,7 +247,8 @@ export default function PaymentModal({
       tenderedAmount: totalAmount,
       change: 0,
       changeDue: 0,
-      printReceipt
+      printReceipt,
+      ...b2bData
     };
 
     if (activeMethod === 'split') {
@@ -225,7 +282,8 @@ export default function PaymentModal({
           tendered: totalAmount,
           change: 0,
           cardAuthCode: res.auth_code,
-          cardMask: res.card_mask
+          cardMask: res.card_mask,
+          ...getB2bPayload()
         };
         if (activeMethod === 'split') {
           payDetails.splitDetails = {
@@ -314,6 +372,202 @@ export default function PaymentModal({
               {totalAmount.toFixed(2)} Kč
             </span>
           </div>
+        </div>
+
+        {/* B2B Invoicing Banner & Drawer (§ 28 ZDPH) */}
+        <div style={{
+          padding: '0.6rem 1.25rem',
+          background: isB2B ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-input)',
+          borderBottom: '1px solid var(--border-color)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.6rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <button
+                type="button"
+                onClick={() => setIsB2B(prev => !prev)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  border: `1px solid ${isB2B ? 'var(--accent-blue)' : 'var(--border-color)'}`,
+                  background: isB2B ? 'var(--accent-blue)' : 'var(--bg-card)',
+                  color: isB2B ? '#fff' : 'var(--text-primary)',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  minHeight: '40px'
+                }}
+              >
+                <Building2 size={16} />
+                <span>{isB2B ? '✓ Firemní faktura (B2B)' : '+ Firemní faktura (B2B)'}</span>
+              </button>
+
+              {totalAmount > 10000 && !isB2B && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--accent-amber)', fontWeight: 600 }}>
+                  ⚠️ Nad 10 000 Kč (§ 28 ZDPH doporučuje daňový doklad s IČO)
+                </span>
+              )}
+            </div>
+
+            {isB2B && customerName && (
+              <span style={{ fontSize: '0.82rem', color: 'var(--accent-blue)', fontWeight: 700 }}>
+                {customerName} {customerIco ? `(IČO: ${customerIco})` : ''}
+              </span>
+            )}
+          </div>
+
+          {/* Expandable B2B Details Form */}
+          {isB2B && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '0.6rem',
+              background: 'var(--bg-card)',
+              padding: '0.75rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-color)'
+            }}>
+              {/* ICO + ARES */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                  IČO Odběratele
+                </label>
+                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                  <input
+                    type="text"
+                    value={customerIco}
+                    maxLength={10}
+                    onChange={e => setCustomerIco(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAresLookup();
+                      }
+                    }}
+                    placeholder="12345678"
+                    style={{
+                      flex: 1,
+                      height: '40px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '0 0.65rem',
+                      color: 'var(--text-primary)',
+                      fontWeight: 700,
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAresLookup}
+                    disabled={isAresLoading || !customerIco.trim()}
+                    style={{
+                      height: '40px',
+                      padding: '0 0.85rem',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--accent-blue)',
+                      color: '#fff',
+                      border: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      cursor: (isAresLoading || !customerIco.trim()) ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
+                    <Search size={14} />
+                    <span>{isAresLoading ? '...' : 'ARES'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Company Name */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                  Název firmy / Jméno
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  placeholder="Firma s.r.o."
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0 0.65rem',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.85rem'
+                  }}
+                />
+              </div>
+
+              {/* DIC */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                  DIČ (volitelné)
+                </label>
+                <input
+                  type="text"
+                  value={customerDic}
+                  onChange={e => setCustomerDic(e.target.value)}
+                  placeholder="CZ12345678"
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0 0.65rem',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.85rem'
+                  }}
+                />
+              </div>
+
+              {/* Address */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                  Sídlo / Adresa odběratele
+                </label>
+                <input
+                  type="text"
+                  value={customerAddress}
+                  onChange={e => setCustomerAddress(e.target.value)}
+                  placeholder="Ulice 1, 110 00 Praha"
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0 0.65rem',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.85rem'
+                  }}
+                />
+              </div>
+
+              {aresStatus && (
+                <div style={{
+                  gridColumn: '1 / -1',
+                  fontSize: '0.78rem',
+                  color: aresStatus.type === 'success' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                  fontWeight: 600
+                }}>
+                  {aresStatus.text}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Modal Main Content Area */}

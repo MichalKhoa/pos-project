@@ -44,12 +44,13 @@ export default function PhysicalInventoryModal({
   };
 
   const handleBarcodeKeyDown = (e) => {
-    if (e.key === 'Enter' && searchTerm.trim()) {
+    if (e.key === 'Enter') {
+      const term = (searchTerm || e.target?.value || '').trim().toLowerCase();
+      if (!term) return;
       e.preventDefault();
-      const term = searchTerm.trim().toLowerCase();
       const match = presets.find(p =>
-        (p.barcode && p.barcode.toLowerCase() === term) ||
-        p.name.toLowerCase() === term
+        (p.barcode && String(p.barcode).toLowerCase() === term) ||
+        (p.name && p.name.toLowerCase() === term)
       );
       if (match) {
         handleItemScanned(match);

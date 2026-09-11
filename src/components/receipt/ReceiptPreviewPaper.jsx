@@ -105,7 +105,13 @@ export default function ReceiptPreviewPaper({
   const footerRaw = storeConfig?.receiptFooterLines || storeConfig?.receiptFooter || 'Děkujeme za váš nákup!';
   const footerLines = footerRaw.split('\n').filter(l => l.trim());
 
-  const rawTitle = isRefund ? `↩️ STORNO DOKLAD č. ${saleData.receiptNumber}` : `DAŇOVÝ DOKLAD č. ${saleData.receiptNumber}`;
+  const invNum = saleData.invoice_number || saleData.invoiceNumber;
+  const isB2BInvoice = Boolean(saleData.is_invoice || saleData.isInvoice || invNum);
+  const rawTitle = isRefund
+    ? `↩️ STORNO DOKLAD č. ${saleData.receiptNumber}`
+    : (isB2BInvoice && invNum
+        ? `FAKTURA č. ${invNum}`
+        : `DAŇOVÝ DOKLAD č. ${saleData.receiptNumber}`);
 
   const paperWidth = width || (is58mm ? '280px' : '380px');
   const topFeedPadding = Math.max(8, topMargin * 16 + 8);
@@ -245,6 +251,35 @@ export default function ReceiptPreviewPaper({
         {showCashier && (
           <div style={{ fontSize: is58mm ? '10.4px' : '11.52px', color: '#555' }}>
             Obsluha: {cashierName}
+          </div>
+        )}
+
+        {(saleData.customer_name || saleData.customerName || saleData.customer_ico || saleData.customerIco) && (
+          <div style={{
+            margin: '6px 0 2px 0',
+            padding: '4px 6px',
+            border: '1px solid #333',
+            borderRadius: '2px',
+            textAlign: 'left',
+            fontSize: is58mm ? '10.5px' : '12px'
+          }}>
+            <div style={{ fontWeight: '800', borderBottom: '1px dashed #666', paddingBottom: '2px', marginBottom: '3px' }}>
+              ODBĚRATEL:
+            </div>
+            {(saleData.customer_name || saleData.customerName) && (
+              <div style={{ fontWeight: '700' }}>{clean(saleData.customer_name || saleData.customerName)}</div>
+            )}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(saleData.customer_ico || saleData.customerIco) && (
+                <div>IČO: <strong>{saleData.customer_ico || saleData.customerIco}</strong></div>
+              )}
+              {(saleData.customer_dic || saleData.customerDic) && (
+                <div>DIČ: <strong>{saleData.customer_dic || saleData.customerDic}</strong></div>
+              )}
+            </div>
+            {(saleData.customer_address || saleData.customerAddress) && (
+              <div style={{ fontSize: is58mm ? '9.5px' : '11px', color: '#333' }}>{clean(saleData.customer_address || saleData.customerAddress)}</div>
+            )}
           </div>
         )}
       </div>

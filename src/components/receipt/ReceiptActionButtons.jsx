@@ -1,11 +1,13 @@
 import React from 'react';
-import { Printer, RotateCcw } from 'lucide-react';
+import { Printer, RotateCcw, FileText } from 'lucide-react';
 
 export default function ReceiptActionButtons({
   isPrinting,
   storeConfig,
   onPrint,
-  onNewSale
+  onNewSale,
+  isInvoice,
+  onPrintA4Invoice
 }) {
   return (
     <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
@@ -27,6 +29,32 @@ export default function ReceiptActionButtons({
         <RotateCcw size={16} />
         <span>Nový Prodej</span>
       </button>
+
+      {/* A4 Printable Invoice Button */}
+      {isInvoice && onPrintA4Invoice && (
+        <button
+          type="button"
+          className="pay-btn"
+          style={{
+            width: '100%',
+            height: '46px',
+            fontSize: '0.88rem',
+            background: 'rgba(59, 130, 246, 0.15)',
+            border: '1px solid var(--accent-blue)',
+            color: 'var(--accent-blue)',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            cursor: 'pointer'
+          }}
+          onClick={onPrintA4Invoice}
+        >
+          <FileText size={18} />
+          <span>🖨️ Tisknout A4 Fakturu / Daňový doklad</span>
+        </button>
+      )}
 
       {/* Debug Preview Window Button */}
       {storeConfig?.directHardwarePrint !== false && (

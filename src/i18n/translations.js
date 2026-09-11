@@ -323,7 +323,16 @@ export const translations = {
       history_tooltip: "Historie nákupních cen dodavatelů",
       write_off_btn: "Odpis zásob",
       write_off_btn_title: "Vystavit protokol o likvidaci a odpisu zásob (§ 25 ZoÚ)",
-      write_off_action: "Odpis"
+      write_off_action: "Odpis",
+      audit_btn: "Inventura 31.12.",
+      deposits_btn: "Vratné obaly",
+      tax_reports_btn: "Daňové přehledy",
+      tax_reports_title: "Daňové přehledy & Příloha č. 1 DPFO (§ 7b ZDP)",
+      tax_reports_subtitle: "Oficiální podklady pro daňové přiznání k dani z příjmů a DPH z pokladního systému",
+      deposit_ledger_title: "Kniha zálohovaných vratných obalů (Lahve & Přepravky)",
+      deposit_ledger_subtitle: "Evidence stavu vratných lahví (3 Kč) a bas (100 Kč), závozů a vratek pivovarům",
+      physical_audit_title: "Fyzická inventura skladu k 31. 12. (§ 29, 30 ZoÚ)",
+      physical_audit_subtitle: "Skenování regálů čtečkou, vyčíslení mank/přebytků a narovnání skladu"
     },
     stock_write_off: {
       title: "Skladový Odpis a Likvidační Protokol",
@@ -1271,6 +1280,15 @@ export const translations = {
       open_price_badge: "Otevřená cena",
       tap_to_edit: "Klepněte pro změnu",
       active_typing: "⌨️ Zadáváte hodnotu..."
+    },
+    b2b: {
+      btn: "Firemní faktura (B2B)",
+      warning_over_10k: "Nad 10 000 Kč (§ 28 ZDPH vyžaduje daňový doklad s IČO)",
+      ico: "IČO Odběratele",
+      company_name: "Název firmy / Jméno",
+      dic: "DIČ (volitelné)",
+      address: "Sídlo / Adresa odběratele",
+      print_a4: "Tisknout A4 Fakturu / Daňový doklad"
     }
   },
   vi: {
@@ -1597,7 +1615,16 @@ export const translations = {
       history_tooltip: "Lịch sử giá nhập từ nhà cung cấp",
       write_off_btn: "Xuất hủy kho",
       write_off_btn_title: "Lập biên bản thanh lý và xuất hủy hàng hóa (§ 25 ZoÚ)",
-      write_off_action: "Hủy"
+      write_off_action: "Hủy",
+      audit_btn: "Kiểm kê 31/12",
+      deposits_btn: "Vỏ chai & két",
+      tax_reports_btn: "Báo cáo thuế",
+      tax_reports_title: "Báo cáo thuế & Phụ lục 1 DPFO (§ 7b ZDP)",
+      tax_reports_subtitle: "Dữ liệu chính thức cho quyết toán thuế thu nhập và VAT từ máy POS",
+      deposit_ledger_title: "Sổ theo dõi vỏ chai và két bia đặt cọc",
+      deposit_ledger_subtitle: "Theo dõi tồn kho vỏ chai (3 Kč) và két (100 Kč), nhập từ nhà máy và trả lại",
+      physical_audit_title: "Kiểm kê kho thực tế k 31/12 (§ 29, 30 ZoÚ)",
+      physical_audit_subtitle: "Quét mã vạch, tính thừa/thiếu và cân bằng kho"
     },
     stock_write_off: {
       title: "Biên Bản Xuất Hủy & Thanh Lý Kho",
@@ -2545,6 +2572,15 @@ export const translations = {
       open_price_badge: "Giá mở",
       tap_to_edit: "Chạm để chỉnh sửa",
       active_typing: "⌨️ Đang nhập giá trị..."
+    },
+    b2b: {
+      btn: "Hóa đơn doanh nghiệp (B2B)",
+      warning_over_10k: "Trên 10 000 Kč (§ 28 ZDPH yêu cầu xuất hóa đơn có IČO)",
+      ico: "Mã số thuế / IČO người mua",
+      company_name: "Tên công ty / Người mua",
+      dic: "Mã VAT / DIČ (tùy chọn)",
+      address: "Trụ sở / Địa chỉ người mua",
+      print_a4: "In hóa đơn A4 / Chứng từ thuế"
     }
   },
   en: {
@@ -2871,7 +2907,16 @@ export const translations = {
       history_tooltip: "Supplier purchase price history",
       write_off_btn: "Stock Write-Off",
       write_off_btn_title: "Create stock write-off & liquidation protocol (§ 25 ZoÚ)",
-      write_off_action: "Write-off"
+      write_off_action: "Write-off",
+      audit_btn: "Inventory 31.12.",
+      deposits_btn: "Returnable bottles",
+      tax_reports_btn: "Tax reports",
+      tax_reports_title: "Tax Reports & Annex 1 DPFO (§ 7b ZDP)",
+      tax_reports_subtitle: "Official accounting and VAT statements from the POS register",
+      deposit_ledger_title: "Returnable Deposit Packaging Ledger (Bottles & Crates)",
+      deposit_ledger_subtitle: "Track inventory of returnable beer bottles (3 CZK) and crates (100 CZK)",
+      physical_audit_title: "Physical Inventory Audit as of 31.12. (§ 29, 30 ZoÚ)",
+      physical_audit_subtitle: "Barcode shelf scanning, discrepancy calculation and stock reconciliation"
     },
     stock_write_off: {
       title: "Stock Write-Off & Liquidation Protocol",
@@ -3819,6 +3864,15 @@ export const translations = {
       open_price_badge: "Open price",
       tap_to_edit: "Tap to edit",
       active_typing: "⌨️ Entering value..."
+    },
+    b2b: {
+      btn: "Corporate invoice (B2B)",
+      warning_over_10k: "Over 10,000 CZK (§ 28 VAT Act requires tax invoice with company ID)",
+      ico: "Buyer Company ID (IČO)",
+      company_name: "Company name / Buyer",
+      dic: "VAT ID / DIČ (optional)",
+      address: "Registered address",
+      print_a4: "Print A4 Tax Invoice"
     }
   }
 };

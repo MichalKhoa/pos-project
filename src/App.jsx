@@ -741,7 +741,26 @@ export default function App() {
     setPaymentModalMethod(method);
   }, [cartItems.length]);
 
-  const handleCompleteSale = ({ method, paymentMethod, splitDetails, tendered, tenderedAmount, change, changeDue, printReceipt = true }) => {
+  const handleCompleteSale = ({
+    method,
+    paymentMethod,
+    splitDetails,
+    tendered,
+    tenderedAmount,
+    change,
+    changeDue,
+    printReceipt = true,
+    isInvoice,
+    is_invoice,
+    customerIco,
+    customer_ico,
+    customerDic,
+    customer_dic,
+    customerName,
+    customer_name,
+    customerAddress,
+    customer_address
+  }) => {
     soundFx.playSuccessChime();
     const effectiveMethod = paymentMethod || method || 'cash';
     const effectiveTendered = tenderedAmount !== undefined ? tenderedAmount : (tendered !== undefined ? tendered : 0);
@@ -784,7 +803,17 @@ export default function App() {
       splitDetails: splitDetails || null,
       tenderedAmount: effectiveMethod === 'cash' ? effectiveTendered : finalGrandTotal,
       changeDue: effectiveMethod === 'cash' ? effectiveChange : 0,
-      taxSummary
+      taxSummary,
+      isInvoice: isInvoice || is_invoice || false,
+      is_invoice: is_invoice || isInvoice || false,
+      customerIco: customerIco || customer_ico || null,
+      customer_ico: customer_ico || customerIco || null,
+      customerDic: customerDic || customer_dic || null,
+      customer_dic: customer_dic || customerDic || null,
+      customerName: customerName || customer_name || null,
+      customer_name: customer_name || customerName || null,
+      customerAddress: customerAddress || customer_address || null,
+      customer_address: customer_address || customerAddress || null
     });
 
     createSaleBackend(newSale).then(async backendRes => {
@@ -801,6 +830,8 @@ export default function App() {
         const enrichedSale = normalizeSale({
           ...newSale,
           receiptNumber: assignedRn,
+          invoiceNumber: backendRes.invoice_number || newSale.invoiceNumber,
+          invoice_number: backendRes.invoice_number || newSale.invoice_number,
           fik: backendRes.fik,
           pok: backendRes.fik,
           bkp: backendRes.bkp,

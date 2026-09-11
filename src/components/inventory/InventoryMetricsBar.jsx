@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History, Trash2, ClipboardCheck, Wine } from 'lucide-react';
+import { Package, AlertTriangle, ShieldAlert, TrendingUp, CheckCircle2, Download, Upload, PackagePlus, History, Trash2, ClipboardCheck, Wine, FileText } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 export default function InventoryMetricsBar({
@@ -20,7 +20,8 @@ export default function InventoryMetricsBar({
   onOpenStockMovements,
   onOpenStockWriteOff,
   onOpenPhysicalAudit,
-  onOpenDepositPackaging
+  onOpenDepositPackaging,
+  onOpenTaxReports
 }) {
   const { t } = useTranslation();
 
@@ -278,6 +279,32 @@ export default function InventoryMetricsBar({
             >
               <Wine size={15} />
               <span>{t('inventory.deposits_btn') || 'Vratné obaly'}</span>
+            </button>
+          )}
+
+          {onOpenTaxReports && (
+            <button
+              type="button"
+              onClick={onOpenTaxReports}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                height: '38px',
+                padding: '0 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--accent-blue)',
+                background: 'rgba(59, 130, 246, 0.12)',
+                color: 'var(--accent-blue)',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Daňové přehledy: Příloha č. 1 DPFO a souhrn DPH (§ 7b ZDP)"
+            >
+              <FileText size={15} />
+              <span>{t('inventory.tax_reports_btn') || 'Daňové přehledy'}</span>
             </button>
           )}
 

@@ -12,6 +12,7 @@ import StockMovementLedgerModal from './inventory/StockMovementLedgerModal.jsx';
 import StockWriteOffModal from './inventory/StockWriteOffModal.jsx';
 import PhysicalInventoryModal from './inventory/PhysicalInventoryModal.jsx';
 import DepositPackagingModal from './inventory/DepositPackagingModal.jsx';
+import TaxReportsModal from './inventory/TaxReportsModal.jsx';
 import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
 export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin, storeConfig = {} }) {
@@ -49,6 +50,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   // Physical Inventory (31.12.) & Returnable Deposits state
   const [isPhysicalAuditOpen, setIsPhysicalAuditOpen] = useState(false);
   const [isDepositPackagingOpen, setIsDepositPackagingOpen] = useState(false);
+  const [isTaxReportsOpen, setIsTaxReportsOpen] = useState(false);
 
   const handleAuditCompleted = async (protocol) => {
     try {
@@ -380,6 +382,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         }}
         onOpenPhysicalAudit={() => setIsPhysicalAuditOpen(true)}
         onOpenDepositPackaging={() => setIsDepositPackagingOpen(true)}
+        onOpenTaxReports={() => setIsTaxReportsOpen(true)}
       />
 
       {statusMessage && (
@@ -513,6 +516,12 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
       <DepositPackagingModal
         isOpen={isDepositPackagingOpen}
         onClose={() => setIsDepositPackagingOpen(false)}
+      />
+
+      {/* Tax Statements & DPFO Přehled (§ 7b ZDP) Modal */}
+      <TaxReportsModal
+        isOpen={isTaxReportsOpen}
+        onClose={() => setIsTaxReportsOpen(false)}
       />
     </div>
   );

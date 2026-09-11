@@ -182,8 +182,8 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1rem' }}>{bal.container_name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Záloha: {bal.deposit_value} Kč / ks</div>
+                    <div style={{ fontWeight: 800, fontSize: '1rem' }}>{bal.container_name || bal.name || bal.container_type}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Záloha: {bal.deposit_value || bal.deposit_amount || 0} Kč / ks</div>
                   </div>
                   <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
                     {bal.container_type}
@@ -191,16 +191,16 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.25rem' }}>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{bal.current_quantity} <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ks</span></div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{bal.current_quantity || 0} <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ks</span></div>
                   <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent-amber)' }}>
-                    {bal.total_deposit_value.toFixed(2)} Kč
+                    {((bal.total_deposit_value !== undefined ? bal.total_deposit_value : ((bal.current_quantity || 0) * (bal.deposit_value || bal.deposit_amount || 0))) || 0).toFixed(2)} Kč
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                  <span>Příjem: +{bal.intake_quantity}</span>
-                  <span>Výkup: +{bal.customer_returned_quantity}</span>
-                  <span>Odvoz: -{bal.supplier_dispatched_quantity}</span>
+                  <span>Příjem: +{bal.intake_quantity || 0}</span>
+                  <span>Výkup: +{bal.customer_returned_quantity || 0}</span>
+                  <span>Odvoz: -{bal.supplier_dispatched_quantity || 0}</span>
                 </div>
               </div>
             ))}
@@ -223,7 +223,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
             <div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Celková vázaná hodnota záloh na prodejně</div>
               <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
-                {summary?.total_deposit_locked_value?.toFixed(2) || '0.00'} Kč
+                {((summary?.total_deposit_locked_value !== undefined ? summary.total_deposit_locked_value : summary?.total_locked_deposit_value) || 0).toFixed(2)} Kč
               </div>
             </div>
 
