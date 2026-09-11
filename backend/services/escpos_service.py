@@ -285,7 +285,13 @@ class ESCPOSPrinterService:
 
 
                         # Document Title & Timestamp
-                        raw_title = f"STORNO DOKLAD č. {receipt_num}" if is_refund else f"DAŇOVÝ DOKLAD č. {receipt_num}"
+                        is_inv = bool(sale_data.get("isInvoice") or sale_data.get("is_invoice") or sale_data.get("invoice_number"))
+                        inv_num_val = sale_data.get("invoiceNumber") or sale_data.get("invoice_number") or ""
+                        if is_inv and inv_num_val:
+                            raw_title = f"OPRAVNÁ FAKTURA č. {inv_num_val}" if is_refund else f"FAKTURA č. {inv_num_val}"
+                        else:
+                            raw_title = f"STORNO DOKLAD č. {receipt_num}" if is_refund else f"DAŇOVÝ DOKLAD č. {receipt_num}"
+
                         printer.set(align='center', font='a', width=1, height=1, bold=True)
 
                         if title_style == "framed":
@@ -322,6 +328,25 @@ class ESCPOSPrinterService:
                         if show_cashier:
                             cashier_name = sale_data.get("cashier") or sale_data.get("cashierName") or "Pokladní"
                             write_receipt_text(printer, f"Obsluha: {cashier_name}\n", strip_diacritics, encoding)
+
+                        # B2B Invoice Buyer Details
+                        if is_inv:
+                            c_ico = sale_data.get("customerIco") or sale_data.get("customer_ico") or ""
+                            c_dic = sale_data.get("customerDic") or sale_data.get("customer_dic") or ""
+                            c_name = sale_data.get("customerName") or sale_data.get("customer_name") or ""
+                            c_addr = sale_data.get("customerAddress") or sale_data.get("customer_address") or ""
+                            printer.text(dash_line + "\n")
+                            printer.set(align='left', font='a', width=1, height=1, bold=True)
+                            write_receipt_text(printer, "ODBĚRATEL:\n", strip_diacritics, encoding)
+                            printer.set(align='left', font='a', width=1, height=1, bold=False)
+                            if c_name:
+                                write_receipt_text(printer, f" {c_name}\n", strip_diacritics, encoding)
+                            if c_addr:
+                                write_receipt_text(printer, f" {c_addr}\n", strip_diacritics, encoding)
+                            id_line = f" IČO: {c_ico}"
+                            if c_dic:
+                                id_line += f"  DIČ: {c_dic}"
+                            write_receipt_text(printer, f"{id_line}\n", strip_diacritics, encoding)
 
                         printer.text(separator + "\n")
 
