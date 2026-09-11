@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 from database import get_db, atomic_transaction
 from models import (
@@ -13,7 +13,11 @@ from models import (
     CategoryModel,
     WriteOffSequenceModel,
     StockWriteOffModel,
-    StockWriteOffItemModel
+    StockWriteOffItemModel,
+    InventoryAuditSequenceModel,
+    InventoryAuditModel,
+    InventoryAuditItemModel,
+    DepositMovementModel
 )
 
 router = APIRouter(prefix="/api/v1/inventory", tags=["Inventory & Stock Ledger"])
@@ -272,6 +276,35 @@ def generate_next_write_off_number(db: Session, year: Optional[int] = None) -> s
     return f"ODP-{year}-{next_num:04d}"
 
 
+def generate_next_audit_number(db: Session, year: Optional[int] = None) -> str:
+    """
+    Atomically increments and retrieves the next physical inventory protocol sequence number (§ 29, 30 ZoÚ).
+    Format: INV-YYYY-XXXX (e.g. INV-2026-0001)
+    """
+    if not year:
+        year = datetime.now().year
+
+    seq_obj = db.query(InventoryAuditSequenceModel).filter(InventoryAuditSequenceModel.year == year).first()
+    if not seq_obj:
+        year_prefix = f"INV-{year}-"
+        max_num = 0
+        existing_audits = db.query(InventoryAuditModel.protocol_number).filter(InventoryAuditModel.protocol_number.like(f"{year_prefix}%")).all()
+        for (pn,) in existing_audits:
+            try:
+                num = int(pn.split("-")[2])
+                if num > max_num:
+                    max_num = num
+            except Exception:
+                pass
+        seq_obj = InventoryAuditSequenceModel(year=year, last_seq=max_num)
+        db.add(seq_obj)
+        db.flush()
+
+    seq_obj.last_seq += 1
+    next_num = seq_obj.last_seq
+    return f"INV-{year}-{next_num:04d}"
+
+
 class WriteOffItemRequestSchema(BaseModel):
     preset_id: str
     quantity: float
@@ -503,3 +536,375 @@ def get_stock_write_off_detail(protocol_id: str, db: Session = Depends(get_db)):
             detail=f"Protokol o odpisu {protocol_id} nebyl nalezen."
         )
     return record
+
+
+# =========================================================================
+# Physical Inventory Audit & Discrepancy Reconciliation (§ 29, 30 ZoÚ)
+# =========================================================================
+
+class InventoryAuditItemRequestSchema(BaseModel):
+    preset_id: str
+    physical_quantity: float
+
+
+class InventoryAuditRequestSchema(BaseModel):
+    responsible_person: Optional[str] = None
+    note: Optional[str] = None
+    items: List[InventoryAuditItemRequestSchema]
+
+
+class InventoryAuditItemResponseSchema(BaseModel):
+    id: str
+    preset_id: str
+    preset_name: str
+    system_quantity: float
+    physical_quantity: float
+    difference: float
+    unit: str
+    unit_cost: float
+    total_cost_impact: float
+
+    model_config = {"from_attributes": True}
+
+
+class InventoryAuditResponseSchema(BaseModel):
+    id: str
+    protocol_number: str
+    responsible_person: Optional[str] = None
+    note: Optional[str] = None
+    total_items_counted: int
+    total_surplus_value: float
+    total_shortage_value: float
+    timestamp: datetime
+    items: List[InventoryAuditItemResponseSchema]
+
+    model_config = {"from_attributes": True}
+
+
+@router.post("/audit", status_code=status.HTTP_201_CREATED, response_model=InventoryAuditResponseSchema)
+def submit_inventory_audit(payload: InventoryAuditRequestSchema, db: Session = Depends(get_db)):
+    """
+    Process physical stock inventory audit protocol (§ 29, 30 ZoÚ).
+    Atomically:
+    - Verifies items and non-negative physical quantities.
+    - Compares physical count to current database stock_quantity.
+    - Generates ADJUSTMENT stock movements for any non-zero discrepancy.
+    - Reconciles preset stock_quantity directly to physical count.
+    - Generates sequential protocol number (INV-YYYY-XXXX).
+    - Persists InventoryAuditModel and InventoryAuditItemModel records.
+    """
+    if not payload.items:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inventurní arch musí obsahovat alespoň jednu položku."
+        )
+
+    for it in payload.items:
+        if it.physical_quantity is None or it.physical_quantity < 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Fyzické množství nesmí být záporné (zadáno: {it.physical_quantity})."
+            )
+
+    now = datetime.now()
+    audit_id = f"inv_{uuid.uuid4().hex[:12]}"
+
+    with atomic_transaction(db):
+        protocol_num = generate_next_audit_number(db, year=now.year)
+
+        audit_items = []
+        total_surplus_value = 0.0
+        total_shortage_value = 0.0
+
+        for it in payload.items:
+            preset = db.query(PresetModel).filter(PresetModel.id == it.preset_id).first()
+            if not preset:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Položka se zadaným ID {it.preset_id} neexistuje."
+                )
+
+            system_qty = float(preset.stock_quantity or 0.0)
+            phys_qty = float(it.physical_quantity)
+            diff = round(phys_qty - system_qty, 4)
+            unit_cost = float(preset.cost_price or 0.0)
+            cost_impact = round(diff * unit_cost, 2)
+
+            if diff > 0:
+                total_surplus_value += round(diff * unit_cost, 2)
+            elif diff < 0:
+                total_shortage_value += round(abs(diff) * unit_cost, 2)
+
+            # Record stock adjustment movement if discrepancy exists
+            if diff != 0:
+                mov_id = f"sm_{uuid.uuid4().hex[:12]}"
+                diff_label = f"+{diff:.2f}" if diff > 0 else f"{diff:.2f}"
+                note_str = f"Inventura {protocol_num}: úprava ze stavu {system_qty:.2f} na {phys_qty:.2f} {preset.unit or 'ks'}"
+                if payload.note:
+                    note_str += f" ({payload.note})"
+
+                mov = StockMovementModel(
+                    id=mov_id,
+                    preset_id=preset.id,
+                    movement_type="ADJUSTMENT",
+                    quantity_delta=diff,
+                    unit_cost=unit_cost,
+                    supplier_ico=None,
+                    supplier_name=None,
+                    document_ref=protocol_num,
+                    note=note_str,
+                    timestamp=now
+                )
+                db.add(mov)
+
+            # Reconcile preset stock quantity to counted physical reality
+            preset.stock_quantity = phys_qty
+
+            item_id = f"invi_{uuid.uuid4().hex[:12]}"
+            audit_item = InventoryAuditItemModel(
+                id=item_id,
+                audit_id=audit_id,
+                preset_id=preset.id,
+                preset_name=preset.name,
+                system_quantity=system_qty,
+                physical_quantity=phys_qty,
+                difference=diff,
+                unit=preset.unit or "ks",
+                unit_cost=unit_cost,
+                total_cost_impact=cost_impact
+            )
+            audit_items.append(audit_item)
+
+        audit_record = InventoryAuditModel(
+            id=audit_id,
+            protocol_number=protocol_num,
+            responsible_person=(payload.responsible_person or "").strip() or None,
+            note=(payload.note or "").strip() or None,
+            total_items_counted=len(audit_items),
+            total_surplus_value=round(total_surplus_value, 2),
+            total_shortage_value=round(total_shortage_value, 2),
+            timestamp=now
+        )
+        audit_record.items = audit_items
+        db.add(audit_record)
+        db.flush()
+
+        db.refresh(audit_record)
+        return audit_record
+
+
+@router.get("/audits", response_model=List[InventoryAuditResponseSchema])
+def get_inventory_audits(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """Fetch chronological physical inventory audit protocols."""
+    effective_limit = min(max(1, limit), 200)
+    records = (
+        db.query(InventoryAuditModel)
+        .order_by(desc(InventoryAuditModel.timestamp))
+        .offset(offset)
+        .limit(effective_limit)
+        .all()
+    )
+    return records
+
+
+@router.get("/audits/{protocol_id}", response_model=InventoryAuditResponseSchema)
+def get_inventory_audit_detail(protocol_id: str, db: Session = Depends(get_db)):
+    """Fetch detail of a single physical inventory audit protocol by ID or protocol_number."""
+    record = (
+        db.query(InventoryAuditModel)
+        .filter(
+            (InventoryAuditModel.id == protocol_id) |
+            (InventoryAuditModel.protocol_number == protocol_id)
+        )
+        .first()
+    )
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Protokol o inventuře {protocol_id} nebyl nalezen."
+        )
+    return record
+
+
+# =========================================================================
+# Deposit Packaging Book / Kniha zálohovaných vratných obalů (Lahve & Přepravky)
+# =========================================================================
+
+STANDARD_DEPOSIT_TYPES = {
+    "BOTTLE_3CZK": {"name": "Pivní lahev 0,5l", "value": 3.0},
+    "CRATE_100CZK": {"name": "Pivní přepravka / basa", "value": 100.0}
+}
+
+
+class DepositMovementRequestSchema(BaseModel):
+    container_type: str  # 'BOTTLE_3CZK', 'CRATE_100CZK', or custom
+    container_name: Optional[str] = None
+    deposit_value: Optional[float] = None
+    movement_type: str  # 'SUPPLIER_INTAKE', 'CUSTOMER_RETURN', 'SUPPLIER_DISPATCH', 'ADJUSTMENT'
+    quantity: float
+    document_ref: Optional[str] = None
+    supplier_ico: Optional[str] = None
+    note: Optional[str] = None
+
+
+class DepositMovementResponseSchema(BaseModel):
+    id: str
+    container_type: str
+    container_name: str
+    deposit_value: float
+    movement_type: str
+    quantity_delta: float
+    total_value: float
+    document_ref: Optional[str] = None
+    supplier_ico: Optional[str] = None
+    note: Optional[str] = None
+    timestamp: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DepositContainerBalanceSchema(BaseModel):
+    container_type: str
+    container_name: str
+    deposit_value: float
+    current_quantity: float
+    total_deposit_value: float
+    intake_quantity: float
+    customer_returned_quantity: float
+    supplier_dispatched_quantity: float
+
+
+class DepositSummaryResponseSchema(BaseModel):
+    balances: List[DepositContainerBalanceSchema]
+    total_deposit_locked_value: float
+    recent_movements: List[DepositMovementResponseSchema]
+
+
+@router.post("/deposits/movement", status_code=status.HTTP_201_CREATED, response_model=DepositMovementResponseSchema)
+def record_deposit_movement(payload: DepositMovementRequestSchema, db: Session = Depends(get_db)):
+    """
+    Record a movement in the returnable deposit packaging ledger.
+    Types:
+    - SUPPLIER_INTAKE: bottles/crates received from brewery (+)
+    - CUSTOMER_RETURN: bottles/crates returned by retail customers at counter (+)
+    - SUPPLIER_DISPATCH: empty bottles/crates loaded back to brewery delivery truck (-)
+    - ADJUSTMENT: inventory correction for breakage or discrepancies (+/-)
+    """
+    valid_movements = {"SUPPLIER_INTAKE", "CUSTOMER_RETURN", "SUPPLIER_DISPATCH", "ADJUSTMENT"}
+    m_type = (payload.movement_type or "").strip().upper()
+    if m_type not in valid_movements:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Neplatný typ pohybu vratných obalů. Povolené hodnoty: {', '.join(sorted(valid_movements))}"
+        )
+
+    if payload.quantity == 0 and m_type != "ADJUSTMENT":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Množství obalů musí být nenulové."
+        )
+
+    c_type = (payload.container_type or "BOTTLE_3CZK").strip().upper()
+    std = STANDARD_DEPOSIT_TYPES.get(c_type, {})
+    c_name = (payload.container_name or std.get("name") or c_type).strip()
+    dep_val = float(payload.deposit_value if payload.deposit_value is not None else std.get("value", 3.0))
+
+    if m_type in ("SUPPLIER_INTAKE", "CUSTOMER_RETURN"):
+        qty_delta = abs(payload.quantity)
+    elif m_type == "SUPPLIER_DISPATCH":
+        current_bal = db.query(func.coalesce(func.sum(DepositMovementModel.quantity_delta), 0.0))\
+            .filter(DepositMovementModel.container_type == c_type).scalar() or 0.0
+        if abs(payload.quantity) > current_bal:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Nelze vrátit {abs(payload.quantity):g} ks obalu '{c_name}' — na skladě je pouze {current_bal:g} ks."
+            )
+        qty_delta = -abs(payload.quantity)
+    else:  # ADJUSTMENT
+        qty_delta = payload.quantity
+
+    total_val = round(qty_delta * dep_val, 2)
+    now = datetime.now()
+    mov_id = f"dep_{uuid.uuid4().hex[:12]}"
+
+    with atomic_transaction(db):
+        mov = DepositMovementModel(
+            id=mov_id,
+            container_type=c_type,
+            container_name=c_name,
+            deposit_value=dep_val,
+            movement_type=m_type,
+            quantity_delta=qty_delta,
+            total_value=total_val,
+            document_ref=(payload.document_ref or "").strip() or None,
+            supplier_ico=(payload.supplier_ico or "").strip() or None,
+            note=(payload.note or "").strip() or None,
+            timestamp=now
+        )
+        db.add(mov)
+        db.flush()
+        db.refresh(mov)
+        return mov
+
+
+@router.get("/deposits/summary", response_model=DepositSummaryResponseSchema)
+def get_deposit_summary(db: Session = Depends(get_db)):
+    """
+    Get current stock balance and financial valuation of returnable deposit containers (Lahve & Přepravky).
+    """
+    movements = db.query(DepositMovementModel).order_by(desc(DepositMovementModel.timestamp)).all()
+
+    types_found = dict(STANDARD_DEPOSIT_TYPES)
+    for m in movements:
+        if m.container_type not in types_found:
+            types_found[m.container_type] = {"name": m.container_name, "value": m.deposit_value}
+
+    balances = []
+    total_locked = 0.0
+
+    for c_type, info in types_found.items():
+        type_movs = [m for m in movements if m.container_type == c_type]
+        cur_qty = sum(m.quantity_delta for m in type_movs)
+        intake_qty = sum(m.quantity_delta for m in type_movs if m.movement_type == "SUPPLIER_INTAKE")
+        cust_ret_qty = sum(m.quantity_delta for m in type_movs if m.movement_type == "CUSTOMER_RETURN")
+        disp_qty = sum(abs(m.quantity_delta) for m in type_movs if m.movement_type == "SUPPLIER_DISPATCH")
+        dep_val = info["value"]
+        tot_val = round(cur_qty * dep_val, 2)
+        total_locked += tot_val
+
+        balances.append(DepositContainerBalanceSchema(
+            container_type=c_type,
+            container_name=info["name"],
+            deposit_value=dep_val,
+            current_quantity=cur_qty,
+            total_deposit_value=tot_val,
+            intake_quantity=intake_qty,
+            customer_returned_quantity=cust_ret_qty,
+            supplier_dispatched_quantity=disp_qty
+        ))
+
+    recent = movements[:50]
+    return DepositSummaryResponseSchema(
+        balances=balances,
+        total_deposit_locked_value=round(total_locked, 2),
+        recent_movements=recent
+    )
+
+
+@router.get("/deposits/movements", response_model=List[DepositMovementResponseSchema])
+def get_deposit_movements(
+    container_type: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """Fetch paginated audit log of deposit packaging movements."""
+    query = db.query(DepositMovementModel)
+    if container_type:
+        query = query.filter(DepositMovementModel.container_type == container_type.strip().upper())
+    records = query.order_by(desc(DepositMovementModel.timestamp)).offset(offset).limit(min(max(1, limit), 200)).all()
+    return records

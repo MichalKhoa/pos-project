@@ -105,7 +105,13 @@ export default function ReceiptPreviewPaper({
   const footerRaw = storeConfig?.receiptFooterLines || storeConfig?.receiptFooter || 'Děkujeme za váš nákup!';
   const footerLines = footerRaw.split('\n').filter(l => l.trim());
 
-  const rawTitle = isRefund ? `↩️ STORNO DOKLAD č. ${saleData.receiptNumber}` : `DAŇOVÝ DOKLAD č. ${saleData.receiptNumber}`;
+  const invNum = saleData.invoice_number || saleData.invoiceNumber;
+  const isB2BInvoice = Boolean(saleData.is_invoice || saleData.isInvoice || invNum);
+  const rawTitle = isRefund
+    ? (isB2BInvoice ? `OPRAVNÝ DAŇOVÝ DOKLAD č. ${invNum || saleData.receiptNumber}` : `↩️ STORNO DOKLAD č. ${saleData.receiptNumber}`)
+    : (isB2BInvoice
+        ? `FAKTURA - DAŇOVÝ DOKLAD č. ${invNum || saleData.receiptNumber}`
+        : `DAŇOVÝ DOKLAD č. ${saleData.receiptNumber}`);
 
   const paperWidth = width || (is58mm ? '280px' : '380px');
   const topFeedPadding = Math.max(8, topMargin * 16 + 8);
@@ -141,176 +147,317 @@ export default function ReceiptPreviewPaper({
         </div>
       )}
 
-
-      <div className="receipt-header" style={{ textAlign: 'center' }}>
-        {showLogo && logoBase64 && (
-          <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-            <img
-              src={logoBase64}
-              alt="Store Logo"
-              style={{
-                maxWidth: is58mm ? '160px' : '220px',
-                maxHeight: '75px',
-                objectFit: 'contain',
-                filter: 'grayscale(100%) contrast(140%)',
-                margin: '0 auto',
-                display: 'block'
-              }}
-            />
-          </div>
-        )}
-        <div
-          className="receipt-store-name"
-          style={{
-            fontSize: is58mm ? '18.4px' : '22.4px',
-            fontWeight: boldStore ? '900' : '400',
-            letterSpacing: boldStore ? '0.5px' : 'normal',
-            textShadow: boldStore ? '0.35px 0 0 currentColor' : 'none'
-          }}
-        >
-          {clean(storeConfig?.storeName || 'VoltFlow POS')}
-        </div>
-
-        <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.street)}</div>
-        <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.city)}</div>
-        <div style={{ marginTop: '2px', fontSize: is58mm ? '11.2px' : '12.8px', fontWeight: '700' }}>
-          IČO: {clean(storeConfig?.ico)} | DIČ: {clean(storeConfig?.dic)} ({vatBadge})
-        </div>
-        {showContacts && (phone || email) && (
-          <div style={{ fontSize: is58mm ? '10.88px' : '12.16px', color: '#555', marginTop: '1px' }}>
-            {[phone && `Tel: ${phone}`, email && `Email: ${email}`].filter(Boolean).join(' • ')}
-          </div>
-        )}
-        <div style={{ fontSize: is58mm ? '10.88px' : '12.16px', color: '#666', marginTop: '2px' }}>
-          Provozovna: {storeConfig?.idProvozovny || '11'} | {clean(storeConfig?.registerNo || 'Pokladna #01')}
-        </div>
-
-        {/* Custom Header Note if Configured */}
-        {customHeader && (
+      {isB2BInvoice ? (
+        /* ==================== FORMAL B2B INVOICE LAYOUT ==================== */
+        <div className="receipt-invoice-block">
+          {/* Invoice Document Title Header */}
           <div style={{
-            margin: '6px 0 4px 0',
-            padding: '4px 8px',
-            fontSize: is58mm ? '11.52px' : '13.12px',
-            fontWeight: '700',
+            border: '2px solid #000',
+            padding: '6px',
             textAlign: 'center',
-            border: '1px dashed #64748b',
-            borderRadius: '2px',
-            background: 'rgba(0, 0, 0, 0.03)'
+            marginBottom: '8px',
+            fontSize: is58mm ? '12px' : '14px',
+            fontWeight: '900',
+            color: isRefund ? '#dc2626' : '#000',
+            background: 'rgba(0, 0, 0, 0.02)'
           }}>
-            {customHeader}
-          </div>
-        )}
-
-        {/* Title rendering */}
-        {titleStyle === 'framed' ? (
-          <div style={{ border: '1.5px solid #000', padding: '4px 6px', margin: '6px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900', color: isRefund ? '#dc2626' : '#000' }}>
             {clean(rawTitle)}
           </div>
-        ) : titleStyle === 'banner' ? (
-          <div
-            className="receipt-divider-title"
-            style={{
-              fontSize: is58mm ? '12.48px' : '14.4px',
-              color: isRefund ? '#dc2626' : '#000000',
-              borderColor: isRefund ? '#dc2626' : '#222222',
-              margin: '6px 0',
-              padding: '3px 0'
-            }}
-          >
-            ══ {clean(rawTitle)} ══
-          </div>
-        ) : titleStyle === 'classic' ? (
-          <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '3px 0', margin: '6px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900' }}>
-            {clean(rawTitle)}
-          </div>
-        ) : (
-          <div style={{ padding: '3px 0', margin: '4px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900' }}>
-            {clean(rawTitle)}
-          </div>
-        )}
 
-        {isRefund && (saleData.originalReceiptNumber || saleData.original_receipt_number) && (
-          <div style={{ fontSize: '11.2px', fontWeight: '800', color: '#dc2626', marginTop: '2px' }}>
-            Původní doklad: #{saleData.originalReceiptNumber || saleData.original_receipt_number}
-          </div>
-        )}
-        {isRefund && (saleData.refundReason || saleData.refund_reason) && (
-          <div style={{ fontSize: '11.2px', color: '#444', fontStyle: 'italic', marginTop: '2px' }}>
-            Důvod vrácení: <em>{saleData.refundReason || saleData.refund_reason}</em>
-          </div>
-        )}
-        <div style={{ fontSize: is58mm ? '10.88px' : '12px', marginTop: '2px', color: '#555' }}>
-          Datum & čas: <b>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b>
-        </div>
-        {showCashier && (
-          <div style={{ fontSize: is58mm ? '10.4px' : '11.52px', color: '#555' }}>
-            Obsluha: {cashierName}
-          </div>
-        )}
-      </div>
+          {/* Supplier & Buyer Structured Cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+            <div style={{ border: '1px solid #333', padding: '6px', borderRadius: '3px', background: '#fafafa', fontSize: is58mm ? '10px' : '11.5px', textAlign: 'left' }}>
+              <div style={{ fontWeight: '900', borderBottom: '1px dashed #888', paddingBottom: '2px', marginBottom: '3px', textTransform: 'uppercase' }}>
+                DODAVATEL:
+              </div>
+              <div style={{ fontWeight: '800', fontSize: is58mm ? '11px' : '12.5px' }}>{clean(storeConfig?.storeName || 'VoltFlow POS')}</div>
+              <div style={{ color: '#444' }}>{[clean(storeConfig?.street), clean(storeConfig?.city)].filter(Boolean).join(', ')}</div>
+              <div style={{ fontWeight: '700', marginTop: '2px' }}>
+                IČO: {clean(storeConfig?.ico)} | DIČ: {clean(storeConfig?.dic)} ({vatBadge})
+              </div>
+              <div style={{ fontSize: is58mm ? '9px' : '10px', color: '#666' }}>Zapsán v živnostenském rejstříku</div>
+              {storeConfig?.bankAccountIban && (
+                <div style={{ marginTop: '2px' }}>Účet/IBAN: <strong>{clean(storeConfig.bankAccountIban)}</strong></div>
+              )}
+            </div>
 
-      {renderSeparator('sep-head')}
+            <div style={{ border: '1px solid #333', padding: '6px', borderRadius: '3px', background: '#fafafa', fontSize: is58mm ? '10px' : '11.5px', textAlign: 'left' }}>
+              <div style={{ fontWeight: '900', borderBottom: '1px dashed #888', paddingBottom: '2px', marginBottom: '3px', textTransform: 'uppercase' }}>
+                ODBĚRATEL:
+              </div>
+              <div style={{ fontWeight: '800', fontSize: is58mm ? '11px' : '12.5px' }}>
+                {clean(saleData.customer_name || saleData.customerName || 'Firemní zákazník')}
+              </div>
+              {(saleData.customer_address || saleData.customerAddress) && (
+                <div style={{ color: '#444' }}>{clean(saleData.customer_address || saleData.customerAddress)}</div>
+              )}
+              <div style={{ display: 'flex', gap: '8px', fontWeight: '700', marginTop: '2px' }}>
+                <div>IČO: <strong>{saleData.customer_ico || saleData.customerIco}</strong></div>
+                {(saleData.customer_dic || saleData.customerDic) && (
+                  <div>DIČ: <strong>{saleData.customer_dic || saleData.customerDic}</strong></div>
+                )}
+              </div>
+            </div>
+          </div>
 
-      <table className="receipt-table" style={{ tableLayout: 'fixed', width: '100%' }}>
-        <thead>
-          <tr style={{ fontSize: is58mm ? '10.88px' : '12.48px' }}>
-            <th style={{ width: '52%', textAlign: 'left' }}>Položka</th>
-            <th style={{ width: '14%', textAlign: 'center' }}>Ks</th>
-            <th style={{ width: '34%', textAlign: 'right' }}>Cena</th>
-          </tr>
-        </thead>
-        <tbody>
-          {resolvedItems.map((item, idx) => {
-            const itemDisc = item.discountPercent || 0;
-            const unitPrice = item.price * (1 - itemDisc / 100);
-            const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
-            const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
-            const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
+          {/* Invoice Dates & Identifiers */}
+          <div style={{
+            fontSize: is58mm ? '9.5px' : '11px',
+            margin: '6px 0',
+            borderTop: '1px dashed #888',
+            borderBottom: '1px dashed #888',
+            padding: '4px 0',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Evidenční číslo:</span>
+              <strong>{saleData.receiptNumber}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Variabilní symbol:</span>
+              <strong>{(invNum || saleData.receiptNumber).toString().replace(/\D/g, '') || saleData.receiptNumber}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Datum vystavení:</span>
+              <span>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Datum zdanit. plnění (DUZP):</span>
+              <strong>{new Date(saleData.timestamp).toLocaleDateString('cs-CZ')}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Forma úhrady:</span>
+              <strong style={{ color: '#059669' }}>
+                {saleData.paymentMethod === 'cash' ? 'HOTOVOST' : saleData.paymentMethod === 'card' ? 'KARTA' : saleData.paymentMethod === 'split' ? 'KOMBINOVANÁ' : 'PŘEVOD'} (Uhrazeno)
+              </strong>
+            </div>
+            {isRefund && (saleData.originalReceiptNumber || saleData.original_receipt_number) && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#dc2626', fontWeight: '700' }}>
+                <span>Původní doklad:</span>
+                <span>#{saleData.originalReceiptNumber || saleData.original_receipt_number}</span>
+              </div>
+            )}
+            {isRefund && (saleData.refundReason || saleData.refund_reason) && (
+              <div style={{ color: '#444', fontStyle: 'italic' }}>
+                Důvod opravy: {saleData.refundReason || saleData.refund_reason}
+              </div>
+            )}
+          </div>
 
-            return (
-              <tr key={idx}>
-                <td style={{ wordBreak: 'break-word', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
-                  <div
-                    className="receipt-item-title"
-                    style={{
-                      fontWeight: boldItems ? '900' : '400',
-                      color: boldItems ? '#000000' : '#222222',
-                      textShadow: boldItems ? '0.3px 0 0 currentColor' : 'none'
-                    }}
-                  >
-                    {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
-                  </div>
-                  {isWeighted && (
-                    <div style={{ fontSize: '9.5px', color: '#555' }}>
-                      {qtyFormatted} {unitStr} × {parseFloat(item.price).toFixed(2)} Kč
-                    </div>
-                  )}
-                  {showSku && (item.barcode || item.sku) && (
-                    <div style={{ fontSize: '9.92px', color: '#777' }}>Kód: {item.barcode || item.sku}</div>
-                  )}
-                  {itemDensity === 'standard' && showVat && (
-                    <div className="receipt-item-sub">DPH {item.vat}%</div>
-                  )}
-                </td>
-                <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
-                  {qtyFormatted}{isWeighted ? ' ' + unitStr : ''}
-                </td>
-                <td style={{
-                  textAlign: 'right',
-                  fontWeight: boldPrices ? '900' : '400',
-                  color: boldPrices ? '#000000' : '#222222',
-                  textShadow: boldPrices ? '0.3px 0 0 currentColor' : 'none',
-                  whiteSpace: 'nowrap',
-                  fontFamily: 'monospace',
-                  padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0'
-                }}>
-                  {(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč
-                </td>
+          {/* Itemized Table with Price bez DPH and VAT % */}
+          <table className="receipt-table" style={{ tableLayout: 'fixed', width: '100%', fontSize: is58mm ? '9.5px' : '11px', marginTop: '6px' }}>
+            <thead>
+              <tr style={{ borderBottom: '1.5px solid #000', textAlign: 'left', fontWeight: '800' }}>
+                <th style={{ width: is58mm ? '40%' : '44%' }}>Položka</th>
+                <th style={{ width: '14%', textAlign: 'center' }}>Ks</th>
+                <th style={{ width: '22%', textAlign: 'right' }}>b. DPH</th>
+                <th style={{ width: '10%', textAlign: 'center' }}>DPH</th>
+                <th style={{ width: '20%', textAlign: 'right' }}>Celk.</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {resolvedItems.map((item, idx) => {
+                const itemDisc = item.discountPercent || 0;
+                const unitPriceInc = item.price * (1 - itemDisc / 100);
+                const vatRate = item.vat !== undefined ? item.vat : 21;
+                const priceEx = unitPriceInc / (1 + vatRate / 100);
+                const totInc = unitPriceInc * item.quantity;
+                const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
+                const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
+                const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
+
+                return (
+                  <tr key={idx} style={{ borderBottom: '1px dashed #ddd' }}>
+                    <td style={{ wordBreak: 'break-word', padding: '3px 0' }}>
+                      <div style={{ fontWeight: '700' }}>{clean(item.name)}</div>
+                      {itemDisc > 0 && <span style={{ color: '#dc2626', fontSize: '9px' }}>(-{itemDisc}%)</span>}
+                    </td>
+                    <td style={{ textAlign: 'center', padding: '3px 0' }}>{qtyFormatted}{isWeighted ? ' ' + unitStr : ''}</td>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', padding: '3px 0' }}>{priceEx.toFixed(2)}</td>
+                    <td style={{ textAlign: 'center', fontFamily: 'monospace', padding: '3px 0' }}>{vatRate}%</td>
+                    <td style={{ textAlign: 'right', fontWeight: '700', fontFamily: 'monospace', padding: '3px 0' }}>{totInc.toFixed(2)} Kč</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* ==================== STANDARD RETAIL RECEIPT LAYOUT ==================== */
+        <>
+          <div className="receipt-header" style={{ textAlign: 'center' }}>
+            {showLogo && logoBase64 && (
+              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <img
+                  src={logoBase64}
+                  alt="Store Logo"
+                  style={{
+                    maxWidth: is58mm ? '160px' : '220px',
+                    maxHeight: '75px',
+                    objectFit: 'contain',
+                    filter: 'grayscale(100%) contrast(140%)',
+                    margin: '0 auto',
+                    display: 'block'
+                  }}
+                />
+              </div>
+            )}
+            <div
+              className="receipt-store-name"
+              style={{
+                fontSize: is58mm ? '18.4px' : '22.4px',
+                fontWeight: boldStore ? '900' : '400',
+                letterSpacing: boldStore ? '0.5px' : 'normal',
+                textShadow: boldStore ? '0.35px 0 0 currentColor' : 'none'
+              }}
+            >
+              {clean(storeConfig?.storeName || 'VoltFlow POS')}
+            </div>
+
+            <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.street)}</div>
+            <div style={{ fontSize: is58mm ? '11.84px' : '13.44px', color: '#444' }}>{clean(storeConfig?.city)}</div>
+            <div style={{ marginTop: '2px', fontSize: is58mm ? '11.2px' : '12.8px', fontWeight: '700' }}>
+              IČO: {clean(storeConfig?.ico)} | DIČ: {clean(storeConfig?.dic)} ({vatBadge})
+            </div>
+            {showContacts && (phone || email) && (
+              <div style={{ fontSize: is58mm ? '10.88px' : '12.16px', color: '#555', marginTop: '1px' }}>
+                {[phone && `Tel: ${phone}`, email && `Email: ${email}`].filter(Boolean).join(' • ')}
+              </div>
+            )}
+            <div style={{ fontSize: is58mm ? '10.88px' : '12.16px', color: '#666', marginTop: '2px' }}>
+              Provozovna: {storeConfig?.idProvozovny || '11'} | {clean(storeConfig?.registerNo || 'Pokladna #01')}
+            </div>
+
+            {/* Custom Header Note if Configured */}
+            {customHeader && (
+              <div style={{
+                margin: '6px 0 4px 0',
+                padding: '4px 8px',
+                fontSize: is58mm ? '11.52px' : '13.12px',
+                fontWeight: '700',
+                textAlign: 'center',
+                border: '1px dashed #64748b',
+                borderRadius: '2px',
+                background: 'rgba(0, 0, 0, 0.03)'
+              }}>
+                {customHeader}
+              </div>
+            )}
+
+            {/* Title rendering */}
+            {titleStyle === 'framed' ? (
+              <div style={{ border: '1.5px solid #000', padding: '4px 6px', margin: '6px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900', color: isRefund ? '#dc2626' : '#000' }}>
+                {clean(rawTitle)}
+              </div>
+            ) : titleStyle === 'banner' ? (
+              <div
+                className="receipt-divider-title"
+                style={{
+                  fontSize: is58mm ? '12.48px' : '14.4px',
+                  color: isRefund ? '#dc2626' : '#000000',
+                  borderColor: isRefund ? '#dc2626' : '#222222',
+                  margin: '6px 0',
+                  padding: '3px 0'
+                }}
+              >
+                ══ {clean(rawTitle)} ══
+              </div>
+            ) : titleStyle === 'classic' ? (
+              <div style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000', padding: '3px 0', margin: '6px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900' }}>
+                {clean(rawTitle)}
+              </div>
+            ) : (
+              <div style={{ padding: '3px 0', margin: '4px 0', fontSize: is58mm ? '11.84px' : '14.08px', fontWeight: '900' }}>
+                {clean(rawTitle)}
+              </div>
+            )}
+
+            {isRefund && (saleData.originalReceiptNumber || saleData.original_receipt_number) && (
+              <div style={{ fontSize: '11.2px', fontWeight: '800', color: '#dc2626', marginTop: '2px' }}>
+                Původní doklad: #{saleData.originalReceiptNumber || saleData.original_receipt_number}
+              </div>
+            )}
+            {isRefund && (saleData.refundReason || saleData.refund_reason) && (
+              <div style={{ fontSize: '11.2px', color: '#444', fontStyle: 'italic', marginTop: '2px' }}>
+                Důvod vrácení: <em>{saleData.refundReason || saleData.refund_reason}</em>
+              </div>
+            )}
+            <div style={{ fontSize: is58mm ? '10.88px' : '12px', marginTop: '2px', color: '#555' }}>
+              Datum & čas: <b>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b>
+            </div>
+            {showCashier && (
+              <div style={{ fontSize: is58mm ? '10.4px' : '11.52px', color: '#555' }}>
+                Obsluha: {cashierName}
+              </div>
+            )}
+          </div>
+
+          {renderSeparator('sep-head')}
+
+          <table className="receipt-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <thead>
+              <tr style={{ fontSize: is58mm ? '10.88px' : '12.48px' }}>
+                <th style={{ width: '52%', textAlign: 'left' }}>Položka</th>
+                <th style={{ width: '14%', textAlign: 'center' }}>Ks</th>
+                <th style={{ width: '34%', textAlign: 'right' }}>Cena</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resolvedItems.map((item, idx) => {
+                const itemDisc = item.discountPercent || 0;
+                const unitPrice = item.price * (1 - itemDisc / 100);
+                const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
+                const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
+                const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
+
+                return (
+                  <tr key={idx}>
+                    <td style={{ wordBreak: 'break-word', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
+                      <div
+                        className="receipt-item-title"
+                        style={{
+                          fontWeight: boldItems ? '900' : '400',
+                          color: boldItems ? '#000000' : '#222222',
+                          textShadow: boldItems ? '0.3px 0 0 currentColor' : 'none'
+                        }}
+                      >
+                        {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
+                      </div>
+                      {isWeighted && (
+                        <div style={{ fontSize: '9.5px', color: '#555' }}>
+                          {qtyFormatted} {unitStr} × {parseFloat(item.price).toFixed(2)} Kč
+                        </div>
+                      )}
+                      {showSku && (item.barcode || item.sku) && (
+                        <div style={{ fontSize: '9.92px', color: '#777' }}>Kód: {item.barcode || item.sku}</div>
+                      )}
+                      {itemDensity === 'standard' && showVat && (
+                        <div className="receipt-item-sub">DPH {item.vat}%</div>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'center', fontWeight: '700', padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0' }}>
+                      {qtyFormatted}{isWeighted ? ' ' + unitStr : ''}
+                    </td>
+                    <td style={{
+                      textAlign: 'right',
+                      fontWeight: boldPrices ? '900' : '400',
+                      color: boldPrices ? '#000000' : '#222222',
+                      textShadow: boldPrices ? '0.3px 0 0 currentColor' : 'none',
+                      whiteSpace: 'nowrap',
+                      fontFamily: 'monospace',
+                      padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0'
+                    }}>
+                      {(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
+      )}
 
       {/* High-Contrast Thermal Total Banner */}
       <div

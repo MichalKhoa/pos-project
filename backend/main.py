@@ -25,7 +25,7 @@ from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from migrations import run_schema_migrations
-from routers import sales, printer, display, payments, eet, catalog, updater, config, qr, system, cash, stock
+from routers import sales, printer, display, payments, eet, catalog, updater, config, qr, system, cash, stock, reports
 
 from paths import LOGS_DIR, get_dist_dir, IS_FROZEN, APP_DIR
 from logging.handlers import RotatingFileHandler
@@ -186,6 +186,7 @@ app.include_router(qr.router)
 app.include_router(system.router)
 app.include_router(cash.router)
 app.include_router(stock.router)
+app.include_router(reports.router)
 
 
 # Single-Process Production Serving: Serve compiled React dist/ static assets dynamically

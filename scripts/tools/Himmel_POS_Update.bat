@@ -6,24 +6,25 @@ echo   Updating Himmel POS to Latest Version from GitHub
 echo ========================================================
 echo.
 
-cd /d "%~dp0"
+set "ROOT_DIR=%~dp0..\.."
+cd /d "%ROOT_DIR%"
 
 REM 0. If running on client installation without git, delegate to client NSIS updater
-if not exist "%~dp0..\..\.git" (
+if not exist "%ROOT_DIR%\.git" (
     call "%~dp0update_client.bat" %*
     exit /b !errorlevel!
 )
 
 REM 1. Safely stop running POS backend services and browser windows
 echo [1/5] Stopping active POS services and app instances...
-call "%~dp0Himmel_POS_Service_Stop.bat" >nul 2>&1
+call "%~dp0Himmel_POS_Stop.bat" >nul 2>&1
 taskkill /F /IM msedge.exe /FI "WINDOWTITLE eq Himmel POS App*" >nul 2>&1
 
 REM 2. Pull latest release changes from GitHub repository
 echo.
 echo [2/5] Fetching latest release from GitHub (git pull origin master)...
 where git >nul 2>&1
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     git pull origin master
     if !errorlevel! neq 0 (
         echo [WARNING] Git pull failed or offline. Proceeding with local build...
@@ -35,7 +36,7 @@ if %errorlevel% equ 0 (
 REM 3. Update Python virtual environment and database schema
 echo.
 echo [3/5] Updating Python packages and auto-migrating database...
-cd /d "%~dp0backend"
+cd /d "%ROOT_DIR%\backend"
 if exist "venv\Scripts\python.exe" (
     call .\venv\Scripts\python.exe -m pip install -r requirements.txt --quiet
     call .\venv\Scripts\python.exe migrations.py
@@ -52,9 +53,9 @@ if exist "venv\Scripts\python.exe" (
 REM 4. Install npm packages and compile React frontend UI bundle
 echo.
 echo [4/5] Building latest React touchscreen UI bundle (npm run build)...
-cd /d "%~dp0"
+cd /d "%ROOT_DIR%"
 where npm >nul 2>&1
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     call npm install --no-audit --no-fund
     call npm run build
 ) else (
@@ -65,7 +66,7 @@ REM 5. Restart Background Service / Register Application
 echo.
 echo [5/5] Restarting Himmel POS Service...
 sc query HimmelPOSBackend >nul 2>&1
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     echo Starting Himmel POS Windows Service...
     net start HimmelPOSBackend >nul 2>&1
 ) else (
@@ -75,7 +76,7 @@ if %errorlevel% equ 0 (
         schtasks /run /tn "HimmelPOSBackend" >nul 2>&1
     ) else (
         echo Launching Register Desktop App...
-        start "" "%~dp0Himmel_POS.bat"
+        start "" "%ROOT_DIR%\start.bat"
     )
 )
 

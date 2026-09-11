@@ -273,6 +273,18 @@ export function normalizeSale(sale) {
     refund_status: sale.refund_status || sale.refundStatus || 'NONE',
     refundedAmount: sale.refundedAmount !== undefined ? parseFloat(sale.refundedAmount) : (sale.refunded_amount !== undefined ? parseFloat(sale.refunded_amount) : 0),
     refunded_amount: sale.refunded_amount !== undefined ? parseFloat(sale.refunded_amount) : (sale.refundedAmount !== undefined ? parseFloat(sale.refundedAmount) : 0),
+    isInvoice: sale.isInvoice !== undefined ? sale.isInvoice : (sale.is_invoice !== undefined ? sale.is_invoice : false),
+    is_invoice: sale.is_invoice !== undefined ? sale.is_invoice : (sale.isInvoice !== undefined ? sale.isInvoice : false),
+    invoiceNumber: sale.invoiceNumber || sale.invoice_number || null,
+    invoice_number: sale.invoice_number || sale.invoiceNumber || null,
+    customerIco: sale.customerIco || sale.customer_ico || null,
+    customer_ico: sale.customer_ico || sale.customerIco || null,
+    customerDic: sale.customerDic || sale.customer_dic || null,
+    customer_dic: sale.customer_dic || sale.customerDic || null,
+    customerName: sale.customerName || sale.customer_name || null,
+    customer_name: sale.customer_name || sale.customerName || null,
+    customerAddress: sale.customerAddress || sale.customer_address || null,
+    customer_address: sale.customer_address || sale.customerAddress || null,
     items: normalizedItems
   };
 }

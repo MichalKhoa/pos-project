@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title VoltFlow POS - Hardware & Environment Pre-Flight
+title VoltFlow POS - Hardware ^& Environment Pre-Flight
 echo ========================================================
 echo   VoltFlow POS — Hardware Pre-Flight Diagnostic Tool
 echo ========================================================

@@ -81,7 +81,16 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
     }
   }, [disableAutoPrint, storeConfig?.autoPrintReceipt, saleData, handlePrint]);
 
+  const handlePrintA4Invoice = useCallback(() => {
+    if (!saleData?.id) return;
+    const url = `/api/v1/sales/${encodeURIComponent(saleData.id)}/invoice-html`;
+    window.open(url, '_blank');
+  }, [saleData?.id]);
+
   if (!saleData) return null;
+
+  const invNum = saleData.invoice_number || saleData.invoiceNumber;
+  const isInvoice = Boolean(saleData.is_invoice || saleData.isInvoice || invNum);
 
   return (
     <div className="modal-overlay">
@@ -89,7 +98,11 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
         <div className="modal-header" style={{ background: (saleData.isRefund || saleData.is_refund) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'var(--bg-input)' }}>
           <div className="modal-title">
             <CheckCircle size={20} style={{ color: (saleData.isRefund || saleData.is_refund) ? '#fff' : 'var(--accent-emerald)' }} />
-            <span>{(saleData.isRefund || saleData.is_refund) ? 'STORNO DOKLAD / DOBROPIS' : 'Prodej Dokončen'}</span>
+            <span>
+              {(saleData.isRefund || saleData.is_refund)
+                ? 'STORNO DOKLAD / DOBROPIS'
+                : (isInvoice && invNum ? `Faktura č. ${invNum}` : 'Prodej Dokončen')}
+            </span>
           </div>
           <button className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
@@ -101,6 +114,8 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
             storeConfig={storeConfig}
             onPrint={handlePrint}
             onNewSale={onNewSale}
+            isInvoice={isInvoice}
+            onPrintA4Invoice={handlePrintA4Invoice}
           />
 
           {/* Printable Thermal Receipt Area */}

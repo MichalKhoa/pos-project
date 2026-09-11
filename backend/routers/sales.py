@@ -7,7 +7,7 @@ from sqlalchemy import func, case
 from typing import List, Optional, Any, Dict
 import re
 from database import get_db
-from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel, PresetModel, StockMovementModel, CashMovementModel
+from models import SaleModel, SaleItemModel, StoreConfigModel, ReceiptSequenceModel, InvoiceSequenceModel, PresetModel, StockMovementModel, CashMovementModel
 from services.eet_service import CzechEETService
 from services.security_utils import parse_iso_timestamp, round_currency
 from services.hardware_profile import get_hardware_profile
@@ -51,6 +51,37 @@ def generate_next_receipt_number(db: Session, year: Optional[int] = None) -> str
     return f"{year}-{next_num:06d}"
 
 
+def generate_next_invoice_number(db: Session, year: Optional[int] = None) -> str:
+    """
+    Atomically increments and retrieves the next B2B invoice sequence number for the specified year.
+    Returns format: FA-YYYY-XXXX (e.g. FA-2026-0001)
+    """
+    if not year:
+        year = datetime.now().year
+
+    seq_obj = db.query(InvoiceSequenceModel).filter(InvoiceSequenceModel.year == year).first()
+    if not seq_obj:
+        year_prefix = f"FA-{year}-"
+        max_num = 0
+        existing_invoices = db.query(SaleModel.invoice_number).filter(SaleModel.invoice_number.like(f"{year_prefix}%")).all()
+        for (inv_num,) in existing_invoices:
+            try:
+                num = int(inv_num.split("-")[2])
+                if num > max_num:
+                    max_num = num
+            except Exception:
+                pass
+        seq_obj = InvoiceSequenceModel(year=year, last_seq=max_num)
+        db.add(seq_obj)
+        db.flush()
+
+    seq_obj.last_seq += 1
+    next_num = seq_obj.last_seq
+    db.commit()
+
+    return f"FA-{year}-{next_num:04d}"
+
+
 class SaleItemSchema(BaseModel):
     id: Optional[str] = None
     name: str
@@ -79,6 +110,12 @@ class CreateSaleSchema(BaseModel):
     refundReason: Optional[str] = None
     refundStatus: Optional[str] = "NONE"
     refundedAmount: Optional[float] = 0.0
+    # B2B Invoice Fields
+    isInvoice: Optional[bool] = False
+    customerIco: Optional[str] = None
+    customerDic: Optional[str] = None
+    customerName: Optional[str] = None
+    customerAddress: Optional[str] = None
 
 
 class UpdateRefundStatusSchema(BaseModel):
@@ -136,6 +173,12 @@ class SaleResponseSchema(BaseModel):
     refund_reason: Optional[str] = None
     refund_status: Optional[str] = "NONE"
     refunded_amount: Optional[float] = 0.0
+    is_invoice: Optional[bool] = False
+    invoice_number: Optional[str] = None
+    customer_ico: Optional[str] = None
+    customer_dic: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_address: Optional[str] = None
     items: List[SaleItemResponseSchema] = []
 
     model_config = {"from_attributes": True}
@@ -792,6 +835,54 @@ def get_sale_by_id(sale_id: str, db: Session = Depends(get_db)):
     return res
 
 
+def recalculate_sale_totals(sale: "CreateSaleSchema"):
+    """
+    FIN-C1: Server-side recomputation of totalAmount and taxSummary.
+    Mirrors src/utils/tax.js calculateCartTotals exactly:
+      gross-down VAT, per-item rounding, cartDiscountFactor applied per item.
+    Works for refunds (negative qty) without special-casing.
+    Returns (computed_total: float, computed_tax_summary: dict).
+    """
+    rc = round_currency
+
+    # Step 1: per-item gross before cart discount
+    item_grosses = []
+    for item in sale.items:
+        price = float(item.price or 0)
+        qty = float(item.quantity if item.quantity is not None else 1)
+        discount = float(item.discount_percent or item.discountPercent or 0)
+        item_gross = rc(price * qty * (1 - discount / 100))
+        item_grosses.append(item_gross)
+
+    # Step 2: cart-level totals
+    raw_subtotal = rc(sum(item_grosses))
+    cart_disc_pct = float(sale.cartDiscountPercent or 0)
+    cart_discount_amount = rc(raw_subtotal * cart_disc_pct / 100)
+    final_grand_total = rc(raw_subtotal - cart_discount_amount)
+    cart_factor = (final_grand_total / raw_subtotal) if raw_subtotal != 0 else 1.0
+
+    # Step 3: per-item tax breakdown
+    tax_summary: dict = {}
+    for item, item_gross in zip(sale.items, item_grosses):
+        rate = int(item.vat) if item.vat is not None else 21
+        item_final_gross = rc(item_gross * cart_factor)
+
+        if rate > 0:
+            net = rc(item_final_gross / (1 + rate / 100))
+            tax = rc(item_final_gross - net)
+        else:
+            net = item_final_gross
+            tax = 0.0
+
+        if rate not in tax_summary:
+            tax_summary[rate] = {"rate": rate, "gross": 0.0, "net": 0.0, "tax": 0.0}
+        tax_summary[rate]["gross"] = rc(tax_summary[rate]["gross"] + item_final_gross)
+        tax_summary[rate]["net"] = rc(tax_summary[rate]["net"] + net)
+        tax_summary[rate]["tax"] = rc(tax_summary[rate]["tax"] + tax)
+
+    return final_grand_total, tax_summary
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(get_db)):
     """Save a completed sale, run EET fiscal signing, and persist line items."""
@@ -814,6 +905,10 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     if not assigned_receipt_number or db.query(SaleModel).filter(SaleModel.receipt_number == assigned_receipt_number).first():
         assigned_receipt_number = generate_next_receipt_number(db)
 
+    # Assign sequential B2B invoice number if B2B invoice requested or customer IČO provided
+    is_invoice_req = bool(sale.isInvoice or (sale.customerIco and sale.customerIco.strip()))
+    assigned_invoice_number = generate_next_invoice_number(db) if is_invoice_req else None
+
     # Retrieve store config
     config = db.query(StoreConfigModel).first()
     store_dict = {
@@ -827,6 +922,25 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
         "eet_cert_password": config.get_decrypted_cert_password() if config else "",
         "eet_environment": config.eet_environment if config else "playground"
     }
+
+    # FIN-C1: Server-side VAT recalculation — reject tampered totals, always store server values
+    import logging as _logging
+    _fin_log = _logging.getLogger(__name__)
+    computed_total, computed_tax_summary = recalculate_sale_totals(sale)
+    client_total = round_currency(sale.totalAmount)
+    if computed_total != client_total:
+        _fin_log.warning(
+            "FIN-C1 total mismatch sale_id=%s client=%s server=%s",
+            sale.id, client_total, computed_total
+        )
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "TOTAL_MISMATCH",
+                "client_total": client_total,
+                "server_total": computed_total,
+            }
+        )
 
     # Run EET Fiscal Signing (if EET is enabled in store config)
     sale_payload = sale.model_dump()
@@ -850,13 +964,13 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             id=sale.id,
             receipt_number=assigned_receipt_number,
             timestamp=parse_iso_timestamp(sale.timestamp),
-            total_amount=round_currency(sale.totalAmount),
+            total_amount=computed_total,           # FIN-C1: server-computed, never client
             cart_discount_percent=sale.cartDiscountPercent,
             payment_method=sale.paymentMethod,
             split_details=sale.splitDetails,
             tendered_amount=round_currency(sale.tenderedAmount),
             change_due=round_currency(sale.changeDue),
-            tax_summary=sale.taxSummary,
+            tax_summary=computed_tax_summary,      # FIN-C1: server-computed, never client
             fik_code=eet_res.get("fik"),
             bkp_code=eet_res.get("bkp"),
             pkp_code=eet_res.get("pkp"),
@@ -869,7 +983,13 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             original_receipt_number=sale.originalReceiptNumber,
             refund_reason=sale.refundReason,
             refund_status=sale.refundStatus or "NONE",
-            refunded_amount=round_currency(sale.refundedAmount or 0.0)
+            refunded_amount=round_currency(sale.refundedAmount or 0.0),
+            is_invoice=is_invoice_req,
+            invoice_number=assigned_invoice_number,
+            customer_ico=(sale.customerIco or "").strip() or None,
+            customer_dic=(sale.customerDic or "").strip() or None,
+            customer_name=(sale.customerName or "").strip() or None,
+            customer_address=(sale.customerAddress or "").strip() or None
         )
 
         db.add(db_sale)
@@ -921,6 +1041,10 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
         "status": "SUCCESS",
         "sale_id": db_sale.id,
         "receipt_number": db_sale.receipt_number,
+        "is_invoice": db_sale.is_invoice,
+        "invoice_number": db_sale.invoice_number,
+        "customer_ico": db_sale.customer_ico,
+        "customer_name": db_sale.customer_name,
         "fik": db_sale.fik_code,
         "bkp": db_sale.bkp_code,
         "pkp": db_sale.pkp_code,
@@ -1073,5 +1197,160 @@ def delete_sale(sale_id: str, request: Request, db: Session = Depends(get_db)):
     )
 
     return {"status": "DELETED", "sale_id": sale_id}
+
+
+@router.get("/{sale_id}/invoice-html")
+def get_sale_invoice_html(sale_id: str, db: Session = Depends(get_db)):
+    """Generate printable Czech A4 B2B Tax Invoice (Faktura - Daňový doklad) HTML."""
+    from fastapi.responses import HTMLResponse
+    sale = db.query(SaleModel).options(selectinload(SaleModel.items)).filter(SaleModel.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+
+    config = db.query(StoreConfigModel).first()
+    store_name = config.store_name if config else "VoltFlow Store s.r.o."
+    store_ico = config.ico if config else ""
+    store_dic = config.dic if config else ""
+    store_street = config.street if config else ""
+    store_city = config.city if config else ""
+    store_iban = getattr(config, "bank_account_iban", "") or ""
+
+    inv_num = sale.invoice_number or f"FA-{sale.receipt_number}"
+    date_str = sale.timestamp.strftime("%d.%m.%Y") if sale.timestamp else ""
+    time_str = sale.timestamp.strftime("%H:%M") if sale.timestamp else ""
+
+    cust_name = sale.customer_name or "Koncový odběratel"
+    cust_ico = sale.customer_ico or "-"
+    cust_dic = sale.customer_dic or "-"
+    cust_addr = sale.customer_address or "-"
+
+    rows_html = ""
+    for it in sale.items:
+        vat_pct = it.vat
+        unit_price_vat = it.price
+        unit_price_base = round(unit_price_vat / (1 + vat_pct / 100), 2)
+        total_base = round(unit_price_base * it.quantity, 2)
+        total_with_vat = round(unit_price_vat * it.quantity, 2)
+        rows_html += f"""
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">{it.name}</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #e2e8f0;">{it.quantity}</td>
+            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e2e8f0;">{unit_price_base:.2f} Kč</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #e2e8f0;">{vat_pct} %</td>
+            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e2e8f0;">{total_base:.2f} Kč</td>
+            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e2e8f0; font-weight: bold;">{total_with_vat:.2f} Kč</td>
+        </tr>
+        """
+
+    tax_html = ""
+    if isinstance(sale.tax_summary, dict):
+        for rate, vals in sale.tax_summary.items():
+            if isinstance(vals, dict):
+                b = vals.get("base", 0.0)
+                v = vals.get("vat", 0.0)
+                tot = vals.get("total", b + v)
+                tax_html += f"""
+                <tr>
+                    <td style="padding: 4px 8px;">{rate} %</td>
+                    <td style="padding: 4px 8px; text-align: right;">{b:.2f} Kč</td>
+                    <td style="padding: 4px 8px; text-align: right;">{v:.2f} Kč</td>
+                    <td style="padding: 4px 8px; text-align: right;">{tot:.2f} Kč</td>
+                </tr>
+                """
+
+    html = f"""<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8">
+    <title>Faktura {inv_num}</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; margin: 0; padding: 40px; background: #fff; }}
+        @media print {{ body {{ padding: 0; }} .no-print {{ display: none; }} }}
+        .header {{ display: flex; justify-content: space-between; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 25px; }}
+        .box-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }}
+        .party-box {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; }}
+        .party-title {{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; margin-bottom: 8px; }}
+        .table {{ width: 100%; border-collapse: collapse; margin-bottom: 25px; }}
+        .table th {{ background: #f1f5f9; padding: 10px 8px; text-align: left; font-size: 12px; color: #475569; border-bottom: 2px solid #cbd5e1; }}
+        .total-box {{ display: flex; justify-content: flex-end; margin-top: 20px; }}
+        .total-card {{ background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 8px; padding: 16px 24px; text-align: right; min-width: 260px; }}
+        .btn-print {{ background: #2563eb; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; margin-bottom: 20px; }}
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: right;">
+        <button class="btn-print" onclick="window.print()">🖨️ Tisknout fakturu (A4)</button>
+    </div>
+    <div class="header">
+        <div>
+            <h1 style="margin: 0 0 5px 0; font-size: 26px; color: #1e3a8a;">FAKTURA - DAŇOVÝ DOKLAD</h1>
+            <div style="font-size: 16px; font-weight: 600; color: #475569;">číslo: {inv_num}</div>
+            <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Účtenka: #{sale.receipt_number}</div>
+        </div>
+        <div style="text-align: right; font-size: 13px; line-height: 1.6;">
+            <div><strong>Datum vystavení:</strong> {date_str}</div>
+            <div><strong>Datum zdanit. plnění (DUZP):</strong> {date_str}</div>
+            <div><strong>Způsob platby:</strong> {sale.payment_method.upper()}</div>
+        </div>
+    </div>
+    <div class="box-grid">
+        <div class="party-box">
+            <div class="party-title">Dodavatel</div>
+            <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">{store_name}</div>
+            <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                {store_street}<br>{store_city}<br>
+                <strong>IČO:</strong> {store_ico} &nbsp;|&nbsp; <strong>DIČ:</strong> {store_dic}<br>
+                <strong>IBAN / Účet:</strong> {store_iban}
+            </div>
+        </div>
+        <div class="party-box">
+            <div class="party-title">Odběratel (B2B)</div>
+            <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">{cust_name}</div>
+            <div style="font-size: 13px; line-height: 1.5; color: #334155;">
+                {cust_addr}<br>
+                <strong>IČO:</strong> {cust_ico} &nbsp;|&nbsp; <strong>DIČ:</strong> {cust_dic}
+            </div>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Položka</th>
+                <th style="text-align: center;">Množství</th>
+                <th style="text-align: right;">Cena bez DPH</th>
+                <th style="text-align: center;">DPH</th>
+                <th style="text-align: right;">Základ daně</th>
+                <th style="text-align: right;">Celkem s DPH</th>
+            </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+    </table>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="flex: 1; max-width: 380px;">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 6px;">Rozpis DPH</div>
+            <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #cbd5e1; font-weight: 600; color: #475569;">
+                    <td style="padding: 4px 8px;">Sazba</td>
+                    <td style="padding: 4px 8px; text-align: right;">Základ</td>
+                    <td style="padding: 4px 8px; text-align: right;">DPH</td>
+                    <td style="padding: 4px 8px; text-align: right;">Celkem</td>
+                </tr>
+                {tax_html}
+            </table>
+        </div>
+        <div class="total-card">
+            <div style="font-size: 13px; color: #475569; margin-bottom: 4px;">Celkem k úhradě</div>
+            <div style="font-size: 28px; font-weight: 800; color: #1e3a8a;">{sale.total_amount:.2f} Kč</div>
+            <div style="font-size: 12px; color: #16a34a; font-weight: 600; margin-top: 4px;">Zaplaceno ({sale.payment_method.upper()})</div>
+        </div>
+    </div>
+    <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+        <div>Vystaveno systémem VoltFlow POS. Doklad splňuje náležitosti daňového dokladu dle § 29 zákona č. 235/2004 Sb.</div>
+        <div>Vytištěno: {date_str} {time_str}</div>
+    </div>
+</body>
+</html>
+"""
+    return HTMLResponse(content=html, status_code=200)
 
 

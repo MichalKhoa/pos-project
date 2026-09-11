@@ -33,6 +33,14 @@ class SaleModel(Base):
     refund_status = Column(String, default="NONE", index=True)    # 'NONE', 'PARTIAL', 'FULL'
     refunded_amount = Column(Float, default=0.0)
 
+    # B2B Invoicing Fields (> 10 000 CZK or customer requested)
+    is_invoice = Column(Boolean, default=False, nullable=False, index=True)
+    invoice_number = Column(String, nullable=True, index=True)   # e.g. 'FA-2026-0001'
+    customer_ico = Column(String, nullable=True, index=True)     # Czech IČO (8 digits)
+    customer_dic = Column(String, nullable=True)                # Czech DIČ (e.g. CZ12345678)
+    customer_name = Column(String, nullable=True)               # Company name / Sole trader
+    customer_address = Column(String, nullable=True)            # Full registered address
+
     __table_args__ = (
         Index("ix_sales_timestamp_payment_method", "timestamp", "payment_method"),
     )
@@ -344,3 +352,70 @@ class StockWriteOffItemModel(Base):
     is_norm_loss = Column(Boolean, default=True, nullable=False)
 
     write_off = relationship("StockWriteOffModel", back_populates="items")
+
+
+class InvoiceSequenceModel(Base):
+    """DB Model for Atomic B2B Invoice Sequence Counters per Year."""
+    __tablename__ = "invoice_sequences"
+
+    year = Column(Integer, primary_key=True)
+    last_seq = Column(Integer, default=0, nullable=False)
+
+
+class InventoryAuditSequenceModel(Base):
+    """DB Model for Atomic Inventory Audit Protocol Sequence Counters per Year."""
+    __tablename__ = "inventory_audit_sequences"
+
+    year = Column(Integer, primary_key=True)
+    last_seq = Column(Integer, default=0, nullable=False)
+
+
+class InventoryAuditModel(Base):
+    """DB Model for Physical Inventory Audit Protocols (§ 29, 30 ZoÚ)."""
+    __tablename__ = "inventory_audits"
+
+    id = Column(String, primary_key=True, index=True)
+    protocol_number = Column(String, unique=True, index=True, nullable=False)  # e.g. INV-2026-0001
+    responsible_person = Column(String, nullable=True)
+    note = Column(String, nullable=True)
+    total_items_counted = Column(Integer, default=0, nullable=False)
+    total_surplus_value = Column(Float, default=0.0, nullable=False)    # přebytek v nákupních cenách
+    total_shortage_value = Column(Float, default=0.0, nullable=False)   # manko v nákupních cenách
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    items = relationship("InventoryAuditItemModel", back_populates="audit", cascade="all, delete-orphan")
+
+
+class InventoryAuditItemModel(Base):
+    """Line item in a physical inventory audit."""
+    __tablename__ = "inventory_audit_items"
+
+    id = Column(String, primary_key=True, index=True)
+    audit_id = Column(String, ForeignKey("inventory_audits.id", ondelete="CASCADE"), index=True, nullable=False)
+    preset_id = Column(String, ForeignKey("presets.id"), nullable=False)
+    preset_name = Column(String, nullable=False)
+    system_quantity = Column(Float, nullable=False)      # Evidenční stav
+    physical_quantity = Column(Float, nullable=False)    # Skutečný zjištěný stav
+    difference = Column(Float, nullable=False)           # physical - system (pos = přebytek, neg = manko)
+    unit = Column(String, default="ks", nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)  # Pořizovací cena / VAP
+    total_cost_impact = Column(Float, default=0.0, nullable=False)  # difference * unit_cost
+
+    audit = relationship("InventoryAuditModel", back_populates="items")
+
+
+class DepositMovementModel(Base):
+    """DB Model for Returnable Deposit Packaging Ledger (Lahve & Přepravky)."""
+    __tablename__ = "deposit_movements"
+
+    id = Column(String, primary_key=True, index=True)
+    container_type = Column(String, nullable=False, index=True)  # 'BOTTLE_3CZK', 'CRATE_100CZK', etc.
+    container_name = Column(String, nullable=False)              # "Pivní lahev 0.5l", "Přepravka piva"
+    deposit_value = Column(Float, default=3.0, nullable=False)   # 3.0 or 100.0
+    movement_type = Column(String, nullable=False, index=True)   # 'SUPPLIER_INTAKE', 'CUSTOMER_RETURN', 'SUPPLIER_DISPATCH', 'ADJUSTMENT'
+    quantity_delta = Column(Float, nullable=False)               # + intake/customer return, - dispatch to brewery
+    total_value = Column(Float, nullable=False)                  # quantity_delta * deposit_value
+    document_ref = Column(String, nullable=True)                 # Delivery note or receipt ref
+    supplier_ico = Column(String, nullable=True)
+    note = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
