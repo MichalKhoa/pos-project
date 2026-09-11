@@ -9,37 +9,29 @@ _Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka
 
 ## 1. Immediate Active Priorities (Nejbližší úkoly k realizaci) 🎯
 
-Concrete, high-impact counter and payment features scheduled for immediate implementation.
+Phase 1 Expansion: **Daňová evidence a inventury pro OSVČ (§ 7b ZDP & ZoÚ)** je nyní bezprostřední aktivní prioritou pro realizaci.
 
 ```mermaid
 graph TD
-    Audit["1. Backend Audit Remediation (P0 Criticals) 🛡️<br/>(FIN-C1, FIN-C2, DB-C1)"] --> Inv["2. Fyzická inventura k 31.12. 📋<br/>(§ 29, 30 ZoÚ Vyrovnání mank/přebytků)"]
-    
-    subgraph DoneItems["Dokončeno nedávno ✅"]
-        D1["Skladové odpisy (§ 25 ZoÚ) 🗑️"]
-        D2["EET-C1 C14N Podpis ✍️"]
+    subgraph P1["🎯 Phase 1: Daňová evidence a inventury pro OSVČ (Next Immediate Tasks)"]
+        T1["1. Fyzická inventura k 31.12. a vyrovnání mank/přebytků 📋<br/>(§ 29, 30 ZoÚ)"]
+        T2["2. Daňové výkazy DPFO Příloha 1 & DPH přehled 📊<br/>(§ 7b ZDP / MOJE daně)"]
+        T3["3. B2B fakturace z pokladny s ARES ověřením 🏢<br/>(Faktury vydané > 10 000 Kč)"]
+        T4["4. Kniha zálohovaných vratných obalů 🍾<br/>(Lahve & Přepravky)"]
+        T1 --> T2 --> T3 --> T4
     end
 
-    subgraph PausedItems["Odloženo do budoucna (Chybí HW) ⏸️"]
-        P1["ČSOB Card Refunds (Není kompatibilní terminál)"]
-        P2["SumUp Integrace (Není Bluetooth v PC)"]
+    subgraph Prereq["🛡️ Technický základ & stabilizace (In Progress / Parallel)"]
+        Audit["Backend Audit Remediation (FIN-C1, FIN-C2, DB-C1)"]
+    end
+
+    subgraph Done["Dokončeno z Phase 1 ✅"]
+        D1["Skladové odpisy a likvidační protokoly (§ 25 ZoÚ)"]
+        D2["EET-C1 C14N XML Podpis"]
     end
 ```
 
-### 1.1 🛡️ Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
-> ⚠️ **Status: P0 CRITICAL** — Okamžitá priorita pro zajištění finanční a právní integrity pokladny.
-- **Reference**: [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
-- **Phase 1 — Critical Prerequisite Gates (Must complete first)**:
-  - **EET-C1**: W3C Exclusive C14N XML-DSig signing via `lxml` + `xmlsec` (DONE ✅ in commit `be330d0`).
-  - **FIN-C1**: Server-side VAT recalculation in `routers/sales.py:create_sale` (`Σ(base + vat) == totalAmount`).
-  - **FIN-C2**: Sales immutability (block hard deletes of completed sales, enforce reverse refunds).
-  - **DB-C1**: Atomic transaction for receipt sequence number generation + sale insertion.
-- **Phase 2–4 — Subsequent Remediation (Unblocks once Criticals pass)**:
-  - **P1 (Data Integrity)**: Atomic stock decrements (`UPDATE ... SET qty = qty - ?`), `Numeric(10,2)` DB migration for monetary columns, EET certificate validity check (`not_valid_after_utc`).
-  - **P2 (Correctness)**: Codepage-aware ESC/POS thermal printing (CP852 Czech, CP1258 Vietnamese), printer auto-reconnect decorator, Decimal math in cash register.
-  - **P3 (Hardening)**: Pydantic VAT rate validators (`vat in {0, 12, 21}`), sales timestamp indexing, logo payload size limiter.
-
-### 1.2 📋 Fyzická inventura k 31.12. a vyrovnání rozdílů (*Inventura skladu* — § 29, 30 ZoÚ)
+### 1.1 📋 Fyzická inventura k 31.12. a vyrovnání rozdílů (*Inventura skladu* — § 29, 30 ZoÚ)
 - **Store Reality**: Zákon ukládá povinnost provést k rozvahovému dni (31.12.) fyzickou inventuru zásob. Majitel vezme bezdrátovou čtečku čárových kódů a pípá regály.
 - **Functionality**:
   - **Inventurní režim čtečky**: Skenování položek do dočasného inventurního archu (sčítání kusů v reálném čase).
@@ -50,6 +42,42 @@ graph TD
   - **1-Klik zúčtování a narovnání skladu**: Zápis vyrovnávacích pohybů (`ADJUSTMENT`) do `stock_movements` a uzamčení stavu k 31.12.
   - Generování oficiálního tiskového **Protokolu o inventarizaci**.
 
+### 1.2 📊 Podklady pro Daňové přiznání (DPFO Příloha č. 1) a DPH výkazy (§ 7b ZDP)
+- **Store Reality**: Majitel večerky na konci roku nosí účetní krabici papírů. Systém má vygenerovat přesná čísla přímo do formulářů Finanční správy.
+- **Functionality**:
+  - **Příloha č. 1 DPFO (Příjmy a výdaje ze SVČ dle § 7 ZDP)**:
+    - Příjmy: Celkové zdanitelné tržby z pokladny (očistěné o vratky).
+    - Výdaje: Nákup zboží (z příjemek dodavatelů) + Provozní režie (z pokladních výběrů/payouts).
+    - Zásoby: Počáteční stav k 1.1. a konečný stav k 31.12.
+  - **Měsíční / Kvartální DPH přehled**:
+    - Rozpis základu daně a daně na výstupu (21 %, 12 %, 0 %).
+    - Vstupní DPH ze zaevidovaných příjemek od dodavatelů.
+    - Export do formátu připraveného pro portál MOJE daně (DIS+ / EPO).
+
+### 1.3 🏢 B2B Fakturace z pokladny s ARES lookupem (Faktury vydané > 10 000 Kč)
+- **Store Reality**: Řemeslník nebo jiný živnostník nakoupí materiál/občerstvení nad 10 000 Kč a potřebuje řádnou fakturu / daňový doklad s uvedením svého IČO, DIČ a sídla.
+- **Functionality**:
+  - Přepínač v platebním okně: `[🏢 Firemní faktura / B2B]`.
+  - Zadání IČO odběratele -> bleskový dotaz na Czech ARES REST API (<1s) -> automatické vyplnění názvu firmy a adresy.
+  - Tisk prodlouženého termálního daňového dokladu s náležitostmi faktury + možnost exportu A4 PDF.
+
+### 1.4 🍾 Kniha zálohovaných vratných obalů (Lahve & Přepravky)
+- **Store Reality**: Hospodaření s vratnými pivními lahvemi (3 Kč) a přepravkami (100 Kč) podléhá specifickému režimu DPH a vyžaduje sledování stavu vratných obalů na prodejně.
+- **Functionality**:
+  - Samostatná podrozvaha pro zálohované obaly v modulu Sklad.
+  - Výpočet stavu vratných obalů: naskladněné obaly z příjemek vs. vyplacené zálohy zákazníkům vs. vrácené obaly pivovaru.
+
+### 1.5 🛡️ Technický základ: Backend Audit Remediation & Hardening (`docs/backend_audit_2026-09-11.md`)
+> ⚠️ **Status: P0 CRITICAL PREREQUISITE** — Zajištění finanční a datové integrity pokladny.
+- **Reference**: [`docs/backend_audit_2026-09-11.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/backend_audit_2026-09-11.md)
+- **Phase 1 Gates**:
+  - **EET-C1**: W3C Exclusive C14N XML-DSig signing via `lxml` + `xmlsec` (DONE ✅ in commit `be330d0`).
+  - **FIN-C1**: Server-side VAT recalculation in `routers/sales.py:create_sale` (`Σ(base + vat) == totalAmount`).
+  - **FIN-C2**: Sales immutability (block hard deletes of completed sales, enforce reverse refunds).
+  - **DB-C1**: Atomic transaction for receipt sequence number generation + sale insertion.
+- **Phase 2–4 Remediation**:
+  - Atomic stock decrements (`UPDATE ... SET qty = qty - ?`), `Numeric(10,2)` DB migration, Codepage-aware thermal printing (CP852 / CP1258).
+
 ---
 
 ## 2. Strategic Expansion Phases (Střednědobý a dlouhodobý plán) 🚀
@@ -58,12 +86,8 @@ graph TD
 
 ```mermaid
 flowchart TD
-    subgraph Phase1["Phase 1: Daňová evidence a inventury (§ 7b ZDP & ZoÚ)"]
-        P1["1. Odpisy a likvidace (§ 25 ZoÚ) [Done ✅]"]
-        P2["2. Fyzická inventura k 31.12. a vyrovnání mank/přebytků (§ 29 ZoÚ)"]
-        P3["3. Daňové výkazy DPFO Příloha 1 a přiznání k DPH (§ 7b ZDP)"]
-        P4["4. B2B fakturace z pokladny s ARES ověřením odběratele"]
-        P5["5. Evidence zálohovaných vratných obalů (lahve/přepravky)"]
+    subgraph Active["🎯 Aktivní priorita (viz Sekce 1)"]
+        Phase1["Phase 1: Daňová evidence a inventury (§ 7b ZDP & ZoÚ)<br/><i>(Inventura 31.12., DPFO/DPH výkazy, B2B fakturace, Vratné obaly)</i>"]
     end
 
     subgraph Phase2["Phase 2: Remote Home Administration Dashboard"]
@@ -90,9 +114,9 @@ flowchart TD
     Phase3 --> Phase4
 ```
 
-### Phase 1: Daňová evidence a inventury pro OSVČ (Remaining Scope — § 7b ZDP & ZoÚ)
+### Phase 1: Daňová evidence a inventury pro OSVČ (Aktivně rozpracováno v Sekci 1 🎯)
 
-*Poznámka: Základní stavební kameny daňové evidence (Deník příjmů a výdajů, Pokladní kniha, Vklady/Výběry, Směnové uzávěrky X/Z-Report, Příjemky s ARES, Výdejky prodejem a Skladové odpisy § 25 ZoÚ) jsou již plně implementovány v produkční verzi viz Sekce 3.*
+*Poznámka: Detailní specifikace jednotlivých kroků Phase 1 byla povýšena přímo do **Sekce 1 (Immediate Active Priorities)** jako bezprostřední fronta úkolů k realizaci. Skladové odpisy (§ 25 ZoÚ) jsou již hotové.*
 
 #### 1. Skladové odpisy, likvidační protokoly a normy úbytků (*Likvidace a manka* — § 25 ZoÚ) [DONE ✅]
 - **Store Reality**: V potravinách dochází ke zkáze zeleniny, prošlému pečivu, rozbitým lahvím od piva a drobným krádežím. Pokud se tyto odpisy neevidují formálně, zkreslují sklad a berňák je může penalizovat doměřením DPH.
