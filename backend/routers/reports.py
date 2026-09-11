@@ -113,7 +113,7 @@ def get_tax_statement(
         pm = (s.payment_method or "cash").lower()
 
         if s.is_refund:
-            total_refunds_dec += amt
+            total_refunds_dec += abs(amt)
         else:
             gross_sales_dec += amt
             total_refunds_dec += ref_amt
@@ -135,8 +135,8 @@ def get_tax_statement(
                         b = Decimal(str(values.get("base", 0.0)))
                         v = Decimal(str(values.get("vat", 0.0)))
                         if s.is_refund:
-                            vat_aggregated[rate_int]["base"] -= b
-                            vat_aggregated[rate_int]["vat"] -= v
+                            vat_aggregated[rate_int]["base"] -= abs(b)
+                            vat_aggregated[rate_int]["vat"] -= abs(v)
                         else:
                             vat_aggregated[rate_int]["base"] += b
                             vat_aggregated[rate_int]["vat"] += v
@@ -278,8 +278,8 @@ def get_vat_overview(
                         b = Decimal(str(val.get("base", 0.0)))
                         v = Decimal(str(val.get("vat", 0.0)))
                         if s.is_refund:
-                            output_vat[rate]["base"] -= b
-                            output_vat[rate]["vat"] -= v
+                            output_vat[rate]["base"] -= abs(b)
+                            output_vat[rate]["vat"] -= abs(v)
                         else:
                             output_vat[rate]["base"] += b
                             output_vat[rate]["vat"] += v

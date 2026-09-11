@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 from database import get_db, atomic_transaction
 from models import (
@@ -606,7 +606,7 @@ def submit_inventory_audit(payload: InventoryAuditRequestSchema, db: Session = D
                 detail=f"Fyzické množství nesmí být záporné (zadáno: {it.physical_quantity})."
             )
 
-    now = datetime.utcnow()
+    now = datetime.now()
     audit_id = f"inv_{uuid.uuid4().hex[:12]}"
 
     with atomic_transaction(db):
@@ -816,12 +816,19 @@ def record_deposit_movement(payload: DepositMovementRequestSchema, db: Session =
     if m_type in ("SUPPLIER_INTAKE", "CUSTOMER_RETURN"):
         qty_delta = abs(payload.quantity)
     elif m_type == "SUPPLIER_DISPATCH":
+        current_bal = db.query(func.coalesce(func.sum(DepositMovementModel.quantity_delta), 0.0))\
+            .filter(DepositMovementModel.container_type == c_type).scalar() or 0.0
+        if abs(payload.quantity) > current_bal:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Nelze vrátit {abs(payload.quantity):g} ks obalu '{c_name}' — na skladě je pouze {current_bal:g} ks."
+            )
         qty_delta = -abs(payload.quantity)
     else:  # ADJUSTMENT
         qty_delta = payload.quantity
 
     total_val = round(qty_delta * dep_val, 2)
-    now = datetime.utcnow()
+    now = datetime.now()
     mov_id = f"dep_{uuid.uuid4().hex[:12]}"
 
     with atomic_transaction(db):

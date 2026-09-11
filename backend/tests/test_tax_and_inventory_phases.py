@@ -75,7 +75,7 @@ class TestTaxAndInventoryPhases(unittest.TestCase):
         self.db.query(CashMovementModel).filter(CashMovementModel.id.in_(["cm_payout_test_01"])).delete(synchronize_session=False)
         self.db.query(SaleItemModel).filter(SaleItemModel.sale_id.in_(self.test_sale_ids)).delete(synchronize_session=False)
         self.db.query(SaleModel).filter(SaleModel.id.in_(self.test_sale_ids)).delete(synchronize_session=False)
-        self.db.query(DepositMovementModel).filter(DepositMovementModel.document_ref.in_(["DL-PIVO-TEST-001"])).delete(synchronize_session=False)
+        self.db.query(DepositMovementModel).delete(synchronize_session=False)
         self.db.query(PresetModel).filter(PresetModel.id.in_(self.test_preset_ids)).delete(synchronize_session=False)
         self.db.commit()
 
@@ -308,6 +308,15 @@ class TestTaxAndInventoryPhases(unittest.TestCase):
         bottle_bal = next((b for b in data["balances"] if b["container_type"] == "BOTTLE_3CZK"), None)
         self.assertIsNotNone(bottle_bal)
         self.assertGreaterEqual(bottle_bal["current_quantity"], 70.0)
+
+        # 5. Dispatching more than available stock raises HTTP 400
+        res_overflow = self.client.post("/api/v1/inventory/deposits/movement", json={
+            "container_type": "BOTTLE_3CZK",
+            "movement_type": "SUPPLIER_DISPATCH",
+            "quantity": 9999,
+            "deposit_value": 3.0
+        })
+        self.assertEqual(res_overflow.status_code, 400)
 
 
 if __name__ == "__main__":
