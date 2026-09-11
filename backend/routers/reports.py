@@ -163,7 +163,7 @@ def get_tax_statement(
     payout_movements = db.query(CashMovementModel).filter(
         and_(
             CashMovementModel.movement_type == "PAYOUT",
-            extract("year", CashMovementModel.timestamp) == target_year
+            extract("year", CashMovementModel.created_at) == target_year
         )
     ).all()
 
