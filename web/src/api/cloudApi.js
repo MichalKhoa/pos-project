@@ -338,6 +338,14 @@ export const cloudApi = {
       end_date: endDate,
     });
   },
+
+  getTaxStatementHtmlUrl({ startDate, endDate, autoPrint = false } = {}) {
+    return buildUrl('/exports/tax-statement/html', {
+      start_date: startDate,
+      end_date: endDate,
+      auto_print: autoPrint ? 'true' : undefined,
+    });
+  },
 };
 
 export default cloudApi;

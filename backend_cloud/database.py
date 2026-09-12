@@ -9,7 +9,7 @@ SNAPSHOT_DB_PATH = os.path.join(DATA_DIR, "snapshot", "pos_store.db")
 STAGING_DB_PATH = os.path.join(DATA_DIR, "pending_staging_queue.db")
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, Text, DateTime, Integer, Boolean
+from sqlalchemy import Column, String, Float, Text, DateTime, Integer, Boolean, text
 
 # Models will inherit from this
 Base = declarative_base()
@@ -60,6 +60,13 @@ class StagedProductModel(Base):
     track_stock = Column(Boolean, default=True)
     category = Column(String, default="custom")
     unit = Column(String, default="ks")
+    show_in_presets = Column(Boolean, default=True)
+    color = Column(String, default="#2563eb")
+    icon = Column(String, default="")
+    is_weighted = Column(Boolean, default=False)
+    is_open_price = Column(Boolean, default=False)
+    min_stock_alert = Column(Float, default=5.0)
+    margin_coefficient = Column(Float, nullable=True)
     status = Column(String, default="PENDING_STORE_SYNC") # PENDING_STORE_SYNC, COMMITTED
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     applied_at = Column(DateTime, nullable=True)
@@ -107,3 +114,29 @@ def get_staging_db():
 def init_staging_db():
     engine = get_staging_engine()
     Base.metadata.create_all(bind=engine)
+    # Ensure newly added columns exist in existing staged_products SQLite table
+    with engine.connect() as conn:
+        try:
+            res = conn.execute(text("PRAGMA table_info(staged_products)")).fetchall()
+            existing_cols = {row[1] for row in res}
+            cols_to_add = [
+                ("show_in_presets", "BOOLEAN DEFAULT 1"),
+                ("color", "VARCHAR DEFAULT '#2563eb'"),
+                ("icon", "VARCHAR DEFAULT ''"),
+                ("is_weighted", "BOOLEAN DEFAULT 0"),
+                ("is_open_price", "BOOLEAN DEFAULT 0"),
+                ("min_stock_alert", "FLOAT DEFAULT 5.0"),
+                ("margin_coefficient", "FLOAT DEFAULT NULL"),
+            ]
+            for col_name, col_def in cols_to_add:
+                if col_name not in existing_cols:
+                    conn.execute(text(f"ALTER TABLE staged_products ADD COLUMN {col_name} {col_def}"))
+            conn.commit()
+        except Exception:
+            pass
+
+try:
+    init_staging_db()
+except Exception:
+    pass
+

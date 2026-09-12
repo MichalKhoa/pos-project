@@ -576,6 +576,38 @@ class SnapshotService:
             logger.error(f"Error retrieving zreports: {e}")
             return []
 
+    def get_store_info(self) -> Dict[str, str]:
+        """
+        Returns basic merchant metadata from store_config table.
+        """
+        default_info = {
+            "store_name": "VoltFlow Store",
+            "ico": "",
+            "dic": "",
+            "street": "",
+            "city": "",
+        }
+        if not self.is_available():
+            return default_info
+        try:
+            with self.get_connection() as conn:
+                if not self._table_exists(conn, "store_config"):
+                    return default_info
+                cursor = conn.cursor()
+                cursor.execute("SELECT store_name, ico, dic, street, city FROM store_config LIMIT 1")
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        "store_name": row["store_name"] or "VoltFlow Store",
+                        "ico": row["ico"] or "",
+                        "dic": row["dic"] or "",
+                        "street": row["street"] or "",
+                        "city": row["city"] or "",
+                    }
+        except Exception as e:
+            logger.error(f"Error retrieving store info: {e}")
+        return default_info
+
     def get_catalog(
         self,
         search: Optional[str] = None,
@@ -611,10 +643,24 @@ class SnapshotService:
                 cursor.execute(f"SELECT COUNT(*) FROM presets {where_sql}", tuple(params))
                 total = cursor.fetchone()[0]
 
+                cursor.execute("PRAGMA table_info(presets)")
+                preset_cols = {col_info[1] for col_info in cursor.fetchall()}
+
+                select_cols = [
+                    "id", "name", "price", "cost_price", "vat", "category",
+                    "stock_quantity", "track_stock", "barcode", "unit"
+                ]
+                optional_cols = [
+                    "margin_coefficient", "show_in_presets", "color", "icon",
+                    "is_weighted", "is_open_price", "min_stock_alert"
+                ]
+                for c in optional_cols:
+                    if c in preset_cols:
+                        select_cols.append(c)
+
                 cursor.execute(
                     f"""
-                    SELECT id, name, price, cost_price, vat, category,
-                           stock_quantity, track_stock, barcode, unit, margin_coefficient
+                    SELECT {', '.join(select_cols)}
                     FROM presets
                     {where_sql}
                     ORDER BY name ASC
@@ -623,8 +669,10 @@ class SnapshotService:
                     tuple(params + [limit, offset]),
                 )
                 rows = cursor.fetchall()
-                items = [
-                    {
+                items = []
+                for r in rows:
+                    r_keys = set(r.keys()) if hasattr(r, "keys") else set()
+                    items.append({
                         "id": r["id"],
                         "name": r["name"],
                         "price": format_dec(r["price"]),
@@ -637,12 +685,40 @@ class SnapshotService:
                         "unit": r["unit"] or "ks",
                         "margin_coefficient": (
                             float(r["margin_coefficient"])
-                            if r["margin_coefficient"] is not None
+                            if "margin_coefficient" in r_keys and r["margin_coefficient"] is not None
                             else None
                         ),
-                    }
-                    for r in rows
-                ]
+                        "show_in_presets": (
+                            bool(r["show_in_presets"])
+                            if "show_in_presets" in r_keys and r["show_in_presets"] is not None
+                            else True
+                        ),
+                        "color": (
+                            r["color"]
+                            if "color" in r_keys and r["color"]
+                            else "#2563eb"
+                        ),
+                        "icon": (
+                            r["icon"]
+                            if "icon" in r_keys and r["icon"]
+                            else ""
+                        ),
+                        "is_weighted": (
+                            bool(r["is_weighted"])
+                            if "is_weighted" in r_keys and r["is_weighted"] is not None
+                            else False
+                        ),
+                        "is_open_price": (
+                            bool(r["is_open_price"])
+                            if "is_open_price" in r_keys and r["is_open_price"] is not None
+                            else False
+                        ),
+                        "min_stock_alert": (
+                            float(r["min_stock_alert"])
+                            if "min_stock_alert" in r_keys and r["min_stock_alert"] is not None
+                            else 5.0
+                        ),
+                    })
                 return {"items": items, "total": total}
         except Exception as e:
             logger.error(f"Error retrieving catalog: {e}")

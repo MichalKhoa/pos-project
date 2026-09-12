@@ -171,6 +171,20 @@ class RemoteStagingSyncService:
                         preset.track_stock = bool(prd["track_stock"])
                     if float(preset.stock_quantity or 0.0) == 0.0 and prd.get("stock_quantity") is not None:
                         preset.stock_quantity = float(prd["stock_quantity"])
+                    if prd.get("show_in_presets") is not None:
+                        preset.show_in_presets = bool(prd["show_in_presets"])
+                    if prd.get("color"):
+                        preset.color = prd["color"]
+                    if prd.get("icon") is not None:
+                        preset.icon = prd["icon"]
+                    if prd.get("is_weighted") is not None:
+                        preset.is_weighted = bool(prd["is_weighted"])
+                    if prd.get("is_open_price") is not None:
+                        preset.is_open_price = bool(prd["is_open_price"])
+                    if prd.get("min_stock_alert") is not None:
+                        preset.min_stock_alert = float(prd["min_stock_alert"])
+                    if prd.get("margin_coefficient") is not None:
+                        preset.margin_coefficient = float(prd["margin_coefficient"])
                 else:
                     new_id = prd_id or f"preset_{uuid.uuid4().hex[:8]}"
                     preset = PresetModel(
@@ -184,6 +198,13 @@ class RemoteStagingSyncService:
                         barcode=barcode,
                         unit=prd.get("unit") or "ks",
                         category=prd.get("category") or "custom",
+                        show_in_presets=bool(prd.get("show_in_presets", True)),
+                        color=prd.get("color") or "#2563eb",
+                        icon=prd.get("icon") or "",
+                        is_weighted=bool(prd.get("is_weighted", False)),
+                        is_open_price=bool(prd.get("is_open_price", False)),
+                        min_stock_alert=float(prd.get("min_stock_alert", 5.0)),
+                        margin_coefficient=float(prd["margin_coefficient"]) if prd.get("margin_coefficient") is not None else None,
                     )
                     db.add(preset)
 

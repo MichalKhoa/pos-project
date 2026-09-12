@@ -197,7 +197,8 @@ export default function TaxExportsPage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    const url = cloudApi.getTaxStatementHtmlUrl({ startDate, endDate, autoPrint: true });
+    window.open(url, '_blank');
   };
 
   // Safe accessor data

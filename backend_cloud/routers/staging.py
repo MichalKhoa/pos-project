@@ -280,7 +280,14 @@ def get_pending(
             "stock_quantity": prd.stock_quantity,
             "track_stock": prd.track_stock,
             "category": prd.category,
-            "unit": prd.unit
+            "unit": prd.unit,
+            "show_in_presets": getattr(prd, "show_in_presets", True),
+            "color": getattr(prd, "color", "#2563eb"),
+            "icon": getattr(prd, "icon", ""),
+            "is_weighted": getattr(prd, "is_weighted", False),
+            "is_open_price": getattr(prd, "is_open_price", False),
+            "min_stock_alert": getattr(prd, "min_stock_alert", 5.0),
+            "margin_coefficient": getattr(prd, "margin_coefficient", None),
         })
 
     return {
@@ -341,6 +348,26 @@ def create_staged_product(payload: dict, db: Session = Depends(get_staging_db)):
     if stock_val is None:
         stock_val = payload.get("stockQuantity")
 
+    show_in_presets_val = payload.get("show_in_presets")
+    if show_in_presets_val is None:
+        show_in_presets_val = payload.get("showInPresets", True)
+
+    is_weighted_val = payload.get("is_weighted")
+    if is_weighted_val is None:
+        is_weighted_val = payload.get("isWeighted", False)
+
+    is_open_price_val = payload.get("is_open_price")
+    if is_open_price_val is None:
+        is_open_price_val = payload.get("isOpenPrice", False)
+
+    min_stock_val = payload.get("min_stock_alert")
+    if min_stock_val is None:
+        min_stock_val = payload.get("minStockAlert", 5.0)
+
+    margin_coeff_val = payload.get("margin_coefficient")
+    if margin_coeff_val is None:
+        margin_coeff_val = payload.get("marginCoefficient")
+
     prod_id = payload.get("id") or f"PRD-{uuid.uuid4().hex[:8].upper()}"
     staged = StagedProductModel(
         id=prod_id,
@@ -354,6 +381,13 @@ def create_staged_product(payload: dict, db: Session = Depends(get_staging_db)):
         track_stock=bool(payload.get("track_stock", True)),
         category=(payload.get("category") or "custom").strip(),
         unit=(payload.get("unit") or "ks").strip(),
+        show_in_presets=bool(show_in_presets_val),
+        color=(payload.get("color") or "#2563eb").strip(),
+        icon=(payload.get("icon") or "").strip(),
+        is_weighted=bool(is_weighted_val),
+        is_open_price=bool(is_open_price_val),
+        min_stock_alert=float(min_stock_val or 5.0),
+        margin_coefficient=float(margin_coeff_val) if margin_coeff_val is not None else None,
         status="PENDING_STORE_SYNC",
         created_at=datetime.now(timezone.utc)
     )

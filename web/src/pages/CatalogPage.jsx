@@ -8,10 +8,12 @@ import {
   CheckCircle2, 
   X, 
   Tag, 
-  TrendingUp,
-  Check,
-  Plus,
-  Sparkles
+  TrendingUp, 
+  Check, 
+  Plus, 
+  Sparkles,
+  ChevronDown,
+  Layers
 } from 'lucide-react';
 import cloudApi from '../api/cloudApi';
 
@@ -38,6 +40,17 @@ function formatCZK(val) {
   if (isNaN(num)) return '0,00 CZK';
   return `${num.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK`;
 }
+
+const PRESET_COLORS = [
+  '#2563eb', // Royal Blue
+  '#059669', // Emerald
+  '#d97706', // Amber
+  '#dc2626', // Crimson Red
+  '#7c3aed', // Purple
+  '#0891b2', // Cyan
+  '#ea580c', // Dark Orange
+  '#475569', // Slate Gray
+];
 
 export default function CatalogPage() {
   const [items, setItems] = useState([]);
@@ -175,6 +188,7 @@ export default function CatalogPage() {
 
   // Add Product modal state
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAdvancedPos, setShowAdvancedPos] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
     barcode: '',
@@ -185,6 +199,11 @@ export default function CatalogPage() {
     stockQuantity: '0',
     trackStock: true,
     unit: 'ks',
+    showInPresets: true,
+    color: '#2563eb',
+    isWeighted: false,
+    isOpenPrice: false,
+    minStockAlert: '5',
   });
   const [savingNewProduct, setSavingNewProduct] = useState(false);
   const [addModalError, setAddModalError] = useState(null);
@@ -200,7 +219,13 @@ export default function CatalogPage() {
       stockQuantity: '0',
       trackStock: true,
       unit: 'ks',
+      showInPresets: true,
+      color: '#2563eb',
+      isWeighted: false,
+      isOpenPrice: false,
+      minStockAlert: '5',
     });
+    setShowAdvancedPos(false);
     setAddModalError(null);
     setShowAddModal(true);
   };
@@ -208,6 +233,7 @@ export default function CatalogPage() {
   const handleCloseAddModal = () => {
     if (savingNewProduct) return;
     setShowAddModal(false);
+    setShowAdvancedPos(false);
     setAddModalError(null);
   };
 
@@ -244,10 +270,16 @@ export default function CatalogPage() {
         stock_quantity: parseFloat(newProduct.stockQuantity) || 0,
         track_stock: Boolean(newProduct.trackStock),
         unit: newProduct.unit || 'ks',
+        show_in_presets: Boolean(newProduct.showInPresets),
+        color: newProduct.color || '#2563eb',
+        is_weighted: Boolean(newProduct.isWeighted),
+        is_open_price: Boolean(newProduct.isOpenPrice),
+        min_stock_alert: parseFloat(newProduct.minStockAlert) || 5.0,
       });
 
       showToast(`Produkt '${newProduct.name.trim()}' byl zařazen do fronty pro pokladnu`, 'success');
       setShowAddModal(false);
+      setShowAdvancedPos(false);
       fetchCatalog(debouncedSearch, true);
     } catch (err) {
       console.error('Error creating product:', err);
@@ -470,9 +502,64 @@ export default function CatalogPage() {
                                 </span>
                               )}
                             </div>
-                            {item.category && item.category !== 'custom' && (
-                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{item.category}</div>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
+                              {item.category && item.category !== 'custom' && (
+                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{item.category}</span>
+                              )}
+                              {item.show_in_presets ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  backgroundColor: '#f1f5f9',
+                                  color: '#334155',
+                                  padding: '0.1rem 0.4rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                }}>
+                                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: item.color || '#2563eb' }} />
+                                  Dlaždice
+                                </span>
+                              ) : (
+                                <span style={{
+                                  backgroundColor: '#f8fafc',
+                                  color: '#64748b',
+                                  border: '1px dashed #cbd5e1',
+                                  padding: '0.1rem 0.4rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                }}>
+                                  Pouze katalog
+                                </span>
+                              )}
+                              {item.is_weighted && (
+                                <span style={{
+                                  backgroundColor: '#f0fdf4',
+                                  color: '#166534',
+                                  border: '1px solid #bbf7d0',
+                                  padding: '0.1rem 0.4rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                }}>
+                                  ⚖️ Váha
+                                </span>
+                              )}
+                              {item.is_open_price && (
+                                <span style={{
+                                  backgroundColor: '#fdf4ff',
+                                  color: '#86198f',
+                                  border: '1px solid #f5d0fe',
+                                  padding: '0.1rem 0.4rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                }}>
+                                  Otevřená cena
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -1082,6 +1169,177 @@ export default function CatalogPage() {
                 />
                 <span style={{ fontWeight: 500 }}>Sledovat stav skladu u tohoto produktu</span>
               </label>
+
+              {/* Expandable POS Settings Section */}
+              <div style={{
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                marginTop: '0.25rem'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedPos(!showAdvancedPos)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#f8fafc',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    color: '#1e293b'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Layers size={16} color="#0284c7" />
+                    <span>⚙️ Pokročilé nastavení pro pokladnu (POS)</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    style={{
+                      transform: showAdvancedPos ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 0.2s ease',
+                      color: '#64748b'
+                    }}
+                  />
+                </button>
+
+                {showAdvancedPos && (
+                  <div style={{
+                    padding: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                    backgroundColor: '#ffffff',
+                    borderTop: '1px solid #e2e8f0'
+                  }}>
+                    {/* Show in presets toggle */}
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={newProduct.showInPresets}
+                        onChange={(e) => setNewProduct({ ...newProduct, showInPresets: e.target.checked })}
+                        style={{ width: '18px', height: '18px', accentColor: '#0284c7', marginTop: '2px' }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b' }}>
+                          Zobrazit jako dlaždici na ploše pokladny
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                          Při zapnutí se zobrazí jako rychlá dotyková dlaždice. Při vypnutí je položka dohledatelná pouze přes čtečku čárových kódů nebo vyhledávání.
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* Color Swatches */}
+                    {newProduct.showInPresets && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#475569', marginBottom: '0.4rem' }}>
+                          Barva dlaždice na pokladně
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          {PRESET_COLORS.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setNewProduct({ ...newProduct, color: c })}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '6px',
+                                backgroundColor: c,
+                                border: newProduct.color === c ? '2px solid #0f172a' : '1px solid rgba(0,0,0,0.15)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#ffffff',
+                                boxShadow: newProduct.color === c ? '0 0 0 2px rgba(2, 132, 199, 0.4)' : 'none'
+                              }}
+                            >
+                              {newProduct.color === c && <Check size={16} strokeWidth={3} />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weighted Goods */}
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={newProduct.isWeighted}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setNewProduct({
+                            ...newProduct,
+                            isWeighted: checked,
+                            unit: checked ? 'kg' : newProduct.unit === 'kg' ? 'ks' : newProduct.unit
+                          });
+                        }}
+                        style={{ width: '18px', height: '18px', accentColor: '#0284c7', marginTop: '2px' }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b' }}>
+                          Vážené zboží (tára / vážení na pokladně)
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                          Při markování na pokladně vyvolá dotykové okno táry a zadání hmotnosti v kg.
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* Open Price */}
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={newProduct.isOpenPrice}
+                        onChange={(e) => setNewProduct({ ...newProduct, isOpenPrice: e.target.checked })}
+                        style={{ width: '18px', height: '18px', accentColor: '#0284c7', marginTop: '2px' }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b' }}>
+                          Otevřená cena (zadat částku při markování)
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                          Při volbě této položky na pokladně bude obsluha vyzvána k ručnímu zadání ceny v Kč.
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* Min stock alert threshold */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#475569', marginBottom: '0.3rem' }}>
+                        Minimální zásoba pro výstrahu na pokladně
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={newProduct.minStockAlert}
+                          onChange={(e) => setNewProduct({ ...newProduct, minStockAlert: e.target.value })}
+                          style={{
+                            width: '120px',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.9rem',
+                            outline: 'none'
+                          }}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem' }}>
+                          {newProduct.unit || 'ks'} (při poklesu zežloutne/zčervená dlaždice)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Modal Actions */}
               <div style={{
