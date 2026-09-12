@@ -389,6 +389,16 @@ pos-project-himmel/
   - [x] Vision OCR parser fallback for paper photos via Gemini/OpenRouter (`backend_cloud/services/ocr_service.py`).
   - [x] 1-click approve & dismiss lifecycle in staging router (`backend_cloud/routers/staging.py`).
 
+### Phase 2.6: POS Preset Parity, Clean Printable Exports & Live Field Testing [IN PROGRESS 🟡]
+- **Completed**:
+  - [x] Clean A4 Printable Tax Statement (`GET /api/v1/exports/tax-statement/html`) with § 37a ZDPH, § 7b ZDP, payment splits, and formal accountant layout.
+  - [x] Catalog Add Product modal with expandable POS settings accordion (`show_in_presets`, color swatches, `is_weighted`, `is_open_price`, `min_stock_alert`).
+  - [x] Full sync pipeline parity (`database.py`, `staging.py`, `remote_staging_sync.py`, `PresetModel`).
+  - [x] Backward-compatible dynamic schema resolution for older snapshots in `snapshot_service.py`.
+- **Ongoing / Next**:
+  - [ ] Multi-store R2 replica prefix routing for multi-branch retailers.
+  - [ ] Real hardware thermal printer ESC/POS driver integration for web clients via WebUSB / WebSerial.
+
 ---
 
 ## 8. Verification & Gate Checklist
