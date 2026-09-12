@@ -290,7 +290,7 @@ class RemoteStagingSyncService:
                         # Recalculate Weighted Average Purchase Price (VAP) per § 25 ZoÚ
                         cur_stock = float(preset.stock_quantity or 0.0)
                         cur_cost = float(preset.cost_price or 0.0)
-                        if cur_stock <= 0:
+                        if cur_stock <= 0 or (cur_stock + qty) <= 0:
                             new_vap = cost
                         else:
                             new_vap = ((cur_stock * cur_cost) + (qty * cost)) / (cur_stock + qty)

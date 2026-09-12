@@ -1,4 +1,5 @@
 import os
+import hmac
 import pyotp
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -159,7 +160,7 @@ def verify_pos_token(
             raise HTTPException(status_code=403, detail="Missing POS API Secret")
         return True
 
-    if token != expected_secret:
+    if not hmac.compare_digest(token, expected_secret):
         raise HTTPException(status_code=403, detail="Invalid POS API Secret")
 
     return True
