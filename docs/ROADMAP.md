@@ -19,15 +19,14 @@ graph TD
         D_ISDOC["2. Automatické vytěžování faktur<br/>(ISDOC XML parser + Vision OCR + IMAP worker)"]
         D_QUEUE["3. Backend Staging Queue & REST API<br/>(backend_cloud/routers/staging.py + DB modely)"]
         D_UI["4. Web Dashboard UI Shell (React 19 + Vite)<br/>(Přehled, Sklad, Analytika, Z-Reporty, Příjemky)"]
-        D_CS --> D_ISDOC --> D_QUEUE --> D_UI
+        D_API["5. Napojení Web Dashboardu na živé Cloud API 🌐<br/>(cloudApi.js + reálné dotazy do SQLite snapshotu)"]
+        D_SQL["6. Reálné dotazy v Backend Cloud 📊<br/>(KPIs, marže z VAP, ležáky, POHODA 2.0 XML)"]
+        D_SYNC["7. Ranní synchronizace pokladny z cloudu 📥<br/>(remote_staging_sync.py + idempotence + VAP přepočet)"]
+        D_CS --> D_ISDOC --> D_QUEUE --> D_UI --> D_API --> D_SQL --> D_SYNC
     end
 
     subgraph P2Rem["🎯 Phase 2 K dokončení (Remaining Tasks)"]
-        T1["5. Napojení Web Dashboardu na živé Cloud API 🌐<br/>(cloudApi.js + náhrada mock dat za reálné query)"]
-        T2["6. Reálné SQL dotazy v Backend Cloud 📊<br/>(KPIs, marže z VAP, ležáky a tržby z pos_store.db)"]
-        T3["7. Ranní synchronizace pokladny z cloudu 📥<br/>(Pokladna stahuje schválené příjemky & změny cen)"]
         T4["8. Zabezpečení, TOTP 2FA a párování pokladny 🔐<br/>(RFC 6238 2FA + 256-bit mutual API token)"]
-        T1 --> T2 --> T3 --> T4
     end
 
     P2Done --> P2Rem
@@ -39,10 +38,10 @@ graph TD
   - **Pipeline automatického vytěžování faktur**: Nativní ISDOC XML parser (`isdoc_parser.py`), Vision OCR fallback pro papírové fotky/skeny (`ocr_service.py`) a IMAP poller e-mailu `faktury@obchod.cz`.
   - **Staging fronta dokladů**: Databázové moduly a REST endpointy pro schvalování, úpravy a správu příjemek (`backend_cloud/routers/staging.py`).
   - **Frontend UI kostra**: Aplikace `web/` v React 19 + Vite s 6 hlavními obrazovkami a Docker kontejnerem pro Home Server.
+  - **Napojení UI na živé API**: Výměna statických mock konstant v `web/src/pages/` za dynamický HTTP klient `cloudApi.js` (Overview, Catalog s přidáváním produktů a změnou cen, Analytics, Z-Reports, Tax Exports, Intake).
+  - **Reálné analytické a přehledové dotazy**: `SnapshotService` s `mode=ro&immutable=1` nad `pos_store.db` (tržby, marže dle VAP, ležáky, heatmapa, POHODA 2.0 XML).
+  - **Ranní synchronizační klient na pokladně**: Klientský modul v pokladně (`backend/services/remote_staging_sync.py`), který při startu a každých 15 minut stáhne `GET /api/v1/staging/pending`, promítne nové produkty, změny cen a příjemky do skladových zásob (vč. VAP přepočtu dle § 25 ZoÚ), chrání idempotenci přes `applied_sync_events` a odešle `POST /api/v1/staging/ack`.
 - **Zbývá dokončit (Remaining ❌)**:
-  - **Napojení UI na živé API**: Výměna statických mock konstant v `web/src/pages/` za dynamický HTTP klient `cloudApi.js`.
-  - **Reálné analytické a přehledové dotazy**: Doplnění SQLAlchemy dotazů do `backend_cloud/routers/dashboard.py` a `analytics.py` nad připojeným read-only snapshotem (tržby, marže dle VAP, ležáky, heatmapa, POHODA XML).
-  - **Ranní synchronizační klient na pokladně**: Klientský modul v pokladně (`backend/services/remote_staging_sync.py`), který při startu stáhne `GET /api/v1/staging/pending`, promítne příjemky do skladových zásob a odešle `POST /api/v1/staging/ack`.
   - **Zabezpečení & TOTP 2FA**: Dokončení dvoufaktorového přihlášení (Google Authenticator) v `auth.py` a validace 256-bitového párovacího tokenu pokladny.
 
 ---

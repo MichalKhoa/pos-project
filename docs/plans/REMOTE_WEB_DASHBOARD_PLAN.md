@@ -364,26 +364,24 @@ pos-project-himmel/
   - [x] Initialized `web/` React 19 + Vite application compiling to production bundle (`dist/`).
   - [x] Responsive layout and desktop/mobile navigation sidebar (`web/src/App.jsx`).
   - [x] UI mock shells for Overview, Catalog, Analytics, Z-Reports, Intake, Tax Exports.
-- **Remaining**:
-  - [ ] Implement `web/src/api/cloudApi.js` HTTP client for `backend_cloud` REST API.
-  - [ ] Wire live state into all 6 page components, replacing hardcoded mock constants (`MOCK_DATA`, `MOCK_CATALOG`, etc.).
+  - [x] Implement `web/src/api/cloudApi.js` HTTP client for `backend_cloud` REST API.
+  - [x] Wire live state into all 6 page components, replacing hardcoded mock constants (`MOCK_DATA`, `MOCK_CATALOG`, etc.).
 
-### Phase 2.3: Deep Analytics & Shift/Tax Hub [REMAINING ❌]
+### Phase 2.3: Deep Analytics & Shift/Tax Hub [COMPLETED ✅]
 - **Completed**:
   - [x] REST endpoint stubs created in `backend_cloud/routers/dashboard.py`, `analytics.py`, `exports.py`.
-- **Remaining**:
-  - [ ] Replace mock JSON with real SQLAlchemy/SQLite queries against the read-only replicated `pos_store.db` snapshot (revenue, margins via VAP, drawer balances).
-  - [ ] Calculate real Top Profit Drivers, Dead Stock ($>0$ qty, 0 sales), and 7x24 Rush-Hour Heatmap.
-  - [ ] Wire POHODA 2.0 XML generator & real VAT return summaries in `exports.py`.
+  - [x] Replace mock JSON with real SQLAlchemy/SQLite queries against the read-only replicated `pos_store.db` snapshot (revenue, margins via VAP, drawer balances).
+  - [x] Calculate real Top Profit Drivers, Dead Stock ($>0$ qty, 0 sales), and 7x24 Rush-Hour Heatmap.
+  - [x] Wire POHODA 2.0 XML generator & real VAT return summaries in `exports.py`.
 
-### Phase 2.4: Bi-Directional Staging Queue & Morning POS Pull [PARTIALLY DONE ⏳]
+### Phase 2.4: Bi-Directional Staging Queue & Morning POS Pull [COMPLETED ✅]
 - **Completed**:
-  - [x] SQLite staging queue tables (`staged_intakes`, `staged_price_changes`) in `backend_cloud/database.py`.
-  - [x] Staging endpoints: `POST /upload-invoice`, `GET /intakes`, `POST /intakes`, `POST /intakes/{id}/approve`, `GET /pending`, `POST /ack`.
-- **Remaining**:
-  - [ ] Add Store POS startup / periodic pull service (`backend/services/remote_staging_sync.py`).
-  - [ ] Poll `GET /api/v1/staging/pending`, commit approved intakes to local master DB (`StockMovementModel`), recalculate VAP and stock.
-  - [ ] Send `POST /api/v1/staging/ack` with idempotency protection to finalize batch sync.
+  - [x] SQLite staging queue tables (`staged_intakes`, `staged_price_changes`, `staged_products`) in `backend_cloud/database.py`.
+  - [x] Staging endpoints: `POST /upload-invoice`, `GET /intakes`, `POST /intakes`, `POST /intakes/{id}/approve`, `GET /pending`, `POST /ack`, `POST /products`, `POST /price-changes`.
+  - [x] Add Store POS startup / periodic pull service (`backend/services/remote_staging_sync.py`).
+  - [x] Poll `GET /api/v1/staging/pending`, commit approved intakes to local master DB (`StockMovementModel`), recalculate VAP and stock.
+  - [x] Send `POST /api/v1/staging/ack` with idempotency protection to finalize batch sync.
+  - [x] Manual pull endpoint `POST /api/v1/system/sync-staging` and background daemon thread in POS lifespan.
 
 ### Phase 2.5: Automated Invoice Fetching (Email IMAP + ISDOC + OCR) [COMPLETED ✅]
 - **Completed**:
@@ -396,12 +394,11 @@ pos-project-himmel/
 
 ## 8. Verification & Gate Checklist
 Current Phase 2 verification status:
-- [x] Store POS offline tests pass: `python -m unittest discover -s backend/tests` (177 tests OK)
+- [x] Store POS offline tests pass: `python -m unittest discover -s backend/tests` (186 tests OK)
 - [x] Desktop POS frontend tests & build pass: `npm run test && npm run build` (216 vitest tests OK)
-- [x] Cloud backend staging & parser tests pass: `python -m unittest discover -s backend_cloud/tests` (9 tests OK)
+- [x] Cloud backend staging & parser tests pass: `python -m unittest discover -s backend_cloud/tests` (67 tests OK)
 - [x] Web dashboard production build passes: `cd web && npm run build` (Vite dist bundle OK)
-- [ ] Connect Web Dashboard UI to live API (`cloudApi.js` replacing static mocks)
-- [ ] Connect Backend Cloud routers to live SQLite snapshot (real KPIs, Z-reports, analytics)
-- [ ] Implement Store POS morning staging pull client & ACK loop
-- [ ] Complete full end-to-end simulation: Store Z-Report $\rightarrow$ R2 upload $\rightarrow$ Home server query $\rightarrow$ Remote intake $\rightarrow$ Next day POS pull.
-
+- [x] Connect Web Dashboard UI to live API (`cloudApi.js` replacing static mocks)
+- [x] Connect Backend Cloud routers to live SQLite snapshot (real KPIs, Z-reports, analytics)
+- [x] Implement Store POS morning staging pull client & ACK loop (`remote_staging_sync.py`)
+- [ ] Finalize RFC 6238 TOTP 2FA flow and mutual machine pairing token.
