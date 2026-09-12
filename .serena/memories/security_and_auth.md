@@ -35,6 +35,15 @@ Security practices, authentication workflows, cryptographic hashing, and PIN rec
 2. **Local Terminal Script:**
    - `VoltFlow_POS_Reset_PIN.bat` directly executes an SQLite update in `pos_store.db` to set PIN hash to `1234`.
 
+## 🌐 Cloud Dashboard Auth & Mutual POS Machine Pairing
+- **Cloud Owner Auth:** `backend_cloud/routers/auth.py` issues JWT bearer tokens (`HS256`, 1-day expiration). Supports JSON and form-urlencoded login.
+- **RFC 6238 TOTP 2FA:** Integrated via `pyotp.TOTP` with `valid_window=1` drift tolerance. Setup endpoint: `GET /api/v1/auth/totp/setup` (returns otpauth URI and QR code). Verification: `POST /api/v1/auth/totp/verify`.
+- **Mutual Machine Token Authentication:** `verify_pos_token` dependency secures `/api/v1/staging/pending` and `/api/v1/staging/ack`.
+  - Supports `Authorization: Bearer <secret>`, `X-Store-Token`, or `pos-auth-token` headers.
+  - Constant-time verification using `hmac.compare_digest`.
+  - Configurable enforcement via `POS_REQUIRE_MACHINE_AUTH` (default `false` for dev, `true` for prod).
+- **Idempotency & Replay Defense:** All staged events use UUIDv4 `idempotency_key`, tracked in `applied_sync_events` with `UNIQUE(idempotency_key)` to prevent duplicate inventory intake or multiple VAP recalculations.
+
 ## 🚀 Execution & Launcher Scripts
 - **Production Silent Mode (`VoltFlow_POS.bat`):** Runs FastAPI backend, Litestream, and Vite in background with no terminal windows; opens Edge POS app.
 - **Debug Mode (`VoltFlow_POS_Debug.bat`):** Launches dedicated terminal windows for backend, frontend, and litestream with Edge DevTools auto-opened.
