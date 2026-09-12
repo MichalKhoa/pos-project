@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import init_staging_db
+try:
+    from database import init_staging_db
+except ImportError:
+    from backend_cloud.database import init_staging_db
 import os
 
 app = FastAPI(title="VoltFlow POS Cloud API", version="0.3.0")
@@ -13,7 +16,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routers import auth, dashboard, analytics, staging, exports
+try:
+    from routers import auth, dashboard, analytics, staging, exports, catalog
+except ImportError:
+    from backend_cloud.routers import auth, dashboard, analytics, staging, exports, catalog
 
 @app.on_event("startup")
 def startup_event():
@@ -24,6 +30,7 @@ app.include_router(dashboard.router)
 app.include_router(analytics.router)
 app.include_router(staging.router)
 app.include_router(exports.router)
+app.include_router(catalog.router)
 
 @app.get("/health")
 def health_check():

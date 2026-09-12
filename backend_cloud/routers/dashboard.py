@@ -1,5 +1,10 @@
 from fastapi import APIRouter
 
+try:
+    from backend_cloud.snapshot_service import SnapshotService, snapshot_service
+except ImportError:
+    from snapshot_service import SnapshotService, snapshot_service
+
 router = APIRouter(
     prefix="/api/v1/dashboard",
     tags=["Dashboard"]
@@ -7,19 +12,17 @@ router = APIRouter(
 
 @router.get("/kpi")
 def get_kpi():
-    return {
-        "gross_revenue": "15000.00",
-        "net_revenue": "12396.69",
-        "margins": "25.5",
-        "total_receipt_count": 120,
-        "aov": "125.00",
-        "cash_drawer_balance": "5000.00",
-        "last_sync_time": "2026-09-12T05:00:00Z"
-    }
+    return snapshot_service.get_kpi_summary()
+
+@router.get("/payment-splits")
+def get_payment_splits():
+    return snapshot_service.get_payment_splits()
 
 @router.get("/zreports")
-def get_zreports():
-    return [
-        {"id": 1, "date": "2026-09-11", "total": "14000.00"},
-        {"id": 2, "date": "2026-09-10", "total": "13500.00"}
-    ]
+def get_zreports(limit: int = 50):
+    return snapshot_service.get_zreports(limit=limit)
+
+@router.get("/health")
+def get_health():
+    return snapshot_service.check_health()
+
