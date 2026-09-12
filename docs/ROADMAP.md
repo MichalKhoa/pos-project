@@ -9,8 +9,8 @@ _Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka
 
 ## 1. Immediate Active Priorities (Nejbližší úkoly k realizaci) 🎯
 
-Phase 1 (**Daňová evidence a inventury pro OSVČ**) a **Kompletní Backend Audit (P0–P3)** jsou **100 % dokončeny** ✅.  
-Jedinou a hlavní aktivní prioritou pro realizaci je nyní **Phase 2: Remote Home Administration Dashboard & Owner Back-Office**.
+Phase 1 (**Daňová evidence a inventury pro OSVČ**), **Kompletní Backend Audit (P0–P3)** i **Phase 2: Remote Home Administration Dashboard & Owner Back-Office** jsou **100 % dokončeny** ✅.  
+Jedinou a hlavní aktivní prioritou pro realizaci je nyní **Phase 3: Customer CRM & Accounting Bridges (Zákaznický systém & Účetní můstky)**.
 
 ```mermaid
 graph TD
@@ -22,18 +22,23 @@ graph TD
         D_API["5. Napojení Web Dashboardu na živé Cloud API 🌐<br/>(cloudApi.js + reálné dotazy do SQLite snapshotu)"]
         D_SQL["6. Reálné dotazy v Backend Cloud 📊<br/>(KPIs, marže z VAP, ležáky, POHODA 2.0 XML)"]
         D_SYNC["7. Ranní synchronizace pokladny z cloudu 📥<br/>(remote_staging_sync.py + idempotence + VAP přepočet)"]
-        D_CS --> D_ISDOC --> D_QUEUE --> D_UI --> D_API --> D_SQL --> D_SYNC
+        D_AUTH["8. Zabezpečení, TOTP 2FA a párování pokladny 🔐<br/>(RFC 6238 2FA + 256-bit mutual API token)"]
+        D_CS --> D_ISDOC --> D_QUEUE --> D_UI --> D_API --> D_SQL --> D_SYNC --> D_AUTH
     end
 
-    subgraph P2Rem["🎯 Phase 2 K dokončení (Remaining Tasks)"]
-        T4["8. Zabezpečení, TOTP 2FA a párování pokladny 🔐<br/>(RFC 6238 2FA + 256-bit mutual API token)"]
+    subgraph P3Active["🎯 Phase 3 Aktivní priorita (Active Tasks)"]
+        P3_1["1. Zákaznické CRM (telefon / EAN věrnostní karta) 👥"]
+        P3_2["2. Bodový systém a VIP slevové hladiny ⭐"]
+        P3_3["3. Bezpapírové účtenky přes QR kód na displeji / e-mail 📱"]
+        P3_4["4. Účetní můstky pro podvojné účetnictví (Money S3 / Abra Flexi) 📑"]
+        P3_1 --> P3_2 --> P3_3 --> P3_4
     end
 
-    P2Done --> P2Rem
+    P2Done --> P3Active
 ```
 
-### 1.1 🌐 Web Dashboard pro vzdálenou správu z domova (*Stav realizace Phase 2*)
-- **Již hotovo (Completed ✅)**:
+### 1.1 🌐 Web Dashboard pro vzdálenou správu z domova (*Phase 2 — 100 % HOTOVO ✅*)
+- **Dokončeno (Completed ✅)**:
   - **Automatický cloud backup při uzávěrce**: Při provedení Z-Reportu na pokladně se spustí asynchronní záloha a upload šifrovaného snapshotu `pos_store.db` na S3/R2 úložiště.
   - **Pipeline automatického vytěžování faktur**: Nativní ISDOC XML parser (`isdoc_parser.py`), Vision OCR fallback pro papírové fotky/skeny (`ocr_service.py`) a IMAP poller e-mailu `faktury@obchod.cz`.
   - **Staging fronta dokladů**: Databázové moduly a REST endpointy pro schvalování, úpravy a správu příjemek (`backend_cloud/routers/staging.py`).
@@ -41,8 +46,7 @@ graph TD
   - **Napojení UI na živé API**: Výměna statických mock konstant v `web/src/pages/` za dynamický HTTP klient `cloudApi.js` (Overview, Catalog s přidáváním produktů a změnou cen, Analytics, Z-Reports, Tax Exports, Intake).
   - **Reálné analytické a přehledové dotazy**: `SnapshotService` s `mode=ro&immutable=1` nad `pos_store.db` (tržby, marže dle VAP, ležáky, heatmapa, POHODA 2.0 XML).
   - **Ranní synchronizační klient na pokladně**: Klientský modul v pokladně (`backend/services/remote_staging_sync.py`), který při startu a každých 15 minut stáhne `GET /api/v1/staging/pending`, promítne nové produkty, změny cen a příjemky do skladových zásob (vč. VAP přepočtu dle § 25 ZoÚ), chrání idempotenci přes `applied_sync_events` a odešle `POST /api/v1/staging/ack`.
-- **Zbývá dokončit (Remaining ❌)**:
-  - **Zabezpečení & TOTP 2FA**: Dokončení dvoufaktorového přihlášení (Google Authenticator) v `auth.py` a validace 256-bitového párovacího tokenu pokladny.
+  - **Zabezpečení & TOTP 2FA**: Dvoufaktorové přihlášení (RFC 6238 TOTP) v `auth.py` a validace 256-bitového párovacího tokenu pokladny na staging endpointech.
 
 ---
 
@@ -180,8 +184,8 @@ flowchart TD
 |---|---|---|---|
 | **`v0.1.0`** | Baseline Core | Základní offline-first pokladna, Tauri v2 desktop shell, ESC/POS tisk, EET 2.0 SOAP engine. | ✅ Vydáno |
 | **`v0.2.0`** | Phase 1 & Audit | Daňová evidence pro OSVČ (§ 7b ZDP), inventura k 31.12. (§ 29, 30 ZoÚ), vratné obaly, odpisy (§ 25 ZoÚ), váhové zboží, kompletní audit P0–P3 (FIN-C1, EET-C1 C14N, DB-C1). | ✅ Vydáno |
-| **`v0.3.0`** | **Phase 2 (Aktivní)** | **Remote Home Admin Dashboard**: Šifrovaný Cloud Sync (S3/R2), webové rozhraní pro správu z domova, vzdálené zadávání příjemek z notebooku/mobilu, vzdálená úprava cen a sledování tržeb. | 🎯 **Další na řadě** |
-| **`v0.4.0`** | Phase 3 | **CRM & Účetní můstky**: Zákaznická věrnost (kartičky, slevové hladiny), bezpapírové QR/e-mail účtenky, exportní můstky pro podvojné účetnictví (Money S3, Abra Flexi). | 📋 Plánováno |
+| **`v0.3.0`** | **Phase 2** | **Remote Home Admin Dashboard**: Šifrovaný Cloud Sync (S3/R2), webové rozhraní pro správu z domova, vzdálené zadávání příjemek z notebooku/mobilu, vzdálená úprava cen a sledování tržeb. | ✅ Dokončeno |
+| **`v0.4.0`** | **Phase 3 (Aktivní)** | **CRM & Účetní můstky**: Zákaznická věrnost (kartičky, slevové hladiny), bezpapírové QR/e-mail účtenky, exportní můstky pro podvojné účetnictví (Money S3, Abra Flexi). | 🎯 **Další na řadě** |
 | **`v0.5.0`** | Phase 4 | **Multi-User & Enterprise**: Rychlé přepínání pokladních profilů s PIN/RFID, oddělené zásuvky per pokladní, multi-store synchronizace více poboček s centrálním katalogem. | 📋 Plánováno |
 | **`v0.6.0`** | Phase 5 | **Hardware & Platební terminály**: Automatické vratky na terminál ČSOB (Ingenico Move 3500 TCP storno), integrace SumUp čtečky (až bude k dispozici HW). | ⏸️ Pozastaveno |
 | **`v0.7.0`** | **Phase 6** | **Gastronomy & Hospitality Expansion**: Modifikovatelné rozložení provozovny (Floor Plan Editor), stoly jako přepínatelné taby s otevřenými účty, dělení účtů (Split Bill), přesuny stolů a bonovací tisk do kuchyně/baru. | 📋 Plánováno |

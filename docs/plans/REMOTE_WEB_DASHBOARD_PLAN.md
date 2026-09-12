@@ -350,16 +350,15 @@ pos-project-himmel/
 
 ## 7. Phased Implementation Roadmap & Current Status
 
-### Phase 2.1: Cloud Sync & Home Server Backend Foundation [PARTIALLY DONE ⏳]
+### Phase 2.1: Cloud Sync & Home Server Backend Foundation [COMPLETED ✅]
 - **Completed**:
   - [x] Automated SQLite snapshot upload in `backend/services/cloud_sync_service.py` upon Z-Report closure (`backend/routers/cash.py`).
   - [x] Scaffold `backend_cloud/` container with read-only SQLite snapshot loader helper (`backend_cloud/database.py`).
   - [x] `Dockerfile` and `docker-compose.yml` for Home Server deployment.
-- **Remaining**:
-  - [ ] Implement RFC 6238 TOTP 2FA (QR setup & verification) in `backend_cloud/routers/auth.py`.
-  - [ ] Mutual 256-bit API secret / machine token validation for POS machine requests (`/pending`, `/ack`).
+  - [x] Implement RFC 6238 TOTP 2FA (QR setup & verification) in `backend_cloud/routers/auth.py`.
+  - [x] Mutual 256-bit API secret / machine token validation for POS machine requests (`/pending`, `/ack`).
 
-### Phase 2.2: Web Dashboard Shell & Live Reporting [PARTIALLY DONE ⏳]
+### Phase 2.2: Web Dashboard Shell & Live Reporting [COMPLETED ✅]
 - **Completed**:
   - [x] Initialized `web/` React 19 + Vite application compiling to production bundle (`dist/`).
   - [x] Responsive layout and desktop/mobile navigation sidebar (`web/src/App.jsx`).
@@ -396,9 +395,9 @@ pos-project-himmel/
 Current Phase 2 verification status:
 - [x] Store POS offline tests pass: `python -m unittest discover -s backend/tests` (186 tests OK)
 - [x] Desktop POS frontend tests & build pass: `npm run test && npm run build` (216 vitest tests OK)
-- [x] Cloud backend staging & parser tests pass: `python -m unittest discover -s backend_cloud/tests` (67 tests OK)
+- [x] Cloud backend staging & parser tests pass: `python -m unittest discover -s backend_cloud/tests` (71 tests OK)
 - [x] Web dashboard production build passes: `cd web && npm run build` (Vite dist bundle OK)
 - [x] Connect Web Dashboard UI to live API (`cloudApi.js` replacing static mocks)
 - [x] Connect Backend Cloud routers to live SQLite snapshot (real KPIs, Z-reports, analytics)
 - [x] Implement Store POS morning staging pull client & ACK loop (`remote_staging_sync.py`)
-- [ ] Finalize RFC 6238 TOTP 2FA flow and mutual machine pairing token.
+- [x] Finalize RFC 6238 TOTP 2FA flow and mutual machine pairing token.
