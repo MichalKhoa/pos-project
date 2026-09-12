@@ -28,6 +28,29 @@ _Target User: Parents' Mixed Retail & Convenience Store (Smíšené zboží / Ve
 
 ---
 
+## 🎯 Phase 2: Remote Home Administration Dashboard (Active Milestone)
+
+- [x] **Automated Z-Report Cloud Sync (`backend/routers/cash.py`, `cloud_sync_service.py`)**:
+  - Asynchronous encrypted SQLite snapshot upload to S3/R2 upon Z-Report closure.
+- [x] **Automated Invoice Intake Pipeline (`backend_cloud/services/`)**:
+  - Native Czech ISDOC 5.2/6.0 parser, Vision OCR fallback, and IMAP email poller (`faktury@obchod.cz`).
+- [x] **Bi-Directional Staging Queue Backend (`backend_cloud/routers/staging.py`)**:
+  - SQLite queue models (`staged_intakes`, `staged_price_changes`), approval workflows, and status transitions.
+- [x] **Web Dashboard UI Shell (`web/`)**:
+  - React 19 + Vite desktop/mobile shell with 6 main pages and production build.
+- [ ] **Web Dashboard Live Data Integration (`web/src/api/cloudApi.js`)**:
+  - Replace static mock constants across all 6 pages with dynamic API requests and action handlers.
+- [ ] **Backend Cloud Real Snapshot Queries (`backend_cloud/routers/`)**:
+  - Connect `dashboard.py`, `analytics.py`, and `exports.py` to read real financial metrics, VAP margins, dead stock, and POHODA XML from the replicated `pos_store.db`.
+- [ ] **Store POS Morning Staging Pull Hook (`backend/services/remote_staging_sync.py`)**:
+  - Store register pulls `GET /api/v1/staging/pending`, commits batches to local SQLite master, recalculates VAP/stock, and returns `POST /api/v1/staging/ack`.
+- [ ] **Security Hardening & 2FA (`backend_cloud/routers/auth.py`)**:
+  - RFC 6238 TOTP 2FA for owner login and mutual 256-bit API token validation for store registers.
+- [ ] **PWA & Offline Manifest (`web/`)**:
+  - Service worker and web manifest for 1-tap mobile home screen pinning.
+
+---
+
 ## 💳 Close Future Features (Payment Terminals & Returns)
 
 - [x] **Receipt Barcode Scanner & Line-Item Return (`Vratka ze záznamu`)**:
@@ -41,7 +64,7 @@ _Target User: Parents' Mixed Retail & Convenience Store (Smíšené zboží / Ve
 
 ## 🚀 Expansion Roadmap (Multi-Customer & Enterprise Scale)
 
-All multi-cashier RBAC, Czech bottle deposit returns, B2B invoicing with ARES lookup, stock intake wizards, embedded scale barcodes, multi-store cloud sync, and loyalty CRM are documented in [`docs/ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/ROADMAP.md).
+All multi-cashier RBAC, Gastronomy floor plans & table tabs, Czech bottle deposit returns, B2B invoicing with ARES lookup, stock intake wizards, embedded scale barcodes, multi-store cloud sync, and loyalty CRM are documented in [`docs/ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/ROADMAP.md).
 
 ---
 

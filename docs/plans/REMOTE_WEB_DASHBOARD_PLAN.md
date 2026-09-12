@@ -348,57 +348,60 @@ pos-project-himmel/
 
 ---
 
-## 7. Phased Implementation Roadmap
+## 7. Phased Implementation Roadmap & Current Status
 
-### Phase 2.1: Cloud Sync & Home Server Backend Foundation
-- **Goals**:
-  1. Complete automated SQLite snapshot upload in `backend/services/cloud_sync_service.py` upon Z-Report closure.
-  2. Scaffold `backend_cloud/` container with read-only SQLite snapshot loader, mutual POS auth token, and TOTP 2FA.
-  3. Provide `Dockerfile` and `docker-compose.yml` for Home Server deployment.
-- **Verification**:
-  - `python -m unittest discover -s backend/tests -p "test_cloud_sync*.py"`
-  - `python -m unittest discover -s backend_cloud/tests -p "test_*.py"`
+### Phase 2.1: Cloud Sync & Home Server Backend Foundation [PARTIALLY DONE ⏳]
+- **Completed**:
+  - [x] Automated SQLite snapshot upload in `backend/services/cloud_sync_service.py` upon Z-Report closure (`backend/routers/cash.py`).
+  - [x] Scaffold `backend_cloud/` container with read-only SQLite snapshot loader helper (`backend_cloud/database.py`).
+  - [x] `Dockerfile` and `docker-compose.yml` for Home Server deployment.
+- **Remaining**:
+  - [ ] Implement RFC 6238 TOTP 2FA (QR setup & verification) in `backend_cloud/routers/auth.py`.
+  - [ ] Mutual 256-bit API secret / machine token validation for POS machine requests (`/pending`, `/ack`).
 
-### Phase 2.2: Web Dashboard Shell & Read-Only Reporting
-- **Goals**:
-  1. Initialize `web/` React 19 + Vite application.
-  2. Import design tokens from `src/styles/` for responsive desktop table + mobile card views.
-  3. Implement Executive Dashboard KPI cards, Z-Report digital tape viewer, and Stock search.
-- **Verification**:
-  - `cd web && npm run test && npm run build`
+### Phase 2.2: Web Dashboard Shell & Live Reporting [PARTIALLY DONE ⏳]
+- **Completed**:
+  - [x] Initialized `web/` React 19 + Vite application compiling to production bundle (`dist/`).
+  - [x] Responsive layout and desktop/mobile navigation sidebar (`web/src/App.jsx`).
+  - [x] UI mock shells for Overview, Catalog, Analytics, Z-Reports, Intake, Tax Exports.
+- **Remaining**:
+  - [ ] Implement `web/src/api/cloudApi.js` HTTP client for `backend_cloud` REST API.
+  - [ ] Wire live state into all 6 page components, replacing hardcoded mock constants (`MOCK_DATA`, `MOCK_CATALOG`, etc.).
 
-### Phase 2.3: Deep Analytics & Shift/Tax Hub
-- **Goals**:
-  1. Implement Top Profit Drivers vs Dead Stock calculation.
-  2. Implement 7x24 Rush-Hour Heatmap and Margin Erosion alerts.
-  3. Add 1-click download of DPFO, DPH overview, and POHODA 2.0 XML from home.
-- **Verification**:
-  - Validate generated POHODA XML against actual POS export.
+### Phase 2.3: Deep Analytics & Shift/Tax Hub [REMAINING ❌]
+- **Completed**:
+  - [x] REST endpoint stubs created in `backend_cloud/routers/dashboard.py`, `analytics.py`, `exports.py`.
+- **Remaining**:
+  - [ ] Replace mock JSON with real SQLAlchemy/SQLite queries against the read-only replicated `pos_store.db` snapshot (revenue, margins via VAP, drawer balances).
+  - [ ] Calculate real Top Profit Drivers, Dead Stock ($>0$ qty, 0 sales), and 7x24 Rush-Hour Heatmap.
+  - [ ] Wire POHODA 2.0 XML generator & real VAT return summaries in `exports.py`.
 
-### Phase 2.4: Bi-Directional Staging Queue & Manual Intake with ARES
-- **Goals**:
-  1. Create `pending_staging_queue` in `backend_cloud`.
-  2. Build Web Intake UI with ARES company lookup and live margin calculator.
-  3. Add morning startup hook to Store POS: queries Home Server, pulls pending intakes, commits to master DB.
-- **Verification**:
-  - End-to-end staging and store pull test.
+### Phase 2.4: Bi-Directional Staging Queue & Morning POS Pull [PARTIALLY DONE ⏳]
+- **Completed**:
+  - [x] SQLite staging queue tables (`staged_intakes`, `staged_price_changes`) in `backend_cloud/database.py`.
+  - [x] Staging endpoints: `POST /upload-invoice`, `GET /intakes`, `POST /intakes`, `POST /intakes/{id}/approve`, `GET /pending`, `POST /ack`.
+- **Remaining**:
+  - [ ] Add Store POS startup / periodic pull service (`backend/services/remote_staging_sync.py`).
+  - [ ] Poll `GET /api/v1/staging/pending`, commit approved intakes to local master DB (`StockMovementModel`), recalculate VAP and stock.
+  - [ ] Send `POST /api/v1/staging/ack` with idempotency protection to finalize batch sync.
 
-### Phase 2.5: Automated Invoice Fetching (Email IMAP + ISDOC + OCR) [IMPLEMENTED ✅]
-- **Goals**:
-  1. Build background IMAP worker on Home Server polling `faktury@obchod.cz` (`backend_cloud/services/email_fetcher.py`).
-  2. Implement native Python ISDOC XML parser (`backend_cloud/services/isdoc_parser.py`).
-  3. Add Vision OCR parser fallback for paper photo scans (`backend_cloud/services/ocr_service.py`).
-  4. Show 1-click approval badge on Web Dashboard (`web/src/pages/IntakePage.jsx`).
-- **Verification**:
-  - Test with mock Makro ISDOC file and scanned paper receipt (`backend_cloud/tests/test_isdoc_parser.py`, `test_staging.py`).
+### Phase 2.5: Automated Invoice Fetching (Email IMAP + ISDOC + OCR) [COMPLETED ✅]
+- **Completed**:
+  - [x] Background IMAP worker on Home Server polling `faktury@obchod.cz` (`backend_cloud/services/email_fetcher.py`).
+  - [x] Native Python ISDOC 5.2/6.0 XML + ZIP parser (`backend_cloud/services/isdoc_parser.py`).
+  - [x] Vision OCR parser fallback for paper photos via Gemini/OpenRouter (`backend_cloud/services/ocr_service.py`).
+  - [x] 1-click approve & dismiss lifecycle in staging router (`backend_cloud/routers/staging.py`).
 
 ---
 
 ## 8. Verification & Gate Checklist
-Phase 2 verification status:
+Current Phase 2 verification status:
 - [x] Store POS offline tests pass: `python -m unittest discover -s backend/tests` (177 tests OK)
-- [x] Desktop POS frontend tests & build pass: `npm run test && npm run build`
-- [x] Cloud backend tests pass: `python -m unittest discover -s backend_cloud/tests` (9 tests OK)
-- [x] Web dashboard tests & build pass: `cd web && npm run test && npm run build`
-- [x] Full end-to-end simulation: Store Z-Report $\rightarrow$ R2 upload $\rightarrow$ Home server query $\rightarrow$ Remote intake $\rightarrow$ Next day POS pull.
+- [x] Desktop POS frontend tests & build pass: `npm run test && npm run build` (216 vitest tests OK)
+- [x] Cloud backend staging & parser tests pass: `python -m unittest discover -s backend_cloud/tests` (9 tests OK)
+- [x] Web dashboard production build passes: `cd web && npm run build` (Vite dist bundle OK)
+- [ ] Connect Web Dashboard UI to live API (`cloudApi.js` replacing static mocks)
+- [ ] Connect Backend Cloud routers to live SQLite snapshot (real KPIs, Z-reports, analytics)
+- [ ] Implement Store POS morning staging pull client & ACK loop
+- [ ] Complete full end-to-end simulation: Store Z-Report $\rightarrow$ R2 upload $\rightarrow$ Home server query $\rightarrow$ Remote intake $\rightarrow$ Next day POS pull.
 

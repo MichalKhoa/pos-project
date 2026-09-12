@@ -9,6 +9,9 @@ Welcome to the comprehensive technical documentation and operational guides for 
 ```
 docs/
 ├── README.md                          # Documentation index (this file)
+├── ROADMAP.md                         # Master product & technical roadmap (Active living document)
+├── plans/                             # Active Implementation Plans (Things to do now)
+│   └── REMOTE_WEB_DASHBOARD_PLAN.md   # Phase 2: Remote Home Admin Dashboard & Cloud Sync
 ├── guides/                            # Operator & Administrator Manuals
 │   ├── CASHIER_SETUP_GUIDE.md         # Daily cashier touch workflows & register usage
 │   ├── CSOB_TERMINAL_GUIDE.md         # ČSOB Ingenico Move 3500 terminal TCP configuration
@@ -17,14 +20,8 @@ docs/
 │   ├── LITESTREAM_R2_SETUP.md         # Off-site real-time SQLite database replication to S3/R2
 │   └── WINDOWS_SERVICE_SETUP.md       # Windows background service administration
 ├── eet_docs/                          # Official Czech EET 2.0 Specifications & Metodika
-│   ├── markdown/                      # Converted Markdown EET documentation
-│   └── convert_pdf_to_md.py           # Converter script for incoming Ministry PDF documents
-├── csob_docs/                         # ČSOB Business Connector technical specifications
-├── ROADMAP.md                         # Master product & technical roadmap
-├── plans/                             # Architecture & Implementation Roadmaps
-│   ├── ROADMAP_REGISTER_UI_AND_QUICK_ACTIONS.md # Keypad bottom action dock specs
-│   └── archive/                       # Archived completed milestones & plans
-└── TOKEN_TRACKING.md                  # Development telemetry & token optimization guide
+│   └── markdown/                      # Converted Markdown EET documentation & schemas
+└── csob_docs/                         # ČSOB Business Connector technical specifications
 ```
 
 ---

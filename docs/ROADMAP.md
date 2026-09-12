@@ -3,7 +3,7 @@
 _Last updated: September 2026_  
 _Status: Active Living Document_  
 _Architecture: Hybrid Offline-First Desktop (Tauri v2 + FastAPI + SQLite + React 19)_  
-_Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka / OSVČ)_
+_Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka / OSVČ) with Gastronomy & Bistro Extension_
 
 ---
 
@@ -14,37 +14,36 @@ Jedinou a hlavní aktivní prioritou pro realizaci je nyní **Phase 2: Remote Ho
 
 ```mermaid
 graph TD
-    subgraph P2["🎯 Phase 2: Remote Home Administration Dashboard (Next Immediate Tasks)"]
-        T1["1. Cloud Sync API & Bezpečné párování domova 🔐<br/>(Šifrovaný S3/R2 sync / REST/WebSocket bridge)"]
-        T2["2. Web Dashboard pro vzdálenou správu z domova 🌐<br/>(Tržby, marže, Z-reporty a audit z PC/mobilu)"]
-        T3["3. Vzdálené zadávání příjemek a ARES párování 📥<br/>(Nahrávání dodavatelských faktur & PDF z domova)"]
-        T4["4. Vzdálená správa katalogu, cenotvorby a dlaždic 🏷️<br/>(1-klik vzdálená aktualizace cen a sortimentu)"]
+    subgraph P2Done["Phase 2 Dokončeno ✅"]
+        D_CS["1. Šifrovaný S3/R2 Cloud Backup při Z-Reportu<br/>(cloud_sync_service.py + cash.py)"]
+        D_ISDOC["2. Automatické vytěžování faktur<br/>(ISDOC XML parser + Vision OCR + IMAP worker)"]
+        D_QUEUE["3. Backend Staging Queue & REST API<br/>(backend_cloud/routers/staging.py + DB modely)"]
+        D_UI["4. Web Dashboard UI Shell (React 19 + Vite)<br/>(Přehled, Sklad, Analytika, Z-Reporty, Příjemky)"]
+        D_CS --> D_ISDOC --> D_QUEUE --> D_UI
+    end
+
+    subgraph P2Rem["🎯 Phase 2 K dokončení (Remaining Tasks)"]
+        T1["5. Napojení Web Dashboardu na živé Cloud API 🌐<br/>(cloudApi.js + náhrada mock dat za reálné query)"]
+        T2["6. Reálné SQL dotazy v Backend Cloud 📊<br/>(KPIs, marže z VAP, ležáky a tržby z pos_store.db)"]
+        T3["7. Ranní synchronizace pokladny z cloudu 📥<br/>(Pokladna stahuje schválené příjemky & změny cen)"]
+        T4["8. Zabezpečení, TOTP 2FA a párování pokladny 🔐<br/>(RFC 6238 2FA + 256-bit mutual API token)"]
         T1 --> T2 --> T3 --> T4
     end
 
-    subgraph Done["Dokončeno z Phase 1 & Backend Audit P0–P3 ✅ (100 % Complete)"]
-        D1["Fyzická inventura k 31.12. a narovnání mank/přebytků (§ 29, 30 ZoÚ)"]
-        D2["Daňové výkazy DPFO Příloha 1 & DPH přehled (§ 7b ZDP / MOJE daně)"]
-        D3["B2B fakturace z pokladny s ARES ověřením (> 10 000 Kč)"]
-        D4["Kniha zálohovaných vratných obalů (Lahve & Přepravky)"]
-        D5["Skladové odpisy a likvidační protokoly (§ 25 ZoÚ)"]
-        D6["Backend Audit P0–P3 (FIN-C1, EET-C1 C14N, DB-C1, DB-H1, FIN-H1 Numeric, PRN, EET Hardening)"]
-    end
+    P2Done --> P2Rem
 ```
 
-### 1.1 🌐 Web Dashboard pro vzdálenou správu z domova (*Vzdálená správa & Back-Office*)
-- **Store Reality**: Majitel večerky nebo prodejny tráví celý den za pultem obsluhou zákazníků. Večer nebo z domova potřebuje na notebooku či telefonu přehled o tržbách, maržích, stavu hotovosti a možnost zkontrolovat uzavřené Z-Reporty bez nutnosti sedět u pokladny v obchodě.
-- **Functionality**:
-  - **1. Cloud Sync API & Bezpečné párování domova (`cloud_sync_service.py`)**:
-    - Šifrovaná asynchronní replikace databáze a dokladů mezi pokladnou a cloudem (S3 / Cloudflare R2).
-    - 2FA / API token autentizace a zabezpečené párování domácího prohlížeče s pokladnou.
-  - **2. Vzdálený přehled tržeb, marží a uzávěrek**:
-    - Živý i historický přehled denních tržeb, platebních metod, marží, pokladní knihy a archivovaných Z-Reportů.
-    - Exporty daňových podkladů z domova (kniha příjmů a výdajů, přehled DPH, DPFO příloha č. 1).
-  - **3. Zadávání příjemek z domova**:
-    - Majitel pohodlně na notebooku naťuká faktury od dodavatelů s ARES vyhledáváním a přiložením fotky/PDF dokladu. Automatická synchronizace na pokladnu.
-  - **4. Vzdálená správa katalogu a cenotvorby**:
-    - Změna prodejních cen, správa dlaždic rychlé volby a sledování skladových zásob v reálném čase.
+### 1.1 🌐 Web Dashboard pro vzdálenou správu z domova (*Stav realizace Phase 2*)
+- **Již hotovo (Completed ✅)**:
+  - **Automatický cloud backup při uzávěrce**: Při provedení Z-Reportu na pokladně se spustí asynchronní záloha a upload šifrovaného snapshotu `pos_store.db` na S3/R2 úložiště.
+  - **Pipeline automatického vytěžování faktur**: Nativní ISDOC XML parser (`isdoc_parser.py`), Vision OCR fallback pro papírové fotky/skeny (`ocr_service.py`) a IMAP poller e-mailu `faktury@obchod.cz`.
+  - **Staging fronta dokladů**: Databázové moduly a REST endpointy pro schvalování, úpravy a správu příjemek (`backend_cloud/routers/staging.py`).
+  - **Frontend UI kostra**: Aplikace `web/` v React 19 + Vite s 6 hlavními obrazovkami a Docker kontejnerem pro Home Server.
+- **Zbývá dokončit (Remaining ❌)**:
+  - **Napojení UI na živé API**: Výměna statických mock konstant v `web/src/pages/` za dynamický HTTP klient `cloudApi.js`.
+  - **Reálné analytické a přehledové dotazy**: Doplnění SQLAlchemy dotazů do `backend_cloud/routers/dashboard.py` a `analytics.py` nad připojeným read-only snapshotem (tržby, marže dle VAP, ležáky, heatmapa, POHODA XML).
+  - **Ranní synchronizační klient na pokladně**: Klientský modul v pokladně (`backend/services/remote_staging_sync.py`), který při startu stáhne `GET /api/v1/staging/pending`, promítne příjemky do skladových zásob a odešle `POST /api/v1/staging/ack`.
+  - **Zabezpečení & TOTP 2FA**: Dokončení dvoufaktorového přihlášení (Google Authenticator) v `auth.py` a validace 256-bitového párovacího tokenu pokladny.
 
 ---
 
@@ -77,9 +76,15 @@ flowchart TD
         P12["12. Záložní terminál SumUp (Bluetooth / Cloud)"]
     end
 
+    subgraph Phase6["Phase 6: Gastronomy & Hospitality Expansion 🍽️"]
+        P13["13. Modifikovatelné rozložení provozovny (Interactive Floor Plan Editor)"]
+        P14["14. Stoly jako taby & Otevřené účty (Table Tabs, Dělení účtů, Bony)"]
+    end
+
     Phase1Done --> Phase2
     Phase2 --> Phase3
     Phase3 --> Phase4
+    Phase4 --> Phase6
 ```
 
 ---
@@ -139,6 +144,37 @@ flowchart TD
 
 ---
 
+### Phase 6: Gastronomy & Hospitality Expansion 🍽️ (Gastro režim: Plán stolů a otevřené účty)
+
+*Target Profile: Cafés, Bistros, Pubs, Restaurants, and Hybrid Retail Stores with Seating (Kavárny, bistra, hospody, gastro provozy a smíšené prodejny s posezením) needing flexible table management, open tabs, split bills, and interactive floor plans.*
+
+#### 8. 🗺️ Modifikovatelné rozložení provozovny (Interactive Floor Plan & Table Editor)
+- **Zóny a místnosti provozovny (Room Zones)**:
+  - Podpora více nezávislých zón a prostorů (např. *Hlavní sál*, *Bar / Výčep*, *Zahrádka / Terasa*, *Salónek*).
+  - Přepínání mezi místnostmi jedním kliknutím/dotykem.
+- **Vizuální editor rozložení stolů (Floor Plan Canvas & Grid Editor)**:
+  - Interaktivní plátno s drag & drop umisťováním stolů s volitelným magnetickým zarovnáním k mřížce (snap-to-grid).
+  - Nastavitelné tvary stolů: čtverec, obdélník, kruh.
+  - Nastavitelná velikost, orientace (rotace po 45°/90°) a kapacita míst k sezení (počet židlí).
+  - Vlastní číslování a pojmenování stolů (např. *Stůl 1*, *Stůl 2*, *Bar 1*, *Zahrada 4*).
+  - Zámek editace chráněný Admin PINem (prevence nechtěného posunu stolů obsluhou během běžného provozu).
+
+#### 9. 📑 Stoly jako nastavitelné taby a otevřené účty (Table Tabs & Open Bills)
+- **Rychlé taby stolů v pokladně (Table Tabs Bar)**:
+  - Horní lišta otevřených stolů v pokladním rozhraní pro okamžité přepínání účtů na 1 dotyk bez nutnosti opouštět pokladní okno a vracet se do mapy stolů.
+  - Dynamické taby s názvem stolu, aktuální útratou a indikátorem stavu.
+- **Vizuální indikátory stavu stolů a tabů (Table State Indicators)**:
+  - *Volný (Free)*: Zelený / neutrální podkres, stůl je volný k usazení.
+  - *Obsazený s útratou (Occupied)*: Modrý podkres s částkou útraty, počtem položek a časem od otevření účtu.
+  - *Žádost o zaplacení (Payment Requested)*: Oranžový pulzující podkres pro prioritu personálu.
+- **Operace s otevřeným účtem stolu**:
+  - **Průběžné markování na stůl**: Postupné přidávání jídel a nápojů v průběhu návštěvy hostů.
+  - **Dělení účtu (Split Bill)**: 1-tap rozdělení útraty (platba vybraných položek konkrétním hostem, rozdělení na rovné díly, kombinace hotovost/karta).
+  - **Přesun a sloučení stolů (Transfer & Merge)**: Přesun položek mezi stoly nebo sloučení více stolů pro větší skupinu hostů.
+  - **Bonovací tisk pro kuchyň a bar (Kitchen / Bar Orders)**: Tisk objednávkových bonů na dedikované tiskárny (kuchyňská tiskárna pro teplá jídla, barová tiskárna pro nápoje) přes síťový nebo USB ESC/POS tisk.
+
+---
+
 ### Plán verzování a budoucích tagů (SemVer Tagging Plan) 🏷️
 
 | Tag | Fáze / Milník | Hlavní obsah vydání | Status |
@@ -149,7 +185,8 @@ flowchart TD
 | **`v0.4.0`** | Phase 3 | **CRM & Účetní můstky**: Zákaznická věrnost (kartičky, slevové hladiny), bezpapírové QR/e-mail účtenky, exportní můstky pro podvojné účetnictví (Money S3, Abra Flexi). | 📋 Plánováno |
 | **`v0.5.0`** | Phase 4 | **Multi-User & Enterprise**: Rychlé přepínání pokladních profilů s PIN/RFID, oddělené zásuvky per pokladní, multi-store synchronizace více poboček s centrálním katalogem. | 📋 Plánováno |
 | **`v0.6.0`** | Phase 5 | **Hardware & Platební terminály**: Automatické vratky na terminál ČSOB (Ingenico Move 3500 TCP storno), integrace SumUp čtečky (až bude k dispozici HW). | ⏸️ Pozastaveno |
-| **`v1.0.0`** | **Production Store Pilot** | **První ostré nasazení**: Zmrazené databázové schéma, ověřený ostrý provoz na fyzické večerce, kompletní instalátor, zálohovací a obnovovací postupy, EET certifikace. | 🚀 Cíl |
+| **`v0.7.0`** | **Phase 6** | **Gastronomy & Hospitality Expansion**: Modifikovatelné rozložení provozovny (Floor Plan Editor), stoly jako přepínatelné taby s otevřenými účty, dělení účtů (Split Bill), přesuny stolů a bonovací tisk do kuchyně/baru. | 📋 Plánováno |
+| **`v1.0.0`** | **Production Store Pilot** | **První ostré nasazení**: Zmrazené databázové schéma, ověřený ostrý provoz na fyzické večerce / bistru, kompletní instalátor, zálohovací a obnovovací postupy, EET certifikace. | 🚀 Cíl |
 
 *(Poznámka: Mezi verzemi se mohou objevit opravné patch tagy `v0.2.1`, `v0.3.1` atd. pro okamžité hotfixy nalezené při testování bez nových funkcí).*
 
@@ -243,16 +280,10 @@ Explicitně analyzováno a zamítnuto pro ochranu před chybami pokladních a na
 
 ---
 
-## 5. Documentation & Plan Archive Index
+## 5. Documentation & Active Implementation Plan
 
-Detailní technické specifikace a archivy hotových milníků:
+Aktivní technické specifikace pro realizaci:
 
-- [`REMOTE_WEB_DASHBOARD_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/REMOTE_WEB_DASHBOARD_PLAN.md) — Kompletní architektura a plán Phase 2: Web Dashboard, Home Server a Cloud Sync.
-- [`DONE_DATABASE_SAFETY_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_DATABASE_SAFETY_PLAN.md) — SQLite schémata, migrace a databázová integrita.
-- [`DONE_EET_HARDENING_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_EET_HARDENING_PLAN.md) — EET 2.0 kryptografie a spolehlivost.
-- [`DONE_INVENTORY_IMPLEMENTATION_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_INVENTORY_IMPLEMENTATION_PLAN.md) — Kniha zásob, skladové pohyby a příjemky.
-- [`DONE_STABILITY_AND_QUALITY_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_STABILITY_AND_QUALITY_PLAN.md) — Testovací standardy a ergonomie pokladny.
-- [`DONE_RETAIL_QUICK_WINS_ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_RETAIL_QUICK_WINS_ROADMAP.md) — Čtečka čárových kódů, platební panel a zvukový engine.
-- [`DONE_LEGACY_FUTURE_ROADMAP.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_LEGACY_FUTURE_ROADMAP.md) — Původní UI roadmapa.
-- [`NATIVE_PYTHON_CLOUD_SYNC_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/NATIVE_PYTHON_CLOUD_SYNC_PLAN.md) — Architektura cloudové S3/R2 zálohy.
-- [`GROCERY_AND_ENTERPRISE_BACKLOG.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/GROCERY_AND_ENTERPRISE_BACKLOG.md) — Specializované grocery nápady.
+- [`REMOTE_WEB_DASHBOARD_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/REMOTE_WEB_DASHBOARD_PLAN.md) — Kompletní architektura a prováděcí plán pro **Phase 2: Remote Home Administration Dashboard & Cloud Sync**.
+
+*(Poznámka: Specifikace předchozích dokončených milníků z Phase 1 a Backend Auditu jsou archivovány v historii repozitáře a jejich funkční přehled je zaznamenán v [Sekci 3: Completed Baseline Capabilities & Archive](#3-completed-baseline-capabilities--archive-dokončené-funkce-).*
