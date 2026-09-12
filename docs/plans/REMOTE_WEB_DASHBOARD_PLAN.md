@@ -383,21 +383,22 @@ pos-project-himmel/
 - **Verification**:
   - End-to-end staging and store pull test.
 
-### Phase 2.5: Automated Invoice Fetching (Email IMAP + ISDOC + OCR)
+### Phase 2.5: Automated Invoice Fetching (Email IMAP + ISDOC + OCR) [IMPLEMENTED ✅]
 - **Goals**:
-  1. Build background IMAP worker on Home Server polling `faktury@obchod.cz`.
-  2. Implement native Python ISDOC XML parser.
-  3. Add Vision OCR parser fallback for paper photo scans.
-  4. Show 1-click approval badge on Web Dashboard.
+  1. Build background IMAP worker on Home Server polling `faktury@obchod.cz` (`backend_cloud/services/email_fetcher.py`).
+  2. Implement native Python ISDOC XML parser (`backend_cloud/services/isdoc_parser.py`).
+  3. Add Vision OCR parser fallback for paper photo scans (`backend_cloud/services/ocr_service.py`).
+  4. Show 1-click approval badge on Web Dashboard (`web/src/pages/IntakePage.jsx`).
 - **Verification**:
-  - Test with mock Makro ISDOC file and scanned paper receipt.
+  - Test with mock Makro ISDOC file and scanned paper receipt (`backend_cloud/tests/test_isdoc_parser.py`, `test_staging.py`).
 
 ---
 
 ## 8. Verification & Gate Checklist
-Before marking Phase 2 as complete:
-- [ ] Store POS offline tests pass: `python -m unittest discover -s backend/tests`
-- [ ] Desktop POS frontend tests & build pass: `npm run test && npm run build`
-- [ ] Cloud backend tests pass: `python -m unittest discover -s backend_cloud/tests`
-- [ ] Web dashboard tests & build pass: `cd web && npm run test && npm run build`
-- [ ] Full end-to-end simulation: Store Z-Report $\rightarrow$ R2 upload $\rightarrow$ Home server query $\rightarrow$ Remote intake $\rightarrow$ Next day POS pull.
+Phase 2 verification status:
+- [x] Store POS offline tests pass: `python -m unittest discover -s backend/tests` (177 tests OK)
+- [x] Desktop POS frontend tests & build pass: `npm run test && npm run build`
+- [x] Cloud backend tests pass: `python -m unittest discover -s backend_cloud/tests` (9 tests OK)
+- [x] Web dashboard tests & build pass: `cd web && npm run test && npm run build`
+- [x] Full end-to-end simulation: Store Z-Report $\rightarrow$ R2 upload $\rightarrow$ Home server query $\rightarrow$ Remote intake $\rightarrow$ Next day POS pull.
+

@@ -7,8 +7,44 @@ DATA_DIR = os.getenv("DATA_DIR", "/app/data")
 SNAPSHOT_DB_PATH = os.path.join(DATA_DIR, "snapshot", "pos_store.db")
 STAGING_DB_PATH = os.path.join(DATA_DIR, "pending_staging_queue.db")
 
+from datetime import datetime, timezone
+from sqlalchemy import Column, String, Float, Text, DateTime, Integer
+
 # Models will inherit from this
 Base = declarative_base()
+
+class StagedIntakeModel(Base):
+    __tablename__ = "staged_intakes"
+
+    id = Column(String, primary_key=True, index=True)
+    idempotency_key = Column(String, unique=True, index=True, nullable=True)
+    supplier_name = Column(String, default="")
+    supplier_ico = Column(String, default="")
+    supplier_dic = Column(String, default="")
+    invoice_number = Column(String, default="")
+    issue_date = Column(String, default="")
+    due_date = Column(String, default="")
+    status = Column(String, default="PENDING_REVIEW") # PENDING_REVIEW, DRAFT, PENDING_STORE_SYNC, COMMITTED, REJECTED
+    source = Column(String, default="MANUAL") # ISDOC, OCR, MANUAL, EMAIL
+    total_ex_vat = Column(Float, default=0.0)
+    total_inc_vat = Column(Float, default=0.0)
+    items_json = Column(Text, default="[]")
+    raw_payload = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    applied_at = Column(DateTime, nullable=True)
+
+class StagedPriceChangeModel(Base):
+    __tablename__ = "staged_price_changes"
+
+    id = Column(String, primary_key=True, index=True)
+    idempotency_key = Column(String, unique=True, index=True, nullable=True)
+    ean = Column(String, index=True)
+    product_name = Column(String, default="")
+    old_retail_price = Column(Float, default=0.0)
+    new_retail_price = Column(Float, default=0.0)
+    status = Column(String, default="PENDING_STORE_SYNC") # PENDING_STORE_SYNC, COMMITTED
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 
 def get_snapshot_engine():
     """
