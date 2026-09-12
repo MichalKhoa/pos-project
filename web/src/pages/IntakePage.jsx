@@ -4,8 +4,7 @@ import {
   Building, List, ArrowRight, Upload, Mail, CheckCircle2, 
   AlertCircle, Sparkles, RefreshCw, Trash2, Eye
 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000/api/v1';
+import { cloudApi, request } from '../api/cloudApi';
 
 const MOCK_CATALOG = {
   '8594001234567': { ean: '8594001234567', name: 'Pilsner Urquell 0.5L', retailPrice: 35.0, vat: 21 },
@@ -52,6 +51,7 @@ const INITIAL_QUEUE = [
 ];
 
 export default function IntakePage() {
+  const [activeIntakeId, setActiveIntakeId] = useState(null);
   const [ico, setIco] = useState('');
   const [supplierName, setSupplierName] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -79,15 +79,12 @@ export default function IntakePage() {
   // Fetch real staged intakes if API available
   const loadQueueFromApi = async () => {
     try {
-      const res = await fetch(`${API_BASE}/staging/intakes`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setStagingQueue(data);
-        }
+      const data = await cloudApi.getStagingIntakes();
+      if (Array.isArray(data) && data.length > 0) {
+        setStagingQueue(data);
       }
-    } catch {
-      // Offline / standalone fallback remains on INITIAL_QUEUE
+    } catch (err) {
+      console.warn('Fallback: keeping current staging queue', err);
     }
   };
 
@@ -145,6 +142,7 @@ export default function IntakePage() {
   };
 
   // Upload ISDOC or Image to backend
+  // Upload ISDOC, PDF or Image to backend using cloudApi
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -152,26 +150,14 @@ export default function IntakePage() {
     setIsUploading(true);
     setStatusMessage({ type: 'info', text: `Zpracovávám doklad: ${file.name}...` });
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const res = await fetch(`${API_BASE}/staging/upload-invoice`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Upload selhal (${res.status})`);
-      }
-
-      const data = await res.json();
+      const data = await cloudApi.uploadInvoiceFile(file);
       loadIntakeDataIntoForm(data);
       setStatusMessage({ 
         type: 'success', 
-        text: `Úspěšně importováno z ${data.source}: ${data.invoice_number || file.name} (${data.items?.length || 0} položek)` 
+        text: `Úspěšně importováno z ${data.source || 'dokladu'}: ${data.invoice_number || file.name} (${data.items?.length || 0} položek)` 
       });
-      loadQueueFromApi();
+      await loadQueueFromApi();
     } catch (err) {
       // Fallback in-browser parser simulation for demo/offline
       if (file.name.toLowerCase().endsWith('.isdoc') || file.name.toLowerCase().endsWith('.xml')) {
@@ -186,6 +172,7 @@ export default function IntakePage() {
   };
 
   const simulateIsdocImport = (filename) => {
+    setActiveIntakeId('INT-AUTO-01');
     setIco('26450691');
     setSupplierName('MAKRO Cash & Carry ČR s.r.o.');
     setInvoiceNumber('2026-MAKRO-0042');
@@ -206,11 +193,12 @@ export default function IntakePage() {
   };
 
   const loadIntakeDataIntoForm = (data) => {
+    setActiveIntakeId(data.id || data.intake_id || null);
     const supp = data.supplier || {};
-    setIco(supp.ico || '');
-    setSupplierName(supp.name || '');
+    setIco(supp.ico || data.supplier_ico || '');
+    setSupplierName(supp.name || data.supplier_name || '');
     setInvoiceNumber(data.invoice_number || data.document_id || '');
-    setIssueDate(data.issue_date || '');
+    setIssueDate(data.issue_date || data.date || '');
     setDueDate(data.due_date || '');
     setActiveSource(data.source || 'ISDOC');
 
@@ -232,17 +220,13 @@ export default function IntakePage() {
     setStatusMessage({ type: 'info', text: 'Stahuji došlé faktury ze schránky faktury@obchod.cz...' });
 
     try {
-      const res = await fetch(`${API_BASE}/staging/fetch-emails`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        setStatusMessage({
-          type: 'success',
-          text: `E-mail poller dokončen: ${data.fetched_count} nových faktur staženo do fronty.`
-        });
-        loadQueueFromApi();
-      } else {
-        throw new Error('Chyba při dotazu na IMAP');
-      }
+      const data = await cloudApi.pollEmail();
+      const count = data?.fetched_count ?? 0;
+      setStatusMessage({
+        type: 'success',
+        text: `E-mail poller dokončen: ${count} nových faktur staženo do fronty.`
+      });
+      await loadQueueFromApi();
     } catch {
       setStatusMessage({
         type: 'info',
@@ -255,17 +239,43 @@ export default function IntakePage() {
 
   const handleApproveFromQueue = async (queueItem) => {
     try {
-      await fetch(`${API_BASE}/staging/intakes/${queueItem.id}/approve`, { method: 'POST' });
-    } catch {
-      // ignore
+      await cloudApi.approveIntake(queueItem.id);
+      setStagingQueue(prev => prev.map(item => 
+        item.id === queueItem.id ? { ...item, status: 'PENDING_STORE_SYNC' } : item
+      ));
+      setStatusMessage({
+        type: 'success',
+        text: `Příjemka ${queueItem.id} schválena (PENDING_STORE_SYNC) a zařazena do ranní synchronizace prodejny.`
+      });
+      await loadQueueFromApi();
+    } catch (err) {
+      setStagingQueue(prev => prev.map(item => 
+        item.id === queueItem.id ? { ...item, status: 'PENDING_STORE_SYNC' } : item
+      ));
+      setStatusMessage({
+        type: 'success',
+        text: `Příjemka ${queueItem.id} schválena lokálně (PENDING_STORE_SYNC).`
+      });
     }
-    setStagingQueue(prev => prev.map(item => 
-      item.id === queueItem.id ? { ...item, status: 'PENDING_STORE_SYNC' } : item
-    ));
-    setStatusMessage({
-      type: 'success',
-      text: `Příjemka ${queueItem.id} schválena a zařazena do ranní synchronizace prodejny.`
-    });
+  };
+
+  const handleRejectFromQueue = async (queueItem) => {
+    if (!window.confirm(`Opravdu chcete vyřadit a smazat příjemku ${queueItem.id}?`)) return;
+    try {
+      await cloudApi.rejectIntake(queueItem.id);
+      setStagingQueue(prev => prev.filter(item => item.id !== queueItem.id));
+      setStatusMessage({
+        type: 'info',
+        text: `Příjemka ${queueItem.id} byla zamítnuta a odstraněna.`
+      });
+      await loadQueueFromApi();
+    } catch (err) {
+      setStagingQueue(prev => prev.filter(item => item.id !== queueItem.id));
+      setStatusMessage({
+        type: 'info',
+        text: `Příjemka ${queueItem.id} odstraněna.`
+      });
+    }
   };
 
   const handleLoadFromQueue = (queueItem) => {
@@ -299,23 +309,26 @@ export default function IntakePage() {
     };
 
     try {
-      const res = await fetch(`${API_BASE}/staging/intakes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        loadQueueFromApi();
-        setStatusMessage({ type: 'success', text: `Příjemka uložena do fronty pro pokladnu (${data.id || 'OK'}).` });
+      if (activeIntakeId) {
+        await cloudApi.approveIntake(activeIntakeId, payload);
       } else {
-        throw new Error('Chyba při ukládání');
+        await request('/staging/intakes', {
+          method: 'POST',
+          body: payload
+        });
       }
+      await loadQueueFromApi();
+      setStatusMessage({ 
+        type: 'success', 
+        text: `Příjemka úspěšně uložena a zařazena do fronty pro pokladnu (PENDING_STORE_SYNC).` 
+      });
     } catch {
       // Local state fallback
       const newQueueItem = {
-        id: `INT-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: activeIntakeId || `INT-${Math.floor(1000 + Math.random() * 9000)}`,
         supplier: `${supplierName} (${ico})`,
+        supplier_name: supplierName,
+        supplier_ico: ico,
         invoice_number: invoiceNumber,
         date: issueDate || new Date().toISOString().split('T')[0],
         status: 'PENDING_STORE_SYNC',
@@ -324,11 +337,15 @@ export default function IntakePage() {
         total: Math.round(totalIncVat),
         items: intakeItems
       };
-      setStagingQueue([newQueueItem, ...stagingQueue]);
-      setStatusMessage({ type: 'success', text: 'Příjemka uložena a připravena pro ranní spuštění pokladny.' });
+      setStagingQueue(prev => [newQueueItem, ...prev.filter(x => x.id !== newQueueItem.id)]);
+      setStatusMessage({ 
+        type: 'success', 
+        text: 'Příjemka uložena (PENDING_STORE_SYNC) a připravena pro ranní synchronizaci pokladny.' 
+      });
     }
 
     // Reset form
+    setActiveIntakeId(null);
     setIco('');
     setSupplierName('');
     setInvoiceNumber('');
@@ -817,7 +834,7 @@ export default function IntakePage() {
 
                     {/* Quick Action Buttons for PENDING_REVIEW */}
                     {isPendingReview ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.75rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', marginTop: '0.75rem' }}>
                         <button 
                           onClick={() => handleLoadFromQueue(intake)}
                           style={{ 
@@ -856,28 +873,60 @@ export default function IntakePage() {
                         >
                           <CheckCircle2 size={14} /> 1-Klik schválit
                         </button>
+                        <button 
+                          onClick={() => handleRejectFromQueue(intake)}
+                          title="Zamítnout a smazat doklad"
+                          style={{ 
+                            padding: '0.45rem 0.6rem', 
+                            backgroundColor: '#fee2e2', 
+                            color: '#b91c1c', 
+                            border: '1px solid #fca5a5', 
+                            borderRadius: '6px', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center' 
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => handleLoadFromQueue(intake)}
-                        style={{ 
-                          marginTop: '0.75rem', 
-                          width: '100%', 
-                          padding: '0.45rem', 
-                          backgroundColor: 'transparent', 
-                          border: '1px solid #cbd5e1', 
-                          borderRadius: '6px', 
-                          cursor: 'pointer', 
-                          display: 'flex', 
-                          justifyContent: 'center', 
-                          alignItems: 'center', 
-                          gap: '0.5rem', 
-                          color: '#475569',
-                          fontSize: '0.85rem' 
-                        }}
-                      >
-                        Zobrazit detail <ArrowRight size={14} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        <button 
+                          onClick={() => handleLoadFromQueue(intake)}
+                          style={{ 
+                            flex: 1, 
+                            padding: '0.45rem', 
+                            backgroundColor: 'transparent', 
+                            border: '1px solid #cbd5e1', 
+                            borderRadius: '6px', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center', 
+                            gap: '0.5rem', 
+                            color: '#475569',
+                            fontSize: '0.85rem' 
+                          }}
+                        >
+                          Zobrazit detail <ArrowRight size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleRejectFromQueue(intake)}
+                          title="Odstranit z fronty"
+                          style={{ 
+                            padding: '0.45rem 0.6rem', 
+                            backgroundColor: 'transparent', 
+                            border: '1px solid #e2e8f0', 
+                            borderRadius: '6px', 
+                            cursor: 'pointer', 
+                            color: '#94a3b8' 
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
 
                   </div>
