@@ -22,7 +22,8 @@ except ImportError:
     try:
         from database import SNAPSHOT_DB_PATH
     except ImportError:
-        SNAPSHOT_DB_PATH = os.path.join(os.getenv("DATA_DIR", "/app/data"), "snapshot", "pos_store.db")
+        default_data = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+        SNAPSHOT_DB_PATH = os.path.join(os.getenv("DATA_DIR", default_data), "snapshot", "pos_store.db")
 
 logger = logging.getLogger("snapshot-service")
 

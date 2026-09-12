@@ -3,7 +3,8 @@ import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATA_DIR = os.getenv("DATA_DIR", "/app/data")
+DEFAULT_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+DATA_DIR = os.getenv("DATA_DIR", DEFAULT_DATA_DIR)
 SNAPSHOT_DB_PATH = os.path.join(DATA_DIR, "snapshot", "pos_store.db")
 STAGING_DB_PATH = os.path.join(DATA_DIR, "pending_staging_queue.db")
 

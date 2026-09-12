@@ -27,6 +27,7 @@ import LoginModal from './components/LoginModal';
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => cloudApi.isAuthenticated());
   const [username, setUsername] = useState(() => cloudApi.getUsername());
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [health, setHealth] = useState({
     status: 'loading',
     available: false,
@@ -36,13 +37,18 @@ function App() {
   });
   const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
 
-  // Sync auth state on custom events (e.g. 401 interceptor)
+  // Sync auth state on custom events (e.g. 401 interceptor, bypass toggle)
   useEffect(() => {
-    const handleAuthRequired = () => {
+    const handleAuthEvent = () => {
       setIsAuthenticated(cloudApi.isAuthenticated());
+      setUsername(cloudApi.getUsername());
     };
-    window.addEventListener('auth:required', handleAuthRequired);
-    return () => window.removeEventListener('auth:required', handleAuthRequired);
+    window.addEventListener('auth:required', handleAuthEvent);
+    window.addEventListener('auth:updated', handleAuthEvent);
+    return () => {
+      window.removeEventListener('auth:required', handleAuthEvent);
+      window.removeEventListener('auth:updated', handleAuthEvent);
+    };
   }, []);
 
   // Poll snapshot health on mount and every 60s
@@ -79,6 +85,7 @@ function App() {
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     setUsername(cloudApi.getUsername());
+    setShowLoginModal(false);
     fetchHealth();
   };
 
@@ -148,7 +155,7 @@ function App() {
 
   const badge = getHealthBadge();
   const BadgeIcon = badge.icon;
-  const isBypass = import.meta.env.VITE_BYPASS_AUTH === 'true';
+  const isBypass = cloudApi.isBypassMode();
 
   return (
     <Router>
@@ -401,7 +408,7 @@ function App() {
                 </div>
               </div>
 
-              {isAuthenticated && !isBypass && (
+              {isAuthenticated && localStorage.getItem('voltflow_token') ? (
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -432,6 +439,24 @@ function App() {
                 >
                   <LogOut size={16} />
                 </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowLoginModal(true)}
+                  title="Sign in with credentials"
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '0.35rem 0.65rem',
+                    backgroundColor: 'var(--color-primary, #0052cc)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Sign In
+                </button>
               )}
             </div>
           </div>
@@ -451,8 +476,12 @@ function App() {
       </div>
 
       {/* Dual-mode Authentication Modal */}
-      {!isAuthenticated && !isBypass && (
-        <LoginModal isOpen={true} onSuccess={handleLoginSuccess} />
+      {((!isAuthenticated && !isBypass) || showLoginModal) && (
+        <LoginModal
+          isOpen={true}
+          onSuccess={handleLoginSuccess}
+          onClose={() => setShowLoginModal(false)}
+        />
       )}
     </Router>
   );

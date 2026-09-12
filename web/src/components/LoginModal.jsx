@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, User, KeyRound, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { Lock, User, KeyRound, ShieldCheck, AlertCircle, Loader2, X, Play } from 'lucide-react';
 import { cloudApi } from '../api/cloudApi';
 
 /**
@@ -10,9 +10,9 @@ import { cloudApi } from '../api/cloudApi';
  * @param {boolean} [props.isOpen=true] - Visibility toggle
  * @param {() => void} [props.onSuccess] - Callback fired on successful login
  */
-export default function LoginModal({ isOpen = true, onSuccess }) {
+export default function LoginModal({ isOpen = true, onSuccess, onClose }) {
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('admin123');
   const [totpCode, setTotpCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +20,7 @@ export default function LoginModal({ isOpen = true, onSuccess }) {
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!username.trim() || !password) {
       setError('Please provide both username and password.');
       return;
@@ -43,6 +43,37 @@ export default function LoginModal({ isOpen = true, onSuccess }) {
       setError(err.message || 'Login failed. Please verify credentials.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setUsername('admin');
+    setPassword('admin123');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const res = await cloudApi.login({
+        username: 'admin',
+        password: 'admin123',
+      });
+      if (onSuccess) {
+        onSuccess(res);
+      }
+    } catch (err) {
+      setError(err.message || 'Demo login failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBypass = () => {
+    cloudApi.bypassAuth();
+    if (onSuccess) {
+      onSuccess({ access_token: 'bypass', token_type: 'bearer' });
+    }
+    if (onClose) {
+      onClose();
     }
   };
 
@@ -75,30 +106,52 @@ export default function LoginModal({ isOpen = true, onSuccess }) {
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div
-            style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '10px',
-              backgroundColor: 'rgba(0, 82, 204, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--color-primary, #0052cc)',
-              flexShrink: 0,
-            }}
-          >
-            <ShieldCheck size={26} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(0, 82, 204, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-primary, #0052cc)',
+                flexShrink: 0,
+              }}
+            >
+              <ShieldCheck size={26} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--color-text, #0f172a)' }}>
+                VoltFlow Cloud
+              </h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary, #64748b)', margin: 0 }}>
+                Management Sign-in
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--color-text, #0f172a)' }}>
-              VoltFlow Cloud
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary, #64748b)', margin: 0 }}>
-              Management Sign-in
-            </p>
-          </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              title="Zavřít"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#64748b',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '6px',
+              }}
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Error Notification */}
@@ -297,6 +350,53 @@ export default function LoginModal({ isOpen = true, onSuccess }) {
             ) : (
               <span>Sign In</span>
             )}
+          </button>
+
+          {/* Quick Demo Login */}
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={isLoading}
+            style={{
+              minHeight: '40px',
+              backgroundColor: '#eff6ff',
+              color: '#1d4ed8',
+              border: '1px solid #bfdbfe',
+              borderRadius: '8px',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <Play size={16} />
+            <span>Rychlé přihlášení (admin / admin123)</span>
+          </button>
+
+          {/* Bypass Button */}
+          <button
+            type="button"
+            onClick={handleBypass}
+            disabled={isLoading}
+            style={{
+              minHeight: '38px',
+              backgroundColor: 'transparent',
+              color: '#64748b',
+              border: '1px dashed #cbd5e1',
+              borderRadius: '8px',
+              fontWeight: 500,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <span>Pokračovat bez přihlášení (Režim prohlížení)</span>
           </button>
         </form>
       </div>

@@ -118,14 +118,34 @@ export const cloudApi = {
   // Authentication
   // --------------------------------------------------------------------------
   /**
-   * Dual-mode authentication check: returns true if VITE_BYPASS_AUTH is set or
-   * if a valid JWT token exists in localStorage.
+   * Dual-mode authentication check: returns true if running in development mode,
+   * if VITE_BYPASS_AUTH is set, or if a valid JWT token exists in localStorage.
    */
   isAuthenticated() {
-    if (import.meta.env.VITE_BYPASS_AUTH === 'true') {
+    if (this.isBypassMode()) {
       return true;
     }
     return !!localStorage.getItem(TOKEN_KEY);
+  },
+
+  /**
+   * Checks whether bypass / guest mode is active.
+   */
+  isBypassMode() {
+    if (typeof window !== 'undefined' && localStorage.getItem('voltflow_bypass') === 'true') {
+      return true;
+    }
+    return import.meta.env.DEV || import.meta.env.VITE_BYPASS_AUTH === 'true';
+  },
+
+  /**
+   * Activates local guest bypass mode.
+   */
+  bypassAuth() {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('voltflow_bypass', 'true');
+      window.dispatchEvent(new CustomEvent('auth:updated'));
+    }
   },
 
   /**
