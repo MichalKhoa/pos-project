@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Download, 
   FileText, 
@@ -8,9 +8,7 @@ import {
   Landmark,
   Calendar,
   Printer,
-  RefreshCw,
-  ArrowRight,
-  Receipt
+  RefreshCw
 } from 'lucide-react';
 import { cloudApi } from '../api/cloudApi';
 
@@ -139,7 +137,7 @@ export default function TaxExportsPage() {
   const [dphSummary, setDphSummary] = useState(null);
   const [dpfoSummary, setDpfoSummary] = useState(null);
 
-  const loadTaxData = async () => {
+  const loadTaxData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [dph, dpfo] = await Promise.all([
@@ -153,11 +151,11 @@ export default function TaxExportsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [startDate, endDate]);
 
   useEffect(() => {
     loadTaxData();
-  }, [startDate, endDate]);
+  }, [loadTaxData]);
 
   const handleApplyPreset = (key) => {
     const p = presets[key];

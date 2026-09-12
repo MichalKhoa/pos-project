@@ -9,7 +9,6 @@ import {
   X, 
   Tag, 
   TrendingUp,
-  Percent,
   Check
 } from 'lucide-react';
 import cloudApi from '../api/cloudApi';

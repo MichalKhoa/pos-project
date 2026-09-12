@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, 
-  TrendingDown, 
   AlertTriangle, 
   PackageX, 
   Clock, 
   DollarSign, 
   BarChart2,
   RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-  ShieldCheck,
-  Calendar
+  AlertCircle
 } from 'lucide-react';
 import cloudApi from '../api/cloudApi';
 

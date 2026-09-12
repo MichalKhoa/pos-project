@@ -12,8 +12,7 @@ import {
   QrCode,
   Layers,
   RefreshCw,
-  AlertTriangle,
-  CheckCircle2
+  AlertTriangle
 } from 'lucide-react';
 import cloudApi from '../api/cloudApi';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   FileText, 
   Calendar, 
@@ -166,26 +166,29 @@ export default function ZReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await cloudApi.getZReports(50);
       if (Array.isArray(data) && data.length > 0) {
         setReports(data);
-        if (!selectedReport || !data.some(r => r.id === selectedReport.id)) {
-          setSelectedReport(data[0]);
-        }
+        setSelectedReport(prev => {
+          if (!prev || !data.some(r => r.id === prev.id)) {
+            return data[0];
+          }
+          return prev;
+        });
       }
     } catch (err) {
       console.warn('Failed to load Z-reports from API, keeping fallback list:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [fetchReports]);
 
   const filteredReports = useMemo(() => {
     if (!searchTerm.trim()) return reports;

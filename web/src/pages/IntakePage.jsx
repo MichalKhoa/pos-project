@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Search, Plus, Save, PackagePlus, FileText, Calendar, 
+  Search, Plus, Save, PackagePlus, FileText, 
   Building, List, ArrowRight, Upload, Mail, CheckCircle2, 
   AlertCircle, Sparkles, RefreshCw, Trash2, Eye
 } from 'lucide-react';
@@ -248,7 +248,7 @@ export default function IntakePage() {
         text: `Příjemka ${queueItem.id} schválena (PENDING_STORE_SYNC) a zařazena do ranní synchronizace prodejny.`
       });
       await loadQueueFromApi();
-    } catch (err) {
+    } catch {
       setStagingQueue(prev => prev.map(item => 
         item.id === queueItem.id ? { ...item, status: 'PENDING_STORE_SYNC' } : item
       ));
@@ -269,7 +269,7 @@ export default function IntakePage() {
         text: `Příjemka ${queueItem.id} byla zamítnuta a odstraněna.`
       });
       await loadQueueFromApi();
-    } catch (err) {
+    } catch {
       setStagingQueue(prev => prev.filter(item => item.id !== queueItem.id));
       setStatusMessage({
         type: 'info',
