@@ -245,7 +245,14 @@ def get_system_diagnostics(
             "disk_total_gb": disk_total_gb
         },
         "eet": eet_info,
-        "litestream": litestream_info
+        "litestream": litestream_info,
+        "cloud_staging": {
+            "enabled": bool(config.cloud_staging_enabled) if config else False,
+            "url": getattr(config, "cloud_staging_url", "") if config else "",
+            "last_sync": getattr(config, "cloud_staging_last_sync", "") if config else "",
+            "last_status": getattr(config, "cloud_staging_last_status", "") if config else "",
+            "last_count": getattr(config, "cloud_staging_last_count", 0) if config else 0,
+        }
     }
 
 
@@ -998,4 +1005,20 @@ async def lookup_ares(ico: str):
         zip=zip_code,
         formattedAddress=formatted_address
     )
+
+
+@router.post("/sync-staging")
+def trigger_staging_sync(
+    request: Request,
+    db: Session = Depends(get_db),
+    _auth=Depends(verify_technician_auth)
+):
+    """
+    Manually triggers pulling pending staging batches (products, prices, intakes)
+    from 24/7 Home Server Cloud API into local POS master SQLite.
+    """
+    from services.remote_staging_sync import remote_staging_sync_service
+    res = remote_staging_sync_service.sync_pending_batches(db)
+    return res
+
 

@@ -86,6 +86,13 @@ MIGRATIONS = [
     ("sales", "customer_dic", "VARCHAR DEFAULT ''"),
     ("sales", "customer_name", "VARCHAR DEFAULT ''"),
     ("sales", "customer_address", "VARCHAR DEFAULT ''"),
+    # Table: store_config cloud staging
+    ("store_config", "cloud_staging_enabled", "BOOLEAN DEFAULT 0"),
+    ("store_config", "cloud_staging_url", "VARCHAR DEFAULT ''"),
+    ("store_config", "cloud_staging_token", "VARCHAR DEFAULT ''"),
+    ("store_config", "cloud_staging_last_sync", "VARCHAR DEFAULT ''"),
+    ("store_config", "cloud_staging_last_status", "VARCHAR DEFAULT ''"),
+    ("store_config", "cloud_staging_last_count", "INTEGER DEFAULT 0"),
 ]
 
 FLOAT_COLUMN_MIGRATIONS = [

@@ -138,6 +138,31 @@ async def lifespan(app: FastAPI):
     prewarm_thread = threading.Thread(target=_prewarm_cache_worker, daemon=True, name="pos-prewarm-worker")
     prewarm_thread.start()
 
+    # 5. Remote staging queue pull daemon (boot sync + 15 min loop)
+    def _remote_staging_sync_worker():
+        from database import SessionLocal
+        from services.remote_staging_sync import remote_staging_sync_service
+
+        # Initial delay of 5 seconds after boot
+        if _shutdown_event.wait(5.0):
+            return
+
+        while not _shutdown_event.is_set():
+            db = SessionLocal()
+            try:
+                remote_staging_sync_service.sync_pending_batches(db)
+            except Exception as e:
+                logger.debug(f"Remote staging sync encountered: {e}")
+            finally:
+                db.close()
+
+            # Periodic interval: 15 minutes (900s)
+            if _shutdown_event.wait(900.0):
+                break
+
+    staging_thread = threading.Thread(target=_remote_staging_sync_worker, daemon=True, name="pos-staging-sync-worker")
+    staging_thread.start()
+
     yield
 
     # Graceful shutdown sequence

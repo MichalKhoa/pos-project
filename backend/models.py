@@ -179,6 +179,14 @@ class StoreConfigModel(Base):
     cloud_backup_last_status = Column(String, default="")
     cloud_backup_last_error = Column(String, default="")
 
+    # Cloud Remote Staging Configuration (Pulling intakes & prices from Home Server / Cloud)
+    cloud_staging_enabled = Column(Boolean, default=False)
+    cloud_staging_url = Column(String, default="")
+    cloud_staging_token = Column(String, default="")
+    cloud_staging_last_sync = Column(String, default="")
+    cloud_staging_last_status = Column(String, default="")
+    cloud_staging_last_count = Column(Integer, default=0)
+
     def get_decrypted_cert_password(self) -> str:
         """Returns decrypted EET certificate password."""
         from services.security_utils import decrypt_secret
@@ -419,3 +427,14 @@ class DepositMovementModel(Base):
     supplier_ico = Column(String, nullable=True)
     note = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
+class AppliedSyncEventModel(Base):
+    """Tracks applied cloud staging events to guarantee idempotency across network retries."""
+    __tablename__ = "applied_sync_events"
+
+    idempotency_key = Column(String(64), primary_key=True, index=True)
+    event_type = Column(String(32), nullable=False)  # 'INTAKE', 'PRICE_CHANGE', 'PRODUCT'
+    entity_id = Column(String(64), nullable=False)
+    applied_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
