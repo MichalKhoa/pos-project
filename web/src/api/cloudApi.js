@@ -268,6 +268,13 @@ export const cloudApi = {
     });
   },
 
+  async stageNewProduct(data) {
+    return request('/staging/products', {
+      method: 'POST',
+      body: data,
+    });
+  },
+
   // --------------------------------------------------------------------------
   // Staging & Invoices Endpoints
   // --------------------------------------------------------------------------

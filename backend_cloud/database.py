@@ -9,7 +9,7 @@ SNAPSHOT_DB_PATH = os.path.join(DATA_DIR, "snapshot", "pos_store.db")
 STAGING_DB_PATH = os.path.join(DATA_DIR, "pending_staging_queue.db")
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, Text, DateTime, Integer
+from sqlalchemy import Column, String, Float, Text, DateTime, Integer, Boolean
 
 # Models will inherit from this
 Base = declarative_base()
@@ -45,6 +45,24 @@ class StagedPriceChangeModel(Base):
     new_retail_price = Column(Float, default=0.0)
     status = Column(String, default="PENDING_STORE_SYNC") # PENDING_STORE_SYNC, COMMITTED
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+class StagedProductModel(Base):
+    __tablename__ = "staged_products"
+
+    id = Column(String, primary_key=True, index=True)
+    idempotency_key = Column(String, unique=True, index=True, nullable=True)
+    name = Column(String, nullable=False)
+    barcode = Column(String, index=True, nullable=True)
+    price = Column(Float, default=0.0)
+    cost_price = Column(Float, default=0.0)
+    vat = Column(Integer, default=21)
+    stock_quantity = Column(Float, default=0.0)
+    track_stock = Column(Boolean, default=True)
+    category = Column(String, default="custom")
+    unit = Column(String, default="ks")
+    status = Column(String, default="PENDING_STORE_SYNC") # PENDING_STORE_SYNC, COMMITTED
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    applied_at = Column(DateTime, nullable=True)
 
 
 def get_snapshot_engine():

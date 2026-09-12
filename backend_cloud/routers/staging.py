@@ -7,10 +7,19 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
-from database import get_staging_db, StagedIntakeModel, StagedPriceChangeModel
-from services.isdoc_parser import parse_isdoc_bytes
-from services.ocr_service import parse_invoice_with_vision
-from services.email_fetcher import EmailInvoiceFetcher
+try:
+    from backend_cloud.database import get_staging_db, StagedIntakeModel, StagedPriceChangeModel, StagedProductModel
+except ImportError:
+    from database import get_staging_db, StagedIntakeModel, StagedPriceChangeModel, StagedProductModel
+
+try:
+    from backend_cloud.services.isdoc_parser import parse_isdoc_bytes
+    from backend_cloud.services.ocr_service import parse_invoice_with_vision
+    from backend_cloud.services.email_fetcher import EmailInvoiceFetcher
+except ImportError:
+    from services.isdoc_parser import parse_isdoc_bytes
+    from services.ocr_service import parse_invoice_with_vision
+    from services.email_fetcher import EmailInvoiceFetcher
 
 router = APIRouter(
     prefix="/api/v1/staging",
@@ -252,10 +261,100 @@ def get_pending(db: Session = Depends(get_staging_db)):
             "new_retail_price": pr.new_retail_price
         })
 
+    pending_products = db.query(StagedProductModel).filter(StagedProductModel.status == "PENDING_STORE_SYNC").all()
+    products_data = []
+    for prd in pending_products:
+        products_data.append({
+            "id": prd.id,
+            "idempotency_key": prd.idempotency_key,
+            "name": prd.name,
+            "barcode": prd.barcode,
+            "price": prd.price,
+            "cost_price": prd.cost_price,
+            "vat": prd.vat,
+            "stock_quantity": prd.stock_quantity,
+            "track_stock": prd.track_stock,
+            "category": prd.category,
+            "unit": prd.unit
+        })
+
     return {
         "intakes": intakes_data,
-        "price_changes": prices_data
+        "price_changes": prices_data,
+        "products": products_data
     }
+
+
+@router.post("/price-changes")
+def create_staged_price_change(payload: dict, db: Session = Depends(get_staging_db)):
+    """
+    Stages a retail price adjustment for a product by EAN.
+    """
+    ean = (payload.get("ean") or "").strip()
+    if not ean:
+        raise HTTPException(status_code=400, detail="Čárový kód (EAN) je povinný")
+
+    new_price = float(payload.get("new_retail_price", payload.get("new_price", 0.0)))
+    old_price = float(payload.get("old_retail_price", payload.get("old_price", 0.0)))
+
+    change_id = f"PRC-{uuid.uuid4().hex[:8].upper()}"
+    staged = StagedPriceChangeModel(
+        id=change_id,
+        idempotency_key=str(uuid.uuid4()),
+        ean=ean,
+        product_name=(payload.get("product_name") or "").strip(),
+        old_retail_price=old_price,
+        new_retail_price=new_price,
+        status="PENDING_STORE_SYNC",
+        created_at=datetime.now(timezone.utc)
+    )
+    db.merge(staged)
+    db.commit()
+    return {"status": "success", "message": "Změna ceny zařazena do fronty pro pokladnu", "id": change_id}
+
+
+@router.post("/products")
+def create_staged_product(payload: dict, db: Session = Depends(get_staging_db)):
+    """
+    Stages a new catalog product created from the web dashboard.
+    """
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Název produktu je povinný")
+
+    price_val = payload.get("price")
+    if price_val is None:
+        price_val = payload.get("retail_price")
+    if price_val is None:
+        price_val = payload.get("retailPrice")
+
+    cost_val = payload.get("cost_price")
+    if cost_val is None:
+        cost_val = payload.get("costPrice")
+
+    stock_val = payload.get("stock_quantity")
+    if stock_val is None:
+        stock_val = payload.get("stockQuantity")
+
+    prod_id = payload.get("id") or f"PRD-{uuid.uuid4().hex[:8].upper()}"
+    staged = StagedProductModel(
+        id=prod_id,
+        idempotency_key=str(uuid.uuid4()),
+        name=name,
+        barcode=(payload.get("barcode") or "").strip() or None,
+        price=float(price_val or 0.0),
+        cost_price=float(cost_val or 0.0),
+        vat=int(payload.get("vat", 21)),
+        stock_quantity=float(stock_val or 0.0),
+        track_stock=bool(payload.get("track_stock", True)),
+        category=(payload.get("category") or "custom").strip(),
+        unit=(payload.get("unit") or "ks").strip(),
+        status="PENDING_STORE_SYNC",
+        created_at=datetime.now(timezone.utc)
+    )
+    db.merge(staged)
+    db.commit()
+    return {"status": "success", "message": f"Produkt '{name}' zařazen do fronty pro pokladnu", "id": prod_id}
 
 
 @router.post("/ack")
@@ -265,6 +364,7 @@ def ack_staging(payload: dict, db: Session = Depends(get_staging_db)):
     """
     intake_ids = payload.get("intake_ids", [])
     price_ids = payload.get("price_ids", [])
+    product_ids = payload.get("product_ids", [])
 
     if intake_ids:
         db.query(StagedIntakeModel).filter(StagedIntakeModel.id.in_(intake_ids)).update(
@@ -275,6 +375,12 @@ def ack_staging(payload: dict, db: Session = Depends(get_staging_db)):
     if price_ids:
         db.query(StagedPriceChangeModel).filter(StagedPriceChangeModel.id.in_(price_ids)).update(
             {"status": "COMMITTED"},
+            synchronize_session=False
+        )
+
+    if product_ids:
+        db.query(StagedProductModel).filter(StagedProductModel.id.in_(product_ids)).update(
+            {"status": "COMMITTED", "applied_at": datetime.now(timezone.utc)},
             synchronize_session=False
         )
 

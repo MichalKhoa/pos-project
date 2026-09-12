@@ -516,6 +516,48 @@ class TestRoutersPopulatedSnapshot(unittest.TestCase):
         self.assertEqual(len(res_page.json()["items"]), 2)
         self.assertEqual(res_page.json()["total"], 4)
 
+    def test_staging_products_and_catalog_merger(self):
+        # 1. Validation test: empty name returns 400
+        res_bad = client.post("/api/v1/staging/products", json={"name": ""})
+        self.assertEqual(res_bad.status_code, 400)
+
+        # 2. Stage new product
+        new_prod_payload = {
+            "name": "Staged Club Mate 0.5l",
+            "barcode": "2001112223334",
+            "retail_price": 49.50,
+            "cost_price": 28.00,
+            "vat": 21,
+            "category": "Nápoje",
+            "stock_quantity": 24,
+            "track_stock": True,
+            "unit": "ks",
+        }
+        res_create = client.post("/api/v1/staging/products", json=new_prod_payload)
+        self.assertEqual(res_create.status_code, 200)
+        prod_id = res_create.json()["id"]
+        self.assertTrue(prod_id.startswith("PRD-"))
+
+        # 3. Verify it shows up immediately in catalog as is_staged = True
+        res_cat = client.get("/api/v1/catalog?search=Club Mate")
+        self.assertEqual(res_cat.status_code, 200)
+        items = res_cat.json()["items"]
+        self.assertTrue(any(it["name"] == "Staged Club Mate 0.5l" and it.get("is_staged") is True for it in items))
+
+        # 4. Verify in GET /staging/pending
+        res_pending = client.get("/api/v1/staging/pending")
+        self.assertEqual(res_pending.status_code, 200)
+        pending_prods = res_pending.json()["products"]
+        self.assertTrue(any(p["id"] == prod_id for p in pending_prods))
+
+        # 5. Acknowledge staged product
+        res_ack = client.post("/api/v1/staging/ack", json={"product_ids": [prod_id]})
+        self.assertEqual(res_ack.status_code, 200)
+
+        # 6. Verify it is no longer pending
+        res_pending2 = client.get("/api/v1/staging/pending")
+        self.assertFalse(any(p["id"] == prod_id for p in res_pending2.json()["products"]))
+
 
 if __name__ == "__main__":
     unittest.main()
