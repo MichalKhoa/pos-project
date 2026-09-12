@@ -132,18 +132,26 @@ class CloudSyncService:
 
         filename = os.path.basename(local_zip_path)
         prefix = cfg["prefix"]
-        s3_key = f"{prefix}/{filename}" if prefix else filename
+        s3_key = f"{prefix}/{filename}.enc" if prefix else f"{filename}.enc"
 
         try:
+            from services.security_utils import encrypt_file
+            encrypted_path = encrypt_file(local_zip_path)
+
             client = self._build_s3_client(
                 cfg["endpoint"],
                 cfg["access_key"],
                 cfg["secret_key"]
             )
 
-            file_size = os.path.getsize(local_zip_path)
-            logger.info(f"Uploading backup to s3://{cfg['bucket']}/{s3_key} ({file_size} bytes)...")
-            client.upload_file(local_zip_path, cfg["bucket"], s3_key)
+            file_size = os.path.getsize(encrypted_path)
+            logger.info(f"Uploading encrypted backup to s3://{cfg['bucket']}/{s3_key} ({file_size} bytes)...")
+            client.upload_file(encrypted_path, cfg["bucket"], s3_key)
+            
+            try:
+                os.remove(encrypted_path)
+            except Exception:
+                pass
 
             sync_time = datetime.now().isoformat()
             self._update_status(status="SUCCESS", error="", sync_time=sync_time)
@@ -206,7 +214,7 @@ class CloudSyncService:
             for page in pages:
                 for obj in page.get("Contents", []):
                     key = obj.get("Key", "")
-                    if not key.endswith(".zip"):
+                    if not (key.endswith(".zip") or key.endswith(".zip.enc")):
                         continue
                     last_mod = obj.get("LastModified")
                     results.append({
@@ -251,7 +259,7 @@ class CloudSyncService:
             for page in pages:
                 for obj in page.get("Contents", []):
                     key = obj.get("Key", "")
-                    if not key.endswith(".zip"):
+                    if not (key.endswith(".zip") or key.endswith(".zip.enc")):
                         continue
                     last_mod = obj.get("LastModified")
                     if last_mod and last_mod < cutoff:
@@ -311,6 +319,15 @@ class CloudSyncService:
             # 1. Download file from S3
             logger.info(f"Downloading s3://{cfg['bucket']}/{s3_key} to {temp_download_zip}...")
             client.download_file(cfg["bucket"], s3_key, temp_download_zip)
+
+            if s3_key.endswith(".enc"):
+                from services.security_utils import decrypt_file
+                try:
+                    decrypted_path = decrypt_file(temp_download_zip)
+                    os.remove(temp_download_zip)
+                    temp_download_zip = decrypted_path
+                except Exception as e:
+                    return {"status": "ERROR", "message": f"Selhalo dešifrování zálohy: {e}"}
 
             if not os.path.exists(temp_download_zip) or not zipfile.is_zipfile(temp_download_zip):
                 return {"status": "ERROR", "message": "Stažený soubor není platným archivem ZIP."}

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -262,7 +262,7 @@ def create_cash_movement(data: CashMovementCreate, db: Session = Depends(get_db)
 
 
 @router.post("/close-shift")
-def close_shift(req: CloseShiftRequest, db: Session = Depends(get_db)):
+def close_shift(req: CloseShiftRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Closes the current active shift session, records actual counted cash,
     computes discrepancy (actual - expected), and generates Z-Report summary.
@@ -296,6 +296,10 @@ def close_shift(req: CloseShiftRequest, db: Session = Depends(get_db)):
     shift_dict = _build_shift_dict(shift, metrics)
     if req.notes:
         shift_dict["notes"] = req.notes.strip()
+
+    # Trigger async backup and cloud upload upon Z-Report closure
+    from services.backup_service import create_database_backup
+    background_tasks.add_task(create_database_backup, upload_to_cloud=True)
 
     return {
         "status": "CLOSED",

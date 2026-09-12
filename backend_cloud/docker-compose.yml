@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  backend_cloud:
+    build: .
+    container_name: voltflow_cloud_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - POS_CLOUD_SECRET_KEY=${POS_CLOUD_SECRET_KEY:-changeme123}
+      - POS_JWT_SECRET=${POS_JWT_SECRET:-jwtchangeme123}
+      - POS_ADMIN_USER=${POS_ADMIN_USER:-admin}
+      - POS_ADMIN_PASSWORD=${POS_ADMIN_PASSWORD:-admin123}
+    restart: unless-stopped

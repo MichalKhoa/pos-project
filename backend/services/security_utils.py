@@ -86,6 +86,50 @@ def decrypt_secret(cipher_text: str) -> str:
         return cipher_text
 
 
+def encrypt_file(file_path: str, output_path: str = None) -> str:
+    """Encrypts a file using AES-256-GCM. Reads entirely into memory (safe for <50MB SQLite)."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    if output_path is None:
+        output_path = file_path + ".enc"
+    
+    # Derive 32-byte key for AES-256
+    key_32 = hashlib.sha256(_get_fernet_key()).digest()
+    aesgcm = AESGCM(key_32)
+    nonce = os.urandom(12)
+    
+    with open(file_path, "rb") as f:
+        data = f.read()
+    
+    ct = aesgcm.encrypt(nonce, data, None)
+    
+    with open(output_path, "wb") as f:
+        f.write(nonce + ct)
+        
+    return output_path
+
+def decrypt_file(file_path: str, output_path: str = None) -> str:
+    """Decrypts AES-256-GCM file."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    if output_path is None:
+        output_path = file_path.replace(".enc", "")
+        if output_path == file_path:
+            output_path = file_path + ".dec"
+            
+    key_32 = hashlib.sha256(_get_fernet_key()).digest()
+    aesgcm = AESGCM(key_32)
+    
+    with open(file_path, "rb") as f:
+        nonce = f.read(12)
+        ct = f.read()
+        
+    pt = aesgcm.decrypt(nonce, ct, None)
+    
+    with open(output_path, "wb") as f:
+        f.write(pt)
+        
+    return output_path
+
+
 def get_czech_now():
     """Returns current datetime in Czech Republic timezone (Europe/Prague)."""
     try:

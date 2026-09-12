@@ -247,6 +247,7 @@ Explicitně analyzováno a zamítnuto pro ochranu před chybami pokladních a na
 
 Detailní technické specifikace a archivy hotových milníků:
 
+- [`REMOTE_WEB_DASHBOARD_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/REMOTE_WEB_DASHBOARD_PLAN.md) — Kompletní architektura a plán Phase 2: Web Dashboard, Home Server a Cloud Sync.
 - [`DONE_DATABASE_SAFETY_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_DATABASE_SAFETY_PLAN.md) — SQLite schémata, migrace a databázová integrita.
 - [`DONE_EET_HARDENING_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_EET_HARDENING_PLAN.md) — EET 2.0 kryptografie a spolehlivost.
 - [`DONE_INVENTORY_IMPLEMENTATION_PLAN.md`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/plans/archive/DONE_INVENTORY_IMPLEMENTATION_PLAN.md) — Kniha zásob, skladové pohyby a příjemky.

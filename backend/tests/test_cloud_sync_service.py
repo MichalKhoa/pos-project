@@ -150,12 +150,12 @@ class TestCloudSyncService(unittest.TestCase):
         res = self.service.upload_backup_file(dummy_zip)
         self.assertEqual(res["status"], "SUCCESS")
         self.assertEqual(res["filename"], "pos_backup_2026-09-05.zip")
-        self.assertEqual(res["key"], "store_01/pos_backup_2026-09-05.zip")
+        self.assertEqual(res["key"], "store_01/pos_backup_2026-09-05.zip.enc")
 
         mock_s3.upload_file.assert_called_once_with(
-            dummy_zip,
+            dummy_zip + ".enc",
             "my-backup-bucket",
-            "store_01/pos_backup_2026-09-05.zip"
+            "store_01/pos_backup_2026-09-05.zip.enc"
         )
 
         # Verify DB status updated

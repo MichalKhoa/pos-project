@@ -7,9 +7,12 @@ High-level component interaction and communication layers in VoltFlow POS.
 - **Backend API**: Python FastAPI application (default port 8000). Handles sales persistence, EET signature generation, receipt thermal printing, and external customer display streaming.
 - **Database**: SQLite database (`pos_store.db`) accessed via SQLAlchemy ORM.
 - **Hardware Integration**: Direct USB/Serial/Network printing via `python-escpos` and real-time display updates via WebSockets `/api/v1/ws/customer-display`.
+- **Remote Web Dashboard**: React 19 + Vite app in `web/` for remote management (KPIs, Analytics, Z-Reports, Staging Queue).
+- **Cloud Backend**: FastAPI application in `backend_cloud/` acting as 24/7 Home Server receiving snapshots and staging intakes.
 
 ## Key Communication Protocols
 - REST APIs (`/api/v1/*`): Sales ledger, printer commands, EET status, bank QR verification, catalog management.
+- Cloud REST APIs: Dashboard KPIs, Analytics, Staging queues, POHODA/DPH tax exports.
 - WebSockets: Real-time itemized stream sent to external customer display monitors.
 - SOAP/XML: Czech EET 2.0 fiscal envelope transmission to Finanční správa ČR servers.
 
