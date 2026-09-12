@@ -25,10 +25,25 @@ except ImportError:
 client = TestClient(app)
 
 
+def _clean_staging_queue():
+    try:
+        try:
+            from backend_cloud.database import StagingSessionLocal, StagedProductModel
+        except ImportError:
+            from database import StagingSessionLocal, StagedProductModel
+        sdb = StagingSessionLocal()
+        sdb.query(StagedProductModel).delete()
+        sdb.commit()
+        sdb.close()
+    except Exception:
+        pass
+
+
 class TestRoutersMissingSnapshot(unittest.TestCase):
     """Verifies that all router endpoints return HTTP 200 and valid schemas when snapshot is missing."""
 
     def setUp(self):
+        _clean_staging_queue()
         self.orig_db_path = snapshot_service.db_path
         self.non_existent_path = os.path.join(tempfile.gettempdir(), "missing_snapshot_for_routers.db")
         if os.path.exists(self.non_existent_path):
@@ -37,6 +52,7 @@ class TestRoutersMissingSnapshot(unittest.TestCase):
 
     def tearDown(self):
         snapshot_service.db_path = self.orig_db_path
+        _clean_staging_queue()
 
     def test_dashboard_health(self):
         res = client.get("/api/v1/dashboard/health")
@@ -138,6 +154,7 @@ class TestRoutersEmptyZeroByteSnapshot(unittest.TestCase):
     """Verifies that all router endpoints return HTTP 200 when snapshot is a 0-byte file."""
 
     def setUp(self):
+        _clean_staging_queue()
         self.orig_db_path = snapshot_service.db_path
         self.zero_file = tempfile.NamedTemporaryFile(delete=False)
         self.zero_file.close()
@@ -145,6 +162,7 @@ class TestRoutersEmptyZeroByteSnapshot(unittest.TestCase):
 
     def tearDown(self):
         snapshot_service.db_path = self.orig_db_path
+        _clean_staging_queue()
         if os.path.exists(self.zero_file.name):
             try:
                 os.remove(self.zero_file.name)
@@ -191,6 +209,7 @@ class TestRoutersPopulatedSnapshot(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        _clean_staging_queue()
         cls.temp_file = tempfile.NamedTemporaryFile(delete=False)
         cls.temp_file.close()
         cls.db_path = cls.temp_file.name
@@ -379,6 +398,7 @@ class TestRoutersPopulatedSnapshot(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        _clean_staging_queue()
         if os.path.exists(cls.db_path):
             try:
                 os.remove(cls.db_path)
@@ -557,6 +577,9 @@ class TestRoutersPopulatedSnapshot(unittest.TestCase):
         # 6. Verify it is no longer pending
         res_pending2 = client.get("/api/v1/staging/pending")
         self.assertFalse(any(p["id"] == prod_id for p in res_pending2.json()["products"]))
+
+        # 7. Clean up staging queue for test isolation
+        _clean_staging_queue()
 
 
 if __name__ == "__main__":

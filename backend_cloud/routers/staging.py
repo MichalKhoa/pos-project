@@ -16,10 +16,12 @@ try:
     from backend_cloud.services.isdoc_parser import parse_isdoc_bytes
     from backend_cloud.services.ocr_service import parse_invoice_with_vision
     from backend_cloud.services.email_fetcher import EmailInvoiceFetcher
+    from backend_cloud.routers.auth import verify_pos_token
 except ImportError:
     from services.isdoc_parser import parse_isdoc_bytes
     from services.ocr_service import parse_invoice_with_vision
     from services.email_fetcher import EmailInvoiceFetcher
+    from routers.auth import verify_pos_token
 
 router = APIRouter(
     prefix="/api/v1/staging",
@@ -231,7 +233,10 @@ def delete_intake(intake_id: str, db: Session = Depends(get_staging_db)):
 
 
 @router.get("/pending")
-def get_pending(db: Session = Depends(get_staging_db)):
+def get_pending(
+    db: Session = Depends(get_staging_db),
+    _pos_auth=Depends(verify_pos_token)
+):
     """
     Polled by Store POS on boot. Returns all intakes and price changes with PENDING_STORE_SYNC.
     """
@@ -358,7 +363,11 @@ def create_staged_product(payload: dict, db: Session = Depends(get_staging_db)):
 
 
 @router.post("/ack")
-def ack_staging(payload: dict, db: Session = Depends(get_staging_db)):
+def ack_staging(
+    payload: dict,
+    db: Session = Depends(get_staging_db),
+    _pos_auth=Depends(verify_pos_token)
+):
     """
     Called by Store POS after committing staged batches into local SQLite master.
     """
