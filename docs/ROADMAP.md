@@ -10,7 +10,7 @@ _Primary Target: Mixed Retail & Convenience Store (Smíšené zboží / Večerka
 ## 1. Immediate Active Priorities (Nejbližší úkoly k realizaci) 🎯
 
 Phase 1 (**Daňová evidence a inventury pro OSVČ**), **Kompletní Backend Audit (P0–P3)** i **Phase 2: Remote Home Administration Dashboard & Owner Back-Office** jsou **100 % dokončeny** ✅.  
-Jedinou a hlavní aktivní prioritou pro realizaci je nyní **Phase 3: Customer CRM & Accounting Bridges (Zákaznický systém & Účetní můstky)**.
+Jedinou a hlavní aktivní prioritou pro realizaci je nyní **Phase 3: Paperless Digital Receipts & Accounting Bridges (Bezpapírové digitální účtenky & Účetní můstky)**.
 
 ```mermaid
 graph TD
@@ -27,11 +27,12 @@ graph TD
     end
 
     subgraph P3Active["🎯 Phase 3 Aktivní priorita (Active Tasks)"]
-        P3_1["1. Zákaznické CRM (telefon / EAN věrnostní karta) 👥"]
-        P3_2["2. Bodový systém a VIP slevové hladiny ⭐"]
-        P3_3["3. Bezpapírové účtenky přes QR kód na displeji / e-mail 📱"]
-        P3_4["4. Účetní můstky pro podvojné účetnictví (Money S3 / Abra Flexi) 📑"]
-        P3_1 --> P3_2 --> P3_3 --> P3_4
+        P3_1["1. Generování zabezpečeného QR kódu & URL účtenky 📱"]
+        P3_2["2. Zobrazení QR na zákaznickém displeji & pokladně 🖥️"]
+        P3_3["3. Webová stránka účtenky s náhledem nákupu 🌐"]
+        P3_4["4. Pole pro zadání e-mailu zákazníka & odeslání ✉️"]
+        P3_5["5. Účetní můstky pro podvojné účetnictví (Money S3 / Abra Flexi) 📑"]
+        P3_1 --> P3_2 --> P3_3 --> P3_4 --> P3_5
     end
 
     P2Done --> P3Active
@@ -60,39 +61,46 @@ flowchart TD
         P1Done["Inventura 31.12., DPFO/DPH výkazy, B2B faktury, Vratné obaly, Odpisy"]
     end
 
-    subgraph Active["🎯 Aktivní priorita (viz Sekce 1)"]
-        Phase2["Phase 2: Remote Home Administration Dashboard<br/><i>(Web dashboard, vzdálené příjemky, správa cen a sync)</i>"]
+    subgraph Phase2Done["Phase 2: Remote Home Administration Dashboard [HOTOVO ✅]"]
+        P2Done["Web dashboard, vzdálené příjemky, správa cen, cloud sync & 2FA"]
     end
 
-    subgraph Phase3["Phase 3: Customer CRM & Accounting Bridges"]
-        P7["7. Zákaznická věrnost a bezpapírové účtenky"]
-        P8["8. Účetní můstky pro podvojné účetnictví (Money S3 / Abra)"]
+    subgraph Phase3["🎯 Phase 3: Paperless Digital Receipts & Accounting Bridges (Aktivní)"]
+        P3A["3. Bezpapírová účtenka (QR kód, webová stránka, odeslání na e-mail)"]
+        P3B["4. Účetní můstky pro podvojné účetnictví (Money S3 / Abra)"]
     end
 
     subgraph Phase4["Phase 4: Multi-User & Enterprise Scaling"]
-        P9["9. Více pokladních profilů s PIN/RFID"]
-        P10["10. Řetězcová synchronizace více poboček"]
+        P4A["5. Více pokladních profilů s PIN/RFID"]
+        P4B["6. Řetězcová synchronizace více poboček"]
     end
 
-    subgraph Phase5["Phase 5: Hardware & Platební terminály (Pozastaveno ⏸️)"]
-        P11["11. Automatické vratky ČSOB (Ingenico Move 3500)"]
-        P12["12. Záložní terminál SumUp (Bluetooth / Cloud)"]
+    subgraph Phase5["Phase 5: Hardware & Platební terminály (Pozastaveno do pořízení HW ⏸️)"]
+        P5A["7. Automatické vratky ČSOB (Ingenico Move 3500)"]
+        P5B["8. Záložní terminál SumUp (Bluetooth / Cloud)"]
     end
 
     subgraph Phase6["Phase 6: Gastronomy & Hospitality Expansion 🍽️"]
-        P13["13. Modifikovatelné rozložení provozovny (Interactive Floor Plan Editor)"]
-        P14["14. Stoly jako taby & Otevřené účty (Table Tabs, Dělení účtů, Bony)"]
+        P6A["9. Modifikovatelné rozložení provozovny (Interactive Floor Plan Editor)"]
+        P6B["10. Stoly jako taby & Otevřené účty (Table Tabs, Dělení účtů, Bony)"]
     end
 
-    Phase1Done --> Phase2
-    Phase2 --> Phase3
+    subgraph Phase7["Phase 7: Customer Loyalty & CRM (Zákaznický věrnostní systém) 👥"]
+        P7A["11. Zákaznické CRM (databáze, telefon, EAN kartičky)"]
+        P7B["12. Bodový systém, VIP slevové hladiny a nákupní historie"]
+    end
+
+    Phase1Done --> Phase2Done
+    Phase2Done --> Phase3
     Phase3 --> Phase4
-    Phase4 --> Phase6
+    Phase4 --> Phase5
+    Phase5 --> Phase6
+    Phase6 --> Phase7
 ```
 
 ---
 
-### Phase 2: Remote Home Administration Dashboard & Owner Back-Office 🌐 (Aktivní priorita)
+### Phase 2: Remote Home Administration Dashboard & Owner Back-Office 🌐 (Dokončeno ✅)
 
 *Rationale: Shop owners spend all day at the counter serving customers. In the evening or from home, they need a dedicated web portal on their home PC/laptop/phone to manage accounting, enter invoices, inspect stock, and adjust prices without disturbing counter operations.*
 
@@ -105,14 +113,26 @@ flowchart TD
 
 ---
 
-### Phase 3: Zákaznický systém & Účetní můstky pro s.r.o.
+### Phase 3: Bezpapírové digitální účtenky & Účetní můstky pro s.r.o. 📱 (Aktivní priorita)
 
-#### 2. Zákaznická věrnost a bezpapírové účtenky
-- CRM zákazníků (telefonní číslo / čárový kód věrnostní kartičky).
-- Bodový systém a VIP slevové hladiny.
-- Bezpapírová účtenka přes QR kód na zákaznickém displeji nebo odeslání na e-mail.
+*Rationale: Eliminace zbytečného tisku termopapíru a zrychlení odbavení u pokladny. Zákazník si po zaplacení naskenuje dynamický QR kód přímo ze zákaznického displeje nebo pokladní obrazovky. Odkaz otevře responzivní webovou stránku s plným detailem účtenky a polem pro okamžité odeslání na e-mail zákazníka.*
 
-#### 3. Rozšířené účetní můstky (Podvojné účetnictví pro s.r.o.)
+#### 2. Bezpapírová digitální účtenka (Paperless Digital Receipts & Email Delivery) 📱
+- **Generování zabezpečeného QR kódu & URL účtenky**:
+  - Unikátní podepsaný odkaz / hash pro každou vystavenou účtenku (`/r/{receipt_id}?token={hash}` nebo cloud snapshot URL).
+  - Přístupné online bez nutnosti instalace jakékoliv aplikace na straně zákazníka.
+- **Zobrazení QR kódu na zákaznickém displeji & pokladně**:
+  - Zákaznický displej (`/#/customer-display` na sekundárním monitoru) po dokončení platby okamžitě zobrazí velký čitelný QR kód s výzvou „Naskenujte pro digitální účtenku“.
+  - Pokladní dialog po dokončení prodeje (volba „Bez tisku“) zobrazuje QR kód i pokladnímu pro případné ukázání zákazníkovi.
+- **Webová stránka účtenky s náhledem nákupu**:
+  - Responzivní mobilní webová stránka: kompletní rozpad položek, DPH rekapitulace (21 %, 12 %, 0 %), způsob platby, datum/čas a zákonné fiskální kódy (EET BKP/PKP).
+  - Tlačítko pro stažení účtenky v PDF nebo tisk z mobilního prohlížeče.
+- **Pole pro zadání e-mailu zákazníka & automatické odeslání**:
+  - Přímo na webové stránce účtenky: formulář s polem pro e-mail (`Zadejte e-mail pro zaslání účtenky`) s tlačítkem `[ Odeslat ]`.
+  - Backend/Cloud služba odešle strukturovaný e-mail s přehlednou HTML účtenkou a přiloženým PDF dokladem.
+  - Možnost rychlého zadání e-mailu obsluhou přímo na pokladně před dokončením nákupu pro zákazníky bez chytrého telefonu.
+
+#### 3. Rozšířené účetní můstky (Podvojné účetnictví pro s.r.o.) 📑
 - POHODA 2.0 XML bridge je již hotov ✅.
 - Rozšíření o exportní můstky pro: **Money S3**, **Abra Flexi (REST / XML)**, a **Helios Inuvio**.
 
@@ -178,17 +198,33 @@ flowchart TD
 
 ---
 
+### Phase 7: Customer Loyalty & CRM Program 👥 (Odsunuto na konec po dokončení platebních terminálů)
+
+*Status: Zařazeno na konec plánu — realizace proběhne až po dokončení integrace bankovních platebních terminálů (Phase 5) a gastro provozu (Phase 6).*
+
+#### 10. Zákaznické CRM (Customer Database & Loyalty Cards)
+- Databáze zákazníků s vazbou na telefonní číslo nebo čárový kód věrnostní kartičky (EAN-13 / Code128 / virtuální karta v peněžence).
+- Rychlé načtení zákazníka k probíhajícímu nákupu naskenováním čárového kódu nebo zadáním telefonního čísla na pokladně.
+
+#### 11. Bodový systém a VIP slevové hladiny (Points & Tiered Discounts)
+- Automatické připisování věrnostních bodů za nákupy a možnost jejich uplatnění jako slevy na další nákup.
+- Odstupňované VIP slevové hladiny (např. automatická sleva 5 % pro registrované stálé zákazníky na celý sortiment).
+- Přehled historie nákupů a nákupních zvyklostí zákazníka pro personál večerky.
+
+---
+
 ### Plán verzování a budoucích tagů (SemVer Tagging Plan) 🏷️
 
 | Tag | Fáze / Milník | Hlavní obsah vydání | Status |
 |---|---|---|---|
 | **`v0.1.0`** | Baseline Core | Základní offline-first pokladna, Tauri v2 desktop shell, ESC/POS tisk, EET 2.0 SOAP engine. | ✅ Vydáno |
 | **`v0.2.0`** | Phase 1 & Audit | Daňová evidence pro OSVČ (§ 7b ZDP), inventura k 31.12. (§ 29, 30 ZoÚ), vratné obaly, odpisy (§ 25 ZoÚ), váhové zboží, kompletní audit P0–P3 (FIN-C1, EET-C1 C14N, DB-C1). | ✅ Vydáno |
-| **`v0.3.0`** | **Phase 2** | **Remote Home Admin Dashboard**: Šifrovaný Cloud Sync (S3/R2), webové rozhraní pro správu z domova, vzdálené zadávání příjemek z notebooku/mobilu, vzdálená úprava cen a sledování tržeb. | ✅ Dokončeno |
-| **`v0.4.0`** | **Phase 3 (Aktivní)** | **CRM & Účetní můstky**: Zákaznická věrnost (kartičky, slevové hladiny), bezpapírové QR/e-mail účtenky, exportní můstky pro podvojné účetnictví (Money S3, Abra Flexi). | 🎯 **Další na řadě** |
+| **`v0.3.0`** | Phase 2 | **Remote Home Admin Dashboard**: Šifrovaný Cloud Sync (S3/R2), webové rozhraní pro správu z domova, vzdálené zadávání příjemek z notebooku/mobilu, vzdálená úprava cen a sledování tržeb. | ✅ Dokončeno |
+| **`v0.4.0`** | **Phase 3 (Aktivní)** | **Paperless Digital Receipts & Účetní můstky**: Bezpapírová účtenka (dynamický QR kód na displeji, responzivní webová účtenka, zadání e-mailu zákazníka a odeslání), účetní exporty Money S3 / Abra Flexi. | 🎯 **Další na řadě** |
 | **`v0.5.0`** | Phase 4 | **Multi-User & Enterprise**: Rychlé přepínání pokladních profilů s PIN/RFID, oddělené zásuvky per pokladní, multi-store synchronizace více poboček s centrálním katalogem. | 📋 Plánováno |
 | **`v0.6.0`** | Phase 5 | **Hardware & Platební terminály**: Automatické vratky na terminál ČSOB (Ingenico Move 3500 TCP storno), integrace SumUp čtečky (až bude k dispozici HW). | ⏸️ Pozastaveno |
-| **`v0.7.0`** | **Phase 6** | **Gastronomy & Hospitality Expansion**: Modifikovatelné rozložení provozovny (Floor Plan Editor), stoly jako přepínatelné taby s otevřenými účty, dělení účtů (Split Bill), přesuny stolů a bonovací tisk do kuchyně/baru. | 📋 Plánováno |
+| **`v0.7.0`** | Phase 6 | **Gastronomy & Hospitality Expansion**: Modifikovatelné rozložení provozovny (Floor Plan Editor), stoly jako přepínatelné taby s otevřenými účty, dělení účtů (Split Bill), přesuny stolů a bonovací tisk do kuchyně/baru. | 📋 Plánováno |
+| **`v0.8.0`** | **Phase 7** | **Customer Loyalty & CRM**: Zákaznické CRM (telefon / EAN karty), bodový systém, VIP slevové hladiny a nákupní historie (zařazeno po dokončení platebních terminálů). | 📋 Plánováno |
 | **`v1.0.0`** | **Production Store Pilot** | **První ostré nasazení**: Zmrazené databázové schéma, ověřený ostrý provoz na fyzické večerce / bistru, kompletní instalátor, zálohovací a obnovovací postupy, EET certifikace. | 🚀 Cíl |
 
 *(Poznámka: Mezi verzemi se mohou objevit opravné patch tagy `v0.2.1`, `v0.3.1` atd. pro okamžité hotfixy nalezené při testování bez nových funkcí).*
