@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Package, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
@@ -148,14 +148,14 @@ function Navbar({
       <div className="nav-island-left">
         <div
           className="nav-status-indicator"
-          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms`) : 'Offline'}
+          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : 'Offline'}
         >
           <span className={`status-pulse-dot ${isOnline ? 'online' : 'offline'}`} />
           <span className="status-label">
-            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : 'Online • EET') : 'Offline'}
+            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : 'Offline'}
           </span>
         </div>
-        {pendingCount > 0 && (
+        {storeConfig?.eetEnabled && pendingCount > 0 && (
           <button
             className="status-badge badge-pending-sync pulse-badge nav-badge-sync"
             onClick={onOpenSyncModal}
@@ -217,15 +217,6 @@ function Navbar({
           >
             <ShoppingBag size={17} />
             <span>{t('nav.register')}</span>
-          </button>
-
-          <button
-            ref={el => { tabRefs.current['inventory'] = el; }}
-            className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''}`}
-            onClick={() => setActiveTab('inventory')}
-          >
-            <Package size={17} />
-            <span>{t('nav.inventory') || 'Sklad'}</span>
           </button>
 
           <button
@@ -291,15 +282,6 @@ function Navbar({
               >
                 <ShoppingBag size={18} />
                 <span>{t('nav.register')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('inventory')}
-              >
-                <Package size={18} />
-                <span>{t('nav.inventory') || 'Sklad'}</span>
               </button>
 
               <button

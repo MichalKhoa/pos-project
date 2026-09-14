@@ -105,7 +105,7 @@ if "%TAURI_SIGNING_PRIVATE_KEY%"=="" (
     )
 )
 
-call npm run tauri build
+call npm run tauri build -- --bundles nsis
 if !errorlevel! neq 0 (
     echo [ERROR] Tauri build failed!
     pause

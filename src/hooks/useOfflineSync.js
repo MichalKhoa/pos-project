@@ -16,7 +16,7 @@ export function useOfflineSync({ salesHistory = [], setSalesHistory } = {}) {
   const checkPendingOfflineSales = useCallback(async () => {
     try {
       const eetStatus = await fetchEetStatus();
-      if (eetStatus && typeof eetStatus.pending_offline_sales === 'number') {
+      if (eetStatus && eetStatus.eet_enabled && typeof eetStatus.pending_offline_sales === 'number') {
         const count = eetStatus.pending_offline_sales;
         setPendingSyncCount(count);
 
@@ -28,6 +28,9 @@ export function useOfflineSync({ salesHistory = [], setSalesHistory } = {}) {
         } else {
           setShowSyncModal(false);
         }
+      } else {
+        setPendingSyncCount(0);
+        setShowSyncModal(false);
       }
     } catch (err) {
       console.warn('EET status check error:', err);
