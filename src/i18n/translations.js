@@ -1081,6 +1081,7 @@ export const translations = {
       all: "Vše"
     },
     last_receipt: {
+      tooltip: "Poslední účtenka: Rychlý dotisk a Storno",
       chip_title: "Poslední účtenka",
       chip_label: "Poslední: {amount} Kč ({time})",
       reprint: "Vytisknout znovu",
@@ -2373,6 +2374,7 @@ export const translations = {
       all: "Tất cả"
     },
     last_receipt: {
+      tooltip: "Hóa đơn gần nhất: In lại và Hoàn tiền nhanh",
       chip_title: "Hóa đơn gần nhất",
       chip_label: "Gần nhất: {amount} Kč ({time})",
       reprint: "In lại hóa đơn",
@@ -3665,6 +3667,7 @@ export const translations = {
       all: "All"
     },
     last_receipt: {
+      tooltip: "Last receipt: Quick re-print and refund",
       chip_title: "Last Receipt",
       chip_label: "Last: {amount} Kč ({time})",
       reprint: "Re-print Receipt",

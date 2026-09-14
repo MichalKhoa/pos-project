@@ -294,21 +294,23 @@ function Cart({
             type="button"
             className={`last-receipt-chip-btn ${isLastReceiptOpen ? 'is-active' : ''} ${isOlderThanToday ? 'is-past-day' : ''}`}
             onClick={() => setIsLastReceiptOpen(prev => !prev)}
-            title="Poslední účtenka: Rychlý dotisk a Storno"
+            title={t('last_receipt.tooltip') || 'Poslední účtenka: Rychlý dotisk a Storno'}
+            aria-expanded={isLastReceiptOpen}
+            aria-haspopup="dialog"
           >
-            <Receipt size={14} className="last-receipt-chip-icon" />
+            <Receipt size={16} className="last-receipt-chip-icon" />
             <span className="last-receipt-chip-text">
               {t('last_receipt.chip_label', {
                 amount: Math.abs(lastSaleAmount).toFixed(0),
                 time: lastSaleChipTime
-              }) || `🧾 Poslední: ${Math.abs(lastSaleAmount).toFixed(0)} Kč (${lastSaleChipTime})`}
+              }) || `Poslední: ${Math.abs(lastSaleAmount).toFixed(0)} Kč (${lastSaleChipTime})`}
             </span>
             {lastSaleItems.length > 0 && (
               <span className="last-receipt-chip-count-badge">
                 {lastSaleItems.length} {t('last_receipt.items_count') || 'pol.'}
               </span>
             )}
-            <ChevronDown size={13} className={`last-receipt-chip-chevron ${isLastReceiptOpen ? 'is-open' : ''}`} />
+            <ChevronDown size={14} className={`last-receipt-chip-chevron ${isLastReceiptOpen ? 'is-open' : ''}`} />
           </button>
 
           {/* Last Receipt Popover */}

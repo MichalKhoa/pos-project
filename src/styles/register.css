@@ -1267,65 +1267,77 @@ select.input-field:focus {
    ========================================================================== */
 .last-receipt-quick-container {
   position: relative;
-  margin: 0.25rem 0.65rem 0.45rem;
+  margin: 0.25rem 1.1rem 0.5rem 1.1rem;
   flex-shrink: 0;
 }
 
 .last-receipt-chip-btn {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.65rem;
-  min-height: 38px;
+  gap: 0.55rem;
+  padding: 0.45rem 0.85rem;
+  min-height: 42px;
   width: 100%;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent-blue) 8%, var(--bg-card));
-  border: 1px solid color-mix(in srgb, var(--accent-blue) 28%, var(--border-color));
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.86rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease, transform 0.08s ease;
   user-select: none;
   touch-action: manipulation;
 }
 
-.last-receipt-chip-btn:hover {
-  background: color-mix(in srgb, var(--accent-blue) 14%, var(--bg-card));
-  border-color: color-mix(in srgb, var(--accent-blue) 55%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .last-receipt-chip-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-blue);
+    box-shadow: var(--shadow-md);
+  }
+
+  .last-receipt-chip-btn:hover .last-receipt-chip-icon {
+    color: var(--accent-blue);
+  }
+
+  .last-receipt-chip-btn:hover .last-receipt-chip-chevron {
+    color: var(--text-primary);
+    opacity: 0.9;
+  }
+}
+
+.last-receipt-chip-btn:active {
+  filter: brightness(0.95);
+  transform: scale(0.995);
 }
 
 .last-receipt-chip-btn.is-active,
 .last-receipt-chip-btn:focus-visible {
-  background: color-mix(in srgb, var(--accent-blue) 16%, var(--bg-card));
+  background: var(--bg-card-hover);
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 25%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 25%, transparent), var(--shadow-sm);
   outline: none;
 }
 
-.last-receipt-chip-btn.is-past-day {
-  border-color: color-mix(in srgb, var(--accent-amber) 35%, var(--border-color));
+.last-receipt-chip-btn.is-active .last-receipt-chip-icon {
+  color: var(--accent-blue);
+}
+
+.last-receipt-chip-btn.is-active .last-receipt-chip-chevron {
+  color: var(--accent-blue);
+  opacity: 1;
 }
 
 .last-receipt-chip-btn.is-past-day .last-receipt-chip-icon {
   color: var(--accent-amber);
 }
 
-.last-receipt-chip-count-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent-blue);
-  background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent);
-  padding: 1px 5px;
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 .last-receipt-chip-icon {
-  color: var(--accent-blue);
+  color: var(--text-secondary);
   flex-shrink: 0;
+  transition: color 0.1s ease;
 }
 
 .last-receipt-chip-text {
@@ -1334,11 +1346,35 @@ select.input-field:focus {
   white-space: nowrap;
   flex: 1;
   text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.last-receipt-chip-count-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.1s ease;
+}
+
+.last-receipt-chip-btn:hover .last-receipt-chip-count-badge,
+.last-receipt-chip-btn.is-active .last-receipt-chip-count-badge {
+  color: var(--accent-blue);
+  border-color: color-mix(in srgb, var(--accent-blue) 40%, var(--border-color));
+  background: color-mix(in srgb, var(--accent-blue) 8%, var(--bg-card));
 }
 
 .last-receipt-chip-chevron {
-  opacity: 0.75;
-  transition: transform 0.2s ease;
+  opacity: 0.6;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.1s ease, color 0.1s ease;
   flex-shrink: 0;
   color: var(--text-secondary);
 }
