@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import logging
 import threading
@@ -132,6 +133,118 @@ class ESCPOSPrinterService:
         self.interface_type = interface_type.upper()
         self.address = address
 
+    def _get_printer_device(self, job_name: str = "VoltFlow_POS_Job"):
+        """
+        Resolves, instantiates, and opens the physical ESC/POS hardware printer device.
+        Handles Windows spooler selection (preferring online default POS printers),
+        USB direct devices, Network IP (port 9100), and Serial COM ports.
+        Returns opened printer device or None if in dummy/test mode or device unavailable.
+        """
+        if self.interface_type in ["DUMMY", "SIMULATED", "VIRTUAL", "NONE", "BROWSER"]:
+            return None
+        if os.environ.get("POS_SIMULATE_PRINT") == "1" or os.environ.get("TESTING") == "1":
+            return None
+        if "unittest" in sys.modules and not os.environ.get("FORCE_HARDWARE_PRINT"):
+            return None
+
+        printer = None
+        try:
+            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
+                from escpos.printer import Win32Raw
+                target_name = self.address
+
+                try:
+                    import win32print
+                    installed_printers = [
+                        p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
+                    ]
+
+                    def _is_offline(pname: str) -> bool:
+                        try:
+                            h = win32print.OpenPrinter(pname)
+                            info = win32print.GetPrinter(h, 2)
+                            win32print.ClosePrinter(h)
+                            return bool(info.get('Attributes', 0) & win32print.PRINTER_ATTRIBUTE_WORK_OFFLINE)
+                        except Exception:
+                            return False
+
+                    default_printer = ""
+                    try:
+                        default_printer = win32print.GetDefaultPrinter()
+                    except Exception:
+                        pass
+
+                    pos_keywords = ["EPSON", "RECEIPT", "POS", "THERMAL", "TICKETING", "TM-T", "TSP", "STAR"]
+
+                    # If target_name is missing, default Linux path, or not in installed printers:
+                    if not target_name or target_name.startswith('/dev/') or target_name not in installed_printers:
+                        # 1. Check if Windows default printer is an online POS printer
+                        if default_printer and default_printer in installed_printers:
+                            is_default_pos = any(kw in default_printer.upper() for kw in pos_keywords)
+                            if is_default_pos and not _is_offline(default_printer):
+                                target_name = default_printer
+
+                        # 2. If not resolved yet, search for online POS printer
+                        if not target_name or target_name.startswith('/dev/') or target_name not in installed_printers:
+                            pos_printers = [p for p in installed_printers if any(kw in p.upper() for kw in pos_keywords)]
+                            online_pos = [p for p in pos_printers if not _is_offline(p)]
+                            if online_pos:
+                                if default_printer in online_pos:
+                                    target_name = default_printer
+                                else:
+                                    target_name = online_pos[0]
+                            elif pos_printers:
+                                target_name = default_printer if default_printer in pos_printers else pos_printers[0]
+                            elif default_printer and default_printer in installed_printers:
+                                target_name = default_printer
+                            elif installed_printers:
+                                target_name = installed_printers[0]
+                            else:
+                                target_name = ""
+                    else:
+                        # Explicitly specified target_name exists in installed_printers
+                        if _is_offline(target_name):
+                            logger.warning(f"Configured printer '{target_name}' is currently OFFLINE in Windows.")
+                            if default_printer and default_printer in installed_printers and not _is_offline(default_printer):
+                                if any(kw in default_printer.upper() for kw in pos_keywords):
+                                    logger.info(f"Falling back to online default POS printer '{default_printer}'.")
+                                    target_name = default_printer
+
+                except Exception as enum_err:
+                    logger.warning(f"Could not enumerate Windows printers: {enum_err}")
+
+                if target_name:
+                    logger.info(f"Connecting to Win32Raw printer: '{target_name}'")
+                    printer = Win32Raw(target_name)
+                else:
+                    return None
+
+            elif self.interface_type == "USB":
+                from escpos.printer import Usb, File
+                if os.path.exists(self.address):
+                    printer = File(self.address)
+                else:
+                    printer = Usb(0x04b8, 0x0e15, 0)
+            elif self.interface_type == "NETWORK" and self.address:
+                from escpos.printer import Network
+                printer = Network(self.address, port=9100, timeout=3.0)
+            elif self.interface_type == "SERIAL" and self.address:
+                from escpos.printer import Serial
+                printer = Serial(self.address, baudrate=9600)
+        except Exception as conn_err:
+            logger.info(f"Physical ESC/POS printer hardware offline ({conn_err}), using print simulation fallback.")
+            return None
+
+        if printer:
+            try:
+                if hasattr(printer, 'open'):
+                    printer.open(job_name)
+            except Exception as open_err:
+                logger.warning(f"Failed to open printer device ({open_err}), falling back to simulation.")
+                return None
+
+        return printer
+
     def print_receipt(self, sale_data: dict, store_config: dict) -> dict:
         """
         Prints a formatted 58mm or 80mm thermal receipt using python-escpos.
@@ -185,48 +298,7 @@ class ESCPOSPrinterService:
 
 
             # 1. Attempt physical ESC/POS Hardware Connection if interface is configured
-            printer = None
-            try:
-                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                    from escpos.printer import Win32Raw
-                    target_name = self.address
-                    if not target_name or target_name.startswith('/dev/'):
-                        target_name = ""
-                        try:
-                            import win32print
-                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                            if pos_printers:
-                                target_name = pos_printers[0]
-                            elif printers:
-                                target_name = printers[0]
-                        except Exception:
-                            pass
-                    printer = Win32Raw(target_name)
-                elif self.interface_type == "USB":
-                    from escpos.printer import Usb, File
-                    if os.path.exists(self.address):
-                        printer = File(self.address)
-                    else:
-                        # Standard Epson/Xprinter/POS-58 USB vendor ID fallback
-                        printer = Usb(0x04b8, 0x0e15, 0)
-                elif self.interface_type == "NETWORK" and self.address:
-                    from escpos.printer import Network
-                    printer = Network(self.address, port=9100, timeout=3.0)
-                elif self.interface_type == "SERIAL" and self.address:
-                    from escpos.printer import Serial
-                    printer = Serial(self.address, baudrate=9600)
-            except Exception as conn_err:
-                logger.info(f"Physical ESC/POS printer hardware offline ({conn_err}), using print simulation fallback.")
-                printer = None
-
-            if printer:
-                try:
-                    if hasattr(printer, 'open'):
-                        printer.open(f"VoltFlow_POS_Receipt_{sale_data.get('receiptNumber')}")
-                except Exception as open_err:
-                    logger.warning(f"Failed to open printer device ({open_err}), falling back to simulation.")
-                    printer = None
+            printer = self._get_printer_device(f"VoltFlow_POS_Receipt_{sale_data.get('receiptNumber')}")
 
             if printer:
                 try:
@@ -678,7 +750,14 @@ class ESCPOSPrinterService:
                                 printer.cut(mode='PART')
                             else:
                                 if pm in ["CASH", "HOTOVOST", "SPLIT"]:
-                                    printer.cashdraw(2)
+                                    try:
+                                        printer.cashdraw(2)
+                                    except Exception:
+                                        pass
+                                    try:
+                                        printer.cashdraw(5)
+                                    except Exception:
+                                        pass
                                 printer.cut()
                         except Exception:
                             pass
@@ -731,49 +810,13 @@ class ESCPOSPrinterService:
         logger.info(f"Printing daily summary slip via {self.interface_type}")
 
         try:
-            printer = None
-            try:
-                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                    from escpos.printer import Win32Raw
-                    target_name = self.address
-                    if not target_name or target_name.startswith('/dev/'):
-                        target_name = ""
-                        try:
-                            import win32print
-                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                            if pos_printers:
-                                target_name = pos_printers[0]
-                            elif printers:
-                                target_name = printers[0]
-                        except Exception:
-                            pass
-                    printer = Win32Raw(target_name)
-                elif self.interface_type == "USB":
-                    from escpos.printer import Usb, File
-                    if os.path.exists(self.address):
-                        printer = File(self.address)
-                    else:
-                        printer = Usb(0x04b8, 0x0e15, 0)
-                elif self.interface_type == "NETWORK" and self.address:
-                    from escpos.printer import Network
-                    printer = Network(self.address, port=9100, timeout=3.0)
-                elif self.interface_type == "SERIAL" and self.address:
-                    from escpos.printer import Serial
-                    printer = Serial(self.address, baudrate=9600)
-            except Exception as conn_err:
-                logger.info(f"Physical printer offline for daily summary ({conn_err}), using simulation fallback.")
-                printer = None
-
+            printer = self._get_printer_device("VoltFlow_POS_Daily_Summary")
             if printer:
                 try:
-                    if hasattr(printer, 'open'):
-                        printer.open("VoltFlow_POS_Daily_Summary")
-                    try:
-                        if hasattr(printer, 'charcode'):
-                            printer.charcode('CP852')
-                    except Exception:
-                        pass
+                    if hasattr(printer, 'charcode'):
+                        printer.charcode('CP852')
+                except Exception:
+                    pass
 
                     # Store Header
                     printer.set(align='center', font='a', width=1, height=1)
@@ -887,49 +930,13 @@ class ESCPOSPrinterService:
         logger.info(f"Printing cash movement slip ({m_type}: {amount:.2f} Kc) via {self.interface_type}")
 
         try:
-            printer = None
-            try:
-                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                    from escpos.printer import Win32Raw
-                    target_name = self.address
-                    if not target_name or target_name.startswith('/dev/'):
-                        target_name = ""
-                        try:
-                            import win32print
-                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                            if pos_printers:
-                                target_name = pos_printers[0]
-                            elif printers:
-                                target_name = printers[0]
-                        except Exception:
-                            pass
-                    printer = Win32Raw(target_name)
-                elif self.interface_type == "USB":
-                    from escpos.printer import Usb, File
-                    if os.path.exists(self.address):
-                        printer = File(self.address)
-                    else:
-                        printer = Usb(0x04b8, 0x0e15, 0)
-                elif self.interface_type == "NETWORK" and self.address:
-                    from escpos.printer import Network
-                    printer = Network(self.address, port=9100, timeout=3.0)
-                elif self.interface_type == "SERIAL" and self.address:
-                    from escpos.printer import Serial
-                    printer = Serial(self.address, baudrate=9600)
-            except Exception as conn_err:
-                logger.info(f"Physical printer offline for cash movement slip ({conn_err}), using simulation fallback.")
-                printer = None
-
+            printer = self._get_printer_device("VoltFlow_POS_Cash_Movement")
             if printer:
                 try:
-                    if hasattr(printer, 'open'):
-                        printer.open("VoltFlow_POS_Cash_Movement")
-                    try:
-                        if hasattr(printer, 'charcode'):
-                            printer.charcode('CP852')
-                    except Exception:
-                        pass
+                    if hasattr(printer, 'charcode'):
+                        printer.charcode('CP852')
+                except Exception:
+                    pass
 
                     printer.set(align='center', font='a', width=1, height=1)
                     printer.text(f"{store_config.get('storeName', 'VoltFlow POS')}\n")
@@ -1018,49 +1025,13 @@ class ESCPOSPrinterService:
         logger.info(f"Printing Z-Report #{z_seq} (Shift #{shift_num}) via {self.interface_type}")
 
         try:
-            printer = None
-            try:
-                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                    from escpos.printer import Win32Raw
-                    target_name = self.address
-                    if not target_name or target_name.startswith('/dev/'):
-                        target_name = ""
-                        try:
-                            import win32print
-                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                            if pos_printers:
-                                target_name = pos_printers[0]
-                            elif printers:
-                                target_name = printers[0]
-                        except Exception:
-                            pass
-                    printer = Win32Raw(target_name)
-                elif self.interface_type == "USB":
-                    from escpos.printer import Usb, File
-                    if os.path.exists(self.address):
-                        printer = File(self.address)
-                    else:
-                        printer = Usb(0x04b8, 0x0e15, 0)
-                elif self.interface_type == "NETWORK" and self.address:
-                    from escpos.printer import Network
-                    printer = Network(self.address, port=9100, timeout=3.0)
-                elif self.interface_type == "SERIAL" and self.address:
-                    from escpos.printer import Serial
-                    printer = Serial(self.address, baudrate=9600)
-            except Exception as conn_err:
-                logger.info(f"Physical printer offline for Z-Report ({conn_err}), using simulation fallback.")
-                printer = None
-
+            printer = self._get_printer_device(f"VoltFlow_POS_Z_Report_{z_seq}")
             if printer:
                 try:
-                    if hasattr(printer, 'open'):
-                        printer.open("VoltFlow_POS_Z_Report")
-                    try:
-                        if hasattr(printer, 'charcode'):
-                            printer.charcode('CP852')
-                    except Exception:
-                        pass
+                    if hasattr(printer, 'charcode'):
+                        printer.charcode('CP852')
+                except Exception:
+                    pass
 
                     printer.set(align='center', font='a', width=1, height=1)
                     printer.text(f"{store_config.get('storeName', 'VoltFlow POS')}\n")
@@ -1166,40 +1137,9 @@ class ESCPOSPrinterService:
     def _do_open_cash_drawer(self) -> dict:
         logger.info(f"Opening cash drawer via printer interface {self.interface_type}")
         try:
-            printer = None
-            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                from escpos.printer import Win32Raw
-                target_name = self.address
-                if not target_name or target_name.startswith('/dev/'):
-                    target_name = ""
-                    try:
-                        import win32print
-                        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                        pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                        if pos_printers:
-                            target_name = pos_printers[0]
-                        elif printers:
-                            target_name = printers[0]
-                    except Exception:
-                        pass
-                printer = Win32Raw(target_name)
-            elif self.interface_type == "USB":
-                from escpos.printer import Usb, File
-                if os.path.exists(self.address):
-                    printer = File(self.address)
-                else:
-                    printer = Usb(0x04b8, 0x0e15, 0)
-            elif self.interface_type == "NETWORK" and self.address:
-                from escpos.printer import Network
-                printer = Network(self.address, port=9100, timeout=3.0)
-            elif self.interface_type == "SERIAL" and self.address:
-                from escpos.printer import Serial
-                printer = Serial(self.address, baudrate=9600)
-
+            printer = self._get_printer_device("VoltFlow_POS_Drawer_Kick")
             if printer:
                 try:
-                    if hasattr(printer, 'open'):
-                        printer.open("VoltFlow_POS_Drawer_Kick")
                     # Try kicking pin 2 and pin 5 to cover all cash drawer wiring types
                     try:
                         printer.cashdraw(2)
@@ -1260,47 +1200,7 @@ class ESCPOSPrinterService:
         logger.info(f"Printing {copies} barcode label(s) for '{item_name}' (barcode: {barcode_val}) via {self.interface_type}")
 
         try:
-            printer = None
-            try:
-                if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                    from escpos.printer import Win32Raw
-                    target_name = self.address
-                    if not target_name or target_name.startswith('/dev/'):
-                        target_name = ""
-                        try:
-                            import win32print
-                            printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                            pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                            if pos_printers:
-                                target_name = pos_printers[0]
-                            elif printers:
-                                target_name = printers[0]
-                        except Exception:
-                            pass
-                    printer = Win32Raw(target_name)
-                elif self.interface_type == "USB":
-                    from escpos.printer import Usb, File
-                    if os.path.exists(self.address):
-                        printer = File(self.address)
-                    else:
-                        printer = Usb(0x04b8, 0x0e15, 0)
-                elif self.interface_type == "NETWORK" and self.address:
-                    from escpos.printer import Network
-                    printer = Network(self.address, port=9100, timeout=3.0)
-                elif self.interface_type == "SERIAL" and self.address:
-                    from escpos.printer import Serial
-                    printer = Serial(self.address, baudrate=9600)
-            except Exception as conn_err:
-                logger.info(f"Physical printer offline ({conn_err}), using simulation fallback.")
-                printer = None
-
-            if printer:
-                try:
-                    if hasattr(printer, 'open'):
-                        printer.open("VoltFlow_POS_Label_Print")
-                except Exception as open_err:
-                    logger.warning(f"Failed to open label printer device ({open_err}), falling back to simulation.")
-                    printer = None
+            printer = self._get_printer_device("VoltFlow_POS_Label_Print")
 
             if printer:
                 try:
@@ -1415,47 +1315,7 @@ class ESCPOSPrinterService:
 
         logger.info(f"Printing write-off protocol slip {protocol_num} via {self.interface_type}")
 
-        printer = None
-        try:
-            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                from escpos.printer import Win32Raw
-                target_name = self.address
-                if not target_name or target_name.startswith('/dev/'):
-                    target_name = ""
-                    try:
-                        import win32print
-                        printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-                        pos_printers = [p for p in printers if any(kw in p.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL"])]
-                        if pos_printers:
-                            target_name = pos_printers[0]
-                        elif printers:
-                            target_name = printers[0]
-                    except Exception:
-                        pass
-                printer = Win32Raw(target_name)
-            elif self.interface_type == "USB":
-                from escpos.printer import Usb, File
-                if os.path.exists(self.address):
-                    printer = File(self.address)
-                else:
-                    printer = Usb(0x04b8, 0x0e15, 0)
-            elif self.interface_type == "NETWORK" and self.address:
-                from escpos.printer import Network
-                printer = Network(self.address, port=9100, timeout=3.0)
-            elif self.interface_type == "SERIAL" and self.address:
-                from escpos.printer import Serial
-                printer = Serial(self.address, baudrate=9600)
-        except Exception as conn_err:
-            logger.info(f"Physical printer offline ({conn_err}), using simulation fallback.")
-            printer = None
-
-        if printer:
-            try:
-                if hasattr(printer, 'open'):
-                    printer.open(f"VoltFlow_POS_WriteOff_{protocol_num}")
-            except Exception as open_err:
-                logger.warning(f"Failed to open printer device ({open_err}), falling back to simulation.")
-                printer = None
+        printer = self._get_printer_device(f"VoltFlow_POS_WriteOff_{protocol_num}")
 
         if printer:
             try:
@@ -1609,34 +1469,7 @@ class ESCPOSPrinterService:
 
         logger.info(f"Printing inventory audit protocol slip {protocol_num} via {self.interface_type}")
 
-        printer = None
-        try:
-            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                from escpos.printer import Win32Raw
-                target_name = self.address if not self.address.startswith('/dev/') else ""
-                printer = Win32Raw(target_name)
-            elif self.interface_type == "USB":
-                from escpos.printer import Usb, File
-                if os.path.exists(self.address):
-                    printer = File(self.address)
-                else:
-                    printer = Usb(0x04b8, 0x0e15, 0)
-            elif self.interface_type == "NETWORK" and self.address:
-                from escpos.printer import Network
-                printer = Network(self.address, port=9100, timeout=3.0)
-            elif self.interface_type == "SERIAL" and self.address:
-                from escpos.printer import Serial
-                printer = Serial(self.address, baudrate=9600)
-        except Exception as e:
-            logger.info(f"Printer offline ({e}), simulating inventory protocol.")
-            printer = None
-
-        if printer:
-            try:
-                if hasattr(printer, 'open'):
-                    printer.open(f"VoltFlow_Inventory_{protocol_num}")
-            except Exception:
-                printer = None
+        printer = self._get_printer_device(f"VoltFlow_Inventory_{protocol_num}")
 
         if printer:
             try:
@@ -1736,34 +1569,7 @@ class ESCPOSPrinterService:
 
         logger.info(f"Printing tax report '{report_type}' for year {year} via {self.interface_type}")
 
-        printer = None
-        try:
-            if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                from escpos.printer import Win32Raw
-                target_name = self.address if not self.address.startswith('/dev/') else ""
-                printer = Win32Raw(target_name)
-            elif self.interface_type == "USB":
-                from escpos.printer import Usb, File
-                if os.path.exists(self.address):
-                    printer = File(self.address)
-                else:
-                    printer = Usb(0x04b8, 0x0e15, 0)
-            elif self.interface_type == "NETWORK" and self.address:
-                from escpos.printer import Network
-                printer = Network(self.address, port=9100, timeout=3.0)
-            elif self.interface_type == "SERIAL" and self.address:
-                from escpos.printer import Serial
-                printer = Serial(self.address, baudrate=9600)
-        except Exception as e:
-            logger.info(f"Printer offline ({e}), simulating tax report.")
-            printer = None
-
-        if printer:
-            try:
-                if hasattr(printer, 'open'):
-                    printer.open(f"VoltFlow_TaxReport_{report_type}_{year}")
-            except Exception:
-                printer = None
+        printer = self._get_printer_device(f"VoltFlow_TaxReport_{report_type}_{year}")
 
         if printer:
             try:

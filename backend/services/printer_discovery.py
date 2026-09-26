@@ -22,19 +22,66 @@ def detect_connected_printers():
     if os.name == 'nt':
         try:
             import win32print
+            default_win_printer = ""
+            try:
+                default_win_printer = win32print.GetDefaultPrinter()
+            except Exception:
+                pass
+
+            def _is_offline(pname: str) -> bool:
+                try:
+                    h = win32print.OpenPrinter(pname)
+                    info = win32print.GetPrinter(h, 2)
+                    win32print.ClosePrinter(h)
+                    return bool(info.get('Attributes', 0) & win32print.PRINTER_ATTRIBUTE_WORK_OFFLINE)
+                except Exception:
+                    return False
+
+            pos_keywords = ["EPSON", "RECEIPT", "POS", "THERMAL", "TICKETING", "TM-T", "TSP", "STAR"]
             printers = win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)
-            for idx, p in enumerate(printers):
+            
+            raw_devices = []
+            for p in printers:
                 pname = p[2]
                 port = p[1]
-                is_pos = any(kw in pname.upper() for kw in ["EPSON", "RECEIPT", "POS", "THERMAL", "TICKETING", "TM-T", "TSP", "STAR"])
-                devices.append({
+                is_pos = any(kw in pname.upper() for kw in pos_keywords)
+                offline = _is_offline(pname)
+                is_def = (pname == default_win_printer) if default_win_printer else False
+                status_str = "OFFLINE" if offline else "CONNECTED"
+                raw_devices.append({
                     "id": pname,
                     "name": f"Windows Tiskárna ({pname} • {port})",
                     "interface": "WIN32",
                     "address": pname,
-                    "status": "CONNECTED",
-                    "is_default": is_pos or (idx == 0)
+                    "status": status_str,
+                    "is_default": is_def,
+                    "_is_pos": is_pos,
+                    "_offline": offline
                 })
+
+            # If no printer matched default_win_printer, pick the first online POS printer as default
+            has_default = any(d["is_default"] for d in raw_devices)
+            if not has_default:
+                online_pos = [d for d in raw_devices if d["_is_pos"] and not d["_offline"]]
+                if online_pos:
+                    online_pos[0]["is_default"] = True
+                elif raw_devices:
+                    raw_devices[0]["is_default"] = True
+
+            # Sort: online POS printers first, then online others, then offline
+            def _sort_key(d):
+                return (
+                    0 if (d["_is_pos"] and not d["_offline"]) else
+                    1 if not d["_offline"] else
+                    2 if d["_is_pos"] else 3
+                )
+            raw_devices.sort(key=_sort_key)
+
+            for d in raw_devices:
+                del d["_is_pos"]
+                del d["_offline"]
+                devices.append(d)
+
         except Exception as win_err:
             logger.warning(f"Failed to scan Windows printers via win32print: {win_err}")
 

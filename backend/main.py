@@ -59,6 +59,26 @@ async def lifespan(app: FastAPI):
     else:
         logger.critical("SQLite database PRAGMA quick_check FAILED!")
 
+    # Auto-resolve Windows printer config if set to default Unix path /dev/usb/lp0 or empty
+    if os.name == 'nt':
+        try:
+            from database import SessionLocal
+            from models import StoreConfigModel
+            from services.printer_discovery import detect_connected_printers
+            with SessionLocal() as db:
+                cfg = db.query(StoreConfigModel).first()
+                if cfg and (not cfg.printer_address or cfg.printer_address.startswith("/dev/")):
+                    devs = detect_connected_printers()
+                    connected_devs = [d for d in devs if d.get("status") == "CONNECTED" and d.get("interface") == "WIN32"]
+                    target_dev = next((d for d in connected_devs if d.get("is_default")), None) or (connected_devs[0] if connected_devs else None)
+                    if target_dev:
+                        cfg.printer_interface = "WIN32"
+                        cfg.printer_address = target_dev["address"]
+                        db.commit()
+                        logger.info(f"Auto-configured Windows POS printer in database: {target_dev['address']}")
+        except Exception as e:
+            logger.warning(f"Could not auto-configure Windows printer in database: {e}")
+
     # 2. Periodic WAL Checkpoint daemon (every 15 minutes, checks shutdown event)
     def _wal_checkpoint_loop():
         while not _shutdown_event.is_set():
