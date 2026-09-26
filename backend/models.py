@@ -138,6 +138,8 @@ class StoreConfigModel(Base):
     receipt_top_margin = Column(Integer, default=1)
     receipt_bottom_margin = Column(Integer, default=3)
     receipt_copies = Column(Integer, default=1)
+    receipt_font_size = Column(String, default="compact")
+    receipt_line_columns = Column(Integer, default=42)
     receipt_encoding = Column(String, default="CP852")
     strip_diacritics = Column(Boolean, default=False)
     receipt_separator_style = Column(String, default="dashed")

@@ -33,8 +33,10 @@ export function getSeparatorCss(style, spacing = 'standard') {
 export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }) {
   const isA4 = paperWidth === 'A4';
   const is58mm = !isA4 && (paperWidth === '58' || paperWidth === '48');
+  const fontSizeMode = String(storeConfig?.receiptFontSize || storeConfig?.receipt_font_size || 'compact').toLowerCase();
+  const isCompactFont = fontSizeMode !== 'standard';
   const printWidth = isA4 ? '210mm' : (is58mm ? '48mm' : '72mm');
-  const fontSize = isA4 ? '11px' : (is58mm ? '9px' : '11px');
+  const fontSize = isA4 ? '11px' : (is58mm ? (isCompactFont ? '8.5px' : '9.5px') : (isCompactFont ? '10px' : '11.5px'));
 
   const topMargin = parseInt(storeConfig?.receiptTopMargin ?? 1, 10);
   const bottomMargin = parseInt(storeConfig?.receiptBottomMargin ?? 3, 10);
@@ -345,25 +347,25 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
   const rawTitle = isRefund ? `↩️ STORNO DOKLAD č. ${receiptNum}` : `DAŇOVÝ DOKLAD č. ${receiptNum}`;
   if (titleStyle === 'framed') {
     titleBoxHtml = `
-      <div style="border: 1.5px solid #000; padding: 4px 6px; margin: 6px 0; font-size: ${is58mm ? '10px' : '12.5px'}; font-weight: 900; letter-spacing: 0.5px; text-align: center;">
+      <div style="border: 1.5px solid #000; padding: 4px 6px; margin: 6px 0; font-size: ${is58mm ? (isCompactFont ? '9px' : '10px') : (isCompactFont ? '11px' : '12.5px')}; font-weight: 900; letter-spacing: 0.5px; text-align: center;">
         ${rawTitle}
       </div>
     `;
   } else if (titleStyle === 'banner') {
     titleBoxHtml = `
-      <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; margin: 6px 0; font-size: ${is58mm ? '10.5px' : '13px'}; font-weight: 900; letter-spacing: 0.5px; text-align: center;">
+      <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; margin: 6px 0; font-size: ${is58mm ? (isCompactFont ? '9.5px' : '10.5px') : (isCompactFont ? '11.5px' : '13px')}; font-weight: 900; letter-spacing: 0.5px; text-align: center;">
         ══ ${rawTitle} ══
       </div>
     `;
   } else if (titleStyle === 'classic') {
     titleBoxHtml = `
-      <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; margin: 6px 0; font-size: ${is58mm ? '10px' : '12.5px'}; font-weight: 900; text-align: center;">
+      <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 0; margin: 6px 0; font-size: ${is58mm ? (isCompactFont ? '9px' : '10px') : (isCompactFont ? '11px' : '12.5px')}; font-weight: 900; text-align: center;">
         ${rawTitle}
       </div>
     `;
   } else {
     titleBoxHtml = `
-      <div style="padding: 3px 0; margin: 4px 0; font-size: ${is58mm ? '10px' : '12px'}; font-weight: 900; text-align: center;">
+      <div style="padding: 3px 0; margin: 4px 0; font-size: ${is58mm ? (isCompactFont ? '9px' : '10px') : (isCompactFont ? '10.5px' : '12px')}; font-weight: 900; text-align: center;">
         ${rawTitle}
       </div>
     `;
@@ -376,12 +378,12 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
         <title>Účtenka č. ${receiptNum}</title>
         <style>
           @page { margin: 0; size: auto; }
-          body { font-family: 'Courier New', Courier, monospace; font-size: ${fontSize}; line-height: 1.35; margin: 0; padding: 0; background: #fff; color: #000; font-weight: bold; }
-          .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${topMargin * 4 + 4}mm 2mm ${bottomMargin * 4 + 8}mm 2mm; box-sizing: border-box; text-align: left; }
+          body { font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: ${fontSize}; line-height: ${isCompactFont ? '1.2' : '1.35'}; margin: 0; padding: 0; background: #fff; color: #000; font-weight: 400; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .receipt-box { width: ${printWidth}; max-width: ${printWidth}; margin: 0 auto; padding: ${topMargin * 2}mm 1mm ${bottomMargin * 2 + 2}mm 1mm; box-sizing: border-box; text-align: left; }
           .center { text-align: center; }
           .bold { font-weight: 900; }
           table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; }
-          .total-row { display: flex; justify-content: space-between; font-size: ${is58mm ? '13px' : '16px'}; font-weight: ${boldTotal ? '900' : '700'}; }
+          .total-row { display: flex; justify-content: space-between; font-size: ${is58mm ? (isCompactFont ? '12px' : '13px') : (isCompactFont ? '14px' : '16px')}; font-weight: ${boldTotal ? '900' : '700'}; }
         </style>
       </head>
       <body>
@@ -391,7 +393,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
               <img src="${logoBase64}" alt="Logo" style="max-width: ${is58mm ? '140px' : '180px'}; max-height: 60px; object-fit: contain; filter: grayscale(100%); margin: 0 auto; display: block;" />
             </div>
           ` : ''}
-          <div class="center" style="font-size: ${is58mm ? '13px' : '17px'}; font-weight: ${boldStore ? '900' : '600'}; text-transform: uppercase; letter-spacing: 0.5px;">${storeName}</div>
+          <div class="center" style="font-size: ${is58mm ? (isCompactFont ? '12px' : '13px') : (isCompactFont ? '15px' : '17px')}; font-weight: ${boldStore ? '900' : '700'}; text-transform: uppercase; letter-spacing: 0.5px;">${storeName}</div>
           <div class="center" style="font-size: ${is58mm ? '9px' : '11.5px'}; color: #333;">${street}</div>
           <div class="center" style="font-size: ${is58mm ? '9px' : '11.5px'}; color: #333;">${city}</div>
           <div class="center" style="margin-top:2px; font-size: ${is58mm ? '8.5px' : '11px'}; font-weight: 700;">IČO: ${ico} | DIČ: ${dic} (${vatBadge})</div>

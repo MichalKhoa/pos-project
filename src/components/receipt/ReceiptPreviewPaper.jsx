@@ -117,6 +117,9 @@ export default function ReceiptPreviewPaper({
   const topFeedPadding = Math.max(8, topMargin * 16 + 8);
   const bottomFeedPadding = Math.max(12, bottomMargin * 18 + 14);
 
+  const fontSizeMode = String(storeConfig?.receiptFontSize || storeConfig?.receipt_font_size || 'compact').toLowerCase();
+  const isCompactFont = fontSizeMode !== 'standard';
+
   return (
     <div
       className={`receipt-paper printable-receipt ${is58mm ? 'paper-58mm' : 'paper-80mm'}`}
@@ -124,8 +127,8 @@ export default function ReceiptPreviewPaper({
         width: paperWidth,
         maxWidth: '100%',
         padding: `${topFeedPadding}px ${is58mm ? '12px' : '18px'} ${bottomFeedPadding}px ${is58mm ? '12px' : '18px'}`,
-        fontSize: is58mm ? '12.48px' : '15.04px',
-        lineHeight: is58mm ? '1.28' : '1.38',
+        fontSize: is58mm ? (isCompactFont ? '10px' : '12px') : (isCompactFont ? '11.5px' : '14px'),
+        lineHeight: isCompactFont ? '1.2' : (is58mm ? '1.28' : '1.38'),
         boxSizing: 'border-box',
         transition: 'all 0.2s ease-in-out',
         ...style
@@ -307,7 +310,7 @@ export default function ReceiptPreviewPaper({
             <div
               className="receipt-store-name"
               style={{
-                fontSize: is58mm ? '18.4px' : '22.4px',
+                fontSize: is58mm ? (isCompactFont ? '16px' : '18.4px') : (isCompactFont ? '19.2px' : '22.4px'),
                 fontWeight: boldStore ? '900' : '400',
                 letterSpacing: boldStore ? '0.5px' : 'normal',
                 textShadow: boldStore ? '0.35px 0 0 currentColor' : 'none'

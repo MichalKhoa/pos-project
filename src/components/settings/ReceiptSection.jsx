@@ -129,9 +129,18 @@ export default function ReceiptSection({
     setTestMessage(null);
     soundFx.playKeypadClick();
     try {
-      const res = await printReceiptBackend({
+      // Minimal concise test receipt to avoid wasting thermal paper
+      const minimalTestSale = {
         ...currentSampleSale,
-        items: sampleItems
+        receiptNumber: 'TEST-01',
+        totalAmount: 42.00,
+        taxSummary: {
+          '21': { rate: 21, net: 34.71, tax: 7.29, gross: 42.00 }
+        }
+      };
+      const res = await printReceiptBackend({
+        ...minimalTestSale,
+        items: [{ id: '1', name: 'Zkušební tisk POS', price: 42.00, quantity: 1, vat: 21, barcode: '859400123' }]
       }, config);
 
       soundFx.playSuccessChime();
@@ -173,8 +182,70 @@ export default function ReceiptSection({
             </div>
           </div>
 
-          {/* Separator Style */}
+          {/* Receipt Font Size */}
           <div className="settings-field">
+            <div className="settings-toggle-label-wrap" style={{ marginBottom: '0.4rem' }}>
+              <label className="settings-label" style={{ marginBottom: '0.15rem' }}>
+                {t('settings.receipt_font_size') || 'Velikost písma účtenky'}
+              </label>
+              <span className="settings-toggle-subtitle">
+                {t('settings.receipt_font_size_desc') || 'Kompaktní (doporučeno pro úsporu papíru a čitelné zarovnání) nebo standardní'}
+              </span>
+            </div>
+            <div className="settings-segmented-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.35rem' }}>
+              {[
+                { id: 'compact', label: t('settings.receipt_font_compact') || 'Kompaktní (Font B / Malé)' },
+                { id: 'standard', label: t('settings.receipt_font_standard') || 'Standardní (Font A / Velké)' }
+              ].map(fSize => (
+                <button
+                  key={fSize.id}
+                  type="button"
+                  className={`settings-segmented-btn ${(config.receiptFontSize || 'compact') === fSize.id ? 'active' : ''}`}
+                  onClick={() => handleUpdate({
+                    receiptFontSize: fSize.id,
+                    receiptLineColumns: fSize.id === 'compact' ? 64 : 48
+                  })}
+                  style={{ minHeight: '38px', fontSize: '0.78rem' }}
+                >
+                  {fSize.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Receipt Line Columns / Width */}
+          <div className="settings-field" style={{ marginTop: '0.85rem' }}>
+            <div className="settings-toggle-label-wrap" style={{ marginBottom: '0.4rem' }}>
+              <label className="settings-label" style={{ marginBottom: '0.15rem' }}>
+                {t('settings.receipt_line_columns') || 'Šířka řádku (Počet znaků)'}
+              </label>
+              <span className="settings-toggle-subtitle">
+                {t('settings.receipt_line_columns_desc') || '48 znaků pro Font A nebo 64 znaků pro Font B (přesně pokrývá celou šířku 80mm pásky bez mezer)'}
+              </span>
+            </div>
+            <div className="settings-segmented-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.35rem' }}>
+              {(config.receiptFontSize === 'compact' ? [
+                { id: 64, label: t('settings.receipt_cols_64') || '64 znaků (Kompaktní pro Font B)' },
+                { id: 42, label: t('settings.receipt_cols_42') || '42 znaků (Pro 58mm / Zúžené)' }
+              ] : [
+                { id: 48, label: t('settings.receipt_cols_48') || '48 znaků (Standardní pro Font A)' },
+                { id: 42, label: t('settings.receipt_cols_42') || '42 znaků (Pro 58mm / Zúžené)' }
+              ]).map(cOpt => (
+                <button
+                  key={cOpt.id}
+                  type="button"
+                  className={`settings-segmented-btn ${(parseInt(config.receiptLineColumns ?? (config.receiptFontSize === 'compact' ? 64 : 48), 10)) === cOpt.id ? 'active' : ''}`}
+                  onClick={() => handleUpdate({ receiptLineColumns: cOpt.id })}
+                  style={{ minHeight: '38px', fontSize: '0.78rem' }}
+                >
+                  {cOpt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Separator Style */}
+          <div className="settings-field" style={{ marginTop: '0.85rem' }}>
             <label className="settings-label">
               {t('settings.receipt_separator_style') || 'Styl oddělovací linky'}
             </label>

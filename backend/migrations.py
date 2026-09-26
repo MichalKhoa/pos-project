@@ -31,6 +31,7 @@ MIGRATIONS = [
     ("store_config", "printer_interface", "VARCHAR DEFAULT 'USB'"),
     ("store_config", "printer_address", "VARCHAR DEFAULT '/dev/usb/lp0'"),
     ("store_config", "printer_paper_width", "VARCHAR DEFAULT '80'"),
+    ("store_config", "receipt_font_size", "VARCHAR DEFAULT 'compact'"),
     # Table: sales
     ("sales", "cart_discount_percent", "FLOAT DEFAULT 0"),
     ("sales", "split_details", "VARCHAR DEFAULT ''"),
@@ -93,6 +94,7 @@ MIGRATIONS = [
     ("store_config", "cloud_staging_last_sync", "VARCHAR DEFAULT ''"),
     ("store_config", "cloud_staging_last_status", "VARCHAR DEFAULT ''"),
     ("store_config", "cloud_staging_last_count", "INTEGER DEFAULT 0"),
+    ("store_config", "receipt_line_columns", "INTEGER DEFAULT 42"),
 ]
 
 FLOAT_COLUMN_MIGRATIONS = [

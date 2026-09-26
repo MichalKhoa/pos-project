@@ -105,7 +105,13 @@ if "%TAURI_SIGNING_PRIVATE_KEY%"=="" (
     )
 )
 
-call npm run tauri build -- --bundles nsis
+if defined TAURI_SIGNING_PRIVATE_KEY (
+    echo [INFO] Building Tauri NSIS installer with updater signature...
+    call npm run tauri build -- --bundles nsis
+) else (
+    echo [INFO] Building Tauri NSIS installer without updater signature...
+    call npm run tauri build -- --bundles nsis --config "{\"bundle\":{\"createUpdaterArtifacts\":false}}"
+)
 if !errorlevel! neq 0 (
     echo [ERROR] Tauri build failed!
     pause

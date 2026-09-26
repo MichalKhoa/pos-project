@@ -62,6 +62,8 @@ class StoreConfigSchema(BaseModel):
     receiptTopMargin: Optional[int] = None
     receiptBottomMargin: Optional[int] = None
     receiptCopies: Optional[int] = None
+    receiptFontSize: Optional[str] = None
+    receiptLineColumns: Optional[int] = None
     receiptEncoding: Optional[str] = None
     stripDiacritics: Optional[bool] = None
     receiptSeparatorStyle: Optional[str] = None
@@ -141,6 +143,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "receiptTopMargin": getattr(config, 'receipt_top_margin', 1) if getattr(config, 'receipt_top_margin', None) is not None else 1,
         "receiptBottomMargin": getattr(config, 'receipt_bottom_margin', 3) if getattr(config, 'receipt_bottom_margin', None) is not None else 3,
         "receiptCopies": getattr(config, 'receipt_copies', 1) if getattr(config, 'receipt_copies', None) is not None else 1,
+        "receiptFontSize": getattr(config, 'receipt_font_size', "compact") or "compact",
+        "receiptLineColumns": getattr(config, 'receipt_line_columns', 42) or 42,
         "receiptEncoding": getattr(config, 'receipt_encoding', "CP852") or "CP852",
         "stripDiacritics": getattr(config, 'strip_diacritics', False) if getattr(config, 'strip_diacritics', None) is not None else False,
         "receiptSeparatorStyle": getattr(config, 'receipt_separator_style', "dashed") or "dashed",
@@ -224,6 +228,8 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.receiptTopMargin is not None: config.receipt_top_margin = data.receiptTopMargin
     if data.receiptBottomMargin is not None: config.receipt_bottom_margin = data.receiptBottomMargin
     if data.receiptCopies is not None: config.receipt_copies = data.receiptCopies
+    if data.receiptFontSize is not None: config.receipt_font_size = data.receiptFontSize
+    if data.receiptLineColumns is not None: config.receipt_line_columns = data.receiptLineColumns
     if data.receiptEncoding is not None: config.receipt_encoding = data.receiptEncoding
     if data.stripDiacritics is not None: config.strip_diacritics = data.stripDiacritics
     if data.receiptSeparatorStyle is not None: config.receipt_separator_style = data.receiptSeparatorStyle
