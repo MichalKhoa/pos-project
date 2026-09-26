@@ -85,3 +85,59 @@ def get_dist_dir() -> str:
     if valid:
         return max(valid, key=lambda c: os.path.getmtime(os.path.join(c, "index.html")))
     return os.path.join(BUNDLE_DIR, "dist")
+
+
+def resolve_escpos_capabilities() -> str:
+    """
+    Ensure python-escpos can locate its printer capabilities database
+    across development, portable, and PyInstaller frozen sidecar bundles.
+    Sets ESCPOS_CAPABILITIES_FILE in os.environ so escpos.capabilities loads seamlessly.
+    """
+    existing_cap = os.getenv("ESCPOS_CAPABILITIES_FILE")
+    if existing_cap and os.path.isfile(existing_cap) and os.path.getsize(existing_cap) > 0:
+        return existing_cap
+
+    candidates = [
+        # 1. Bundled inside PyInstaller temp extraction dir (_MEIPASS)
+        os.path.join(BUNDLE_DIR, "escpos", "capabilities.json"),
+        os.path.join(BUNDLE_DIR, "capabilities.json"),
+        # 2. Adjacent to executable / script
+        os.path.join(APP_DIR, "escpos", "capabilities.json"),
+        os.path.join(APP_DIR, "capabilities.json"),
+        os.path.join(ROOT_DIR, "backend", "capabilities.json"),
+        os.path.join(ROOT_DIR, "capabilities.json"),
+        # 3. Persistent AppData data directory
+        os.path.join(DATA_DIR, "capabilities.json"),
+    ]
+
+    try:
+        import escpos
+        candidates.append(os.path.join(os.path.dirname(escpos.__file__), "capabilities.json"))
+    except Exception:
+        pass
+
+    found = None
+    for cand in candidates:
+        if cand and os.path.isfile(cand) and os.path.getsize(cand) > 0:
+            found = cand
+            break
+
+    target_cap = os.path.join(DATA_DIR, "capabilities.json")
+    if found:
+        if not os.path.exists(target_cap) or os.path.getsize(target_cap) == 0:
+            try:
+                import shutil
+                shutil.copy2(found, target_cap)
+            except Exception:
+                pass
+        os.environ["ESCPOS_CAPABILITIES_FILE"] = found
+        return found
+    elif os.path.isfile(target_cap) and os.path.getsize(target_cap) > 0:
+        os.environ["ESCPOS_CAPABILITIES_FILE"] = target_cap
+        return target_cap
+
+    return ""
+
+
+ESCPOS_CAPABILITIES_FILE = resolve_escpos_capabilities()
+

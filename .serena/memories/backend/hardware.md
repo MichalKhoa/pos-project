@@ -5,12 +5,13 @@ Hardware drivers & protocols for thermal receipt printers, ČSOB card terminals,
 ## Thermal Printer Driver (`/backend/services/escpos_service.py` & `/backend/routers/printer.py`)
 - Direct USB POS printer support (`/dev/usb/lp0`, `USB`, `RAW`).
 - Network ESC/POS printer support via TCP socket (`RAW_SOCKET`, port 9100).
-- Windows Spooler driver support (`WIN32RAW` / `win32print`).
+- Windows Spooler driver support (`WIN32RAW` / `win32print`), backed by `Win32SpoolerRawFallback` direct raw spooler driver when python-escpos profile/capabilities fail.
+- ESC/POS Capabilities Resolution: `resolve_escpos_capabilities()` in `backend/paths.py` dynamically locates `capabilities.json` across PyInstaller `_MEIPASS`, executable directory, repo source, or persistent `%APPDATA%\VoltFlow POS\data`, setting `ESCPOS_CAPABILITIES_FILE` before library import. PyInstaller spec bundles `capabilities.json` via `collect_data_files('escpos')` and explicit datas mapping.
 - Dynamic ESC/POS paper width formatting: 80mm (`48` chars per line) vs 58mm (`32` chars per line).
 - Printer discovery isolated in `/backend/services/printer_discovery.py` (`detect_connected_printers` across Windows Win32Print, Linux `/dev/usb/lp*`, `/dev/tty*`, and CUPS).
 - Automatic printer discovery scanner (`GET /api/v1/printer/scan`): Scans local subnets (`192.168.x.x:9100`) and USB ports (`/dev/usb/lp*`, COM ports) in parallel with a 1.5s socket timeout.
 - Cut command: `\x1b\x69` (ESC/POS full cut).
-- Cash drawer kick command: `\x1b\x70\x00\x19\xfa` (Pin 2 / Pin 5 pulse) broadcast on cash checkout.
+- Cash drawer kick command: `\x1b\x70\x00\x19\xfa` (Pin 2 / Pin 5 pulse) broadcast on cash checkout, with direct Win32 spooler raw pulse fallback if ESC/POS device instance is unavailable.
 - 1-Click Daily Shift Summary slip (`POST /api/v1/printer/print-daily-summary`): Prints concise 80mm/58mm closing slip (total revenue, cash in drawer, card total, receipt count, VAT breakdown) and automatically triggers drawer kick pulse for 2-minute cash reconciliation.
 - Receipt Formatting Engine (`format_escpos_receipt` in `escpos_service.py`): Multi-copy printing with customer/merchant watermark, configurable top/bottom line feeds, 6 separator styles (dashed, double, dotted, solid, stars, wavy), bold text toggles (store, items, prices, total, footer), diacritics transliteration fallback (`strip_diacritics`), CP852/CP1250 encoding, and offline SPAYD QR codes via `printer.qr()`.
 

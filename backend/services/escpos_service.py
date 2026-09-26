@@ -164,6 +164,66 @@ def set_escpos_font(printer, font: str = 'b', bold: bool = False, double_height:
             pass
 
 
+class Win32SpoolerRawFallback:
+    """
+    Direct win32print spooler driver fallback when python-escpos profile/capabilities fail.
+    Implements the minimal ESC/POS interface needed by ESCPOSPrinterService:
+    open(), close(), _raw(), text(), charcode(), cut(), cashdraw(), set()
+    """
+    def __init__(self, printer_name: str):
+        self.printer_name = printer_name
+        self.handle = None
+
+    def open(self, job_name: str = "VoltFlow_POS_Job"):
+        import win32print
+        self.handle = win32print.OpenPrinter(self.printer_name)
+        win32print.StartDocPrinter(self.handle, 1, (job_name, None, "RAW"))
+        win32print.StartPagePrinter(self.handle)
+
+    def close(self):
+        if self.handle:
+            import win32print
+            try:
+                win32print.EndPagePrinter(self.handle)
+                win32print.EndDocPrinter(self.handle)
+            finally:
+                win32print.ClosePrinter(self.handle)
+                self.handle = None
+
+    def _raw(self, msg: bytes):
+        if self.handle:
+            import win32print
+            win32print.WritePrinter(self.handle, msg)
+
+    def text(self, txt: str):
+        if not txt:
+            return
+        try:
+            raw = txt.encode('cp852', errors='replace')
+        except Exception:
+            raw = txt.encode('ascii', errors='replace')
+        self._raw(raw)
+
+    def charcode(self, code: str = 'CP852'):
+        pass
+
+    def cut(self, mode: str = 'PART', **kwargs):
+        # GS V 66 0 (Feed and partial cut)
+        self._raw(b'\x1b\x64\x03\x1d\x56\x01')
+
+    def cashdraw(self, pin: int):
+        # ESC p m t1 t2
+        if pin == 2:
+            self._raw(b'\x1b\x70\x00\x19\xfa')
+        else:
+            self._raw(b'\x1b\x70\x01\x19\xfa')
+
+    def set(self, align: str = 'left', font: str = 'a', bold: bool = False, double_height: bool = False, double_width: bool = False, **kwargs):
+        align_code = 0x01 if align == 'center' else (0x02 if align == 'right' else 0x00)
+        mode = (0x01 if str(font).lower() == 'b' else 0x00) | (0x08 if bold else 0x00) | (0x10 if double_height else 0x00) | (0x20 if double_width else 0x00)
+        self._raw(b'\x1ba' + bytes([align_code]) + b'\x1b!' + bytes([mode]))
+
+
 class ESCPOSPrinterService:
     """
     Thermal ESC/POS Hardware Printer Service.
@@ -191,7 +251,11 @@ class ESCPOSPrinterService:
         printer = None
         try:
             if os.name == 'nt' and (self.interface_type in ["WIN32", "USB"] or self.address.startswith('/dev/')):
-                from escpos.printer import Win32Raw
+                try:
+                    from paths import resolve_escpos_capabilities
+                    resolve_escpos_capabilities()
+                except Exception:
+                    pass
                 target_name = self.address
 
                 try:
@@ -256,7 +320,12 @@ class ESCPOSPrinterService:
 
                 if target_name:
                     logger.info(f"Connecting to Win32Raw printer: '{target_name}'")
-                    printer = Win32Raw(target_name)
+                    try:
+                        from escpos.printer import Win32Raw
+                        printer = Win32Raw(target_name)
+                    except Exception as raw_init_err:
+                        logger.warning(f"Win32Raw init failed ({raw_init_err}), falling back to direct Win32 spooler raw driver.")
+                        printer = Win32SpoolerRawFallback(target_name)
                 else:
                     return None
 
@@ -1279,6 +1348,39 @@ class ESCPOSPrinterService:
                             printer.close()
                     except Exception:
                         pass
+
+            # Direct Windows spooler pulse fallback if escpos device was unavailable
+            if os.name == 'nt':
+                try:
+                    import win32print
+                    target_name = self.address
+                    if not target_name or target_name.startswith('/dev/'):
+                        try:
+                            target_name = win32print.GetDefaultPrinter()
+                        except Exception:
+                            target_name = ""
+                    if not target_name:
+                        try:
+                            installed = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
+                            pos_prn = [p for p in installed if any(k in p.upper() for k in ["EPSON", "RECEIPT", "POS", "THERMAL", "TM-T", "STAR"])]
+                            if pos_prn:
+                                target_name = pos_prn[0]
+                        except Exception:
+                            pass
+                    if target_name:
+                        logger.info(f"Opening cash drawer via direct win32print raw pulse to '{target_name}'")
+                        h = win32print.OpenPrinter(target_name)
+                        try:
+                            win32print.StartDocPrinter(h, 1, ("VoltFlow_POS_Drawer_Kick", None, "RAW"))
+                            win32print.StartPagePrinter(h)
+                            win32print.WritePrinter(h, b'\x1b\x70\x00\x19\xfa\x1b\x70\x01\x19\xfa')
+                            win32print.EndPagePrinter(h)
+                            win32print.EndDocPrinter(h)
+                            return {"success": True, "physical": True, "status": "OPENED"}
+                        finally:
+                            win32print.ClosePrinter(h)
+                except Exception as direct_kick_err:
+                    logger.warning(f"Direct win32print drawer kick failed: {direct_kick_err}")
 
             print("--- CASH DRAWER OPEN SIGNAL SIMULATED ---")
             return {"success": True, "physical": False, "status": "SIMULATED"}

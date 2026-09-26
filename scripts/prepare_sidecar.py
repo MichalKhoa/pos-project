@@ -65,9 +65,27 @@ def main():
     onefile_bin = BACKEND_DIR / "dist_standalone" / f"pos-backend-standalone{bin_ext}"
     dest_binary = BINARIES_DIR / f"pos-backend-{target_triple}{bin_ext}"
 
-    # Build backend if missing
-    if not onefile_bin.is_file():
-        print(f"Standalone onefile binary not found at {onefile_bin}. Invoking backend build script using {py_exec}...")
+    force_build = "--force" in sys.argv or os.environ.get("FORCE_BUILD") in ("1", "true", "True")
+    should_rebuild = force_build or not onefile_bin.is_file()
+
+    if not should_rebuild and onefile_bin.is_file():
+        bin_mtime = onefile_bin.stat().st_mtime
+        spec_file = BACKEND_DIR / "pos_backend.spec"
+        if spec_file.is_file() and spec_file.stat().st_mtime > bin_mtime:
+            should_rebuild = True
+            print("Detected changes in pos_backend.spec. Triggering rebuild...")
+        else:
+            for py_file in BACKEND_DIR.glob("**/*.py"):
+                if "venv" in py_file.parts or "build" in py_file.parts:
+                    continue
+                if py_file.stat().st_mtime > bin_mtime:
+                    should_rebuild = True
+                    print(f"Detected changes in {py_file.name}. Triggering rebuild...")
+                    break
+
+    # Build backend if missing or outdated
+    if should_rebuild:
+        print(f"Building standalone backend binary with PyInstaller using {py_exec}...")
         build_script = BACKEND_DIR / "build_standalone.py"
         if not build_script.exists():
             print(f"Error: {build_script} not found!", file=sys.stderr)

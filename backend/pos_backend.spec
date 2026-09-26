@@ -12,6 +12,24 @@ datas = []
 if os.path.exists(dist_dir) and os.path.isfile(os.path.join(dist_dir, 'index.html')):
     datas.append((dist_dir, 'dist'))
 
+# Collect required library data files
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
+try:
+    datas += collect_data_files('escpos')
+except Exception:
+    pass
+
+try:
+    datas += collect_data_files('certifi')
+except Exception:
+    pass
+
+backend_cap = os.path.join(backend_dir, 'capabilities.json')
+if os.path.exists(backend_cap):
+    datas.append((backend_cap, 'escpos'))
+    datas.append((backend_cap, '.'))
+
 hiddenimports = [
     'uvicorn',
     'uvicorn.logging',
@@ -33,6 +51,14 @@ hiddenimports = [
     'cryptography.fernet',
     'escpos',
     'escpos.printer',
+    'escpos.printer.win32raw',
+    'escpos.printer.usb',
+    'escpos.printer.network',
+    'escpos.printer.serial',
+    'escpos.printer.file',
+    'escpos.capabilities',
+    'escpos.magicencode',
+    'escpos.codepages',
     'serial',
     'serial.tools.list_ports',
     'qrcode',
@@ -42,10 +68,17 @@ hiddenimports = [
     'starlette',
     'starlette.middleware.cors',
     'email_validator',
+    'yaml',
+    'importlib_resources',
 ]
 
+try:
+    hiddenimports += collect_submodules('escpos')
+except Exception:
+    pass
+
 if sys.platform == 'win32':
-    hiddenimports.extend(['win32print', 'win32com.client'])
+    hiddenimports.extend(['win32print', 'win32com.client', 'pywintypes'])
 
 a = Analysis(
     ['main.py'],
