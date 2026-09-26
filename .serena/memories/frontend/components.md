@@ -3,7 +3,7 @@
 Directory: `/src/components`
 
 ## Views (Top-Level Code-Split Tabs)
-- `App.jsx`: Main register shell coordinator. Supports 2-column (`layout-two-column`: wide presets + cart) and 3-column (`layout-three-column`: keypad + presets + cart) modes configurable via `storeConfig.registerLayout`. Uses `useMemo` for cart subtotal. Subcomponents & hooks:
+- `App.jsx`: Main register shell coordinator. Supports 2-column (`layout-two-column`: wide presets + cart) and 3-column (`layout-three-column`: keypad + presets + cart) modes configurable via `storeConfig.registerLayout`. Optimized for 1600x900 screen resolutions via dedicated `@media (max-width: 1600px) and (max-height: 920px), (max-height: 900px)` rules (navbar height 40px, root font-size 14.5px, compact keypad 48px buttons, cart footer, and widescreen payment modals with touch targets >= 40-44px). Uses `useMemo` for cart subtotal. Subcomponents & hooks:
   - `src/components/app/AppModals.jsx`: Centralized modal and portal coordinator.
   - `src/hooks/usePosKeyboardShortcuts.js`: Hardware numpad & shortcut keybindings.
   - `src/hooks/usePosCatalog.js`: Category & preset state and CRUD handlers.

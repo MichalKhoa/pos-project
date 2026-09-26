@@ -293,6 +293,26 @@ html[data-font-size='xl'] {
   font-size: 20px;
 }
 
+/* Responsive Root Scaling for 1600x900 and Compact Desktop Displays */
+@media (max-width: 1600px) and (max-height: 920px), (max-height: 900px) {
+  html,
+  html[data-font-size='md'] {
+    font-size: 14.5px;
+  }
+
+  html[data-font-size='sm'] {
+    font-size: 13px;
+  }
+
+  html[data-font-size='lg'] {
+    font-size: 16px;
+  }
+
+  html[data-font-size='xl'] {
+    font-size: 17.5px;
+  }
+}
+
 /* Exempt receipt preview and printing from root font-size scaling to prevent character clumping */
 .receipt-paper,
 .printable-receipt,

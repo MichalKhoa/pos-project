@@ -22,7 +22,9 @@ export default function QrPaymentPanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
-      <div style={{
+      <div
+        className="payment-qr-panel-box"
+        style={{
         padding: '1.25rem 1.5rem',
         background: 'var(--bg-main)',
         borderRadius: 'var(--radius-lg)',

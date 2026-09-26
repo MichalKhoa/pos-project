@@ -15,6 +15,7 @@ vi.mock('../api/posApi', async (importOriginal) => {
   return {
     ...actual,
     verifyPinBackend: vi.fn().mockResolvedValue({ valid: true }),
+    verifyAdminPinBackend: vi.fn().mockResolvedValue({ valid: true }),
     printReceiptBackend: vi.fn().mockResolvedValue({ status: 'PRINTED' })
   };
 });

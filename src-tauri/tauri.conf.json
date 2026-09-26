@@ -14,10 +14,10 @@
       {
         "title": "VoltFlow POS",
         "label": "main",
-        "width": 1280,
-        "height": 800,
+        "width": 1600,
+        "height": 900,
         "minWidth": 1024,
-        "minHeight": 768,
+        "minHeight": 680,
         "resizable": true,
         "fullscreen": false
       }

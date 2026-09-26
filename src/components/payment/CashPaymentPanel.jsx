@@ -222,6 +222,7 @@ export default function CashPaymentPanel({
 
         {/* 🌟 GIANT HERO CHANGE DUE DISPLAY BANNER */}
         <div
+          className="payment-change-hero-banner"
           style={{
             background: (tenderedVal > 0 && changeDue < 0)
               ? 'rgba(244, 63, 94, 0.08)'
@@ -258,6 +259,7 @@ export default function CashPaymentPanel({
                   : `${t('payment.change_due') || 'Vrátit zákazníkovi'}:`)}
             </span>
             <span
+              className="payment-change-hero-value"
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '2.5rem',

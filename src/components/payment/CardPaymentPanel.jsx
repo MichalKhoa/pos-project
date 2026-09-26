@@ -14,7 +14,9 @@ export default function CardPaymentPanel({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
-      <div style={{
+      <div
+        className="payment-card-panel-box"
+        style={{
         textAlign: 'center',
         padding: '2rem 1.5rem',
         background: 'var(--bg-main)',
