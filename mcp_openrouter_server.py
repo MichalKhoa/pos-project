@@ -23,16 +23,36 @@ for env_candidate in [Path.cwd() / ".env", Path(__file__).resolve().parent / ".e
             pass
 
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
-DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-oss-120b")
+DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-5.6-luna-pro")
 REQUEST_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "180.0"))
 
 mcp = FastMCP("openrouter-bridge", dependencies=["httpx", "pydantic", "mcp"])
 
 
+def _get_default_model() -> str:
+    """Retrieve default OpenRouter model from mcp_config.json or environment."""
+    config_path = Path.home() / ".gemini" / "config" / "mcp_config.json"
+    if config_path.exists():
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                openrouter_cfg = data.get("mcpServers", {}).get("openrouter", {})
+                m = openrouter_cfg.get("env", {}).get("OPENROUTER_MODEL")
+                if m:
+                    return m
+        except Exception:
+            pass
+    return os.getenv("OPENROUTER_MODEL", "openai/gpt-5.6-luna-pro")
+
+
 def _normalize_model_id(model: Optional[str]) -> str:
-    target = (model or DEFAULT_MODEL).strip()
-    if target == "gpt-oss-120b":
+    target = (model or _get_default_model()).strip()
+    if target in ("gpt-oss-120b", "oss-120b"):
         return "openai/gpt-oss-120b"
+    if target in ("luna-pro", "gpt-5.6-luna-pro"):
+        return "openai/gpt-5.6-luna-pro"
+    if target in ("deepseek-flash", "v4.1-flash", "deepseek-v4.1-flash"):
+        return "deepseek/deepseek-v4.1-flash"
     return target
 
 
@@ -76,21 +96,21 @@ async def openrouter_query(
     system_prompt: Optional[str] = None,
     model: Optional[str] = None,
     json_format: bool = False,
-    temperature: float = 0.7,
+    temperature: float = 0.2,
     max_tokens: Optional[int] = 8192,
 ) -> Dict[str, Any]:
-    """Execute a query or code synthesis prompt using OpenRouter (e.g. gpt-oss-120b).
+    """Execute a query or code synthesis prompt using OpenRouter (e.g. openai/gpt-5.6-luna-pro).
 
     Args:
         prompt: The main user prompt, task instruction, or code context to analyze.
         system_prompt: Optional system prompt instructing role, rules, or output constraints.
-        model: OpenRouter model identifier. Defaults to configured OPENROUTER_MODEL (e.g. 'gpt-oss-120b').
+        model: OpenRouter model identifier. Defaults to configured OPENROUTER_MODEL (e.g. 'openai/gpt-5.6-luna-pro').
         json_format: If true, requests JSON mode from the model backend.
-        temperature: Sampling temperature between 0.0 (deterministic) and 1.0 (creative). Default is 0.7.
-        max_tokens: Maximum tokens to generate (up to 131072 for gpt-oss-120b). Default is 8192.
+        temperature: Sampling temperature between 0.0 (deterministic) and 1.0 (creative). Default is 0.2.
+        max_tokens: Maximum tokens to generate. Default is 8192.
 
     Returns:
-        Dictionary with status, model used, generated content, parsed JSON if requested, and token usage metrics.
+        Dictionary with status, model used, generated content, reasoning, parsed JSON if requested, and token usage metrics.
     """
     api_key = _get_api_key()
     if not api_key:
@@ -110,6 +130,10 @@ async def openrouter_query(
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "provider": {
+            "allow_fallbacks": True,
+            "data_collection": "deny",
+        },
     }
     if json_format:
         payload["response_format"] = {"type": "json_object"}
@@ -135,7 +159,12 @@ async def openrouter_query(
 
             choice = choices[0]
             msg = choice.get("message", {})
-            content = msg.get("content", "")
+            reasoning = msg.get("reasoning") or msg.get("reasoning_content") or ""
+            content = msg.get("content") or ""
+
+            # If model returned pure reasoning with empty content (e.g. DeepSeek R1), fallback to reasoning
+            if not content and reasoning:
+                content = reasoning
 
             parsed_json = None
             if json_format and content:
@@ -150,6 +179,7 @@ async def openrouter_query(
                 "status": "success",
                 "model": data.get("model", target_model),
                 "content": content,
+                "reasoning": reasoning,
                 "json_data": parsed_json,
                 "finish_reason": choice.get("finish_reason"),
                 "usage": {
@@ -234,6 +264,10 @@ async def openrouter_chat_with_tools(
         "tools": normalized_tools,
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "provider": {
+            "allow_fallbacks": True,
+            "data_collection": "deny",
+        },
     }
 
     async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
@@ -276,6 +310,11 @@ async def openrouter_chat_with_tools(
                     }
                 )
 
+            reasoning = message.get("reasoning") or message.get("reasoning_content") or ""
+            content = message.get("content") or ""
+            if not content and reasoning:
+                content = reasoning
+
             usage = data.get("usage", {})
 
             return {
@@ -283,7 +322,8 @@ async def openrouter_chat_with_tools(
                 "model": data.get("model", target_model),
                 "has_tool_calls": len(extracted_calls) > 0,
                 "tool_calls": extracted_calls,
-                "content": message.get("content"),
+                "content": content,
+                "reasoning": reasoning,
                 "finish_reason": choice.get("finish_reason"),
                 "usage": {
                     "prompt_tokens": usage.get("prompt_tokens", 0),
@@ -379,10 +419,110 @@ async def openrouter_code_refactor(
     )
     prompt = f"### INSTRUCTION\n{instruction}\n\n### SOURCE CODE ({language})\n```{language}\n{code}\n```"
 
+    target_model = _normalize_model_id(model or "deepseek/deepseek-v4.1-flash")
     return await openrouter_query(
         prompt=prompt,
         system_prompt=system_prompt,
-        model=model or DEFAULT_MODEL,
+        model=target_model,
+        temperature=0.2,
+    )
+
+
+@mcp.tool()
+async def openrouter_accuracy_oracle(
+    code: str,
+    intent: str,
+    invariants: Optional[List[str]] = None,
+    language: Optional[str] = "python",
+    model: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Execute deep cross-model verification and invariant auditing against high-stakes code.
+
+    Acts as an adversarial oracle to complement the primary agent, identifying hidden edge cases,
+    concurrency/deadlock traps, boundary math errors, null safety issues, and broken contracts.
+
+    Args:
+        code: Source code or proposed changes to verify.
+        intent: What the code is supposed to accomplish, feature spec, or expected behavior.
+        invariants: Explicit constraints to uphold (e.g. 'no raw float math', 'SQLite lock safety', 'idempotent').
+        language: Programming language (default: 'python').
+        model: OpenRouter model to use (default: 'openai/gpt-5.6-luna-pro').
+
+    Returns:
+        Structured audit report with verdict (PASS/WARN/FAIL), detected violations, edge cases, and suggested fixes.
+    """
+    invariants_text = "\n".join(f"- {inv}" for inv in (invariants or [])) if invariants else "- Standard production safety, concurrency, and boundary constraints."
+    system_prompt = (
+        f"You are a rigorous, adversarial code auditor and accuracy oracle. Your task is to verify {language} code "
+        "against its intended specification and strict domain invariants. Find subtle bugs, edge-case boundary failures, "
+        "race conditions, unhandled exceptions, or invariant violations that ordinary reviews miss.\n"
+        "Return your audit in valid JSON format with keys:\n"
+        "{\n"
+        '  "verdict": "PASS" | "WARN" | "FAIL",\n'
+        '  "summary": "Concise high-level verdict explanation",\n'
+        '  "violations": ["List of specific invariant or contract violations"],\n'
+        '  "edge_cases": ["List of boundary conditions or failure modes that break this code"],\n'
+        '  "suggested_fixes": ["Concrete surgical corrections"]\n'
+        "}"
+    )
+
+    prompt = (
+        f"### SPECIFICATION / INTENDED BEHAVIOR\n{intent}\n\n"
+        f"### DOMAIN INVARIANTS TO AUDIT\n{invariants_text}\n\n"
+        f"### IMPLEMENTATION CODE ({language})\n```{language}\n{code}\n```"
+    )
+
+    target_model = _normalize_model_id(model or "openai/gpt-5.6-luna-pro")
+    return await openrouter_query(
+        prompt=prompt,
+        system_prompt=system_prompt,
+        model=target_model,
+        json_format=True,
+        temperature=0.0,
+    )
+
+
+@mcp.tool()
+async def openrouter_synthesize_tests(
+    code: str,
+    test_framework: Optional[str] = "pytest",
+    focus: Optional[str] = "boundary_and_negative",
+    language: Optional[str] = "python",
+    model: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Synthesize executable boundary and negative test vectors with zero conversational fluff.
+
+    Args:
+        code: Source code or interfaces to generate tests for.
+        test_framework: Target test runner / framework ('pytest', 'unittest', 'vitest', 'jest').
+        focus: Testing focus ('boundary_and_negative', 'concurrency', 'routine', 'fuzz_vectors').
+        language: Programming language (default: 'python').
+        model: OpenRouter model to use (default: 'openai/gpt-5.6-luna-pro' for boundaries, or 'deepseek/deepseek-v4.1-flash' for routine).
+
+    Returns:
+        Structured result containing runnable test code and identified test vectors.
+    """
+    system_prompt = (
+        f"You are an expert test engineer specializing in {test_framework} ({language}). "
+        f"Your goal is to synthesize rigorous {focus} test suites. "
+        "Target boundary values (min/max, off-by-one, overflow, zero, nan), invalid types, "
+        "unhandled exceptions, and negative scenarios. "
+        "Output ONLY clean, production-ready, runnable test code. Do not output conversational explanations."
+    )
+
+    prompt = f"### TARGET CODE ({language})\n```{language}\n{code}\n```\n\nGenerate comprehensive {test_framework} tests targeting {focus}."
+
+    if model:
+        target_model = _normalize_model_id(model)
+    elif focus and focus.lower() in ("routine", "happy_path", "smoke", "scaffold"):
+        target_model = "deepseek/deepseek-v4.1-flash"
+    else:
+        target_model = "openai/gpt-5.6-luna-pro"
+
+    return await openrouter_query(
+        prompt=prompt,
+        system_prompt=system_prompt,
+        model=target_model,
         temperature=0.2,
     )
 
