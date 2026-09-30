@@ -53,6 +53,8 @@ def _normalize_model_id(model: Optional[str]) -> str:
         return "openai/gpt-5.6-luna-pro"
     if target in ("deepseek-flash", "v4.1-flash", "deepseek-v4.1-flash"):
         return "deepseek/deepseek-v4.1-flash"
+    if target in ("jev", "jev-router", "typesafe/jev"):
+        return "typesafe/jev-router"
     return target
 
 
@@ -527,5 +529,396 @@ async def openrouter_synthesize_tests(
     )
 
 
+async def _call_jev(
+    prompt: str,
+    system_prompt: str,
+    temperature: float = 0.0,
+) -> Dict[str, Any]:
+    """Internal helper to query TypeSafe Jev Router on OpenRouter with JSON output."""
+    return await openrouter_query(
+        prompt=prompt,
+        system_prompt=system_prompt,
+        model="typesafe/jev-router",
+        json_format=True,
+        temperature=temperature,
+    )
+
+
+@mcp.tool()
+async def openrouter_jev_route(
+    task_description: str,
+    available_tiers: Optional[List[str]] = None,
+    context: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Execute System One model routing via TypeSafe Jev Router on OpenRouter.
+
+    Picks the optimal model tier and reasoning effort for an agent/subagent task,
+    balancing speed, cost, and capability.
+
+    Args:
+        task_description: Objective or prompt for the proposed agent/subagent task.
+        available_tiers: Optional allowed tier list (defaults to:
+            ['tier1_mechanical_flash', 'tier2_frontier_reasoning', 'tier3_critical_gatekeeper']).
+        context: Optional extra context, repository scope, or constraints.
+
+    Returns:
+        Structured decision containing recommended_tier, reason, and execution metadata.
+    """
+    tiers = available_tiers or [
+        "tier1_mechanical_flash",
+        "tier2_frontier_reasoning",
+        "tier3_critical_gatekeeper",
+    ]
+    tiers_str = json.dumps(tiers)
+    context_str = f"\nContext: {context}" if context else ""
+
+    prompt = (
+        f"Route the following agent task to the single most optimal tier from {tiers_str}:\n"
+        f"Task: {task_description}{context_str}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        f'  "recommended_tier": one of {tiers_str},\n'
+        '  "reason": "concise explanation"\n'
+        "}"
+    )
+
+    system_prompt = (
+        "You are Jev, a high-speed System One decision and routing engine. "
+        "Select the most cost-effective tier that meets safety and capability requirements. Output valid JSON only."
+    )
+
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_guardrail(
+    command_or_action: str,
+    context: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Execute high-speed System One safety screening on shell commands or destructive actions.
+
+    Acts as an instant gatekeeper before executing shell scripts, git operations, or database mutations.
+
+    Args:
+        command_or_action: Proposed shell command or file/database operation.
+        context: Optional environment context (e.g. 'local dev git branch', 'production DB').
+
+    Returns:
+        Structured evaluation containing allowed (bool), verdict ('ALLOW' | 'WARN' | 'BLOCK'), and reason.
+    """
+    context_str = f"\nContext: {context}" if context else ""
+    prompt = (
+        f"Screen the following command/action for risk:\n"
+        f"Action: {command_or_action}{context_str}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "allowed": boolean,\n'
+        '  "verdict": "ALLOW" | "WARN" | "BLOCK",\n'
+        '  "reason": "concise explanation of risk or lack thereof"\n'
+        "}"
+    )
+
+    system_prompt = (
+        "You are Jev, a low-latency System One guardrail engine. "
+        "Evaluate actions for data loss, secret leakage, destructive mutations, or runaway processes. Output valid JSON only."
+    )
+
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_classify(
+    statement: str,
+    choices: List[str],
+    criteria: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Execute fast typed decision classification via TypeSafe Jev Router.
+
+    Categorizes input into one of several discrete choices with zero conversational filler.
+
+    Args:
+        statement: Text, code snippet, log line, or user input to classify.
+        choices: Explicit list of valid classification labels (e.g. ['BUG', 'FEATURE', 'CHORE']).
+        criteria: Optional decision rule or instructions for classification.
+
+    Returns:
+        Structured result with selected choice, reason, and metadata.
+    """
+    choices_str = json.dumps(choices)
+    criteria_str = f"\nCriteria: {criteria}" if criteria else ""
+    prompt = (
+        f"Classify the following statement into exactly one choice from {choices_str}:\n"
+        f"Statement: {statement}{criteria_str}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        f'  "decision": one of {choices_str},\n'
+        '  "reason": "concise rationale"\n'
+        "}"
+    )
+
+    system_prompt = (
+        "You are Jev, a fast System One classification engine. "
+        "Categorize accurately into the provided choices. Output valid JSON only."
+    )
+
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_compact_context(
+    raw_output: str,
+    focus: str = "errors_and_failures",
+    max_lines: int = 40,
+) -> Dict[str, Any]:
+    """Compress bulky terminal logs, test suites, or diffs into high-signal summaries.
+
+    Uses Jev System One engine to discard passing tests, debug spam, and irrelevant hunks,
+    retaining only root cause failures, tracebacks, and affected symbols.
+
+    Args:
+        raw_output: Verbose output (e.g. pytest log, npm build output, big diff).
+        focus: Filtering focus ('errors_and_failures', 'breaking_changes', 'failing_tests', 'schema_changes').
+        max_lines: Approximate target line limit.
+
+    Returns:
+        Structured result with compacted_text, lines_removed, and detected_summary.
+    """
+    prompt = (
+        f"Filter and compact the following raw terminal/log output targeting focus: '{focus}'.\n"
+        f"Drop all passing tests, noise, and routine progress bars. Keep only failing assertions, "
+        f"stack traces, root errors, or relevant diff lines up to ~{max_lines} lines.\n\n"
+        f"### RAW OUTPUT\n{raw_output[:12000]}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "compacted_text": "extracted essential lines",\n'
+        '  "detected_summary": "one-line diagnosis",\n'
+        '  "has_critical_errors": boolean\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, a high-speed System One log compactor. "
+        "Strip all filler, preserve exact error lines and stack frames. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_filter_relevance(
+    query: str,
+    candidates: List[str],
+) -> Dict[str, Any]:
+    """Filter search matches, file lists, or symbols to keep only relevant items.
+
+    Eliminates search noise before results are injected into the agent context window.
+
+    Args:
+        query: User intent, task objective, or symbol being investigated.
+        candidates: List of file paths, grep match strings, or symbols to filter.
+
+    Returns:
+        Structured result with relevant_items (list of strings) and excluded_count.
+    """
+    candidates_str = json.dumps(candidates[:100])
+    prompt = (
+        f"Filter the candidates list for relevance to query: '{query}'.\n"
+        f"Candidates: {candidates_str}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "relevant_items": ["item1", "item2"],\n'
+        '  "reason": "concise rationale for selection"\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, a low-latency relevance filtering engine. "
+        "Select only strictly relevant candidates. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_triage_request(
+    user_prompt: str,
+) -> Dict[str, Any]:
+    """Fast-triage incoming user request to trigger Grill-Me protocol or direct execution.
+
+    Classifies whether request is ambiguous/architectural (requires interview) or surgical (proceed directly).
+
+    Args:
+        user_prompt: Raw user request or task description.
+
+    Returns:
+        Structured decision with action ('DIRECT_EXECUTE' | 'GRILL_ME'), complexity ('TRIVIAL' | 'MODERATE' | 'ARCHITECTURAL'), and reason.
+    """
+    prompt = (
+        f"Classify the following user prompt for agent planning:\nPrompt: {user_prompt}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "action": "DIRECT_EXECUTE" | "GRILL_ME",\n'
+        '  "complexity": "TRIVIAL" | "MODERATE" | "ARCHITECTURAL",\n'
+        '  "clarification_needed": boolean,\n'
+        '  "key_questions_to_ask": ["question 1", "question 2"] or [],\n'
+        '  "reason": "concise rationale"\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, a fast System One intent triage engine. "
+        "Mark DIRECT_EXECUTE for clear, surgical, or routine tasks. "
+        "Mark GRILL_ME only if requirements are ambiguous, multi-file architectural, or high risk. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_oracle_bypass(
+    diff_or_code: str,
+    domain_invariants: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Determine whether code changes warrant expensive frontier accuracy oracle auditing.
+
+    Bypasses costly frontier models (~$0.20/M) if changes are purely UI, styling, typings, or formatting.
+    Escalates to frontier oracle if code touches SQLite concurrency, financial math, schema migrations, or auth.
+
+    Args:
+        diff_or_code: Source code diff or proposed implementation.
+        domain_invariants: Optional list of critical domain invariants to check against.
+
+    Returns:
+        Structured decision with needs_frontier_audit (bool), critical_surfaces (list), and reason.
+    """
+    inv_str = json.dumps(domain_invariants or ["SQLite locks", "float/money precision", "schema migration", "auth/crypto", "idempotency"])
+    prompt = (
+        f"Evaluate whether this diff touches critical invariants: {inv_str}.\n"
+        f"### CODE / DIFF\n{diff_or_code[:8000]}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "needs_frontier_audit": boolean,\n'
+        '  "critical_surfaces_detected": ["surface1", "surface2"] or [],\n'
+        '  "recommended_model": "deepseek/deepseek-v4.1-flash" | "openai/gpt-5.6-luna-pro",\n'
+        '  "reason": "concise rationale"\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, a System One cost-optimization gatekeeper. "
+        "Enforce cheap models for routine changes and escalate to frontier reasoning only for real invariant hazards. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_detect_loop(
+    recent_attempts: List[str],
+) -> Dict[str, Any]:
+    """Detect runaway error loops, repeated mistakes, or stagnated progress in agent workflows.
+
+    Acts as an instant circuit breaker when an agent cycles on the same compiler or test error.
+
+    Args:
+        recent_attempts: List of recent error outputs, edit summaries, or test failure traces (in chronological order).
+
+    Returns:
+        Structured evaluation with is_stuck (bool), loop_type ('SAME_ERROR' | 'OSCILLATING' | 'PROGRESSING'), and suggested_intervention.
+    """
+    attempts_str = json.dumps(recent_attempts[-4:])
+    prompt = (
+        f"Analyze these recent agent execution attempts for stuck loops:\n{attempts_str}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "is_stuck": boolean,\n'
+        '  "loop_type": "SAME_ERROR" | "OSCILLATING" | "PROGRESSING",\n'
+        '  "suggested_intervention": "CONTINUE" | "RETRY_DIFFERENT_APPROACH" | "HALT_AND_ASK_USER",\n'
+        '  "reason": "concise diagnosis"\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, an agent circuit breaker. "
+        "Identify repetitive failure cycles accurately. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_commit_triage(
+    diff_or_stat: str,
+) -> Dict[str, Any]:
+    """Classify git changes into Conventional Commit type, scope, and concise imperative subject.
+
+    Args:
+        diff_or_stat: git diff, git status, or git diff --stat summary.
+
+    Returns:
+        Structured result with type ('feat'|'fix'|'refactor'|'chore'|'test'|'docs'|'perf'), scope, subject, and is_breaking (bool).
+    """
+    prompt = (
+        f"Triage this git diff into a Conventional Commit message:\n{diff_or_stat[:8000]}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "type": "feat" | "fix" | "refactor" | "chore" | "test" | "docs" | "perf",\n'
+        '  "scope": "optional concise scope (e.g. auth, api, db, ui) or empty string",\n'
+        '  "subject": "imperative summary <= 50 chars, no trailing period",\n'
+        '  "is_breaking": boolean,\n'
+        '  "commit_message": "full one-line commit message formatted as type(scope): subject"\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, a high-speed commit classifier. "
+        "Follow Conventional Commits strictly. Imperative mood. No fluff. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
+@mcp.tool()
+async def openrouter_jev_classify_failure(
+    trace_or_error: str,
+) -> Dict[str, Any]:
+    """Diagnose test or build failure category and prescribe the optimal fix path.
+
+    Differentiates environment issues from syntax errors, assertion bugs, and flakes in 200ms.
+
+    Args:
+        trace_or_error: Exception traceback, pytest failure line, compiler stderr.
+
+    Returns:
+        Structured diagnosis with category ('ENV_MISSING' | 'SYNTAX_BUG' | 'LOGIC_REGRESSION' | 'ASSERTION_MISMATCH' | 'FLAKY'), root_cause_hint, and next_action.
+    """
+    prompt = (
+        f"Diagnose the category of this failure traceback:\n{trace_or_error[:8000]}\n\n"
+        "Return valid JSON with keys:\n"
+        "{\n"
+        '  "category": "ENV_MISSING" | "SYNTAX_BUG" | "LOGIC_REGRESSION" | "ASSERTION_MISMATCH" | "FLAKY",\n'
+        '  "root_cause_hint": "concise explanation of failure source",\n'
+        '  "next_action": "concrete diagnostic or fix step"\n'
+        "}"
+    )
+    system_prompt = (
+        "You are Jev, a fast failure triage engine. "
+        "Diagnose root cause accurately. Output valid JSON only."
+    )
+    return await _call_jev(prompt, system_prompt)
+
+
 if __name__ == "__main__":
-    mcp.run()
+    if "--export-schemas" in sys.argv:
+        import asyncio
+
+        async def _export():
+            tools = await mcp.list_tools()
+            target_dirs = [
+                Path.home() / ".gemini" / "antigravity" / "mcp" / "openrouter",
+                Path.home() / ".gemini" / "antigravity-ide" / "mcp" / "openrouter",
+            ]
+            for td in target_dirs:
+                td.mkdir(parents=True, exist_ok=True)
+                for t in tools:
+                    schema_file = td / f"{t.name}.json"
+                    schema_data = {
+                        "name": t.name,
+                        "description": t.description,
+                        "parameters": t.inputSchema,
+                    }
+                    schema_file.write_text(json.dumps(schema_data, indent=2), encoding="utf-8")
+            print(f"Exported {len(tools)} tool schemas to {len(target_dirs)} directories.")
+
+        asyncio.run(_export())
+    else:
+        mcp.run()
+

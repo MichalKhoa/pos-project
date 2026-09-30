@@ -1,5 +1,14 @@
 {
   "mcpServers": {
+    "serena": {
+      "command": "C:\\Users\\micha\\AppData\\Roaming\\Python\\Python314\\Scripts\\serena.exe",
+      "args": [
+        "start-mcp-server",
+        "--project",
+        "c:\\Users\\micha\\Documents\\GitHub\\pos-project-himmel"
+      ],
+      "trust": true
+    },
     "ollama": {
       "command": "C:\\Python314\\python.exe",
       "args": [
