@@ -6,6 +6,14 @@ from services.eet_soap import EETSoapClient
 
 logger = logging.getLogger("pos-eet-service")
 
+# CA EET REST API (OpenAPI 3.1, JWT Bearer RS256 for automated certificate renewal - updated 30.09.2026)
+CA_EET_URLS = {
+    "test": "https://ca.test.caeet.gov.cz/api",
+    "zkus": "https://ca.zkus.caeet.gov.cz/api",
+    "playground": "https://ca.test.caeet.gov.cz/api",
+    "production": "https://ca.caeet.gov.cz/api",
+}
+
 
 class CzechEETService:
     """

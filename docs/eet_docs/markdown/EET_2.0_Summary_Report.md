@@ -30,7 +30,21 @@ Tento dokument představuje ucelený souhrn všech **7 oficiálních dokumentů*
 ### **B. Automatizovaná Obnova Certifikátu (Z Pokladního Systému)**
 - Pokladní certifikát má platnost **366 dnů**.
 - Pokladní systém realizuje obnovu **2–3 týdny před vypršením platnosti**.
-- Obnova probíhá přes API rozhraní `caeetapi` za použití **JWT tokenu** a digitálního podpisu stávajícím platným pokladním certifikátem.
+- Obnova probíhá přes REST API rozhraní `caeetapi` popsané v [caeetapi_jwt.yml](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/eet_docs/caeetapi_jwt.yml) (aktualizováno 30.09.2026) za použití **JWT tokenu** (RS256) podepsaného stávajícím platným pokladním certifikátem.
+- **Oficiální Server URL (aktualizace 30.09.2026)**:
+  - Testovací prostředí: `https://ca.test.caeet.gov.cz/api`
+  - Zkušební prostředí: `https://ca.zkus.caeet.gov.cz/api`
+  - Produkční prostředí: `https://ca.caeet.gov.cz/api`
+- **Definované Endpointy API**:
+  - `POST /request/renew` – Podání žádosti o následný certifikát (vrací `201` s `reqId`).
+  - `GET /request/{reqId}/status` – Zjištění stavu žádosti (`INPROCESS`, `ISSUED`, `DELIVERING`, `FINISHED`, `REJECTED`). Podporuje polling interval přes hlavičku `Retry-After` a parametr `pollAfterSeconds`.
+  - `POST /request/{reqId}/claim-download` – Stažení nového PKCS#12 (base64) a hesla k certifikátu.
+  - `POST /request/{reqId}/ack-download` – Potvrzení úspěšného stažení (vrací `204`).
+  - `GET /request/not-finished` – Přehled všech neukončených žádostí pro dané EIČ.
+- **Požadavky na JWT Token**:
+  - Header: `alg: RS256`, `typ: JWT`, `x5t#S256: base64url(SHA-256(DER))`
+  - Claims: `iat`, `exp` (platnost tokenu max. 5 minut od vystavení).
+
 
 ---
 

@@ -8,10 +8,16 @@ Czech Republic EET 2.0 fiscal signing and SOAP communication services in `/backe
   - RSA-SHA256 PKP (Podpisový Kód Poplatníka) signature generation.
   - SHA-1 BKP (Bezpečnostní Kód Poplatníka) formatted hex code generation.
 - [eet_soap.py](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/backend/services/eet_soap.py): 
-  - WS-Security 1.0 SOAP envelope builder.
-  - Dispatcher to Finanční správa ČR (Playground: `https://pg.eet.cz/eet/services/EETServiceSOAP/v3`, Production: `https://prod.eet.cz/eet/services/EETServiceSOAP/v3`).
+  - WS-Security 1.0 SOAP envelope builder (v4.1).
+  - Dispatcher to Finanční správa ČR (Playground: `https://pg.trzbyeet.gov.cz/eet/services/EETServiceSOAP/v4`, Production: `https://trzbyeet.gov.cz/eet/services/EETServiceSOAP/v4`).
   - Handles FIK (Fiskální Identifikační Kód) responses and fault handling.
-- [eet_service.py](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/backend/services/eet_service.py): High-level orchestrator; stores transaction status (`EVD_OK`, `OFFLINE_PENDING`, `REJECTED`).
+- [eet_service.py](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/backend/services/eet_service.py): High-level orchestrator; stores transaction status (`EVD_OK`, `OFFLINE_PENDING`, `REJECTED`). Defines `CA_EET_URLS` constants for CA EET automated renewal.
+- [caeetapi_jwt.yml](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/docs/eet_docs/caeetapi_jwt.yml): 
+  - OpenAPI 3.1 spec for CA EET automated certificate renewal via RS256 JWT tokens.
+  - Official Server URLs (updated 30.09.2026):
+    - Test: `https://ca.test.caeet.gov.cz/api`
+    - Zkušební: `https://ca.zkus.caeet.gov.cz/api`
+    - Production: `https://ca.caeet.gov.cz/api`
 - [eet_resend_daemon.py](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/backend/services/eet_resend_daemon.py): 
   - Background daemon thread running every 60 seconds auto-flushing offline pending sales.
   - Generates audit trails in `eet_audit_logs`.
