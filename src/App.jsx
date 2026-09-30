@@ -469,7 +469,7 @@ export default function App() {
 
     // Cold-start readiness polling: probe backend until online to sync sales and config
     let probeAttempts = 0;
-    const maxProbeAttempts = 25; // 25 * 600ms = 15s max polling
+    const maxProbeAttempts = 60; // 60 * 350ms = 21s max polling
     let probeTimer = null;
 
     const probeBackendOnline = () => {
@@ -478,16 +478,21 @@ export default function App() {
           reloadBackendData(true);
         } else if (probeAttempts < maxProbeAttempts) {
           probeAttempts += 1;
-          probeTimer = setTimeout(probeBackendOnline, 600);
+          probeTimer = setTimeout(probeBackendOnline, 350);
         }
       }).catch(() => {
         if (probeAttempts < maxProbeAttempts) {
           probeAttempts += 1;
-          probeTimer = setTimeout(probeBackendOnline, 600);
+          probeTimer = setTimeout(probeBackendOnline, 350);
         }
       });
     };
-    probeTimer = setTimeout(probeBackendOnline, 600);
+    probeTimer = setTimeout(probeBackendOnline, 350);
+
+    const handleBackendOnline = () => {
+      reloadBackendData(true);
+    };
+    window.addEventListener('pos:backend-online', handleBackendOnline);
 
     const handleStorageChange = (e) => {
       if (!e.key || !e.newValue) return;
@@ -517,6 +522,7 @@ export default function App() {
 
     return () => {
       if (probeTimer) clearTimeout(probeTimer);
+      window.removeEventListener('pos:backend-online', handleBackendOnline);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };

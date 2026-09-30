@@ -57,7 +57,8 @@ function Navbar({
   const [soundEnabled, setSoundEnabled] = useState(() => soundFx.isSoundEnabled());
   const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
   const [latency, setLatency] = useState(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
 
   const handleToggleSound = () => {
     const next = !soundEnabled;
@@ -83,25 +84,70 @@ function Navbar({
   }, []);
 
   useEffect(() => {
+    let timer = null;
+    let isMounted = true;
+    let consecutiveFailures = 0;
+
     const checkLatency = async () => {
       const start = performance.now();
       try {
         const host = getApiHost();
         const res = await fetch(`http://${host}:8000/api/v1/status`, { method: 'GET', cache: 'no-store' });
+        if (!isMounted) return;
         if (res.ok) {
           const end = performance.now();
           setLatency(Math.max(1, Math.round(end - start)));
           setIsOnline(true);
+          setIsConnecting(false);
+          consecutiveFailures = 0;
+          window.dispatchEvent(new CustomEvent('pos:backend-online'));
+          timer = setTimeout(checkLatency, 8000);
         } else {
-          setIsOnline(false);
+          handleFailure();
         }
       } catch {
-        setIsOnline(false);
+        if (!isMounted) return;
+        handleFailure();
       }
     };
+
+    const handleFailure = () => {
+      consecutiveFailures++;
+      setIsOnline(false);
+      // Give 15 seconds grace period on cold start before switching from connecting to offline
+      if (consecutiveFailures > 40) {
+        setIsConnecting(false);
+      }
+      // Rapid 350ms probing during cold boot/connecting, backing off to 2000ms after 20s
+      const nextDelay = consecutiveFailures < 60 ? 350 : 2000;
+      timer = setTimeout(checkLatency, nextDelay);
+    };
+
     checkLatency();
-    const interval = setInterval(checkLatency, 8000);
-    return () => clearInterval(interval);
+
+    const handleInstantWakeup = () => {
+      if (timer) clearTimeout(timer);
+      checkLatency();
+    };
+    window.addEventListener('pos:wake-backend-check', handleInstantWakeup);
+
+    let unlistenTauri = null;
+    if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+      import('@tauri-apps/api/event').then(({ listen }) => {
+        listen('backend-ready', () => {
+          handleInstantWakeup();
+        }).then(unlistenFn => {
+          unlistenTauri = unlistenFn;
+        }).catch(() => {});
+      }).catch(() => {});
+    }
+
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('pos:wake-backend-check', handleInstantWakeup);
+      if (unlistenTauri) unlistenTauri();
+    };
   }, []);
 
   const navbarStyle = storeConfig?.navbarStyle || (() => {
@@ -148,11 +194,11 @@ function Navbar({
       <div className="nav-island-left">
         <div
           className="nav-status-indicator"
-          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : 'Offline'}
+          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : (isConnecting ? (t('backend_connecting') || 'Připojování k serveru...') : (t('offline') || 'Offline'))}
         >
-          <span className={`status-pulse-dot ${isOnline ? 'online' : 'offline'}`} />
+          <span className={`status-pulse-dot ${isOnline ? 'online' : (isConnecting ? 'connecting' : 'offline')}`} />
           <span className="status-label">
-            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : 'Offline'}
+            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : (isConnecting ? (t('backend_status_connecting') || 'Připojování...') : (t('offline') || 'Offline'))}
           </span>
         </div>
         {storeConfig?.eetEnabled && pendingCount > 0 && (

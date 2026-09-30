@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_shell::process::CommandChild;
 use tauri_plugin_shell::ShellExt;
 
@@ -71,6 +71,21 @@ fn do_restart_backend(app: &AppHandle, state: &AppState) -> Result<String, Strin
     kill_sidecar(state);
     std::thread::sleep(Duration::from_millis(1000));
     spawn_sidecar(app, state)?;
+
+    let restart_handle = app.clone();
+    std::thread::spawn(move || {
+        let start = Instant::now();
+        let timeout = Duration::from_secs(30);
+        while start.elapsed() < timeout {
+            if is_backend_responsive(8000) {
+                log::info!("Backend restart health check succeeded at {:?}", start.elapsed());
+                let _ = restart_handle.emit("backend-ready", ());
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(200));
+        }
+    });
+
     Ok("Backend restarted successfully".into())
 }
 
@@ -173,16 +188,18 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Background health check thread to monitor backend availability
-            std::thread::spawn(|| {
+            // Background health check thread to monitor backend availability and notify frontend
+            let health_handle = app.handle().clone();
+            std::thread::spawn(move || {
                 let start = Instant::now();
-                let timeout = Duration::from_secs(20);
+                let timeout = Duration::from_secs(30);
                 while start.elapsed() < timeout {
                     if is_backend_responsive(8000) {
                         log::info!("Backend health check succeeded at {:?}", start.elapsed());
+                        let _ = health_handle.emit("backend-ready", ());
                         break;
                     }
-                    std::thread::sleep(Duration::from_millis(500));
+                    std::thread::sleep(Duration::from_millis(200));
                 }
             });
 

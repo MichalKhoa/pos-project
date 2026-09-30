@@ -418,12 +418,19 @@ def run_schema_migrations(engine=None):
         tables_res = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
         existing_tables = {row[0] for row in tables_res}
 
+        table_info_cache = {}
+
+        def _get_table_info(t_name: str):
+            if t_name not in table_info_cache:
+                table_info_cache[t_name] = conn.execute(text(f"PRAGMA table_info('{t_name}')")).fetchall()
+            return table_info_cache[t_name]
+
         # 2. Dynamic reflection against Base.metadata
         for table_name, table in Base.metadata.tables.items():
             if table_name not in existing_tables:
                 continue
 
-            pragma_res = conn.execute(text(f"PRAGMA table_info('{table_name}')")).fetchall()
+            pragma_res = _get_table_info(table_name)
             existing_col_names = {row[1] for row in pragma_res}
 
             for col in table.columns:
@@ -432,22 +439,25 @@ def run_schema_migrations(engine=None):
                     try:
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col.name} {col_def}"))
                         conn.commit()
+                        table_info_cache.pop(table_name, None)
                         added_columns.append(f"{table_name}.{col.name}")
                         logger.info(f"Auto-migrated {table_name}: added missing column {col.name} ({col_def})")
                         existing_col_names.add(col.name)
                     except Exception as e:
                         logger.warning(f"Could not add column {table_name}.{col.name}: {e}")
 
-        # 3. Fallback explicit migrations list
+        # 3. Fallback explicit migrations list (uses cached table info)
         for table, col, col_type in MIGRATIONS:
             if table in existing_tables:
-                pragma_res = conn.execute(text(f"PRAGMA table_info('{table}')")).fetchall()
+                pragma_res = _get_table_info(table)
                 existing_cols = {row[1] for row in pragma_res}
                 if col not in existing_cols:
                     try:
                         conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
                         conn.commit()
+                        table_info_cache.pop(table, None)
                         added_columns.append(f"{table}.{col}")
+                        existing_cols.add(col)
                         logger.info(f"Applied legacy migration {table}.{col} ({col_type})")
                     except Exception:
                         pass
@@ -456,7 +466,7 @@ def run_schema_migrations(engine=None):
         for table, col, default_val in FLOAT_COLUMN_MIGRATIONS:
             if table in existing_tables:
                 try:
-                    pragma_res = conn.execute(text(f"PRAGMA table_info('{table}')")).fetchall()
+                    pragma_res = _get_table_info(table)
                     col_info = next((row for row in pragma_res if row[1] == col), None)
                     if col_info:
                         current_type = (col_info[2] or "").upper()
@@ -467,6 +477,7 @@ def run_schema_migrations(engine=None):
                             conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {col}"))
                             conn.execute(text(f"ALTER TABLE {table} RENAME COLUMN {temp_col} TO {col}"))
                             conn.commit()
+                            table_info_cache.pop(table, None)
                             added_columns.append(f"{table}.{col}->FLOAT")
                             logger.info(f"Auto-migrated {table}.{col}: converted {current_type} to FLOAT")
                 except Exception as e:

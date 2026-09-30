@@ -40,8 +40,7 @@ file_handler.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] [%(na
 logging.basicConfig(level=logging.INFO, handlers=[file_handler, logging.StreamHandler()])
 logger = logging.getLogger("pos-backend")
 
-# Create database tables automatically
-Base.metadata.create_all(bind=engine)
+# Run schema migrations once at startup
 run_schema_migrations(engine)
 
 from contextlib import asynccontextmanager
@@ -52,32 +51,41 @@ _shutdown_event = threading.Event()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Startup SQLite integrity quick check
-    from database import check_db_integrity, run_wal_checkpoint
-    if check_db_integrity():
-        logger.info("SQLite database PRAGMA quick_check: OK")
-    else:
-        logger.critical("SQLite database PRAGMA quick_check FAILED!")
-
-    # Auto-resolve Windows printer config if set to default Unix path /dev/usb/lp0 or empty
-    if os.name == 'nt':
+    # 1. Startup SQLite integrity quick check (non-blocking background worker)
+    def _bg_integrity_check():
+        from database import check_db_integrity
         try:
-            from database import SessionLocal
-            from models import StoreConfigModel
-            from services.printer_discovery import detect_connected_printers
-            with SessionLocal() as db:
-                cfg = db.query(StoreConfigModel).first()
-                if cfg and (not cfg.printer_address or cfg.printer_address.startswith("/dev/")):
-                    devs = detect_connected_printers()
-                    connected_devs = [d for d in devs if d.get("status") == "CONNECTED" and d.get("interface") == "WIN32"]
-                    target_dev = next((d for d in connected_devs if d.get("is_default")), None) or (connected_devs[0] if connected_devs else None)
-                    if target_dev:
-                        cfg.printer_interface = "WIN32"
-                        cfg.printer_address = target_dev["address"]
-                        db.commit()
-                        logger.info(f"Auto-configured Windows POS printer in database: {target_dev['address']}")
+            if check_db_integrity():
+                logger.info("SQLite database PRAGMA quick_check: OK")
+            else:
+                logger.critical("SQLite database PRAGMA quick_check FAILED!")
         except Exception as e:
-            logger.warning(f"Could not auto-configure Windows printer in database: {e}")
+            logger.warning(f"Integrity check background worker error: {e}")
+
+    threading.Thread(target=_bg_integrity_check, daemon=True, name="pos-db-integrity").start()
+
+    # Auto-resolve Windows printer config in background (non-blocking)
+    if os.name == 'nt':
+        def _bg_printer_resolve():
+            try:
+                from database import SessionLocal
+                from models import StoreConfigModel
+                from services.printer_discovery import detect_connected_printers
+                with SessionLocal() as db:
+                    cfg = db.query(StoreConfigModel).first()
+                    if cfg and (not cfg.printer_address or cfg.printer_address.startswith("/dev/")):
+                        devs = detect_connected_printers()
+                        connected_devs = [d for d in devs if d.get("status") == "CONNECTED" and d.get("interface") == "WIN32"]
+                        target_dev = next((d for d in connected_devs if d.get("is_default")), None) or (connected_devs[0] if connected_devs else None)
+                        if target_dev:
+                            cfg.printer_interface = "WIN32"
+                            cfg.printer_address = target_dev["address"]
+                            db.commit()
+                            logger.info(f"Auto-configured Windows POS printer in database: {target_dev['address']}")
+            except Exception as e:
+                logger.warning(f"Could not auto-configure Windows printer in database: {e}")
+
+        threading.Thread(target=_bg_printer_resolve, daemon=True, name="pos-printer-resolve").start()
 
     # 2. Periodic WAL Checkpoint daemon (every 15 minutes, checks shutdown event)
     def _wal_checkpoint_loop():
@@ -120,6 +128,10 @@ async def lifespan(app: FastAPI):
 
     # 4. In-memory cache prewarm daemon
     def _prewarm_cache_worker():
+        # Defer prewarming by 2 seconds to let initial frontend requests (status, config, sales) execute instantly
+        if _shutdown_event.wait(2.0):
+            return
+
         from database import SessionLocal
         from models import CategoryModel, PresetModel
         from routers.sales import get_daily_sales_stats
