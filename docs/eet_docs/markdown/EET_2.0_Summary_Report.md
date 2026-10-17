@@ -87,7 +87,11 @@ Každá datová zpráva odesílaná na EET rozhraní obsahuje následující str
 
 | Název Souboru | Popis |
 | :--- | :--- |
-| `EET_popis_rozhrani_v1.1.pdf` | XML SOAP v4.1 schémata, WSDL definice, datová pole tržby |
+| `EET_popis_rozhrani_v1.2a_EN.pdf` | XML SOAP v4.1 specifikace (EN) – opravena délka `porad_cis` na 1–25 znaků |
+| `EET_popis_rozhrani_v1.2.pdf` | XML SOAP v4.1 schémata, WSDL definice, datová pole tržby (CZ, `string25`) |
+| `ca_eet-root_test.pem` / `ca_eet-sub_test.pem` | Kořenový a mezilehlý certifikát CA EET (testovací prostředí, 2026–2036 / 2026–2030) |
+| `ca_eet-root_zkus.pem` / `ca_eet-sub_zkus.pem` | Kořenový a mezilehlý certifikát CA EET (zkušební neprodukční prostředí) |
+| `ca_eet-root_prod.pem` / `ca_eet-sub_prod.pem` | Kořenový a mezilehlý certifikát CA EET (produkční prostředí) |
 | `CAEET_postupy_zadost_certifikat_v2.pdf` | Postup generování `.p12` v DIS+ a JWT API pro automatickou obnovu |
 | `CAEET_postupy_instalace_certifikatu_v1.pdf` | Návody na import `.p12` do Windows 11, macOS, Android, iOS |
 | `CAEET_napoveda_webove_aplikace_v2.pdf` | Uživatelská příručka portálu Správy certifikátů EET |

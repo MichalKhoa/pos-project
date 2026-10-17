@@ -69,10 +69,13 @@ backend/certs/*.pem
 backend/certs/*.crt
 backend/certs/*.key
 !backend/certs/.gitkeep
+!backend/certs/ca_eet-*
 *.p12
 *.pfx
 *.pem
 *.key
+!docs/eet_docs/ca_eet-*
+!backend/certs/ca_eet-*
 .env
 .env.local
 .env.*.local

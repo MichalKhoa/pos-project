@@ -18,6 +18,10 @@ Czech Republic EET 2.0 fiscal signing and SOAP communication services in `/backe
     - Test: `https://ca.test.caeet.gov.cz/api`
     - Zkušební: `https://ca.zkus.caeet.gov.cz/api`
     - Production: `https://ca.caeet.gov.cz/api`
+- **CA EET Trust Anchors (`backend/certs/` & `docs/eet_docs/`)**:
+  - `ca_eet-root_test.pem` & `ca_eet-sub_test.pem` (Test CA, exp. 2036 / 2030)
+  - `ca_eet-root_zkus.pem` & `ca_eet-sub_zkus.pem` (Zkušební / neprodukční CA, exp. 2036 / 2030)
+  - `ca_eet-root_prod.pem` & `ca_eet-sub_prod.pem` (Produkční CA, exp. 2036 / 2030)
 - [eet_resend_daemon.py](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/backend/services/eet_resend_daemon.py): 
   - Background daemon thread running every 60 seconds auto-flushing offline pending sales.
   - Generates audit trails in `eet_audit_logs`.
