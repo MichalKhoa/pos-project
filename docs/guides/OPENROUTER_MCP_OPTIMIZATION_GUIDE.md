@@ -8,9 +8,9 @@ This guide details the tiered OpenRouter model setup and step-by-step instructio
 
 | Tier | Model ID | Cost (Prompt / Completion per 1M) | Context Limit | Target Workload |
 |---|---|---|---|---|
-| **Tier 1: Mechanical Workhorse** | `deepseek/deepseek-v4.1-flash` | **$0.035 / $0.29** | 1,048,576 | Boilerplate DTOs, i18n dictionaries, mock test fixtures, routine refactoring, happy-path/smoke tests |
+| **Tier 1: Mechanical Workhorse** | `deepseek/deepseek-v4.1-flash` | **$0.045 / $0.50** | 1,048,576 | Boilerplate DTOs, i18n dictionaries, mock test fixtures, routine refactoring, happy-path/smoke tests |
 | **Tier 2: Frontier Reasoning Oracle** | `openai/gpt-5.6-luna-pro` | **$0.20 / $1.20** | 1,050,000 | Negative & boundary test vector synthesis, `openrouter_accuracy_oracle` (invariant & race audits) |
-| **Tier 3: Critical Gatekeeper** | `anthropic/claude-sonnet-4.6` | **$2.00 / $10.00** | 1,000,000 | Final Phase 4 branch diff audit exclusively on cryptographic, schema migration, or legal financial math |
+| **Tier 3: Critical Gatekeeper** | `anthropic/claude-sonnet-5.5` | **$2.00 / $10.00** | 1,000,000 | Final Phase 4 branch diff audit exclusively on cryptographic, schema migration, or legal financial math |
 
 ---
 

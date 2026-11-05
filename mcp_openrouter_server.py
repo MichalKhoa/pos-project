@@ -55,6 +55,10 @@ def _normalize_model_id(model: Optional[str]) -> str:
         return "deepseek/deepseek-v4.1-flash"
     if target in ("jev", "jev-router", "typesafe/jev"):
         return "typesafe/jev-router"
+    if target in ("claude-sonnet-5.5", "sonnet-5.5", "anthropic/claude-sonnet-4.6", "claude-sonnet-4.6"):
+        return "anthropic/claude-sonnet-5.5"
+    if target in ("deepseek-pro", "deepseek-pro-latest", "deepseek/deepseek-r1", "deepseek-r1"):
+        return "~deepseek/deepseek-pro-latest"
     return target
 
 
