@@ -1,6 +1,7 @@
 :root, [data-theme='light'] {
   --bg-main: #f1f5f9;
   --bg-card: #ffffff;
+  --touch-min: 44px;
   --bg-card-hover: #f8fafc;
   --bg-input: #f8fafc;
   --bg-elevated: #ffffff;
@@ -344,11 +345,17 @@ button, .preset-card, .category-chip, .nav-tab, .cart-item-row {
 }
 
 button {
+  min-height: var(--touch-min);
   font-family: inherit;
   cursor: pointer;
   border: none;
   outline: none;
   transition: background-color 0.05s ease, border-color 0.05s ease, color 0.05s ease, opacity 0.05s ease;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+select {
+  min-height: var(--touch-min);
 }
 
 button:active {

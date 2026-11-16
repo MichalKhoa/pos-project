@@ -109,7 +109,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'all' ? 'active' : ''}`}
-              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '30px', minHeight: 'unset', border: 'none' }}
+              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '44px', border: 'none' }}
               onClick={() => setPresetFilter('all')}
             >
               {t('common.all') || 'Vše'}
@@ -117,7 +117,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'pinned' ? 'active' : ''}`}
-              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '30px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '44px', border: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
               onClick={() => setPresetFilter('pinned')}
               title={t('inventory.filter_pinned_desc') || 'Zobrazit pouze položky připnuté na pokladnu'}
             >
@@ -127,7 +127,7 @@ export default function InventoryStockTable({
             <button
               type="button"
               className={`nav-tab ${presetFilter === 'unpinned' ? 'active' : ''}`}
-              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '30px', minHeight: 'unset', border: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              style={{ padding: '0 0.65rem', fontSize: '0.8rem', fontWeight: '700', height: '44px', border: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
               onClick={() => setPresetFilter('unpinned')}
               title={t('inventory.filter_unpinned_desc') || 'Zobrazit pouze skladové položky (bez tlačítka na pokladně)'}
             >

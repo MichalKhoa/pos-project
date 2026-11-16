@@ -79,3 +79,13 @@ Note for later phases: Vitest turns CSS imports into empty strings, so the CSS g
 - `navbar_reachability.test.jsx`: now checks the desktop bar only.
 - Gates: lint clean, build OK. 395 of 402 frontend tests pass; the 2 mobile guards from Phase 1 are now green and the 7 still red are the Phase 3 and 4 tests (touch sizes, default text size, intake and write-off modals). The 213 backend tests were not touched by this phase and were not rerun. `/code-review` at `medium`: no findings.
 - Live check at 1366x768: the register screen renders with the six tabs and the status chips in one row and no hamburger button. Not checked: 1920x1080, other tabs after the CSS removal beyond the register screen.
+
+## 9. Phase 3 result
+
+- `tokens.css`: new `--touch-min: 44px`; buttons, text inputs and selects get `min-height: var(--touch-min)`.
+- `layout.css`: navbar tabs are 48 px (44 px in the slim style). The 1600x900 compact block, which is the one that applies at 1366x768 and was the real source of the 34 px tabs, now keeps tabs at 48 px, tool buttons and the clock chip at 44 px, and the islands tall enough for them; tab padding and the right island gap are tighter so everything still fits. The five navbar and status rules under 12 px now use 12 px.
+- `register.css`, `settings.css`, `InventoryStockTable.jsx`: category chips, segmented buttons and the three Sklad filter pills raised to 44 px.
+- Default text size is Large: `DEFAULT_STORE_CONFIG.fontSize` and the fallbacks are `lg`. Stores that already saved a size keep it. The `App.test.jsx` font cycling test now starts at L.
+- Measured live at 1366x768 after the change: remaining controls under 44 px on the register, Katalog, Sklad, Historie, Analytika and Nastavení tabs went from dozens to none on Historie and Analytika, and to the items fixed above elsewhere; the page no longer scrolls sideways.
+- Gates: 399 of 402 frontend tests pass (the 3 red are the Phase 4 modal tests), lint clean, build OK. `/code-review` at `medium`: one plausible finding, below.
+- Open: the navbar content is still about 5 px wider than its container at 1366x768 (no page scroll; the power button touches the edge). The audit's idea of grouping the secondary tools (theme, font size, sound) into one menu would free about 130 px and is not done. Small inputs inside other modals (for example the keypad label field) were not individually measured. Real finger accuracy still needs the 15-minute test with the cashier.
