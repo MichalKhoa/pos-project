@@ -495,6 +495,7 @@ export default function StockWriteOffModal({
                               onChange={e => handleRowChange(row.id, 'preset_id', e.target.value)}
                               style={{
                                 width: '100%',
+                                minWidth: '220px',
                                 height: '36px',
                                 padding: '0 0.5rem',
                                 background: 'var(--bg-input)',
@@ -638,28 +639,30 @@ export default function StockWriteOffModal({
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.45rem 0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    background: isAllWithinNorm ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    border: `1px solid ${isAllWithinNorm ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-                  }}
-                >
-                  {isAllWithinNorm ? (
-                    <CheckCircle2 size={16} style={{ color: 'var(--accent-emerald)' }} />
-                  ) : (
-                    <ShieldAlert size={16} style={{ color: 'var(--accent-rose)' }} />
-                  )}
-                  <span style={{ fontSize: '0.78rem', fontWeight: '700', color: isAllWithinNorm ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
-                    {isAllWithinNorm
-                      ? 'Režim: Daňově uznatelný (§ 25)'
-                      : 'Režim: Nedaňové manko (nutná korekce DPH)'}
-                  </span>
-                </div>
+                {rowsEvaluated.some(r => r.preset) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      background: isAllWithinNorm ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      border: `1px solid ${isAllWithinNorm ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                    }}
+                  >
+                    {isAllWithinNorm ? (
+                      <CheckCircle2 size={16} style={{ color: 'var(--accent-emerald)' }} />
+                    ) : (
+                      <ShieldAlert size={16} style={{ color: 'var(--accent-rose)' }} />
+                    )}
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: isAllWithinNorm ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                      {isAllWithinNorm
+                        ? 'Režim: Daňově uznatelný (§ 25)'
+                        : 'Režim: Nedaňové manko (nutná korekce DPH)'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Submit & Cancel Buttons */}

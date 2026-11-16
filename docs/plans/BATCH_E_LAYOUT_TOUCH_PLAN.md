@@ -89,3 +89,14 @@ Note for later phases: Vitest turns CSS imports into empty strings, so the CSS g
 - Measured live at 1366x768 after the change: remaining controls under 44 px on the register, Katalog, Sklad, Historie, Analytika and Nastavení tabs went from dozens to none on Historie and Analytika, and to the items fixed above elsewhere; the page no longer scrolls sideways.
 - Gates: 399 of 402 frontend tests pass (the 3 red are the Phase 4 modal tests), lint clean, build OK. `/code-review` at `medium`: one plausible finding, below.
 - Open: the navbar content is still about 5 px wider than its container at 1366x768 (no page scroll; the power button touches the edge). The audit's idea of grouping the secondary tools (theme, font size, sound) into one menu would free about 130 px and is not done. Small inputs inside other modals (for example the keypad label field) were not individually measured. Real finger accuracy still needs the 15-minute test with the cashier.
+
+## 10. Phase 4 result
+
+- `StockIntakeModal.jsx`: the item table container scrolls sideways (`overflowX: auto`) and the table has a 760 px minimum width, so the new-price column and the delete button are reachable. Live: the table is 887 px in an 809 px container and scrolls.
+- `StockWriteOffModal.jsx`: the product select has a 220 px minimum width (was about 50 to 160 px). The "Režim: ..." tax notice shows only once a product is chosen.
+- Gates: 402 of 402 frontend tests pass (all of `touch_layout.test.jsx` is green), lint clean, build OK, 213 backend tests pass. `/code-review` at `medium`: no findings.
+- Live check on the Vite dev server confirmed the three changes above. Not checked: submitting an intake or write-off after the change (the logic is untouched), touch use.
+
+## 11. Batch E status
+
+Done: F-018 (phone and tablet mode removed, zoom allowed), F-020 (44 px minimum, 48 px tabs, 12 px text floor), F-007 (Large default, compact navbar sizes), F-031, F-032. Open: the navbar is still about 5 px wider than its container at 1366x768 (grouping theme, font size and sound into one menu would fix it); small inputs inside other modals were not individually measured; the 15-minute test with the real cashier on the real screen has not been done and should set the final sizes.

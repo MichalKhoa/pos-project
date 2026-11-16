@@ -33,6 +33,7 @@ Status per finding: VERIFIED (reproduced live), CODE (seen in code only, not rep
 | Batch C fixes (branch `fix/batch-c-receipt-text`) | DONE | F-016, F-019, F-011 fixed with tests; see the Batch C plan |
 | Batch D fixes (same branch) | PARTIAL | F-017, F-029, F-030 fixed with tests (Batch D and D2 plans); F-031 and F-032 are layout findings left for Batch E |
 | Batch F fixes (same branch) | PARTIAL | F-010, F-013 (navbar), F-024 (button types, dialog guard), F-025 fixed with tests; F-009 and F-023 only for the dialog screens; see the Batch F plan |
+| Batch E fixes (same branch) | DONE | F-007, F-018, F-020, F-031, F-032 fixed with tests; touch PC only, see the Batch E plan |
 | P7 Owner review | PENDING | Needs the owner, see open questions in the plan |
 
 Not tested: real touch input, real hardware, W4, W6 to W10, W12, W13, W16 to W18, W20 to W22.
