@@ -56,3 +56,16 @@ Each phase commits separately.
 ## 6. Out of scope
 
 Phone and tablet support, the cloud `web/` dashboard, inline style and hex color enforcement, remaining Czech text, security batch.
+
+## 7. Phase 1 result
+
+Added `src/__tests__/touch_layout.test.jsx` with 9 tests. All 9 are red for the intended reasons:
+- No `--touch-min: 44px` token and no touch minimum on `button`.
+- `.nav-tab` is 40 px high, not 48.
+- Five navbar or status rules use text below 12 px (for example `.nav-font-size-badge` at 0.6rem).
+- `App.jsx` still has the mobile mode (`isMobile`, `mobilePosTab`, `mobile-pos-tab`, `mobile-hidden`).
+- The viewport meta still blocks zoom.
+- The default font size is `md`, not `lg`.
+- Intake modal table wrapper has no horizontal scroll; the write-off product select has no `minWidth`; the "Režim" notice shows with no item chosen.
+
+Note for later phases: Vitest turns CSS imports into empty strings, so the CSS guards read the stylesheets from disk with `readFileSync` (a first version using `?raw` passed vacuously and was fixed). The reachability test from Batch D still clicks drawer buttons; Phase 2 narrows it to the desktop bar.
