@@ -9,14 +9,16 @@ const RETRY_INTERVAL_MS = 30000;
  * Automatic resend only touches PENDING sales: on `pos:backend-online`, every 30 s, and on
  * demand. Resending is safe because the server answers ALREADY_EXISTS for a known sale id.
  */
-export function useUnsentSales({ salesHistory, setSalesHistory }) {
+export function useUnsentSales({ salesHistory, setSalesHistory, onSent }) {
   const [isFlushing, setIsFlushing] = useState(false);
   const salesRef = useRef(salesHistory);
   const busyRef = useRef(false);
+  const onSentRef = useRef(onSent);
 
   useEffect(() => {
     salesRef.current = salesHistory;
-  }, [salesHistory]);
+    onSentRef.current = onSent;
+  }, [salesHistory, onSent]);
 
   /**
    * Sends sales one by one, oldest first. Without `ids` it sends all PENDING sales; with `ids`
@@ -47,6 +49,7 @@ export function useUnsentSales({ salesHistory, setSalesHistory }) {
       busyRef.current = false;
       setIsFlushing(false);
     }
+    if (result.sent > 0) onSentRef.current?.();
     return result;
   }, [setSalesHistory]);
 

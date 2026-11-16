@@ -125,6 +125,17 @@ Files: `backend/routers/cash.py` (`_build_shift_dict`), `src/components/keypad/S
 Tests: widget renders backend numbers, ignores local-only sales, shows the unsent line; Z-report warns when unsent > 0.
 Verify: repeat audit repro 4; the three screens agree.
 
+### Phase 4 result (done)
+- 4.1 `_build_shift_dict` now also returns `total_revenue`, `card_sales`, `qr_sales`, `receipts_count`, `refunds_count`, `refunds_total` (and `cash_rounding_total` from Phase 2). These are the numbers the Z-report prints.
+- 4.2 `ShiftStatsWidget` takes `shift` (server data) and no longer sums `salesHistory`. With no server data it shows a dash. `App` refreshes `currentShift` after a sale is stored, after a refund is stored, after a queue flush (`useUnsentSales` has an `onSent` callback), after a manual send, and on every backend reload.
+- 4.3 Separate amber line "Neuloženo: N prodejů (X Kč)" from the unsent list; it never enters the totals.
+- 4.4 `ZReportModal` shows a warning with count and amount when unsent sales exist; the close button stays disabled until the cashier ticks "Rozumím, uzavřít směnu bez nich".
+- 4.5 Czech plural via `Intl.PluralRules` ("1 účtenka / 2 účtenky / 5 účtenek"); keys `shift_stats.receipts_one/few/many/other` exist in CZ, VI and EN (1 280 keys each, no gaps).
+- Tests: widget (12), Z-report warning (2), App refresh (1), backend shift data (1). Frontend 265, backend 201, lint and build clean.
+- Live check: 3.50 Kč cash sale: widget "1 účtenka, Tržba 3,5, Hotovost 4"; with the backend stopped a second sale added "Neuloženo: 1 prodejů (4,00 Kč)" and left the totals alone; after restart the widget showed "2 účtenky, Tržba 7, Hotovost 8", equal to `/cash/current-shift` (revenue 7.0, cash 8.0, rounding 1.0).
+- Not changed: the daily `cash_total` in `sales.py` `stats/daily` (calendar in Historie) still sums exact `total_amount`, so it can differ from the Z-report by the cash rounding. The unused `/sales/stats/shift` endpoint has the same date-based logic; consider deleting it. Historie's list screen reads sales from the server, so it matches once sales are stored.
+- Known limit: if the backend is down the widget keeps the last server numbers it received (no clock-based reset), and the unsent line shows what is missing.
+
 ### Phase 5: Refund guards (F-026)
 Files: `src/App.jsx` (`handleProcessRefund`), `src/components/Cart.jsx` (last-receipt chip), `src/components/RefundModal.jsx`, `src/components/SalesHistoryView.jsx`, tests `receipt_return_scanner.test.jsx`, `price_check_and_last_receipt.test.jsx`.
 5.1 Disable "Rychlé storno" and refund entry points for a sale whose `syncState !== 'SYNCED'`, with the reason shown ("Prodej ještě není uložen na serveru").

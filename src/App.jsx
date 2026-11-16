@@ -131,13 +131,32 @@ export default function App() {
     checkPendingOfflineSales
   } = useOfflineSync({ salesHistory, setSalesHistory });
 
+  const [currentShift, setCurrentShift] = useState(null);
+
+  const fetchShiftData = useCallback(async () => {
+    try {
+      const shift = await getCurrentShift();
+      if (shift) setCurrentShift(shift);
+    } catch (e) {
+      console.warn('Failed to fetch shift data:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchShiftData();
+  }, [fetchShiftData]);
+
   const [showUnsentModal, setShowUnsentModal] = useState(false);
   const {
     unsentSales,
     unsentCount,
     isFlushing: isFlushingUnsent,
     flush: flushUnsent
-  } = useUnsentSales({ salesHistory, setSalesHistory });
+  } = useUnsentSales({ salesHistory, setSalesHistory, onSent: fetchShiftData });
+  const unsentSummary = useMemo(() => ({
+    count: unsentSales.length,
+    amount: unsentSales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0)
+  }), [unsentSales]);
 
   const {
     isAppLocked,
@@ -177,20 +196,6 @@ export default function App() {
   const [isCashMovementModalOpen, setIsCashMovementModalOpen] = useState(false);
   const [isZReportModalOpen, setIsZReportModalOpen] = useState(false);
   const [weightModalPreset, setWeightModalPreset] = useState(null);
-  const [currentShift, setCurrentShift] = useState(null);
-
-  const fetchShiftData = useCallback(async () => {
-    try {
-      const shift = await getCurrentShift();
-      if (shift) setCurrentShift(shift);
-    } catch (e) {
-      console.warn('Failed to fetch shift data:', e);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchShiftData();
-  }, [fetchShiftData]);
 
   const computedTotalAmount = useMemo(() => {
     return cartItems.reduce((sum, item) => {
@@ -386,6 +391,7 @@ export default function App() {
       setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? settled : s));
       setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? settled : prev);
       if (settled.syncState === SYNC.REJECTED) setShowUnsentModal(true);
+      else fetchShiftData();
     });
 
     updateSaleRefundStatusBackend(originalSale.id, newRefundStatus, updatedRefundedAmount);
@@ -423,6 +429,7 @@ export default function App() {
     let lastFocusReload = 0;
 
     const reloadBackendData = (isInitial = false) => {
+      fetchShiftData();
       fetchStoreConfigBackend().then(data => {
         if (data && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
@@ -543,7 +550,7 @@ export default function App() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [fetchShiftData]);
 
   const handleSaveStoreConfig = async (newConfig) => {
     setStoreConfig(newConfig);
@@ -845,6 +852,7 @@ export default function App() {
         setSalesHistory(prev => prev.map(s => s.id === newSale.id ? enrichedSale : s));
         setCurrentReceiptData(prev => prev && prev.id === newSale.id ? enrichedSale : prev);
         finalSaleToPrint = enrichedSale;
+        fetchShiftData();
       } else if (outcome === 'rejected') {
         // Server refused the sale: no receipt for a sale that is not recorded; show the list.
         setSalesHistory(prev => prev.map(s => s.id === newSale.id ? applySendResult(s, backendRes) : s));
@@ -910,6 +918,7 @@ export default function App() {
 
   const handleSendUnsent = useCallback(async (ids) => {
     const r = await flushUnsent({ ids });
+    if (r.sent > 0) fetchShiftData();
     if (r.unreachable) {
       setFlashBanner({ type: 'WARNING', message: t('unsent_sales.banner_still_down') });
     } else if (r.sent > 0) {
@@ -917,7 +926,7 @@ export default function App() {
     } else if (r.rejected > 0) {
       setFlashBanner({ type: 'ERROR', message: t('unsent_sales.banner_rejected') });
     }
-  }, [flushUnsent, t]);
+  }, [flushUnsent, fetchShiftData, t]);
   const handleOpenUnsentModal = useCallback(() => setShowUnsentModal(true), []);
   const handleCloseUnsentModal = useCallback(() => setShowUnsentModal(false), []);
   const handleOpenSyncModal = useCallback(() => setShowSyncModal(true), [setShowSyncModal]);
@@ -989,7 +998,8 @@ export default function App() {
                       isParkedModalOpen={isParkedModalOpen}
                       onParkedModalOpenChange={setIsParkedModalOpen}
                       hasCartItems={cartItems.length > 0}
-                      salesHistory={salesHistory}
+                      shift={currentShift}
+                      unsent={unsentSummary}
                       shiftWidgetPosition={storeConfig?.shiftWidgetPosition || 'keypad'}
                     />
                   </div>
@@ -1028,7 +1038,8 @@ export default function App() {
                   {(storeConfig?.shiftWidgetPosition === 'bottom_presets' || (isTwoColumn && storeConfig?.shiftWidgetPosition !== 'under_cart')) && (
                     <ShiftStatsWidget
                       variant="slim"
-                      salesHistory={salesHistory}
+                      shift={currentShift}
+                      unsent={unsentSummary}
                       onPrintDailySummary={handlePrintDailySummary}
                       onOpenZReport={() => setIsZReportModalOpen(true)}
                     />
@@ -1063,7 +1074,8 @@ export default function App() {
                   {isTwoColumn && storeConfig?.shiftWidgetPosition === 'under_cart' && (
                     <ShiftStatsWidget
                       variant="card"
-                      salesHistory={salesHistory}
+                      shift={currentShift}
+                      unsent={unsentSummary}
                       onPrintDailySummary={handlePrintDailySummary}
                       onOpenZReport={() => setIsZReportModalOpen(true)}
                     />
@@ -1189,6 +1201,7 @@ export default function App() {
         currentReceiptData={currentReceiptData}
         setCurrentReceiptData={setCurrentReceiptData}
         showUnsentModal={showUnsentModal}
+        unsentSummary={unsentSummary}
         unsentSales={unsentSales}
         isFlushingUnsent={isFlushingUnsent}
         onSendUnsent={handleSendUnsent}

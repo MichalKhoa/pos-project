@@ -75,6 +75,19 @@ class TestCashRounding(TempDbTestCase):
         self.assertAlmostEqual(after["cash_rounding_total"] - before["cash_rounding_total"], 0.01, places=2)
         self.assertAlmostEqual(after["expected_cash"] - before["expected_cash"], 35.0, places=2)
 
+    def test_shift_data_carries_the_numbers_the_register_widget_shows(self):
+        before = self.client.get("/api/v1/cash/current-shift").json()
+        for s in (sale("w1", 11.5, 12, rounding=0.5), sale("w2", 100, 100, method="card"), sale("w3", 20, 20, method="qr")):
+            self.assertEqual(self._post(s).status_code, 201)
+        after = self.client.get("/api/v1/cash/current-shift").json()
+        delta = lambda k: round(after[k] - before[k], 2)
+        self.assertEqual(delta("receipts_count"), 3)
+        self.assertEqual(delta("total_revenue"), 131.5)   # exact totals, no rounding
+        self.assertEqual(delta("card_sales"), 100.0)
+        self.assertEqual(delta("qr_sales"), 20.0)
+        self.assertEqual(delta("total_cash_sales"), 12.0)  # drawer: 11.50 + 0.50 rounding
+        self.assertEqual(after["refunds_count"], before["refunds_count"])
+
 
 if __name__ == "__main__":
     unittest.main()

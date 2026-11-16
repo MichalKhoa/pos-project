@@ -141,6 +141,13 @@ def _build_shift_dict(shift: ShiftSessionModel, metrics: dict) -> dict:
         "opening_cash": round(shift.opening_cash or 0.0, 2),
         "total_cash_sales": metrics["total_cash_sales"],
         "cash_rounding_total": metrics["cash_rounding_total"],
+        # Same numbers the Z-report prints, so the register widget never aggregates on its own (F-015)
+        "total_revenue": metrics["total_revenue"],
+        "card_sales": metrics["card_sales"],
+        "qr_sales": metrics["qr_sales"],
+        "receipts_count": metrics["receipts_count"],
+        "refunds_count": metrics["refunds_count"],
+        "refunds_total": metrics["refunds_total"],
         "total_cash_refunds": metrics["total_cash_refunds"],
         "float_in": metrics["float_in"],
         "payouts": metrics["payouts"],

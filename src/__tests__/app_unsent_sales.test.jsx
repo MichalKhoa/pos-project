@@ -29,6 +29,7 @@ vi.mock('../api/posApi', async (importOriginal) => {
     broadcastCustomerDisplay: vi.fn(),
     deleteSaleBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
     purgeAllSalesBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
+    getCurrentShift: vi.fn().mockResolvedValue({ receipts_count: 0, total_revenue: 0, total_cash_sales: 0, card_sales: 0 }),
     createSaleBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS', receipt_number: '2026-000001' }),
     openCashDrawerBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
     printReceiptBackend: vi.fn().mockResolvedValue({ status: 'PRINTED', physical: true }),
@@ -116,5 +117,16 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
     expect(await screen.findByRole('button', { name: /Neuložené prodeje: 1/i })).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0].syncState).toBe('STRANDED');
     expect(posApi.createSaleBackend).not.toHaveBeenCalled();
+  });
+
+  it('the shift widget shows the server numbers and refreshes them after the sale is stored', async () => {
+    const posApi = await import('../api/posApi');
+    posApi.getCurrentShift.mockResolvedValue({ receipts_count: 0, total_revenue: 0, total_cash_sales: 0, card_sales: 0 });
+    renderAppWithProviders();
+    expect(await screen.findByText('0 účtenek')).toBeInTheDocument();
+
+    posApi.getCurrentShift.mockResolvedValue({ receipts_count: 1, total_revenue: 150, total_cash_sales: 150, card_sales: 0 });
+    await payOneCustomItemInCash();
+    expect(await screen.findByText('1 účtenka')).toBeInTheDocument();
   });
 });

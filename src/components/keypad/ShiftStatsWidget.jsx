@@ -1,58 +1,55 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { BarChart3, Banknote, CreditCard, Printer, FileSpreadsheet, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
-import { formatLocalDate } from '../../utils/dateUtils';
-import { roundCZK } from '../../utils/tax.js';
 
 function ShiftStatsWidget({
-  salesHistory = [],
+  shift = null,
+  unsent = null,
   onPrintDailySummary,
   onOpenZReport,
   variant = 'card'
 }) {
-  const { t } = useTranslation();
-  const todayStr = useMemo(() => formatLocalDate(new Date()), []);
+  const { t, language } = useTranslation();
 
-  const {
-    todaySalesCount,
-    todayRevenue,
-    todayCash,
-    todayCard
-  } = useMemo(() => {
-    if (!Array.isArray(salesHistory) || salesHistory.length === 0) {
-      return { todaySalesCount: 0, todayRevenue: 0, todayCash: 0, todayCard: 0 };
-    }
+  // One source of truth (audit F-015): the totals come from the server's current shift, the same
+  // numbers the Z-report prints. Nothing is summed from sales held in the browser.
+  const hasShift = Boolean(shift) && typeof shift === 'object';
+  const todaySalesCount = hasShift ? Number(shift.receipts_count) || 0 : null;
+  const todayRevenue = hasShift ? Number(shift.total_revenue) || 0 : null;
+  const todayCash = hasShift ? Number(shift.total_cash_sales) || 0 : null;
+  const todayCard = hasShift ? Number(shift.card_sales) || 0 : null;
 
-    const todaySales = salesHistory.filter(sale => {
-      const saleDate = sale.created_at || sale.timestamp || sale.date;
-      return saleDate && formatLocalDate(saleDate) === todayStr;
-    });
+  const money = (value, options) =>
+    value === null ? '\u2014' : `${value.toLocaleString('cs-CZ', options)} Kč`;
 
-    let revenue = 0;
-    let cash = 0;
-    let card = 0;
+  const receiptsLabel = (() => {
+    if (todaySalesCount === null) return '\u2014';
+    const category = new Intl.PluralRules(language).select(todaySalesCount);
+    const word = t(`shift_stats.receipts_${category}`);
+    const fallback = t('shift_stats.receipts_other');
+    return `${todaySalesCount} ${word.startsWith('shift_stats.') ? fallback : word}`;
+  })();
 
-    for (const s of todaySales) {
-      const total = parseFloat(s.total_amount !== undefined ? s.total_amount : s.total) || 0;
-      revenue = roundCZK(revenue + total);
-
-      if (s.cash_amount !== undefined || s.card_amount !== undefined) {
-        cash = roundCZK(cash + parseFloat(s.cash_amount || 0));
-        card = roundCZK(card + parseFloat(s.card_amount || 0));
-      } else if (s.payment_method === 'cash') {
-        cash = roundCZK(cash + total);
-      } else if (s.payment_method === 'card') {
-        card = roundCZK(card + total);
-      }
-    }
-
-    return {
-      todaySalesCount: todaySales.length,
-      todayRevenue: revenue,
-      todayCash: cash,
-      todayCard: card
-    };
-  }, [salesHistory, todayStr]);
+  // Sales the server does not have yet: shown apart, never added to the totals above
+  const unsentLine = unsent && unsent.count > 0 ? (
+    <div
+      role="status"
+      style={{
+        fontSize: '0.82rem',
+        fontWeight: '800',
+        color: 'var(--accent-amber)',
+        background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--accent-amber) 35%, transparent)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '0.3rem 0.55rem'
+      }}
+    >
+      {t('shift_stats.unsent', {
+        n: unsent.count,
+        amount: unsent.amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      })}
+    </div>
+  ) : null;
 
   // Default collapsed for slim variant under presets to give maximum height to grid,
   // default expanded for card variant docked in side columns.
@@ -125,7 +122,7 @@ function ShiftStatsWidget({
               borderRadius: '999px',
               whiteSpace: 'nowrap'
             }}>
-              {todaySalesCount} {t('shift_stats.receipts') || 'účtenek'}
+              {receiptsLabel}
             </span>
           </div>
 
@@ -141,7 +138,7 @@ function ShiftStatsWidget({
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--accent-emerald)'
               }}>
-                {todayRevenue.toLocaleString('cs-CZ')} Kč
+                {money(todayRevenue)}
               </span>
             </div>
 
@@ -159,7 +156,7 @@ function ShiftStatsWidget({
                 borderRadius: 'var(--radius-sm)'
               }}>
                 <Banknote size={12} />
-                <span>{todayCash.toLocaleString('cs-CZ')} Kč</span>
+                <span>{money(todayCash)}</span>
               </span>
 
               <span style={{
@@ -175,7 +172,7 @@ function ShiftStatsWidget({
                 borderRadius: 'var(--radius-sm)'
               }}>
                 <CreditCard size={12} />
-                <span>{todayCard.toLocaleString('cs-CZ')} Kč</span>
+                <span>{money(todayCard)}</span>
               </span>
             </div>
 
@@ -197,7 +194,9 @@ function ShiftStatsWidget({
           </div>
         </div>
 
-        {/* Expanded Drawer Details */}
+        {unsentLine}
+
+      {/* Expanded Drawer Details */}
         {isExpanded && (
           <div style={{
             marginTop: '0.65rem',
@@ -230,7 +229,7 @@ function ShiftStatsWidget({
                   color: 'var(--accent-emerald)',
                   marginTop: '0.15rem'
                 }}>
-                  {todayRevenue.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč
+                  {money(todayRevenue, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
 
@@ -252,7 +251,7 @@ function ShiftStatsWidget({
                   color: 'var(--text-primary)',
                   marginTop: '0.15rem'
                 }}>
-                  {todayCash.toLocaleString('cs-CZ')} Kč
+                  {money(todayCash)}
                 </div>
               </div>
 
@@ -274,7 +273,7 @@ function ShiftStatsWidget({
                   color: 'var(--text-primary)',
                   marginTop: '0.15rem'
                 }}>
-                  {todayCard.toLocaleString('cs-CZ')} Kč
+                  {money(todayCard)}
                 </div>
               </div>
             </div>
@@ -405,7 +404,7 @@ function ShiftStatsWidget({
               color: 'var(--accent-emerald)',
               marginRight: '2px'
             }}>
-              {todayRevenue.toLocaleString('cs-CZ')} Kč
+              {money(todayRevenue)}
             </span>
           )}
 
@@ -419,7 +418,7 @@ function ShiftStatsWidget({
             borderRadius: '999px',
             whiteSpace: 'nowrap'
           }}>
-            {todaySalesCount} {t('shift_stats.receipts') || 'účtenek'}
+            {receiptsLabel}
           </span>
 
           <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
@@ -427,6 +426,8 @@ function ShiftStatsWidget({
           </span>
         </div>
       </div>
+
+      {unsentLine}
 
       {isExpanded && (
         <>
@@ -454,7 +455,7 @@ function ShiftStatsWidget({
                 color: 'var(--accent-emerald)',
                 marginTop: '2px'
               }}>
-                {todayRevenue.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč
+                {money(todayRevenue, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
 
@@ -476,7 +477,7 @@ function ShiftStatsWidget({
                 color: 'var(--text-primary)',
                 marginTop: '2px'
               }}>
-                {todayCash.toLocaleString('cs-CZ')} Kč
+                {money(todayCash)}
               </div>
             </div>
 
@@ -498,7 +499,7 @@ function ShiftStatsWidget({
                 color: 'var(--text-primary)',
                 marginTop: '2px'
               }}>
-                {todayCard.toLocaleString('cs-CZ')} Kč
+                {money(todayCard)}
               </div>
             </div>
           </div>

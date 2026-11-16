@@ -118,6 +118,7 @@ export default function AppModals({
   onMovementRecorded = null,
 
   // Z-Report Modal
+  unsentSummary = null,
   isZReportModalOpen = false,
   setIsZReportModalOpen = null,
   onShiftClosed = null,
@@ -318,6 +319,7 @@ export default function AppModals({
             if (onShiftClosed) onShiftClosed(res);
           }}
           storeConfig={storeConfig}
+          unsent={unsentSummary}
         />
       )}
 
