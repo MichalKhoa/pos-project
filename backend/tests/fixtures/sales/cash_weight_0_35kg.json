@@ -33,15 +33,13 @@
   },
   "expectedServer": {
     "total_amount": 14.7,
+    "cash_rounding": 0.3,
     "items": [
       {
         "item_id": "fx-d",
         "quantity": 0.35
       }
     ]
-  },
-  "knownBugs": {
-    "backend": "F-001"
   },
   "input": {
     "id": "fixture-cash_weight_0_35kg",

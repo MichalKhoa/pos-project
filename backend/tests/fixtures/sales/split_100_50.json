@@ -36,6 +36,7 @@
   },
   "expectedServer": {
     "total_amount": 150.0,
+    "cash_rounding": 0.0,
     "items": [
       {
         "item_id": "fx-e",

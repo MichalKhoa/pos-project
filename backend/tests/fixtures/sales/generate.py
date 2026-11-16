@@ -50,7 +50,7 @@ def make(name, description, items, method, tendered, change, total_client, cash_
     if refund:
         payload.update({"isRefund": True, "originalReceiptNumber": "2026-000001", "refundReason": "fixture"})
     fx = {"name": name, "description": description,
-          "payload": payload, "expectedServer": {"total_amount": expected_total if expected_total is not None else computed,
+          "payload": payload, "expectedServer": {"total_amount": expected_total if expected_total is not None else computed, "cash_rounding": cash_rounding,
           "items": [{"item_id": i["id"], "quantity": i["quantity"]} for i in items]}}
     if known:
         fx["knownBugs"] = known
@@ -68,16 +68,14 @@ def make(name, description, items, method, tendered, change, total_client, cash_
 
 make("cash_exact_12", "Cash, whole-koruna total, two VAT rates.",
      [item("fx-a", "Volný prodej", 8, 1, 21), item("fx-b", "Pečivo", 4, 1, 12)], "cash", 20, 8, 12)
-make("cash_11_50", "Cash, fractional total: client rounds to 12 and sends cashRounding 0.5 (F-001).",
-     [item("fx-a", "Volný prodej", 8, 1, 21), item("fx-c", "Rohlík tukový", 3.5, 1, 12)], "cash", 20, 8, 12, cash_rounding=0.5,
-     known={"backend": "F-001"}, expected_total=11.5)
+make("cash_11_50", "Cash, fractional total: client rounds to 12 and sends cashRounding 0.5 (F-001, fixed in Batch A Phase 2).",
+     [item("fx-a", "Volný prodej", 8, 1, 21), item("fx-c", "Rohlík tukový", 3.5, 1, 12)], "cash", 20, 8, 12, cash_rounding=0.5, expected_total=11.5)
 make("card_3_50", "Card, fractional total, no rounding.",
      [item("fx-c", "Rohlík tukový", 3.5, 1, 12)], "card", 3.5, 0, 3.5)
 make("card_weight_0_35kg", "Card, 0.35 kg of apples at 42 Kč/kg (F-027: client truncates quantity to 0).",
      [item("fx-d", "Jablka Gala", 42, 0.35, 12)], "card", 14.7, 0, 14.7)
 make("cash_weight_0_35kg", "Cash, 0.35 kg of apples: total 14.70 rounds to 15 (F-027 client, F-001 server).",
-     [item("fx-d", "Jablka Gala", 42, 0.35, 12)], "cash", 20, 5, 15, cash_rounding=0.3,
-     known={"backend": "F-001"}, expected_total=14.7)
+     [item("fx-d", "Jablka Gala", 42, 0.35, 12)], "cash", 20, 5, 15, cash_rounding=0.3, expected_total=14.7)
 make("split_100_50", "Split cash 100 + card 50; split totals are not rounded.",
      [item("fx-e", "Dárkový poukaz", 150, 1, 21)], "split", 150, 0, 150, split={"cash": 100, "card": 50})
 make("cart_discount_10_cash", "Cash with 10% cart discount, two VAT rates, whole-koruna result 135.",

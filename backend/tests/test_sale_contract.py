@@ -16,19 +16,14 @@ Any other failure (500, other 4xx, missing sale) still fails the test.
 import glob
 import json
 import os
-import shutil
 import sys
-import tempfile
 import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-
-from database import SessionLocal, Base
-from main import app
+from database import SessionLocal
 from models import SaleModel, SaleItemModel
+from tests.temp_db import TempDbTestCase
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures", "sales")
 
@@ -41,31 +36,12 @@ def _load_fixtures():
     return out
 
 
-class TestSaleContract(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Rebind the shared session factory to a temp DB; routers read SessionLocal per request.
-        cls._tmp = tempfile.mkdtemp(prefix="sale_contract_")
-        cls._orig_engine = SessionLocal.kw["bind"]
-        cls._engine = create_engine(
-            f"sqlite:///{os.path.join(cls._tmp, 'test.db')}",
-            connect_args={"check_same_thread": False},
-        )
-        import models  # noqa: F401  (register tables)
-        Base.metadata.create_all(bind=cls._engine)
-        SessionLocal.configure(bind=cls._engine)
-        cls.client = TestClient(app)
-
-    @classmethod
-    def tearDownClass(cls):
-        SessionLocal.configure(bind=cls._orig_engine)
-        cls._engine.dispose()
-        shutil.rmtree(cls._tmp, ignore_errors=True)
-
+class TestSaleContract(TempDbTestCase):
     def _check_stored_values(self, fx, db):
         sale = db.query(SaleModel).filter(SaleModel.id == fx["payload"]["id"]).first()
         self.assertIsNotNone(sale, f"{fx['name']}: sale not stored")
         self.assertAlmostEqual(float(sale.total_amount), fx["expectedServer"]["total_amount"], places=2)
+        self.assertAlmostEqual(float(sale.cash_rounding or 0), fx["expectedServer"]["cash_rounding"], places=2)
         rows = db.query(SaleItemModel).filter(SaleItemModel.sale_id == sale.id).all()
         stored = {r.item_id: float(r.quantity) for r in rows}
         for exp in fx["expectedServer"]["items"]:

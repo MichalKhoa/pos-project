@@ -1,6 +1,6 @@
 {
   "name": "cash_11_50",
-  "description": "Cash, fractional total: client rounds to 12 and sends cashRounding 0.5 (F-001).",
+  "description": "Cash, fractional total: client rounds to 12 and sends cashRounding 0.5 (F-001, fixed in Batch A Phase 2).",
   "payload": {
     "id": "fixture-cash_11_50",
     "receiptNumber": "2026-000001",
@@ -47,6 +47,7 @@
   },
   "expectedServer": {
     "total_amount": 11.5,
+    "cash_rounding": 0.5,
     "items": [
       {
         "item_id": "fx-a",
@@ -57,9 +58,6 @@
         "quantity": 1
       }
     ]
-  },
-  "knownBugs": {
-    "backend": "F-001"
   },
   "input": {
     "id": "fixture-cash_11_50",

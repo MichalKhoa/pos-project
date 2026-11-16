@@ -106,6 +106,7 @@ class CreateSaleSchema(BaseModel):
     receiptNumber: Optional[str] = ""
     timestamp: Optional[str] = None
     totalAmount: float
+    cashRounding: float = 0.0
     cartDiscountPercent: float = 0.0
     paymentMethod: str
     splitDetails: Optional[dict] = None
@@ -943,19 +944,29 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     _fin_log = _logging.getLogger(__name__)
     computed_total, computed_tax_summary = recalculate_sale_totals(sale)
     client_total = round_currency(sale.totalAmount)
+    cash_rounding = 0.0
     if computed_total != client_total:
-        _fin_log.warning(
-            "FIN-C1 total mismatch sale_id=%s client=%s server=%s",
-            sale.id, client_total, computed_total
-        )
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "code": "TOTAL_MISMATCH",
-                "client_total": client_total,
-                "server_total": computed_total,
-            }
-        )
+        # Cash is rounded to whole koruna at the till (F-001). Accept that, and only that:
+        # a whole-number client total within 0.50 of the exact server total. The difference
+        # is stored as cash_rounding; total_amount stays the exact FIN-C1 value.
+        is_cash = (sale.paymentMethod or "").lower() in ("cash", "hotovost")
+        diff = round_currency(client_total - computed_total)
+        if (is_cash and not sale.isRefund and client_total == float(round(client_total))
+                and abs(diff) <= 0.5):
+            cash_rounding = diff
+        else:
+            _fin_log.warning(
+                "FIN-C1 total mismatch sale_id=%s client=%s server=%s",
+                sale.id, client_total, computed_total
+            )
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "TOTAL_MISMATCH",
+                    "client_total": client_total,
+                    "server_total": computed_total,
+                }
+            )
 
     # F-027: refuse a paid sale that computes to 0 (money tendered, nothing recorded)
     if not sale.isRefund and computed_total == 0 and float(sale.tenderedAmount or 0) > 0:
@@ -984,6 +995,7 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             receipt_number=assigned_receipt_number,
             timestamp=parse_iso_timestamp(sale.timestamp),
             total_amount=computed_total,           # FIN-C1: server-computed, never client
+            cash_rounding=cash_rounding,           # cash only: client whole-koruna total minus exact total
             cart_discount_percent=sale.cartDiscountPercent,
             payment_method=sale.paymentMethod,
             split_details=sale.splitDetails,

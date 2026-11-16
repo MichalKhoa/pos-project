@@ -1199,6 +1199,7 @@ class ESCPOSPrinterService:
 
         opening_cash = float(shift.get("opening_cash", 0.0))
         cash_sales = float(shift.get("total_cash_sales", 0.0))
+        cash_rounding = float(shift.get("cash_rounding_total", 0.0))
         cash_refunds = float(shift.get("total_cash_refunds", 0.0))
         float_in = float(shift.get("float_in", 0.0))
         payouts = float(shift.get("payouts", 0.0))
@@ -1257,6 +1258,8 @@ class ESCPOSPrinterService:
                     printer.set(align='left', bold=False)
                     printer.text(f"Pocatecni hotovost: {opening_cash:,.2f} Kc\n".replace(",", " "))
                     printer.text(f"Trzba hotovost (+): {cash_sales:,.2f} Kc\n".replace(",", " "))
+                    if cash_rounding:
+                        printer.text(f"  z toho zaokrouhl.: {cash_rounding:,.2f} Kc\n".replace(",", " "))
                     printer.text(f"Vratky hotovost (-):{cash_refunds:,.2f} Kc\n".replace(",", " "))
                     printer.text(f"Vklady (+):         {float_in:,.2f} Kc\n".replace(",", " "))
                     printer.text(f"Vybery (-):         {payouts:,.2f} Kc\n".replace(",", " "))

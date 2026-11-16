@@ -322,6 +322,12 @@ export default function ZReportModal({
                     <span>{t('z_report.cash_sales') || 'Tržba v hotovosti (+):'}</span>
                     <span style={{ fontWeight: '700' }}>+{(shiftData?.total_cash_sales || 0).toLocaleString('cs-CZ')} Kč</span>
                   </div>
+                  {Boolean(shiftData?.cash_rounding_total) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                      <span>{t('z_report.cash_rounding') || 'z toho zaokrouhlení:'}</span>
+                      <span>{shiftData.cash_rounding_total.toLocaleString('cs-CZ')} Kč</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--accent-rose)' }}>
                     <span>{t('z_report.cash_refunds') || 'Vratky hotovost (-):'}</span>
                     <span style={{ fontWeight: '700' }}>-{(shiftData?.total_cash_refunds || 0).toLocaleString('cs-CZ')} Kč</span>

@@ -24,6 +24,7 @@ def _calculate_shift_metrics(shift: ShiftSessionModel, db: Session):
     sales = sales_query.all()
 
     total_cash_sales = 0.0
+    cash_rounding_total = 0.0
     total_cash_refunds = 0.0
     total_revenue = 0.0
     card_sales = 0.0
@@ -39,7 +40,11 @@ def _calculate_shift_metrics(shift: ShiftSessionModel, db: Session):
         # Extract cash portion
         cash_part = 0.0
         if pm in ("cash", "hotovost"):
-            cash_part = amt
+            # Drawer holds the whole-koruna amount the customer paid: exact total + rounding
+            rounding = float(s.cash_rounding or 0.0)
+            cash_part = amt + rounding
+            if not s.is_refund:
+                cash_rounding_total += rounding
         elif pm == "split" and s.split_details and isinstance(s.split_details, dict):
             cash_part = float(s.split_details.get("cash", s.split_details.get("hotovost", 0.0)))
 
@@ -77,6 +82,7 @@ def _calculate_shift_metrics(shift: ShiftSessionModel, db: Session):
         "sales": sales,
         "movements": movements,
         "total_cash_sales": round(total_cash_sales, 2),
+        "cash_rounding_total": round(cash_rounding_total, 2),
         "total_cash_refunds": round(total_cash_refunds, 2),
         "float_in": round(float_in, 2),
         "payouts": round(payouts, 2),
@@ -134,6 +140,7 @@ def _build_shift_dict(shift: ShiftSessionModel, metrics: dict) -> dict:
         "closed_at": shift.closed_at.isoformat() if shift.closed_at else None,
         "opening_cash": round(shift.opening_cash or 0.0, 2),
         "total_cash_sales": metrics["total_cash_sales"],
+        "cash_rounding_total": metrics["cash_rounding_total"],
         "total_cash_refunds": metrics["total_cash_refunds"],
         "float_in": metrics["float_in"],
         "payouts": metrics["payouts"],

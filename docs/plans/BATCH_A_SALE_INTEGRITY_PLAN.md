@@ -81,6 +81,16 @@ Files: `backend/routers/sales.py`, `backend/models.py`, `backend/routers/cash.py
 Tests: 11.50 cash accepted with +0.50; 11.49 accepted with -0.49; 12.00 exact; 11.50 with client total 13 rejected (422); card 11.50 with client total 12 rejected; Z-report expected cash includes rounding over 10 mixed sales; old-DB migration adds the column.
 Verify: audit repro 2 (11.50 basket) completes and appears in Historie, Z-report cash is 12.
 
+### Phase 2 result (done, default rounding contract)
+- 2.1 `cashRounding` in `CreateSaleSchema`; `SaleModel.cash_rounding` column (auto-migrated; `test_migrations.py` covers an old `sales` table).
+- 2.2 Cash only: accept a whole-number client total within 0.50 of the exact total, never for refunds, card, QR or split. The server derives `cash_rounding` itself and ignores the client's value. Anything else is still 422 `TOTAL_MISMATCH`.
+- 2.3 `total_amount` stays the exact server total; the difference goes to `cash_rounding`.
+- 2.4 `_calculate_shift_metrics`: cash part = exact + rounding, so expected drawer cash matches the real till. New `cash_rounding_total` in the shift data, a "z toho zaokrouhlení" line in the Z-report modal and the printed Z-report. Revenue totals stay exact.
+- 2.5 EET payload unchanged (still carries the client's rounded total). EET is off by default; the accountant should confirm before EET is enabled.
+- Not changed: the daily summary `cash_total` in `sales.py` (history screen) still sums exact `total_amount`, so it can differ from the Z-report by the rounding. Cover it in Phase 4 (one source for shift totals).
+- The client was not changed: it already sent the rounded total and `cashRounding`.
+- Tests: backend 200, frontend 230, lint clean. Not yet checked live in the browser (audit repro 2).
+
 ### Phase 3: Truthful completion and unsent queue (F-001 part 2, F-014)
 Files: `src/api/posApi.js`, `src/App.jsx`, `src/hooks/useOfflineSync.js`, `src/components/Navbar.jsx` (badge), new `src/components/UnsentSalesModal.jsx`, `src/utils/storage.js` (quota guard), translations (CZ, VI, EN), tests.
 3.1 `createSaleBackend` returns: the JSON on 2xx; `{ status: 'REJECTED', httpStatus, code, detail }` on 4xx (parsing `detail.code` such as `TOTAL_MISMATCH`); `null` on network error or 5xx (retryable). Existing callers and mocks that treat `null` as "failed" keep working.
