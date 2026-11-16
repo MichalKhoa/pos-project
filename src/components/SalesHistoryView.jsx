@@ -204,7 +204,7 @@ export default function SalesHistoryView({
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
+          <button type="button"
             className="checkout-btn"
             style={{
               padding: '0.35rem 0.75rem',
@@ -224,7 +224,7 @@ export default function SalesHistoryView({
             <span>{t('history.export_csv')}</span>
           </button>
 
-          <button
+          <button type="button"
             className="checkout-btn"
             style={{
               padding: '0.35rem 0.75rem',
@@ -245,7 +245,7 @@ export default function SalesHistoryView({
           </button>
 
           {isAdminMode && (
-            <button
+            <button type="button"
               className="clear-cart-btn"
               style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
               onClick={onClearAllTestSales}
@@ -256,7 +256,7 @@ export default function SalesHistoryView({
             </button>
           )}
 
-          <button
+          <button type="button"
             className="nav-tab"
             style={{
               padding: '0.35rem 0.75rem',

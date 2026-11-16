@@ -30,7 +30,7 @@ try {
       <h2 style="color: #e11d48; margin-top: 0;">Chyba spuštění aplikace (Startup Error)</h2>
       <p style="color: #475569; font-size: 0.95rem;">Došlo k chybě při inicializaci pokladního systému:</p>
       <pre style="background: #f1f5f9; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; color: #b91c1c;">${err?.message || err}</pre>
-      <button onclick="localStorage.clear(); location.reload();" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+      <button type="button" onclick="localStorage.clear(); location.reload();" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
         Vymazat mezipaměť a restartovat
       </button>
     </div>

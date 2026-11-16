@@ -520,6 +520,8 @@ export default function PaymentModal({
                 <div style={{ display: 'flex', gap: '0.35rem' }}>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     value={customerIco}
                     maxLength={10}
                     onChange={e => setCustomerIco(e.target.value)}

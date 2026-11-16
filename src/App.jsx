@@ -1117,7 +1117,7 @@ export default function App() {
               {isMobile && (
                 <div className="mobile-pos-tabs">
                   {!isTwoColumn && (
-                    <button
+                    <button type="button"
                       className={`mobile-pos-tab ${mobilePosTab === 'keypad' ? 'active' : ''}`}
                       onClick={() => setMobilePosTab('keypad')}
                     >
@@ -1125,14 +1125,14 @@ export default function App() {
                       Klávesy
                     </button>
                   )}
-                  <button
+                  <button type="button"
                     className={`mobile-pos-tab ${mobilePosTab === 'products' || (isTwoColumn && mobilePosTab === 'keypad') ? 'active' : ''}`}
                     onClick={() => setMobilePosTab('products')}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 8h20"/><path d="M9 3v5"/></svg>
                     Produkty
                   </button>
-                  <button
+                  <button type="button"
                     className={`mobile-pos-tab ${mobilePosTab === 'cart' ? 'active' : ''}`}
                     onClick={() => setMobilePosTab('cart')}
                   >

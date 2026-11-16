@@ -60,3 +60,11 @@ Added `src/__tests__/ui_hygiene.test.jsx` with four guard tests. All four are re
 - IČO field: no `inputmode="numeric"`.
 
 The Register-screen check of icon-only buttons is not in this phase; the navbar is the only screen covered, because rendering the whole app for it costs more than it finds. Phase 2 can add it if the live click-through shows unnamed buttons there.
+
+## 8. Phase 2 result
+
+- Added `type="button"` to the 66 untyped buttons in 19 files with a one-off script. The script checks whether a button sits inside a `<form>` and would have listed it for manual review; none did. The submit buttons of the forms already have `type="submit"` (the preset form's button sits outside its form and uses `form="preset-form"`, also already typed).
+- Navbar: 11 buttons that had only a `title` now also have the same text as `aria-label`, so every navbar button has an accessible name.
+- Payment modal: the IČO field has `inputMode="numeric"` and `autoComplete="off"`. The DIČ field stays text because it starts with "CZ".
+- Gates: 392 of 393 frontend tests pass, lint clean, build OK. The one failing test is the guard against native dialogs, which stays red until Phase 3 replaces the 21 calls. `/code-review` at `medium`: no findings (mechanical diff).
+- Not checked live: no browser click-through, to save time on a mechanical change. Risk is low because no untyped button was inside a form; Phase 3's live check covers the screens it touches.

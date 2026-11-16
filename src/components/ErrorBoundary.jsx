@@ -54,7 +54,7 @@ export default class ErrorBoundary extends React.Component {
                 ? 'Byla nasazena nová aktualizace komponent pokladního systému. Stiskněte tlačítko pro načtení nejnovější verze.'
                 : 'Došlo k neočekávané chybě při vykreslování rozhraní. Stiskněte tlačítko níže pro obnovení pokladny.'}
             </p>
-            <button
+            <button type="button"
               onClick={this.handleReload}
               style={{
                 backgroundColor: '#2563eb',

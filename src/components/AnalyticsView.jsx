@@ -271,7 +271,7 @@ export default function AnalyticsView({
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
+          <button type="button"
             className="checkout-btn"
             style={{
               padding: '0.4rem 0.85rem',

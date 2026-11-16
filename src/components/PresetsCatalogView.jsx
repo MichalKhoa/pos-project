@@ -76,7 +76,7 @@ export default function PresetsCatalogView({
           </span>
         </div>
 
-        <button
+        <button type="button"
           className="pay-btn pay-btn-card"
           style={{ height: '44px', padding: '0 1.25rem', fontSize: '0.9rem' }}
           onClick={handleOpenAddModal}
@@ -101,7 +101,7 @@ export default function PresetsCatalogView({
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-main)', padding: '0.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-            <button
+            <button type="button"
               className={`nav-tab ${viewMode === 'table' ? 'active' : ''}`}
               style={{ padding: '0.4rem 0.8rem' }}
               onClick={() => setViewMode('table')}
@@ -109,7 +109,7 @@ export default function PresetsCatalogView({
               <List size={16} />
               <span>Table</span>
             </button>
-            <button
+            <button type="button"
               className={`nav-tab ${viewMode === 'grid' ? 'active' : ''}`}
               style={{ padding: '0.4rem 0.8rem' }}
               onClick={() => setViewMode('grid')}
@@ -122,7 +122,7 @@ export default function PresetsCatalogView({
 
         <div className="category-bar">
           {categories.map(cat => (
-            <button
+            <button type="button"
               key={cat.id}
               className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
               onClick={() => setActiveCategory(cat.id)}
@@ -131,7 +131,7 @@ export default function PresetsCatalogView({
             </button>
           ))}
 
-          <button
+          <button type="button"
             className="category-chip"
             style={{ borderStyle: 'dashed', background: 'transparent' }}
             onClick={() => setIsCategoryModalOpen(true)}
@@ -216,7 +216,7 @@ export default function PresetsCatalogView({
                           <span>🏷️</span>
                           <span>{t('presets.print_shelf_label') || 'Tisk cenovky'}</span>
                         </button>
-                        <button
+                        <button type="button"
                           className="nav-tab"
                           style={{ padding: '0.35rem 0.75rem', display: 'inline-flex', marginRight: '0.5rem' }}
                           onClick={() => handleOpenEditModal(preset)}
@@ -224,7 +224,7 @@ export default function PresetsCatalogView({
                           <Edit3 size={14} />
                           <span>{t('presets.edit')}</span>
                         </button>
-                        <button className="delete-item-btn" onClick={() => handleDelete(preset.id)}>
+                        <button type="button" className="delete-item-btn" onClick={() => handleDelete(preset.id)}>
                           <Trash2 size={16} />
                         </button>
                       </td>

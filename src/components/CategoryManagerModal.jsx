@@ -128,7 +128,7 @@ export default function CategoryManagerModal({
             <Layers size={20} style={{ color: 'var(--accent-blue)' }} />
             <span>{t('presets.manage_categories')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ gap: '1.2rem' }}>

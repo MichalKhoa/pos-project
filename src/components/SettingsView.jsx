@@ -641,7 +641,7 @@ export default function SettingsView({
                 <RefreshCw size={20} style={{ color: 'var(--accent-blue)' }} />
                 <span>Potvrzení aktualizace pokladny</span>
               </div>
-              <button className="close-modal-btn" onClick={() => setShowUpdateModal(false)}>✕</button>
+              <button type="button" className="close-modal-btn" onClick={() => setShowUpdateModal(false)}>✕</button>
             </div>
 
             <div className="modal-body" style={{ padding: '1.25rem' }}>
@@ -666,10 +666,10 @@ export default function SettingsView({
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', padding: '1rem', borderTop: '1px solid var(--border-color)', justifyContent: 'flex-end' }}>
-              <button className="nav-tab" onClick={() => setShowUpdateModal(false)}>
+              <button type="button" className="nav-tab" onClick={() => setShowUpdateModal(false)}>
                 Zrušit
               </button>
-              <button
+              <button type="button"
                 className="pay-btn pay-btn-card"
                 disabled={applyLoading}
                 onClick={handleTriggerApplyUpdate}

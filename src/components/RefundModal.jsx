@@ -152,7 +152,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             <RotateCcw size={22} />
             <span>{t('refund.title')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         {/* Modal Body */}
