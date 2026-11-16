@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Wine, Plus, Truck, ArrowDownLeft } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useConfirm } from '../../context/useConfirm.js';
 import { API_BASE_URL } from '../../api/posApi';
 
 export default function DepositPackagingModal({ isOpen, onClose }) {
   const { t } = useTranslation();
+  const { notify } = useConfirm();
   const [summary, setSummary] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [actionType, setActionType] = useState(null); // 'SUPPLIER_INTAKE' | 'CUSTOMER_RETURN' | 'SUPPLIER_DISPATCH' | 'ADJUSTMENT'
@@ -41,7 +43,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
     e.preventDefault();
     const qtyNum = parseFloat(quantity);
     if (isNaN(qtyNum) || qtyNum <= 0) {
-      alert('Zadejte kladný počet kusů.');
+      notify(t('dialogs.positive_qty'));
       return;
     }
 
@@ -75,7 +77,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
       fetchSummary();
       setTimeout(() => setStatusMsg(null), 3500);
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setIsRecording(false);
     }

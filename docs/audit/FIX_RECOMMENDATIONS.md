@@ -39,7 +39,7 @@ Goal: a mis-scan, a wrong unit or a stray Enter cannot record money that was not
 
 **Batch E: Layout and touch ergonomics.** F-018, F-020, F-007.
 
-**Batch F: Hygiene, ongoing.** F-009, F-010, F-023, F-024, F-013, F-025.
+**Batch F: Hygiene (PARTLY DONE, see `docs/plans/BATCH_F_HYGIENE_PLAN.md`).** F-010, F-013 (navbar), F-024 (button types), F-025 done; F-009 and F-023 only for the dialog screens.
 
 ## 3. Where I have more recommendations (approach, trade-offs, open questions)
 

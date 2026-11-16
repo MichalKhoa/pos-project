@@ -4,6 +4,7 @@ import ReceiptModal from './ReceiptModal';
 import TouchCalendarModal from './TouchCalendarModal.jsx';
 import TouchDateRangeModal from './TouchDateRangeModal.jsx';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 import { pluralWord } from '../utils/pluralWord';
 import { exportSalesToCSV } from '../utils/csvExporter';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
@@ -23,6 +24,7 @@ export default function SalesHistoryView({
   initialDateFilter = null
 }) {
   const { t, language } = useTranslation();
+  const { notify } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
@@ -217,7 +219,7 @@ export default function SalesHistoryView({
               gap: '0.35rem',
               fontWeight: '700'
             }}
-            onClick={() => exportSalesToCSV(searchFilteredSales, getPeriodLabel())}
+            onClick={() => { if (exportSalesToCSV(searchFilteredSales, getPeriodLabel()) === 'empty') notify(t('dialogs.export_no_sales')); }}
             title={t('history.export_csv_title')}
           >
             <Download size={14} />

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useTranslation } from '../i18n/LanguageContext';
+import { useConfirm } from '../context/useConfirm.js';
 import { savePresetBackend, bulkSavePresetsBackend, fetchPresetsBackend } from '../api/posApi';
 import PresetModal from './PresetModal';
 import InventoryMetricsBar from './inventory/InventoryMetricsBar.jsx';
@@ -17,6 +18,7 @@ import { exportInventoryToCSV, parseInventoryCSV } from '../utils/csvExporter';
 
 export default function InventoryView({ presets = [], categories = [], onUpdatePresets, onAddPreset, onTogglePin, storeConfig = {} }) {
   const { t } = useTranslation();
+  const { askConfirm, notify } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [presetFilter, setPresetFilter] = useState('all'); // 'all' | 'pinned' | 'unpinned'
@@ -146,7 +148,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   };
 
   const handleDeletePresetModal = async (presetId) => {
-    if (window.confirm('Opravdu chcete tuto položku smazat ze skladu?')) {
+    if (await askConfirm({ message: t('dialogs.delete_stock_item'), danger: true, confirmLabel: t('dialogs.delete_button') })) {
       setIsSaving(true);
       try {
         const remaining = presets.filter(p => p.id !== presetId);
@@ -291,7 +293,7 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
   };
 
   const handleExportCSV = () => {
-    exportInventoryToCSV(presets, categories);
+    if (exportInventoryToCSV(presets, categories) === 'empty') notify(t('dialogs.export_no_stock'));
   };
 
   const handleImportCSVClick = () => {
@@ -311,14 +313,14 @@ export default function InventoryView({ presets = [], categories = [], onUpdateP
         const text = event.target?.result;
         const parsed = parseInventoryCSV(text, presets);
         if (parsed.toUpdate.length === 0 && parsed.toCreate.length === 0) {
-          alert('V souboru CSV nebyly nalezeny žádné platné položky.');
+          notify(t('dialogs.csv_no_items'));
           return;
         }
         setImportData(parsed);
         setIsImportModalOpen(true);
       } catch (err) {
         console.error('Error parsing CSV:', err);
-        alert('Chyba při čtení CSV: ' + err.message);
+        notify(t('dialogs.csv_read_error', { message: err.message }));
       }
     };
     reader.readAsText(file, 'utf-8');

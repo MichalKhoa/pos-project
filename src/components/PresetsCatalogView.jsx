@@ -5,6 +5,7 @@ import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
 import BarcodeLabelModal from './inventory/BarcodeLabelModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 import { getPresetIconComponent } from '../utils/presetIcons';
 
 export default function PresetsCatalogView({
@@ -19,6 +20,7 @@ export default function PresetsCatalogView({
   storeConfig = null
 }) {
   const { t } = useTranslation();
+  const { askConfirm } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
@@ -55,8 +57,8 @@ export default function PresetsCatalogView({
     setEditingPreset(null);
   };
 
-  const handleDelete = (presetId) => {
-    if (window.confirm('Opravdu chcete toto tlačítko smazat z katalogu?')) {
+  const handleDelete = async (presetId) => {
+    if (await askConfirm({ message: t('dialogs.delete_preset'), danger: true, confirmLabel: t('dialogs.delete_button') })) {
       onDeletePreset(presetId);
       if (activeModal === 'edit') {
         setActiveModal(null);
@@ -312,8 +314,8 @@ export default function PresetsCatalogView({
         defaultShowInPresets={true}
         onClose={() => { setActiveModal(null); setEditingPreset(null); }}
         onSave={handleSavePreset}
-        onDelete={editingPreset ? () => {
-          if (window.confirm('Opravdu chcete toto tlačítko smazat z katalogu?')) {
+        onDelete={editingPreset ? async () => {
+          if (await askConfirm({ message: t('dialogs.delete_preset'), danger: true, confirmLabel: t('dialogs.delete_button') })) {
             onDeletePreset(editingPreset.id);
             setActiveModal(null);
             setEditingPreset(null);

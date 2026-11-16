@@ -68,3 +68,16 @@ The Register-screen check of icon-only buttons is not in this phase; the navbar 
 - Payment modal: the IČO field has `inputMode="numeric"` and `autoComplete="off"`. The DIČ field stays text because it starts with "CZ".
 - Gates: 392 of 393 frontend tests pass, lint clean, build OK. The one failing test is the guard against native dialogs, which stays red until Phase 3 replaces the 21 calls. `/code-review` at `medium`: no findings (mechanical diff).
 - Not checked live: no browser click-through, to save time on a mechanical change. Risk is low because no untyped button was inside a form; Phase 3's live check covers the screens it touches.
+
+## 9. Phase 3 result
+
+- New `ConfirmProvider` (`src/context/ConfirmContext.jsx`) and hook `useConfirm()` (`src/context/useConfirm.js`) with `askConfirm(options)` (returns true or false) and `notify(message)`. Large 52 px buttons, red confirm button for destructive actions, a "type the word" variant (`SMAZAT` / `XÓA` / `DELETE`, or `RESET`) for deleting all test sales and for resetting data, Escape cancels, one dialog at a time. Without a provider a confirmation is refused, never accepted. The API is named `askConfirm` so the guard test can tell it from the native `confirm(`.
+- All 21 native `confirm(` and `alert(` calls are replaced in 12 files. `csvExporter.js` returns `'empty'` instead of alerting and its three callers show the message. Their texts are in the new `dialogs` block in cs, vi and en (about 20 messages each).
+- Gates: 399 frontend tests pass (new `confirm_dialog.test.jsx`, 5 tests; the native-dialog guard is green), lint clean, build OK, 213 backend tests pass. A pre-existing unhandled error in `ZReportModal` (`toLocaleString` on a missing value) still shows in the test run and is unrelated.
+- Live check on the Vite dev server: opened the preset editor from Sklad and pressed Smazat; the new dialog showed over the editor with a red "Smazat" button and Cancel closed it.
+- `/code-review` at `medium`: one plausible finding (Escape may also reach a modal underneath that listens on window). No current dialog caller has such a modal, so no change.
+- Not checked live: the typed-word dialogs (delete all test sales, reset data), the Vietnamese and English texts on screen, touch use. Unit tests cover the typed-word logic.
+
+## 10. Batch F status
+
+Done for F-010, F-013, F-024 (types and the dialog guard), F-025 (numeric IČO keyboard). F-009 and F-023 are only done for the screens that had dialogs; the receipt text stays Czech on purpose. Still open: hard-coded Czech elsewhere (mobile tab labels, banner texts, B2B form labels), enforcing hex colors and inline styles, accessible names beyond the navbar.

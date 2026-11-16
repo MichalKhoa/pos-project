@@ -17,6 +17,7 @@ import { buildRefundUpdate, revertRefund, settleRefundUpdate } from './utils/ref
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
 import { useTranslation } from './i18n/LanguageContext';
+import { useConfirm } from './context/useConfirm.js';
 import { soundFx } from './utils/audio';
 import { buildSalePayload } from './utils/buildSalePayload';
 import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
@@ -47,6 +48,7 @@ import CustomerDisplayView from './components/CustomerDisplayView';
 
 export default function App() {
   const { t } = useTranslation();
+  const { askConfirm } = useConfirm();
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
 
   useEffect(() => {
@@ -313,14 +315,14 @@ export default function App() {
   // Test Sales Management
 
   const handleDeleteSale = async (saleId) => {
-    if (window.confirm('Opravdu chcete smazat tento testovací prodej? Tržby se okamžitě přepočítají.')) {
+    if (await askConfirm({ message: t('dialogs.delete_sale'), danger: true, confirmLabel: t('dialogs.delete_button') })) {
       setSalesHistory(prev => prev.filter(s => s.id !== saleId));
       await deleteSaleBackend(saleId);
     }
   };
 
   const handleClearAllTestSales = async () => {
-    if (window.confirm('Opravdu chcete smazat VŠECHNY testovací prodeje? Všechny rozpracované účtenky budou vymazány.')) {
+    if (await askConfirm({ message: t('dialogs.purge_sales'), danger: true, typeWord: t('dialogs.type_word_delete'), confirmLabel: t('dialogs.delete_button') })) {
       setSalesHistory([]);
       await purgeAllSalesBackend();
     }
@@ -935,8 +937,8 @@ export default function App() {
     });
   };
 
-  const handleResetData = () => {
-    if (window.confirm('Opravdu chcete resetovat zálohy a vrátit výchozí nastavení?')) {
+  const handleResetData = async () => {
+    if (await askConfirm({ message: t('dialogs.reset_data'), danger: true, typeWord: t('dialogs.type_word_reset') })) {
       removeStorageItem('presets');
       removeStorageItem('config');
       removeStorageItem('sales');

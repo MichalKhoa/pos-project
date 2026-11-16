@@ -5,6 +5,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { LanguageProvider } from './i18n/LanguageContext.jsx'
 import { StoreConfigProvider } from './context/StoreConfigContext.jsx'
+import { ConfirmProvider } from './context/ConfirmContext.jsx'
 
 try {
   const rootElement = document.getElementById('root');
@@ -17,7 +18,9 @@ try {
       <ErrorBoundary>
         <LanguageProvider>
           <StoreConfigProvider>
-            <App />
+            <ConfirmProvider>
+              <App />
+            </ConfirmProvider>
           </StoreConfigProvider>
         </LanguageProvider>
       </ErrorBoundary>

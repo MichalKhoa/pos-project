@@ -3,8 +3,7 @@
  */
 export function exportSalesToCSV(salesHistory, periodLabel = 'vsechna_data') {
   if (!Array.isArray(salesHistory) || salesHistory.length === 0) {
-    alert('Žádné prodeje k exportu.');
-    return;
+    return 'empty';
   }
 
   // Define CSV headers
@@ -110,8 +109,7 @@ export function exportSalesToCSV(salesHistory, periodLabel = 'vsechna_data') {
  */
 export function exportInventoryToCSV(presets = [], categories = []) {
   if (!Array.isArray(presets) || presets.length === 0) {
-    alert('Žádné skladové položky k exportu.');
-    return;
+    return 'empty';
   }
 
   const categoryMap = categories.reduce((acc, cat) => {

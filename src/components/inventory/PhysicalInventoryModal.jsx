@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Search, Printer, CheckCircle2, AlertCircle, ShieldCheck, ClipboardCheck } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useConfirm } from '../../context/useConfirm.js';
 import { API_BASE_URL, invalidateApiCache } from '../../api/posApi';
 
 export default function PhysicalInventoryModal({
@@ -11,6 +12,7 @@ export default function PhysicalInventoryModal({
   storeConfig = {}
 }) {
   const { t } = useTranslation();
+  const { notify } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [counts, setCounts] = useState({}); // { [presetId]: countedQuantity }
   const [responsiblePerson, setResponsiblePerson] = useState('');
@@ -153,7 +155,7 @@ export default function PhysicalInventoryModal({
       setConfirmDialog(false);
       if (onAuditCompleted) onAuditCompleted(protocol);
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setIsSubmitting(false);
     }
