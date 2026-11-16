@@ -5,8 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { buildSalePayload } from '../utils/buildSalePayload';
 
 // Golden fixtures shared with backend/tests/test_sale_contract.py.
-// Fixtures with knownBugs.frontend are expected to fail until the bug is fixed
-// (it.fails). When a fix lands the test reports it, so delete the knownBugs entry then.
+// Fixtures with knownBugs.frontend (F-027) must show exactly that symptom: a
+// fractional quantity truncated to 0. Any other mismatch still fails the test.
+// When the fix lands the symptom check fails, so delete the knownBugs entry then.
 const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../backend/tests/fixtures/sales');
 const fixtures = fs
   .readdirSync(dir)
@@ -20,10 +21,18 @@ describe('buildSalePayload matches shared sale fixtures', () => {
   });
 
   for (const fx of fixtures) {
-    const run = fx.knownBugs?.frontend ? it.fails : it;
-    run(`${fx.name}${fx.knownBugs?.frontend ? ` (known bug ${fx.knownBugs.frontend})` : ''}`, () => {
+    const bug = fx.knownBugs?.frontend;
+    it(`${fx.name}${bug ? ` (known bug ${bug})` : ''}`, () => {
       const { sale } = buildSalePayload(fx.input);
-      expect(sale).toMatchObject(fx.payload);
+      if (bug) {
+        expect(
+          sale.items.some(i => i.quantity === 0),
+          `bug fixed (${bug}): remove knownBugs.frontend from the fixture`
+        ).toBe(true);
+        expect(() => expect(sale).toMatchObject(fx.payload)).toThrow();
+      } else {
+        expect(sale).toMatchObject(fx.payload);
+      }
     });
   }
 });

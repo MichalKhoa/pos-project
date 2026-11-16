@@ -1,6 +1,6 @@
 # Audit: prioritized fixes and where more thought is needed
 
-Source: [`FINDINGS.md`](FINDINGS.md) (26 findings, F-001 to F-026). This file orders the work, groups it into fix batches, and marks the parts where the fix approach needs a decision or more investigation before coding. No code has been changed.
+Source: [`FINDINGS.md`](FINDINGS.md) (28 findings, F-001 to F-028). This file orders the work, groups it into fix batches, and marks the parts where the fix approach needs a decision or more investigation before coding. The audit itself changed no code; Batch A Phase 0 (tests and a pure payload builder, no behavior change) is done, see the Batch A plan.
 
 ## 1. Priority order
 
@@ -21,11 +21,12 @@ Source: [`FINDINGS.md`](FINDINGS.md) (26 findings, F-001 to F-026). This file or
 | 12 | F-020 touch targets and text size | S2 | M | E |
 | 13 | F-022, F-004, F-008, F-011, F-025 | S2-S3 | S each | B/C |
 | 14 | F-006, F-012, F-026 | S2-S3 | M | A |
+| 14a | F-028 server and client VAT split differ by 0.01 Kč | S3 | S (Decimal division on the server) | A |
 | 15 | F-009, F-010, F-023, F-024, F-013 | S2-S4 | L (spread out) | F |
 
 ## 2. Fix batches
 
-**Batch A: Sale integrity (do first, one plan, backend and frontend together).** F-001, F-014, F-015, F-006, F-026, F-012.
+**Batch A: Sale integrity (do first, one plan, backend and frontend together).** F-027, F-001, F-014, F-015, F-006, F-026, F-012, F-028.
 Goal: a sale shown as "paid" is either recorded on the server or visibly queued, and every screen reads the same totals.
 Order inside the batch: (1) server accepts the cash-rounded total; (2) client distinguishes 4xx (rejected, show error) from network error (queue as `OFFLINE_PENDING`); (3) retry queue on `pos:backend-online`; (4) shift widget from a server summary; (5) server-assigned receipt numbers.
 

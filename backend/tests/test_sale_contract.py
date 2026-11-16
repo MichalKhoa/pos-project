@@ -3,23 +3,30 @@ Contract test: the sale payloads the register sends (golden fixtures in tests/fi
 must be accepted by POST /api/v1/sales/ and stored with the expected values.
 The same fixtures are checked on the frontend in src/__tests__/sale_payload.test.js.
 
+The test runs against a throw-away SQLite file, never the store database, so it
+cannot burn receipt numbers or trigger EET submission.
+
 Fixtures may list known bugs under "knownBugs":
-  backend             -> POST is currently rejected or stores wrong totals (see audit finding)
-  backendTaxSummary   -> stored tax_summary differs from the exact half-up reference
-The test then EXPECTS the check to fail. When a fix makes it pass, the test fails with
+  backend             -> POST must be rejected with 422 TOTAL_MISMATCH (audit F-001)
+  backendTaxSummary   -> stored tax_summary must differ from the exact half-up reference (F-028)
+The test then EXPECTS exactly that symptom. When a fix removes it, the test fails with
 "bug fixed", which tells you to delete the knownBugs entry from the fixture.
+Any other failure (500, other 4xx, missing sale) still fails the test.
 """
 import glob
 import json
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
 
-from database import SessionLocal, init_db_schema
+from database import SessionLocal, Base
 from main import app
 from models import SaleModel, SaleItemModel
 
@@ -34,22 +41,26 @@ def _load_fixtures():
     return out
 
 
-def _purge(db, sale_id):
-    db.query(SaleItemModel).filter(SaleItemModel.sale_id == sale_id).delete()
-    db.query(SaleModel).filter(SaleModel.id == sale_id).delete()
-    db.commit()
-
-
 class TestSaleContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        init_db_schema()
+        # Rebind the shared session factory to a temp DB; routers read SessionLocal per request.
+        cls._tmp = tempfile.mkdtemp(prefix="sale_contract_")
+        cls._orig_engine = SessionLocal.kw["bind"]
+        cls._engine = create_engine(
+            f"sqlite:///{os.path.join(cls._tmp, 'test.db')}",
+            connect_args={"check_same_thread": False},
+        )
+        import models  # noqa: F401  (register tables)
+        Base.metadata.create_all(bind=cls._engine)
+        SessionLocal.configure(bind=cls._engine)
         cls.client = TestClient(app)
 
-    def _post(self, fx):
-        res = self.client.post("/api/v1/sales/", json=fx["payload"])
-        self.assertEqual(res.status_code, 201, f"{fx['name']}: POST rejected: {res.text[:200]}")
-        self.assertEqual(res.json().get("status"), "SUCCESS")
+    @classmethod
+    def tearDownClass(cls):
+        SessionLocal.configure(bind=cls._orig_engine)
+        cls._engine.dispose()
+        shutil.rmtree(cls._tmp, ignore_errors=True)
 
     def _check_stored_values(self, fx, db):
         sale = db.query(SaleModel).filter(SaleModel.id == fx["payload"]["id"]).first()
@@ -59,36 +70,32 @@ class TestSaleContract(unittest.TestCase):
         stored = {r.item_id: float(r.quantity) for r in rows}
         for exp in fx["expectedServer"]["items"]:
             self.assertAlmostEqual(stored.get(exp["item_id"]), exp["quantity"], places=3)
-
-    def _check_tax_summary(self, fx, db):
-        sale = db.query(SaleModel).filter(SaleModel.id == fx["payload"]["id"]).first()
-        self.assertEqual(sale.tax_summary, fx["payload"]["taxSummary"],
-                         f"{fx['name']}: stored tax_summary differs from reference")
-
-    def _expect(self, known, check, *args):
-        """Run check; if `known` is set the check must fail, otherwise it must pass."""
-        if known:
-            with self.assertRaises(AssertionError, msg=f"bug fixed ({known}): remove it from the fixture"):
-                check(*args)
-        else:
-            check(*args)
+        return sale
 
     def test_fixtures_are_accepted_and_stored(self):
         fixtures = _load_fixtures()
         self.assertGreaterEqual(len(fixtures), 8)
         for fx in fixtures:
             with self.subTest(fixture=fx["name"]):
+                known = fx.get("knownBugs", {})
+                res = self.client.post("/api/v1/sales/", json=fx["payload"])
+                if known.get("backend"):
+                    self.assertEqual(res.status_code, 422,
+                                     f"bug fixed or changed ({known['backend']}): got {res.status_code}; remove knownBugs.backend")
+                    self.assertIn("TOTAL_MISMATCH", res.text)
+                    continue
+                self.assertEqual(res.status_code, 201, f"{fx['name']}: POST rejected: {res.text[:200]}")
+                self.assertEqual(res.json().get("status"), "SUCCESS")
                 db = SessionLocal()
                 try:
-                    _purge(db, fx["payload"]["id"])
-                    known = fx.get("knownBugs", {})
-                    self._expect(known.get("backend"), self._post, fx)
-                    if not known.get("backend"):
-                        db.expire_all()
-                        self._check_stored_values(fx, db)
-                        self._expect(known.get("backendTaxSummary"), self._check_tax_summary, fx, db)
+                    sale = self._check_stored_values(fx, db)
+                    if known.get("backendTaxSummary"):
+                        self.assertNotEqual(sale.tax_summary, fx["payload"]["taxSummary"],
+                                            f"bug fixed ({known['backendTaxSummary']}): remove knownBugs.backendTaxSummary")
+                    else:
+                        self.assertEqual(sale.tax_summary, fx["payload"]["taxSummary"],
+                                         f"{fx['name']}: stored tax_summary differs from reference")
                 finally:
-                    _purge(db, fx["payload"]["id"])
                     db.close()
 
 

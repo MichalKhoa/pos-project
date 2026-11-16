@@ -51,8 +51,8 @@ export function buildSalePayload({
     id,
     receiptNumber,
     timestamp,
-    items: cartItems.map(item => ({
-      id: item.id || `item-${Date.now()}`,
+    items: cartItems.map((item, index) => ({
+      id: item.id || `${id}-item-${index}`,
       name: item.name,
       price: parseFloat(item.price),
       quantity: item.quantity,

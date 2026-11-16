@@ -132,3 +132,5 @@ Thumbs.db
 .projectmem/watch.pid
 .projectmem/watch.log
 .projectmem/structure.json
+.projectmem/.current_issue
+.projectmem/summary.md
