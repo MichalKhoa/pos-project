@@ -140,7 +140,7 @@ export default function CustomItemModal({
 
     onAddToCart?.({
       id: id || `custom-${Date.now()}`,
-      name: name.trim() || (isReturn ? (t('keypad.return_title') || '↩️ Vratka / Vrácené zboží') : (t('keypad.unclassified_item') || 'Volný prodej')),
+      name: name.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
       price: unitPrice,
       vat: selectedVat,
       quantity: qty,
@@ -394,7 +394,7 @@ export default function CustomItemModal({
                 {...inlineBackspaceHandlers}
                 disabled={!priceStr}
                 aria-label="Inline Backspace"
-                title={t('keypad.backspace_title') || 'Smazat poslední znak (Backspace)'}
+                title={t('keypad.backspace_title')}
                 style={{
                   width: '34px',
                   height: '34px',
@@ -424,7 +424,7 @@ export default function CustomItemModal({
                 fontWeight: '800',
                 marginTop: '1px'
               }}>
-                {isReturn ? (t('keypad.total_return_preview') || '↩️ Vratka celkem: ') : (t('keypad.total_preview') || '= Celkem: ')}
+                {isReturn ? t('keypad.total_return_preview') : t('keypad.total_preview')}
                 {(Math.abs(itemMultiplier) * parseFloat(priceStr || 0)).toLocaleString('cs-CZ')} Kč ({itemMultiplier} ks)
               </div>
             )}

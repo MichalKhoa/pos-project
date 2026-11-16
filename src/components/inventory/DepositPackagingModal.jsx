@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Wine, Plus, Truck, ArrowDownLeft } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useConfirm } from '../../context/useConfirm.js';
+import { API_BASE_URL } from '../../api/posApi';
 
 export default function DepositPackagingModal({ isOpen, onClose }) {
   const { t } = useTranslation();
+  const { notify } = useConfirm();
   const [summary, setSummary] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [actionType, setActionType] = useState(null); // 'SUPPLIER_INTAKE' | 'CUSTOMER_RETURN' | 'SUPPLIER_DISPATCH' | 'ADJUSTMENT'
@@ -16,13 +19,12 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
 
   const fetchSummary = async () => {
     try {
-      const res = await fetch('/api/v1/inventory/deposits/summary');
-      if (res.ok) {
-        const data = await res.json();
-        setSummary(data);
-      }
+      const res = await fetch(`${API_BASE_URL}/inventory/deposits/summary`);
+      if (!res.ok) throw new Error(`Deposit summary error ${res.status}`);
+      setSummary(await res.json());
     } catch (err) {
       console.error('Error fetching deposit summary:', err);
+      setStatusMsg({ type: 'error' });
     }
   };
 
@@ -41,7 +43,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
     e.preventDefault();
     const qtyNum = parseFloat(quantity);
     if (isNaN(qtyNum) || qtyNum <= 0) {
-      alert('Zadejte kladný počet kusů.');
+      notify(t('dialogs.positive_qty'));
       return;
     }
 
@@ -56,7 +58,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
         note: note.trim() || undefined
       };
 
-      const res = await fetch('/api/v1/inventory/deposits/movement', {
+      const res = await fetch(`${API_BASE_URL}/inventory/deposits/movement`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -75,7 +77,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
       fetchSummary();
       setTimeout(() => setStatusMsg(null), 3500);
     } catch (err) {
-      alert(err.message);
+      notify(err.message);
     } finally {
       setIsRecording(false);
     }
@@ -160,8 +162,19 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
         {/* Content Area */}
         <div style={{ padding: '1.25rem', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {statusMsg && (
-            <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', border: '1px solid var(--accent-emerald)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.88rem', fontWeight: 700 }}>
-              {statusMsg.text}
+            <div
+              role={statusMsg.type === 'error' ? 'alert' : undefined}
+              style={{
+                background: statusMsg.type === 'error' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(16, 185, 129, 0.15)',
+                color: statusMsg.type === 'error' ? 'var(--accent-red, #ef4444)' : 'var(--accent-emerald)',
+                border: `1px solid ${statusMsg.type === 'error' ? 'var(--accent-red, #ef4444)' : 'var(--accent-emerald)'}`,
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.88rem',
+                fontWeight: 700
+              }}
+            >
+              {statusMsg.type === 'error' ? t('inventory.deposit_load_error') : statusMsg.text}
             </div>
           )}
 

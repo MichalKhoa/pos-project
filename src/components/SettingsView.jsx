@@ -26,6 +26,7 @@ import {
   fetchLitestreamStatus
 } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
 import AdminPinModal from './AdminPinModal.jsx';
 import StoreProfileSection from './settings/StoreProfileSection.jsx';
@@ -49,6 +50,7 @@ export default function SettingsView({
   onToggleAdminMode
 }) {
   const { t, setLanguage } = useTranslation();
+  const { notify } = useConfirm();
   const {
     isAdminMode: ctxIsAdminMode,
     enterAdminMode,
@@ -250,17 +252,17 @@ export default function SettingsView({
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const imported = JSON.parse(event.target.result);
         if (imported.storeConfig) {
           onSaveStoreConfig(imported.storeConfig);
           setConfig(imported.storeConfig);
         }
-        alert('Data byla úspěšně importována. Stránka se obnoví.');
+        await notify(t('dialogs.import_ok'));
         window.location.reload();
       } catch (err) {
-        alert('Chyba při čtení záložního souboru: ' + err.message);
+        notify(t('dialogs.backup_read_error', { message: err.message }));
       }
     };
     reader.readAsText(file);
@@ -641,7 +643,7 @@ export default function SettingsView({
                 <RefreshCw size={20} style={{ color: 'var(--accent-blue)' }} />
                 <span>Potvrzení aktualizace pokladny</span>
               </div>
-              <button className="close-modal-btn" onClick={() => setShowUpdateModal(false)}>✕</button>
+              <button type="button" className="close-modal-btn" onClick={() => setShowUpdateModal(false)}>✕</button>
             </div>
 
             <div className="modal-body" style={{ padding: '1.25rem' }}>
@@ -666,10 +668,10 @@ export default function SettingsView({
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', padding: '1rem', borderTop: '1px solid var(--border-color)', justifyContent: 'flex-end' }}>
-              <button className="nav-tab" onClick={() => setShowUpdateModal(false)}>
+              <button type="button" className="nav-tab" onClick={() => setShowUpdateModal(false)}>
                 Zrušit
               </button>
-              <button
+              <button type="button"
                 className="pay-btn pay-btn-card"
                 disabled={applyLoading}
                 onClick={handleTriggerApplyUpdate}

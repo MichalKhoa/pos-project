@@ -34,7 +34,7 @@ export default function SalesPeriodBar({
       }}>
         {/* Chips row */}
         <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'today' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('today')}
@@ -42,7 +42,7 @@ export default function SalesPeriodBar({
             {t('history.period_today')}
           </button>
 
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'yesterday' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('yesterday')}
@@ -50,7 +50,7 @@ export default function SalesPeriodBar({
             {t('history.period_yesterday')}
           </button>
 
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'week' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('week')}
@@ -58,7 +58,7 @@ export default function SalesPeriodBar({
             {t('history.period_week')}
           </button>
 
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'month' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('month')}
@@ -66,7 +66,7 @@ export default function SalesPeriodBar({
             {t('history.period_month')}
           </button>
 
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'year' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('year')}
@@ -74,7 +74,7 @@ export default function SalesPeriodBar({
             {t('history.period_year')}
           </button>
 
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'all' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem' }}
             onClick={() => onSelectPreset('all')}
@@ -82,7 +82,7 @@ export default function SalesPeriodBar({
             {t('history.all_period')}
           </button>
 
-          <button
+          <button type="button"
             className={`nav-tab ${periodFilter === 'custom' ? 'active' : ''}`}
             style={{ padding: '0.28rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
             onClick={() => onSelectPreset('custom')}
@@ -95,7 +95,7 @@ export default function SalesPeriodBar({
         {/* Stepper Controls (‹ Date Badge ›) */}
         {periodFilter !== 'all' && periodFilter !== 'custom' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'var(--bg-input)', padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-            <button
+            <button type="button"
               className="nav-tab"
               style={{ padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-sm)' }}
               onClick={() => onStepPeriod('prev')}
@@ -115,7 +115,7 @@ export default function SalesPeriodBar({
               </span>
             </div>
 
-            <button
+            <button type="button"
               className="nav-tab"
               style={{ padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-sm)' }}
               onClick={() => onStepPeriod('next')}
@@ -214,7 +214,7 @@ export default function SalesPeriodBar({
           </div>
 
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <button
+            <button type="button"
               className="nav-tab"
               style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
               onClick={() => {
@@ -227,7 +227,7 @@ export default function SalesPeriodBar({
               Posledních 7 dní
             </button>
 
-            <button
+            <button type="button"
               className="nav-tab"
               style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
               onClick={() => {
@@ -240,7 +240,7 @@ export default function SalesPeriodBar({
               Posledních 30 dní
             </button>
 
-            <button
+            <button type="button"
               className="nav-tab"
               style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
               onClick={() => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Printer, Calendar, TrendingUp, TrendingDown, DollarSign, PieChart, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { API_BASE_URL } from '../../api/posApi';
 
 export default function TaxReportsModal({ isOpen, onClose }) {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/v1/reports/tax-statement?year=${year}`);
+      const res = await fetch(`${API_BASE_URL}/reports/tax-statement?year=${year}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || 'Nepodařilo se načíst daňové podklady.');
@@ -35,7 +36,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/v1/reports/vat-overview?year=${year}&period=${period}`);
+      const res = await fetch(`${API_BASE_URL}/reports/vat-overview?year=${year}&period=${period}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || 'Nepodařilo se načíst přehled DPH.');
@@ -75,7 +76,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
     setThermalStatus(null);
     try {
       const dataToSend = activeTab === 'dpfo' ? taxData : vatData;
-      const res = await fetch('/api/v1/printer/print-tax-report', {
+      const res = await fetch(`${API_BASE_URL}/printer/print-tax-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

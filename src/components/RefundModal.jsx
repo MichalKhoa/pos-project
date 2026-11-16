@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RotateCcw, Banknote, CreditCard, Minus, Plus, Calendar, User, AlertTriangle, RotateCcw as ReturnIcon } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 
 const REASON_PRESETS = [
   'Vada / poškození zboží',
@@ -12,6 +13,7 @@ const REASON_PRESETS = [
 
 export default function RefundModal({ sale, onClose, onConfirmRefund }) {
   const { t } = useTranslation();
+  const { notify } = useConfirm();
   const originalItems = sale?.items || [];
 
   const getMaxRefundableQty = (item) => {
@@ -103,7 +105,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
 
   const handleConfirm = () => {
     if (returnedItems.length === 0) {
-      alert('Vyberte prosím alespoň jednu položku k vrácení.');
+      notify(t('dialogs.refund_select_item'));
       return;
     }
 
@@ -152,7 +154,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             <RotateCcw size={22} />
             <span>{t('refund.title')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         {/* Modal Body */}

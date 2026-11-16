@@ -517,7 +517,7 @@ export default function BarcodeLabelModal({
             <Printer size={18} />
             <span>
               {isPrinting
-                ? (t('common.saving') || 'Tisknu...')
+                ? t('common.processing')
                 : isBatch
                   ? `${t('inventory.batch_print_btn') || 'Vytisknout cenovky'} (${itemsToPrint.length} ks × ${copies}x)`
                   : `${t('inventory.label_thermal_print') || 'Vytisknout štítek'} (${copies}x)`}

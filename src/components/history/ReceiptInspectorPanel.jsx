@@ -145,7 +145,7 @@ export default function ReceiptInspectorPanel({
         </div>
 
         {onOpenFullModal && (
-          <button
+          <button type="button"
             className="nav-tab"
             style={{ padding: '0.22rem 0.45rem', fontSize: '0.75rem' }}
             onClick={() => onOpenFullModal(saleData)}
@@ -165,7 +165,7 @@ export default function ReceiptInspectorPanel({
         gap: '0.5rem',
         alignItems: 'center'
       }}>
-        <button
+        <button type="button"
           className="checkout-btn"
           style={{
             flex: 1,
@@ -193,7 +193,7 @@ export default function ReceiptInspectorPanel({
         </button>
 
         {!isRefund && !isFullyRefunded && onInitiateRefund && (
-          <button
+          <button type="button"
             className="nav-tab"
             style={{
               flex: 1,

@@ -11,7 +11,7 @@ export default function ReceiptActionButtons({
 }) {
   return (
     <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
-      <button
+      <button type="button"
         className="pay-btn pay-btn-card"
         style={{ flex: 1, height: '48px', fontSize: '0.85rem' }}
         onClick={() => onPrint(false)}
@@ -21,7 +21,7 @@ export default function ReceiptActionButtons({
         <span>{isPrinting ? 'Tisknu...' : (isInvoice ? '⚡ Tisk Faktury (Termo)' : (storeConfig?.directHardwarePrint !== false ? '⚡ Přímý Tisk Účtenky' : 'Tisk Účtenky'))}</span>
       </button>
 
-      <button
+      <button type="button"
         className="pay-btn pay-btn-cash"
         style={{ flex: 1, height: '48px', fontSize: '0.85rem' }}
         onClick={onNewSale}

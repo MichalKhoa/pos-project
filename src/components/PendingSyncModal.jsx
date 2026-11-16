@@ -10,7 +10,7 @@ export default function PendingSyncModal({ pendingCount, isLoading, onSync, onSn
             <AlertTriangle className="icon-warning" size={24} />
             <h2>Neodeslané účtenky k evidenci (EET)</h2>
           </div>
-          <button className="close-modal-btn" onClick={onSnooze} disabled={isLoading} title="Zavřít">
+          <button type="button" className="close-modal-btn" onClick={onSnooze} disabled={isLoading} title="Zavřít">
             <X size={18} />
           </button>
         </div>
@@ -36,7 +36,7 @@ export default function PendingSyncModal({ pendingCount, isLoading, onSync, onSn
         </div>
 
         <div className="modal-footer footer-split">
-          <button
+          <button type="button"
             className="btn btn-secondary"
             onClick={onSnooze}
             disabled={isLoading}
@@ -59,7 +59,7 @@ export default function PendingSyncModal({ pendingCount, isLoading, onSync, onSn
             <span>Připomenout za 5 minut</span>
           </button>
 
-          <button
+          <button type="button"
             className="btn"
             onClick={onSync}
             disabled={isLoading}

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { BarChart3, Download } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 import { exportSalesToCSV } from '../utils/csvExporter';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesAnalyticsCharts from './history/SalesAnalyticsCharts.jsx';
@@ -12,6 +13,7 @@ export default function AnalyticsView({
   salesHistory = []
 }) {
   const { t } = useTranslation();
+  const { notify } = useConfirm();
   const {
     periodFilter,
     setPeriodFilter,
@@ -271,7 +273,7 @@ export default function AnalyticsView({
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
+          <button type="button"
             className="checkout-btn"
             style={{
               padding: '0.4rem 0.85rem',
@@ -284,7 +286,7 @@ export default function AnalyticsView({
               gap: '0.4rem',
               fontWeight: '700'
             }}
-            onClick={() => exportSalesToCSV(periodFilteredSales, getPeriodLabel())}
+            onClick={() => { if (exportSalesToCSV(periodFilteredSales, getPeriodLabel()) === 'empty') notify(t('dialogs.export_no_sales')); }}
             title={t('history.export_csv_title')}
           >
             <Download size={15} />
