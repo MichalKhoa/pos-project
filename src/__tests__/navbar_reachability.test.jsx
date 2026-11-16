@@ -32,8 +32,4 @@ describe('navbar reachability', () => {
   it.each(viewKeys)('desktop navbar opens the %s view', (key) => {
     expect(keysOpenedBy('.nav-tab')).toContain(key);
   });
-
-  it.each(viewKeys)('mobile drawer opens the %s view', (key) => {
-    expect(keysOpenedBy('.drawer-nav-btn')).toContain(key);
-  });
 });

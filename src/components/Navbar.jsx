@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Package, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Package, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, BarChart3, Printer, Type, Wrench } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
@@ -57,7 +57,6 @@ function Navbar({
     return localStorage.getItem('pos_theme') || 'light';
   });
   const [soundEnabled, setSoundEnabled] = useState(() => soundFx.isSoundEnabled());
-  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
   const [latency, setLatency] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
@@ -66,11 +65,6 @@ function Navbar({
     const next = !soundEnabled;
     soundFx.setSoundEnabled(next);
     setSoundEnabled(next);
-  };
-
-  const handleNavTabSelect = (tabKey) => {
-    setActiveTab(tabKey);
-    setIsNavDrawerOpen(false);
   };
 
   // Apply theme attribute to html root element
@@ -329,100 +323,9 @@ function Navbar({
       </div>
 
       {/* Right Island: Utility Actions & Time */}
-      <div className={`nav-island-right nav-meta ${isNavDrawerOpen ? 'drawer-open' : ''}`}>
-        {/* Hamburger Drawer Toggle Button (Visible on screens < 900px) */}
-        <button
-          type="button"
-          className="nav-hamburger-btn"
-          onClick={() => setIsNavDrawerOpen(!isNavDrawerOpen)}
-          title="Nabídka stavu a rychlých nástrojů"
-          aria-label="Nabídka stavu a rychlých nástrojů"
-        >
-          {isNavDrawerOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-
-        {/* Status badges container (desktop flex row / mobile slide drawer) */}
-        <div className={`nav-status-group ${isNavDrawerOpen ? 'show-drawer' : ''}`}>
-          {/* Mobile View Drawer Nav Section (Visible inside mobile drawer) */}
-          <div className="drawer-nav-section">
-            <div className="drawer-section-title">{t('nav.section_title') || 'Navigace'}</div>
-            <div className="drawer-nav-grid">
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'register' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('register')}
-              >
-                <ShoppingBag size={18} />
-                <span>{t('nav.register')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'presets' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('presets')}
-              >
-                <Tag size={18} />
-                <span>{t('nav.presets')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('inventory')}
-              >
-                <Package size={18} />
-                <span>{t('nav.inventory')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('history')}
-              >
-                <History size={18} />
-                <span>{t('nav.history')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('analytics')}
-              >
-                <BarChart3 size={18} />
-                <span>{t('nav.analytics') || 'Analytika'}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('settings')}
-              >
-                <Settings size={18} />
-                <span>{t('nav.settings')}</span>
-              </button>
-            </div>
-          </div>
-
-          {isAdmin && (
-            <div className={`drawer-technician-banner ${remainingSeconds < 60 ? 'critical-warning' : ''}`}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Wrench size={14} />
-                <span>{t('nav.technician_active') || 'Technik'}</span>
-                <span className="technician-timer">{formatCountdown(remainingSeconds)}</span>
-              </div>
-              <button
-                type="button"
-                className="technician-drawer-exit-btn"
-                onClick={handleExitTechnician}
-                title={t('nav.technician_lock_now') || 'Uzamknout'}
-                aria-label={t('nav.technician_lock_now') || 'Uzamknout'}
-              >
-                <Lock size={12} />
-                <span>{t('nav.technician_lock_now') || 'Uzamknout'}</span>
-              </button>
-            </div>
-          )}
-
+      <div className="nav-island-right nav-meta">
+        {/* Status badges and quick tools */}
+        <div className="nav-status-group">
           {/* Language Switcher */}
           <LanguageSelector
             compact

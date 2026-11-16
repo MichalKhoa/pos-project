@@ -68,16 +68,6 @@ export default function App() {
   const [flashBanner, setFlashBanner] = useState(null);
   const storageWarnedRef = useRef(false);
   const [unknownBarcode, setUnknownBarcode] = useState(null);
-  const [mobilePosTab, setMobilePosTab] = useState('keypad');
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
   const [storeConfig, setStoreConfig] = useState(() => {
     try {
       const saved = getStorageItem('config');
@@ -1010,7 +1000,7 @@ export default function App() {
               <div className={`pos-layout ${isTwoColumn ? 'layout-two-column' : 'layout-three-column'} cart-layout-${storeConfig?.cartPosition || (isTwoColumn ? 'right' : 'middle')}`}>
                 {/* Left Column: Manual Keypad (Rendered only in 3-column mode) */}
                 {!isTwoColumn && (
-                  <div className={`pos-col-left${isMobile && mobilePosTab !== 'keypad' ? ' mobile-hidden' : ''}`}>
+                  <div className="pos-col-left">
                     <ManualKeypad
                       onAddToCart={handleAddToCart}
                       amountStr={keypadAmount}
@@ -1039,7 +1029,7 @@ export default function App() {
                 )}
 
                 {/* Presets Grid Column (pos-col-presets in 2-column mode, pos-col-center in 3-column mode) */}
-                <div className={`${isTwoColumn ? 'pos-col-presets' : 'pos-col-center'}${isMobile && mobilePosTab !== 'products' && (!isTwoColumn || mobilePosTab !== 'keypad') ? ' mobile-hidden' : ''}`}>
+                <div className={isTwoColumn ? 'pos-col-presets' : 'pos-col-center'}>
                   <div className="pos-card-box pos-presets-box">
                     <div className="pos-presets-scroll-wrapper">
                       <QuickPresetGrid
@@ -1080,7 +1070,7 @@ export default function App() {
                 </div>
 
                 {/* Live Cart Column (pos-col-cart in 2-column mode, pos-col-right in 3-column mode) */}
-                <div className={`${isTwoColumn ? 'pos-col-cart' : 'pos-col-right'}${isMobile && mobilePosTab !== 'cart' ? ' mobile-hidden' : ''}`}>
+                <div className={isTwoColumn ? 'pos-col-cart' : 'pos-col-right'}>
                   <Cart
                     cartItems={cartItems}
                     onUpdateQty={handleUpdateQty}
@@ -1116,36 +1106,6 @@ export default function App() {
                 </div>
               </div>
 
-              {isMobile && (
-                <div className="mobile-pos-tabs">
-                  {!isTwoColumn && (
-                    <button type="button"
-                      className={`mobile-pos-tab ${mobilePosTab === 'keypad' ? 'active' : ''}`}
-                      onClick={() => setMobilePosTab('keypad')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-                      Klávesy
-                    </button>
-                  )}
-                  <button type="button"
-                    className={`mobile-pos-tab ${mobilePosTab === 'products' || (isTwoColumn && mobilePosTab === 'keypad') ? 'active' : ''}`}
-                    onClick={() => setMobilePosTab('products')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 8h20"/><path d="M9 3v5"/></svg>
-                    Produkty
-                  </button>
-                  <button type="button"
-                    className={`mobile-pos-tab ${mobilePosTab === 'cart' ? 'active' : ''}`}
-                    onClick={() => setMobilePosTab('cart')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    Košík
-                    {cartItems.length > 0 && (
-                      <span className="mobile-cart-badge">{cartItems.length}</span>
-                    )}
-                  </button>
-                </div>
-              )}
             </>
           );
         })()}

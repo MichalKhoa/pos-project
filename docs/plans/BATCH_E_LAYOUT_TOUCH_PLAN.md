@@ -69,3 +69,13 @@ Added `src/__tests__/touch_layout.test.jsx` with 9 tests. All 9 are red for the 
 - Intake modal table wrapper has no horizontal scroll; the write-off product select has no `minWidth`; the "Režim" notice shows with no item chosen.
 
 Note for later phases: Vitest turns CSS imports into empty strings, so the CSS guards read the stylesheets from disk with `readFileSync` (a first version using `?raw` passed vacuously and was fixed). The reachability test from Batch D still clicks drawer buttons; Phase 2 narrows it to the desktop bar.
+
+## 8. Phase 2 result
+
+- `App.jsx`: removed `isMobile`, `mobilePosTab`, the media-query listener, the `mobile-hidden` class use on the three columns and the whole `mobile-pos-tabs` bar.
+- `Navbar.jsx`: removed the hamburger button, the slide-in drawer with its second copy of the tab buttons and the technician banner, the drawer state and handler, and the unused `Menu` and `X` imports. The status badges and quick tools stay in the navbar.
+- `layout.css`: removed the 768 px mobile block, the 1050 px drawer block and the hamburger and drawer-technician rules (about 350 lines removed in total). The 1240, 1300 and 1100 px desktop compaction rules stay.
+- `index.html`: the viewport meta no longer blocks zoom.
+- `navbar_reachability.test.jsx`: now checks the desktop bar only.
+- Gates: lint clean, build OK. 395 of 402 frontend tests pass; the 2 mobile guards from Phase 1 are now green and the 7 still red are the Phase 3 and 4 tests (touch sizes, default text size, intake and write-off modals). The 213 backend tests were not touched by this phase and were not rerun. `/code-review` at `medium`: no findings.
+- Live check at 1366x768: the register screen renders with the six tabs and the status chips in one row and no hamburger button. Not checked: 1920x1080, other tabs after the CSS removal beyond the register screen.
