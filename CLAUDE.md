@@ -33,4 +33,5 @@
 
 ## Mandatory Agent Discipline
 - **Implementation Planning First**: Create phased `implementation_plan.md` + get approval before multi-file/feature code changes.
+- **Code Review Always**: Every code change must pass `/code-review` after the quality gates pass and before it is reported done or committed. Use `medium` effort; use `high` when touching `backend/services/eet*`, VAT math, refunds, sale payloads, or SQLite migrations. Fix or report every finding. Instruction/doc-only edits have no code to review.
 - **Serena Memory & Codegraph (Autonomous)**: Full autonomous authority to read, query, edit, and sync `.serena/memories/` and `.codegraph/` without asking. Keep memories in sync.
