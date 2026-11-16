@@ -127,3 +127,8 @@ Thumbs.db
 .agent_logs/
 
 *.tex
+
+.projectmem/events.jsonl
+.projectmem/watch.pid
+.projectmem/watch.log
+.projectmem/structure.json
