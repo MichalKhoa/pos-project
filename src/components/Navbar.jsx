@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Package, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
@@ -290,6 +290,15 @@ function Navbar({
           </button>
 
           <button
+            ref={el => { tabRefs.current['inventory'] = el; }}
+            className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''}`}
+            onClick={() => setActiveTab('inventory')}
+          >
+            <Package size={17} />
+            <span>{t('nav.inventory')}</span>
+          </button>
+
+          <button
             ref={el => { tabRefs.current['history'] = el; }}
             className={`nav-tab ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
@@ -352,6 +361,15 @@ function Navbar({
               >
                 <Tag size={18} />
                 <span>{t('nav.presets')}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`drawer-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`}
+                onClick={() => handleNavTabSelect('inventory')}
+              >
+                <Package size={18} />
+                <span>{t('nav.inventory')}</span>
               </button>
 
               <button
