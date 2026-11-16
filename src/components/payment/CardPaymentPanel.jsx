@@ -1,6 +1,7 @@
 import React from 'react';
-import { CreditCard, Wifi, RefreshCw, Zap, Printer } from 'lucide-react';
+import { CreditCard, Wifi } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import PaymentFinishBar from './PaymentFinishBar.jsx';
 
 export default function CardPaymentPanel({
   totalAmount,
@@ -120,67 +121,15 @@ export default function CardPaymentPanel({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'nowrap' }}>
-        {termConfig?.enabled && termConfig?.ip && (
-          <button
-            type="button"
-            className="pay-btn pay-btn-card"
-            disabled={termLoading}
-            style={{ flex: 1.2, height: '56px', fontSize: '0.95rem', fontWeight: '800' }}
-            onClick={onTerminalPay}
-          >
-            <RefreshCw size={18} className={termLoading ? 'spin' : ''} />
-            <span>{termLoading ? t('payment.sending_to_terminal') : t('payment.card_send_csob')}</span>
-          </button>
-        )}
-
-        <button
-          type="button"
-          className="pay-btn"
-          style={{
-            flex: 1,
-            height: '56px',
-            fontSize: '0.95rem',
-            fontWeight: '800',
-            background: 'var(--bg-main)',
-            color: 'var(--text-primary)',
-            border: '1.5px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.45rem',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap'
-          }}
-          onClick={() => onComplete({ printReceipt: false })}
-          title={t('payment.finish_no_print') || 'Dokončit bez tisku'}
-        >
-          <Zap size={18} style={{ color: 'var(--accent-amber)' }} />
-          <span>{t('payment.finish_no_print') || 'Dokončit bez tisku'}</span>
-        </button>
-
-        <button
-          type="button"
-          className="pay-btn pay-btn-card"
-          style={{
-            flex: 1.2,
-            height: '56px',
-            fontSize: '0.95rem',
-            fontWeight: '800',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.45rem',
-            whiteSpace: 'nowrap'
-          }}
-          onClick={() => onComplete({ printReceipt: true })}
-          title={t('payment.finish_with_print') || 'Dokončit a vytisknout'}
-        >
-          <Printer size={19} />
-          <span>{t('payment.finish_with_print') || 'Dokončit a vytisknout'}</span>
-        </button>
-      </div>
+      <PaymentFinishBar
+        primaryClassName="pay-btn-card"
+        onComplete={onComplete}
+        terminalAction={{
+          enabled: Boolean(termConfig?.enabled && termConfig?.ip),
+          loading: termLoading,
+          onPay: onTerminalPay
+        }}
+      />
     </div>
   );
 }

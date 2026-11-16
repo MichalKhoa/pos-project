@@ -293,7 +293,23 @@ describe('Roadmap 1.1 to 1.4 Frontend Feature Tests', () => {
   });
 
   describe('Task 1.3: B2B Invoicing in PaymentModal & ReceiptModal', () => {
-    it('toggles B2B invoice drawer and prefills customer data from ARES', async () => {
+    it('hides B2B toggle in PaymentModal by default when enableB2bInvoicing is off', () => {
+      render(
+        <LanguageProvider>
+          <PaymentModal
+            method="cash"
+            totalAmount={15000}
+            storeConfig={{}}
+            onClose={vi.fn()}
+            onCompleteSale={vi.fn()}
+          />
+        </LanguageProvider>
+      );
+
+      expect(screen.queryByRole('button', { name: /Firemní faktura/i })).not.toBeInTheDocument();
+    });
+
+    it('toggles B2B invoice drawer from modal header and prefills customer data from ARES when enabled', async () => {
       posApi.lookupAres.mockResolvedValue({
         ico: '12345678',
         dic: 'CZ12345678',
@@ -309,7 +325,7 @@ describe('Roadmap 1.1 to 1.4 Frontend Feature Tests', () => {
           <PaymentModal
             method="cash"
             totalAmount={15000}
-            storeConfig={{}}
+            storeConfig={{ enableB2bInvoicing: true }}
             onClose={vi.fn()}
             onCompleteSale={onCompleteSale}
           />

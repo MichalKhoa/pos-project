@@ -26,7 +26,8 @@ export default function PaymentModal({
   const [tenderedStr, setTenderedStr] = useState('0');
   const [activeMethod, setActiveMethod] = useState(initialMethod || method || 'cash');
 
-  // B2B Invoicing state (§ 28 ZDPH > 10 000 CZK)
+  // B2B Invoicing state (§ 28 ZDPH > 10 000 CZK) — hidden unless enabled in Settings
+  const b2bEnabled = Boolean(storeConfig?.enableB2bInvoicing);
   const [isB2B, setIsB2B] = useState(false);
   const [customerIco, setCustomerIco] = useState('');
   const [customerDic, setCustomerDic] = useState('');
@@ -258,7 +259,7 @@ export default function PaymentModal({
   }, [activeMethod, tenderedStr, tenderedVal, splitCashStr, changeDue, totalAmount, effectiveCashTotal, isBusy, confirmOptions, onClose]);
 
   const getB2bPayload = () => {
-    if (!isB2B) return { isInvoice: false, is_invoice: false };
+    if (!b2bEnabled || !isB2B) return { isInvoice: false, is_invoice: false };
     return {
       isInvoice: true,
       is_invoice: true,
@@ -368,6 +369,17 @@ export default function PaymentModal({
             {isRefund ? t('payment.refund_title') : t('payment.title')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            {b2bEnabled && (
+              <button
+                type="button"
+                className={`payment-modal-b2b-btn ${isB2B ? 'active' : ''}`}
+                onClick={() => setIsB2B(prev => !prev)}
+                title={t('b2b.btn') || 'Firemní faktura (B2B)'}
+              >
+                <Building2 size={16} />
+                <span>{isB2B ? `✓ ${t('b2b.btn') || 'Firemní faktura (B2B)'}` : `+ ${t('b2b.btn') || 'Firemní faktura (B2B)'}`}</span>
+              </button>
+            )}
             {onOpenCashDrawer && (
               <button
                 type="button"
@@ -454,55 +466,24 @@ export default function PaymentModal({
           </div>
         </div>
 
-        {/* B2B Invoicing Banner & Drawer (§ 28 ZDPH) */}
-        <div style={{
-          padding: '0.6rem 1.25rem',
-          background: isB2B ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-input)',
-          borderBottom: '1px solid var(--border-color)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.6rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <button
-                type="button"
-                onClick={() => setIsB2B(prev => !prev)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: `1px solid ${isB2B ? 'var(--accent-blue)' : 'var(--border-color)'}`,
-                  background: isB2B ? 'var(--accent-blue)' : 'var(--bg-card)',
-                  color: isB2B ? '#fff' : 'var(--text-primary)',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer',
-                  minHeight: '40px'
-                }}
-              >
-                <Building2 size={16} />
-                <span>{isB2B ? '✓ Firemní faktura (B2B)' : '+ Firemní faktura (B2B)'}</span>
-              </button>
-
-              {totalAmount > 10000 && !isB2B && (
-                <span style={{ fontSize: '0.78rem', color: 'var(--accent-amber)', fontWeight: 600 }}>
-                  ⚠️ Nad 10 000 Kč (§ 28 ZDPH doporučuje daňový doklad s IČO)
+        {/* Expandable B2B Invoicing Drawer (only when enabled in Settings and toggled on in modal header) */}
+        {b2bEnabled && isB2B && (
+          <div style={{
+            padding: '0.75rem 1.25rem',
+            background: 'rgba(59, 130, 246, 0.08)',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem'
+          }}>
+            {customerName && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--accent-blue)', fontWeight: 700 }}>
+                  {customerName} {customerIco ? `(IČO: ${customerIco})` : ''}
                 </span>
-              )}
-            </div>
-
-            {isB2B && customerName && (
-              <span style={{ fontSize: '0.82rem', color: 'var(--accent-blue)', fontWeight: 700 }}>
-                {customerName} {customerIco ? `(IČO: ${customerIco})` : ''}
-              </span>
+              </div>
             )}
-          </div>
 
-          {/* Expandable B2B Details Form */}
-          {isB2B && (
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -649,8 +630,8 @@ export default function PaymentModal({
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Modal Main Content Area */}
         <div className="modal-body payment-widescreen-body">

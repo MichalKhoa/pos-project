@@ -1,6 +1,7 @@
 import React from 'react';
-import { Delete, CreditCard, Wifi, RefreshCw, Zap, Printer } from 'lucide-react';
+import { Delete, CreditCard, Wifi } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import PaymentFinishBar from './PaymentFinishBar.jsx';
 
 export default function SplitPaymentPanel({
   splitStep,
@@ -21,7 +22,8 @@ export default function SplitPaymentPanel({
 
   if (splitStep === 1) {
     return (
-      <div className="cash-payment-container">
+      <div className="payment-panel-stack">
+        <div className="cash-payment-container">
         {/* COLUMN 1: Cash Portion Inputs, Calculation & Shortcuts */}
         <div className="cash-col-left" style={{ gap: '0.85rem' }}>
           <div>
@@ -102,58 +104,27 @@ export default function SplitPaymentPanel({
               <Delete size={20} />
             </button>
           </div>
+        </div>
+        </div>
 
-          {/* Proceed to Card Step or Finish Cash Sale */}
-          {splitCardVal > 0 ? (
+        {/* Proceed to Card Step or Finish Cash Sale */}
+        {splitCardVal > 0 ? (
+          <div className="payment-finish-bar">
             <button
               type="button"
-              className="pay-btn pay-btn-card"
-              style={{ width: '100%', height: '54px', marginTop: 'auto', fontSize: '1rem', fontWeight: '800' }}
+              className="pay-btn pay-btn-card payment-finish-primary"
               onClick={() => setSplitStep(2)}
             >
-              <CreditCard size={20} />
+              <CreditCard size={22} style={{ flexShrink: 0 }} />
               <span>{t('payment.proceed_to_card', { amount: splitCardVal.toFixed(2) })}</span>
             </button>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: '0.45rem', width: '100%', marginTop: 'auto' }}>
-              <button
-                type="button"
-                className="pay-btn"
-                style={{
-                  height: '54px',
-                  fontSize: '0.92rem',
-                  fontWeight: '800',
-                  background: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  border: '1.5px solid var(--border-color)',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-                onClick={() => onComplete({ printReceipt: false })}
-                title={t('payment.finish_no_print') || 'Dokončit bez tisku'}
-              >
-                <Zap size={17} style={{ color: 'var(--accent-amber)' }} />
-                <span>{t('payment.finish_no_print_short') || 'Bez tisku'}</span>
-              </button>
-
-              <button
-                type="button"
-                className="pay-btn pay-btn-cash"
-                style={{ height: '54px', fontSize: '0.92rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
-                onClick={() => onComplete({ printReceipt: true })}
-                title={t('payment.finish_with_print') || 'Dokončit a vytisknout'}
-              >
-                <Printer size={18} />
-                <span>{t('payment.finish_with_print_short') || 'S tiskem'}</span>
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <PaymentFinishBar
+            primaryClassName="pay-btn-cash"
+            onComplete={onComplete}
+          />
+        )}
       </div>
     );
   }
@@ -279,67 +250,15 @@ export default function SplitPaymentPanel({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'nowrap' }}>
-        {termConfig?.enabled && termConfig?.ip && (
-          <button
-            type="button"
-            className="pay-btn pay-btn-card"
-            disabled={termLoading}
-            style={{ flex: 1.2, height: '56px', fontSize: '0.95rem', fontWeight: '800' }}
-            onClick={onTerminalPay}
-          >
-            <RefreshCw size={18} className={termLoading ? 'spin' : ''} />
-            <span>{termLoading ? t('payment.sending_to_terminal') : t('payment.card_send_csob')}</span>
-          </button>
-        )}
-
-        <button
-          type="button"
-          className="pay-btn"
-          style={{
-            flex: 1,
-            height: '56px',
-            fontSize: '0.95rem',
-            fontWeight: '800',
-            background: 'var(--bg-main)',
-            color: 'var(--text-primary)',
-            border: '1.5px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.45rem',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap'
-          }}
-          onClick={() => onComplete({ printReceipt: false })}
-          title={t('payment.finish_no_print') || 'Dokončit bez tisku'}
-        >
-          <Zap size={18} style={{ color: 'var(--accent-amber)' }} />
-          <span>{t('payment.finish_no_print') || 'Dokončit bez tisku'}</span>
-        </button>
-
-        <button
-          type="button"
-          className="pay-btn pay-btn-card"
-          style={{
-            flex: 1.2,
-            height: '56px',
-            fontSize: '0.95rem',
-            fontWeight: '800',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.45rem',
-            whiteSpace: 'nowrap'
-          }}
-          onClick={() => onComplete({ printReceipt: true })}
-          title={t('payment.finish_with_print') || 'Dokončit a vytisknout'}
-        >
-          <Printer size={19} />
-          <span>{t('payment.finish_with_print') || 'Dokončit a vytisknout'}</span>
-        </button>
-      </div>
+      <PaymentFinishBar
+        primaryClassName="pay-btn-card"
+        onComplete={onComplete}
+        terminalAction={{
+          enabled: Boolean(termConfig?.enabled && termConfig?.ip),
+          loading: termLoading,
+          onPay: onTerminalPay
+        }}
+      />
     </div>
   );
 }

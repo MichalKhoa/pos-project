@@ -147,6 +147,9 @@ class StoreConfigModel(Base):
     # Show/Hide VAT Rate on Preset Tiles (Useful for non-VAT retailers)
     show_preset_vat = Column(Boolean, default=True)
 
+    # Enable/Disable B2B Corporate Invoice Toggle in Payment Modal (Hidden by default)
+    enable_b2b_invoicing = Column(Boolean, default=False)
+
     # Receipt Overhaul Customization Fields
     receipt_top_margin = Column(Integer, default=1)
     receipt_bottom_margin = Column(Integer, default=3)
