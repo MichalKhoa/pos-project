@@ -93,6 +93,9 @@ export const translations = {
       print_success: "Denní tržba vytištěna na tiskárně"
     },
     keypad: {
+      backspace_title: "Smazat poslední znak (Backspace)",
+      total_return_preview: "↩️ Vratka celkem: ",
+      total_preview: "= Celkem: ",
       manual_title: "Ruční Zadání Částky",
       item_placeholder: "Název / popis položky (volitelné)...",
       amount_label: "Částka k úhradě",
@@ -1095,6 +1098,10 @@ export const translations = {
       err_price_invalid: "Zadejte platnou prodejní cenu"
     },
     common: {
+      optional: "volitelné",
+      clear: "Vymazat",
+      processing: "Zpracovávám...",
+      loading: "Načítám...",
       save: "Uložit",
       cancel: "Zrušit",
       close: "Zavřít",
@@ -1449,6 +1456,9 @@ export const translations = {
       print_success: "Đã in tổng kết ngày ra máy in nhiệt"
     },
     keypad: {
+      backspace_title: "Xóa ký tự cuối (Backspace)",
+      total_return_preview: "↩️ Tổng trả hàng: ",
+      total_preview: "= Tổng: ",
       manual_title: "Nhập Số Tiền Thủ Công",
       item_placeholder: "Tên / mô tả sản phẩm (tùy chọn)...",
       amount_label: "Số tiền cần thanh toán",
@@ -2451,6 +2461,10 @@ export const translations = {
       err_price_invalid: "Vui lòng nhập giá bán hợp lệ"
     },
     common: {
+      optional: "tùy chọn",
+      clear: "Xóa",
+      processing: "Đang xử lý...",
+      loading: "Đang tải...",
       save: "Lưu",
       cancel: "Hủy",
       close: "Đóng",
@@ -2805,6 +2819,9 @@ export const translations = {
       print_success: "Daily summary printed on thermal printer"
     },
     keypad: {
+      backspace_title: "Delete last character (Backspace)",
+      total_return_preview: "↩️ Return total: ",
+      total_preview: "= Total: ",
       manual_title: "Manual Amount Entry",
       item_placeholder: "Item name / description (optional)...",
       amount_label: "Amount Due",
@@ -3807,6 +3824,10 @@ export const translations = {
       err_price_invalid: "Please enter a valid price"
     },
     common: {
+      optional: "optional",
+      clear: "Clear",
+      processing: "Processing...",
+      loading: "Loading...",
       save: "Save",
       cancel: "Cancel",
       close: "Close",

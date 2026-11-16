@@ -445,7 +445,7 @@ function QuickPresetGrid({
                 type="button"
                 className="preset-search-clear"
                 onClick={() => setSearchTerm('')}
-                title={t('common.clear') || 'Vymazat'}
+                title={t('common.clear')}
               >
                 <X size={12} />
               </button>

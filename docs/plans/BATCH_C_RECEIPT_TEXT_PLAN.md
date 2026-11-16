@@ -1,6 +1,6 @@
 # Batch C: Receipt and Text Correctness — Implementation Plan
 
-Status: APPROVED with defaults. Phase 1 done (see result below); Phases 2 and 3 open.
+Status: APPROVED with defaults. Phases 1 and 2 done (see results below); Phase 3 open.
 Source: [`docs/audit/FINDINGS.md`](../audit/FINDINGS.md) and [`docs/audit/FIX_RECOMMENDATIONS.md`](../audit/FIX_RECOMMENDATIONS.md).
 Covers findings: F-016, F-019, F-011. One small add-on (section 5, item 3): the Czech plural on the history header.
 
@@ -81,3 +81,16 @@ Done on branch `fix/batch-c-receipt-text`.
 - Review (high): one finding fixed (a trivial `_money` wrapper). One skipped: the A4 invoice total (`receiptHtmlGenerator.js`, A4 branch) still prints `totalAmount.toFixed(2)`, so a cash A4 invoice shows 12.00 above lines summing to 11.50 with no rounding line. Open for a decision, because an invoice may need different wording than a receipt.
 - Known, not mine: `cash_shift.test.jsx` has an unhandled error (`closedReport.shift.expected_cash` undefined in the test mock). It also occurs without this change.
 - Not tested: real thermal printer and paper width.
+
+## 7. Phase 2 result
+
+Done on branch `fix/batch-c-receipt-text`.
+
+- New `src/__tests__/translation_keys.test.js`: every literal `t('…')` key in `src/` must exist in Czech, and cs, vi and en must hold the same keys. The first test failed on 16 call sites before the fix.
+- Seven of the 13 keys already existed under another path, so the call sites changed instead of adding duplicates: Navbar now uses `settings.backend_connecting`, `settings.backend_status_connecting` and `nav.offline`; BackupSection uses `settings.tech_logs_refresh_btn`.
+- New keys in cs, vi and en: `keypad.backspace_title`, `keypad.total_preview`, `keypad.total_return_preview`, `common.optional`, `common.clear`, `common.loading`, and `common.processing` (replaces `common.saving` in the label print and import buttons, which meant "working", not "saving").
+- A custom keypad item added without a name was stored in the cart as the raw key `keypad.unclassified_item`. The name is saved with the sale and printed on the Czech receipt, so it is now the plain Czech text "Volný prodej" (and "Vratka / Vrácené zboží" for a return), not a translated key.
+- The dead `|| 'fallback'` text is removed on the touched lines only; other dead fallbacks on keys that exist stay.
+- Live check: the header chip reads "Připojování..." while connecting and "Offline" afterwards, with matching tooltips.
+- Gates: 347 frontend tests, lint and build pass. Review (high): no findings. The `cash_shift.test.jsx` unhandled error from Phase 1 is still there and unrelated.
+- Not covered: keys built from a variable or template string (`t(\`a.${x}\`)`) are not scanned.

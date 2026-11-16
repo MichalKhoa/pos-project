@@ -214,7 +214,7 @@ export default function SupplierPriceHistoryModal({
             <div style={{ padding: '3rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
               <Loader2 size={28} className="spin-animate" style={{ color: 'var(--accent-blue)' }} />
               <span style={{ fontSize: '0.88rem', fontWeight: '600' }}>
-                {t('common.loading') || 'Načítám historii cen...'}
+                {t('common.loading')}
               </span>
             </div>
           )}

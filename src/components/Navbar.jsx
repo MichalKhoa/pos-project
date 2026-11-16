@@ -196,11 +196,11 @@ function Navbar({
       <div className="nav-island-left">
         <div
           className="nav-status-indicator"
-          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : (isConnecting ? (t('backend_connecting') || 'Připojování k serveru...') : (t('offline') || 'Offline'))}
+          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : (isConnecting ? t('settings.backend_connecting') : t('nav.offline'))}
         >
           <span className={`status-pulse-dot ${isOnline ? 'online' : (isConnecting ? 'connecting' : 'offline')}`} />
           <span className="status-label">
-            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : (isConnecting ? (t('backend_status_connecting') || 'Připojování...') : (t('offline') || 'Offline'))}
+            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : (isConnecting ? t('settings.backend_status_connecting') : t('nav.offline'))}
           </span>
         </div>
         {unsentCount > 0 && (
