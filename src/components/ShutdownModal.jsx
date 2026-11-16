@@ -45,7 +45,7 @@ export default function ShutdownModal({ pendingCount, onClose }) {
             <Power size={24} style={{ color: 'var(--accent-rose)' }} />
             <h2>Ukončení Směny & Vypnutí</h2>
           </div>
-          <button className="close-modal-btn" onClick={onClose} disabled={isShuttingDown} title="Zavřít">
+          <button type="button" className="close-modal-btn" onClick={onClose} disabled={isShuttingDown} title="Zavřít">
             <X size={18} />
           </button>
         </div>
@@ -84,7 +84,7 @@ export default function ShutdownModal({ pendingCount, onClose }) {
         </div>
 
         <div className="modal-footer footer-split">
-          <button
+          <button type="button"
             className="btn btn-secondary"
             onClick={onClose}
             disabled={isShuttingDown}
@@ -102,7 +102,7 @@ export default function ShutdownModal({ pendingCount, onClose }) {
             <span>Pokračovat v prodeji</span>
           </button>
 
-          <button
+          <button type="button"
             className="btn"
             onClick={handleConfirmShutdown}
             disabled={isShuttingDown}

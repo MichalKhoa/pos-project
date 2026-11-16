@@ -39,6 +39,10 @@ export function usePosKeyboardShortcuts({
 
       const key = e.key;
 
+      // F-002: a payment modal owns the keyboard. A scan during payment must neither add an
+      // item to the cart nor type into the keypad; the modal shows the warning.
+      if (paymentModalMethod) return;
+
       // F2 hotkey: Toggle Price Check Mode (Cenovka)
       if (key === 'F2') {
         e.preventDefault();

@@ -184,7 +184,7 @@ export default function CalendarModal({
             <CalendarIcon size={22} style={{ color: 'var(--accent-blue)' }} />
             <span>{t('calendar.title')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ padding: '1.25rem' }}>

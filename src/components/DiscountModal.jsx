@@ -86,7 +86,7 @@ export default function DiscountModal({
             <Percent size={22} style={{ color: 'var(--accent-purple)' }} />
             <span>{t('discount.title')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ gap: '0.9rem' }}>

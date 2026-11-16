@@ -104,7 +104,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
                 : (isInvoice && invNum ? `Faktura č. ${invNum}` : 'Prodej Dokončen')}
             </span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ alignItems: 'center' }}>

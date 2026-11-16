@@ -477,7 +477,7 @@ export default function PresetModal({
                 {/* Cost Price (Nákupní cena bez DPH) */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
-                    {t('presets.cost_price') || 'Nákupní cena bez DPH'} ({t('common.optional') || 'volitelné'})
+                    {t('presets.cost_price') || 'Nákupní cena bez DPH'} ({t('common.optional')})
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input
@@ -507,7 +507,7 @@ export default function PresetModal({
                 {/* Margin Coefficient (Koeficient marže k_marže) */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
-                    {t('presets.margin_coefficient') || 'Koeficient marže k_marže, např. 1.35'} ({t('common.optional') || 'volitelné'})
+                    {t('presets.margin_coefficient') || 'Koeficient marže k_marže, např. 1.35'} ({t('common.optional')})
                   </label>
                   <input
                     type="number"

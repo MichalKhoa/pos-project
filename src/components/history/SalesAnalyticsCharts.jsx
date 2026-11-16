@@ -1,6 +1,7 @@
 import React from 'react';
 import { DollarSign, Banknote, CreditCard, Receipt, BarChart3, PieChart, Flame, Trophy, Clock, RotateCcw } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { pluralWord } from '../../utils/pluralWord';
 import MultiPeriodComparison from './MultiPeriodComparison.jsx';
 
 export default function SalesAnalyticsCharts({
@@ -21,7 +22,7 @@ export default function SalesAnalyticsCharts({
   hourlySales = { hours: [], maxRevenue: 1, peakHour: null },
   refundMetrics = { count: 0, amount: 0 }
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const cashPercent = totalRevenue > 0 ? (((paymentMethodSummary?.cash?.total || 0) / totalRevenue) * 100).toFixed(1) : '0.0';
   const cardPercent = totalRevenue > 0 ? (((paymentMethodSummary?.card?.total || 0) / totalRevenue) * 100).toFixed(1) : '0.0';
@@ -72,7 +73,7 @@ export default function SalesAnalyticsCharts({
             </div>
           </div>
           <div className="metric-value" style={{ fontSize: '1.4rem' }}>
-            {transactionCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>{t('shift_stats.receipts') || 'účtenek'}</span>
+            {transactionCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>{pluralWord(t, language, 'shift_stats.receipts', transactionCount)}</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             {t('history.avg_receipt') || 'Průměr'}: <strong style={{ color: 'var(--accent-emerald)' }}>{avgOrderValue.toFixed(0)} Kč</strong>

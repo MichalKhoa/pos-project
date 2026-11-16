@@ -491,10 +491,10 @@ export default function StockIntakeModal({
                 background: 'var(--bg-input)',
                 border: '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
-                overflow: 'hidden'
+                overflowX: 'auto'
               }}
             >
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+              <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_intake.col_product') || 'Produkt / Položka'}</th>

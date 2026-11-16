@@ -1,5 +1,6 @@
 import { generateQrDataUrl } from './qrCode.js';
 import { generateBarcodeSVG } from './barcodeGenerator.js';
+import { formatReceiptMoney as money, receiptTotals } from './receiptAmounts.js';
 
 export function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -64,6 +65,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
   const logoBase64 = storeConfig?.receiptLogoBase64 || '';
 
   const isRefund = saleData.isRefund || saleData.is_refund || (saleData.totalAmount !== undefined && saleData.totalAmount < 0) || (saleData.grandTotal !== undefined && saleData.grandTotal < 0);
+  const totals = receiptTotals(saleData);
   const origNumber = escapeHtml(saleData.originalReceiptNumber || saleData.original_receipt_number);
   const reasonText = escapeHtml(saleData.refundReason || saleData.refund_reason);
   const receiptNum = escapeHtml(saleData.receiptNumber);
@@ -124,7 +126,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
           ${itemDensity === 'standard' && showVat ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">DPH ${item.vat}%</div>` : ''}
         </td>
         <td style="text-align: center; width: 14%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: 800; font-size: ${is58mm ? '9.5px' : '12px'};">${qtyFormatted}${isWeighted ? ' ' + unitStr : ''}</td>
-        <td style="text-align: right; width: 34%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: ${boldPrices ? '900' : '500'}; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${lineTotalStr}&nbsp;Kč</td>
+        <td style="text-align: right; width: 34%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: ${boldPrices ? '900' : '500'}; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${money(effPrice * item.quantity)}&nbsp;Kč</td>
       </tr>
     `;
   }).join('');
@@ -432,10 +434,16 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
             </tbody>
           </table>
 
+          ${totals.rounding !== 0 ? `
+            <div style="font-size: ${is58mm ? '8.5px' : '10px'}; margin: 4px 0 0;">
+              <div style="display:flex; justify-content:space-between;"><span>Mezisoučet:</span><span>${money(totals.exact)} Kč</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Zaokrouhlení:</span><span>${money(totals.rounding, { signed: true })} Kč</span></div>
+            </div>
+          ` : ''}
           <div style="border-top: 2px dashed #000; border-bottom: 3px double #000; padding: 6px 0; margin: 5px 0;">
             <div class="total-row">
               <span>CELKEM K ${isRefund ? 'VRÁCENÍ' : 'ÚHRADĚ'}</span>
-              <span>${saleData.totalAmount.toFixed(0)} Kč</span>
+              <span>${money(totals.payable)} Kč</span>
             </div>
           </div>
 
@@ -446,13 +454,13 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
             </div>
             ${saleData.paymentMethod === 'split' && saleData.splitDetails ? `
               <div style="font-size: ${is58mm ? '7.5px' : '9px'}; margin-top:2px;">
-                <div style="display:flex; justify-content:space-between;"><span>- Uhrazeno Hotově:</span><span class="bold">${(saleData.splitDetails.cash || 0).toFixed(0)} Kč</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>- Uhrazeno Kartou:</span><span class="bold">${(saleData.splitDetails.card || 0).toFixed(0)} Kč</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>- Uhrazeno Hotově:</span><span class="bold">${money(saleData.splitDetails.cash)} Kč</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>- Uhrazeno Kartou:</span><span class="bold">${money(saleData.splitDetails.card)} Kč</span></div>
               </div>
             ` : ''}
             ${saleData.paymentMethod === 'cash' ? `
-              <div style="display:flex; justify-content:space-between;"><span>Přijatá hotovost:</span><span class="bold">${(saleData.tenderedAmount || 0).toFixed(0)} Kč</span></div>
-              <div style="display:flex; justify-content:space-between;"><span>Vrácená hotovost:</span><span class="bold" style="color: #059669;">${(saleData.changeDue || 0).toFixed(0)} Kč</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Přijatá hotovost:</span><span class="bold">${money(saleData.tenderedAmount)} Kč</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Vrácená hotovost:</span><span class="bold" style="color: #059669;">${money(saleData.changeDue)} Kč</span></div>
             ` : ''}
           </div>
 

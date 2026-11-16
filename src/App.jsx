@@ -17,6 +17,7 @@ import { buildRefundUpdate, revertRefund, settleRefundUpdate } from './utils/ref
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
 import { useTranslation } from './i18n/LanguageContext';
+import { useConfirm } from './context/useConfirm.js';
 import { soundFx } from './utils/audio';
 import { buildSalePayload } from './utils/buildSalePayload';
 import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
@@ -47,6 +48,7 @@ import CustomerDisplayView from './components/CustomerDisplayView';
 
 export default function App() {
   const { t } = useTranslation();
+  const { askConfirm } = useConfirm();
   const [isCustomerDisplayMode, setIsCustomerDisplayMode] = useState(() => window.location.hash === '#/customer-display');
 
   useEffect(() => {
@@ -66,16 +68,6 @@ export default function App() {
   const [flashBanner, setFlashBanner] = useState(null);
   const storageWarnedRef = useRef(false);
   const [unknownBarcode, setUnknownBarcode] = useState(null);
-  const [mobilePosTab, setMobilePosTab] = useState('keypad');
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
   const [storeConfig, setStoreConfig] = useState(() => {
     try {
       const saved = getStorageItem('config');
@@ -266,7 +258,7 @@ export default function App() {
       if (res && res.status === 'PRINTED' && res.physical !== false) {
         soundFx.playSuccessChime();
         setFlashBanner({
-          message: `✓ Účtenka #${sale.receiptNumber || sale.receipt_number || ''} vytištěna`,
+          message: t('payment.receipt_printed', { n: sale.receiptNumber || sale.receipt_number || '' }),
           type: 'success'
         });
       } else {
@@ -279,7 +271,7 @@ export default function App() {
     } catch {
       setCurrentReceiptData(sale);
     }
-  }, [storeConfig]);
+  }, [storeConfig, t]);
 
   // Open Cash Drawer Handler
   const handleOpenCashDrawer = useCallback(async () => {
@@ -313,14 +305,14 @@ export default function App() {
   // Test Sales Management
 
   const handleDeleteSale = async (saleId) => {
-    if (window.confirm('Opravdu chcete smazat tento testovací prodej? Tržby se okamžitě přepočítají.')) {
+    if (await askConfirm({ message: t('dialogs.delete_sale'), danger: true, confirmLabel: t('dialogs.delete_button') })) {
       setSalesHistory(prev => prev.filter(s => s.id !== saleId));
       await deleteSaleBackend(saleId);
     }
   };
 
   const handleClearAllTestSales = async () => {
-    if (window.confirm('Opravdu chcete smazat VŠECHNY testovací prodeje? Všechny rozpracované účtenky budou vymazány.')) {
+    if (await askConfirm({ message: t('dialogs.purge_sales'), danger: true, typeWord: t('dialogs.type_word_delete'), confirmLabel: t('dialogs.delete_button') })) {
       setSalesHistory([]);
       await purgeAllSalesBackend();
     }
@@ -903,7 +895,7 @@ export default function App() {
             if (outcome === 'ok') {
               setFlashBanner({
                 type: 'SUCCESS',
-                message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
+                message: t('payment.receipt_printed', { n: finalSaleToPrint.receiptNumber || '' }),
                 amount: finalGrandTotal
               });
             }
@@ -930,13 +922,13 @@ export default function App() {
 
     setFlashBanner({
       type: 'SUCCESS',
-      message: printReceipt ? 'Zaplaceno!' : 'Zaplaceno!',
+      message: printReceipt ? t('payment.paid') : t('payment.paid_no_print'),
       amount: finalGrandTotal
     });
   };
 
-  const handleResetData = () => {
-    if (window.confirm('Opravdu chcete resetovat zálohy a vrátit výchozí nastavení?')) {
+  const handleResetData = async () => {
+    if (await askConfirm({ message: t('dialogs.reset_data'), danger: true, typeWord: t('dialogs.type_word_reset') })) {
       removeStorageItem('presets');
       removeStorageItem('config');
       removeStorageItem('sales');
@@ -1008,7 +1000,7 @@ export default function App() {
               <div className={`pos-layout ${isTwoColumn ? 'layout-two-column' : 'layout-three-column'} cart-layout-${storeConfig?.cartPosition || (isTwoColumn ? 'right' : 'middle')}`}>
                 {/* Left Column: Manual Keypad (Rendered only in 3-column mode) */}
                 {!isTwoColumn && (
-                  <div className={`pos-col-left${isMobile && mobilePosTab !== 'keypad' ? ' mobile-hidden' : ''}`}>
+                  <div className="pos-col-left">
                     <ManualKeypad
                       onAddToCart={handleAddToCart}
                       amountStr={keypadAmount}
@@ -1037,7 +1029,7 @@ export default function App() {
                 )}
 
                 {/* Presets Grid Column (pos-col-presets in 2-column mode, pos-col-center in 3-column mode) */}
-                <div className={`${isTwoColumn ? 'pos-col-presets' : 'pos-col-center'}${isMobile && mobilePosTab !== 'products' && (!isTwoColumn || mobilePosTab !== 'keypad') ? ' mobile-hidden' : ''}`}>
+                <div className={isTwoColumn ? 'pos-col-presets' : 'pos-col-center'}>
                   <div className="pos-card-box pos-presets-box">
                     <div className="pos-presets-scroll-wrapper">
                       <QuickPresetGrid
@@ -1078,7 +1070,7 @@ export default function App() {
                 </div>
 
                 {/* Live Cart Column (pos-col-cart in 2-column mode, pos-col-right in 3-column mode) */}
-                <div className={`${isTwoColumn ? 'pos-col-cart' : 'pos-col-right'}${isMobile && mobilePosTab !== 'cart' ? ' mobile-hidden' : ''}`}>
+                <div className={isTwoColumn ? 'pos-col-cart' : 'pos-col-right'}>
                   <Cart
                     cartItems={cartItems}
                     onUpdateQty={handleUpdateQty}
@@ -1114,36 +1106,6 @@ export default function App() {
                 </div>
               </div>
 
-              {isMobile && (
-                <div className="mobile-pos-tabs">
-                  {!isTwoColumn && (
-                    <button
-                      className={`mobile-pos-tab ${mobilePosTab === 'keypad' ? 'active' : ''}`}
-                      onClick={() => setMobilePosTab('keypad')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-                      Klávesy
-                    </button>
-                  )}
-                  <button
-                    className={`mobile-pos-tab ${mobilePosTab === 'products' || (isTwoColumn && mobilePosTab === 'keypad') ? 'active' : ''}`}
-                    onClick={() => setMobilePosTab('products')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 8h20"/><path d="M9 3v5"/></svg>
-                    Produkty
-                  </button>
-                  <button
-                    className={`mobile-pos-tab ${mobilePosTab === 'cart' ? 'active' : ''}`}
-                    onClick={() => setMobilePosTab('cart')}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    Košík
-                    {cartItems.length > 0 && (
-                      <span className="mobile-cart-badge">{cartItems.length}</span>
-                    )}
-                  </button>
-                </div>
-              )}
             </>
           );
         })()}

@@ -21,7 +21,7 @@ export default function SyncNotificationBanner({ type = 'success', message, onCl
         {getIcon()}
         <span className="banner-message">{message}</span>
       </div>
-      <button className="banner-close-btn" onClick={onClose} title="Zavřít oznámení">
+      <button type="button" className="banner-close-btn" onClick={onClose} title="Zavřít oznámení">
         <X size={18} />
       </button>
     </div>

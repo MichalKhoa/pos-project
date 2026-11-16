@@ -4,6 +4,12 @@ import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { roundCZK } from '../../utils/tax.js';
 import { soundFx } from '../../utils/audio.js';
 import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
+import { getStorageItem, setStorageItem } from '../../utils/storage.js';
+
+// F-003: a cashier types grams for fruit, so grams are the default entry unit.
+// Anything above this needs a second tap (350 kg typed for 350 g would be 14 700 Kč).
+const MAX_WEIGHT_KG = 25;
+const UNIT_KEY = 'weight_entry_unit';
 
 export default function WeightEntryModal({
   isOpen,
@@ -17,6 +23,8 @@ export default function WeightEntryModal({
   const [unitPriceStr, setUnitPriceStr] = useState('');
   const [tareGrams, setTareGrams] = useState(0);
   const [activeField, setActiveField] = useState('weight'); // 'weight' | 'unit_price'
+  const [entryUnit, setEntryUnit] = useState(() => (getStorageItem(UNIT_KEY, 'g') === 'kg' ? 'kg' : 'g'));
+  const [confirmedKg, setConfirmedKg] = useState(null); // weight the cashier already confirmed as "really this heavy"
   const modalRef = useRef(null);
 
   const isOpenPrice = Boolean(
@@ -33,6 +41,8 @@ export default function WeightEntryModal({
     if (isOpen) {
       setWeightStr('');
       setTareGrams(0);
+      setConfirmedKg(null);
+      setEntryUnit(getStorageItem(UNIT_KEY, 'g') === 'kg' ? 'kg' : 'g');
 
       const incomingPrice = preset?.initialUnitPrice !== undefined
         ? preset.initialUnitPrice
@@ -49,8 +59,14 @@ export default function WeightEntryModal({
     }
   }, [isOpen, preset, initialUnitPrice, isOpenPrice]);
 
+  const itemUnit = preset?.unit || 'kg';
+  // Only items priced per kg can be typed in grams; other units keep plain decimal entry
+  const isGrams = itemUnit === 'kg' && entryUnit === 'g';
+  const shownUnit = itemUnit === 'kg' ? entryUnit : itemUnit;
+
   // Gross, tare and net weight calculations (precision in kg, up to 3 decimal places)
-  const grossWeightKg = parseFloat(weightStr) || 0;
+  const typedWeight = parseFloat(weightStr) || 0;
+  const grossWeightKg = isGrams ? typedWeight / 1000 : typedWeight;
   const tareKg = tareGrams / 1000;
   const rawNetKg = grossWeightKg - tareKg;
   const netWeightKg = Math.round(rawNetKg * 1000) / 1000;
@@ -64,7 +80,8 @@ export default function WeightEntryModal({
   const isValidPrice = effectiveUnitPrice > 0;
   const isValidSubmission = isValidNet && isValidPrice;
   const lineTotal = roundCZK(Math.max(0, netWeightKg) * effectiveUnitPrice);
-  const itemUnit = preset?.unit || 'kg';
+  const isOverLimit = netWeightKg > MAX_WEIGHT_KG;
+  const needsHeavyConfirm = isOverLimit && confirmedKg !== netWeightKg;
 
   const handleDigit = useCallback((digit) => {
     soundFx.playKeypadClick();
@@ -84,10 +101,10 @@ export default function WeightEntryModal({
           if (parts[1] && parts[1].length >= 3) return prev;
         }
         if (prev === '0') return digit;
-        return prev.length < 8 ? prev + digit : prev;
+        return prev.length < (isGrams ? 6 : 8) ? prev + digit : prev;
       });
     }
-  }, [activeField]);
+  }, [activeField, isGrams]);
 
   const handleDoubleZero = useCallback(() => {
     soundFx.playKeypadClick();
@@ -107,12 +124,13 @@ export default function WeightEntryModal({
           const parts = prev.split('.');
           if (parts[1] && parts[1].length >= 2) return prev;
         }
-        return prev.length < 7 ? prev + '00' : prev;
+        return prev.length < (isGrams ? 5 : 7) ? prev + '00' : prev;
       });
     }
-  }, [activeField]);
+  }, [activeField, isGrams]);
 
   const handleComma = useCallback(() => {
+    if (activeField === 'weight' && isGrams) return;
     soundFx.playKeypadClick();
     if (activeField === 'unit_price') {
       setUnitPriceStr((prev) => {
@@ -125,7 +143,7 @@ export default function WeightEntryModal({
         return prev ? prev + '.' : '0.';
       });
     }
-  }, [activeField]);
+  }, [activeField, isGrams]);
 
   const handleBackspace = useCallback(() => {
     soundFx.playKeypadClick();
@@ -144,6 +162,16 @@ export default function WeightEntryModal({
       setWeightStr('');
     }
   }, [activeField]);
+
+  // Switching unit keeps the same weight on the screen
+  const handleSetUnit = useCallback((unit) => {
+    if (unit === entryUnit) return;
+    soundFx.playKeypadClick();
+    const kg = isGrams ? typedWeight / 1000 : typedWeight;
+    setWeightStr(kg > 0 ? String(unit === 'g' ? Math.round(kg * 1000) : kg) : '');
+    setEntryUnit(unit);
+    setStorageItem(UNIT_KEY, unit);
+  }, [entryUnit, isGrams, typedWeight]);
 
   const handleToggleTare = useCallback((grams) => {
     soundFx.playKeypadClick();
@@ -175,6 +203,12 @@ export default function WeightEntryModal({
       return;
     }
 
+    if (needsHeavyConfirm) {
+      soundFx.playKeypadClick();
+      setConfirmedKg(netWeightKg);
+      return;
+    }
+
     soundFx.playSuccess();
     onAddToCart({
       ...preset,
@@ -184,7 +218,7 @@ export default function WeightEntryModal({
       isWeighted: true
     });
     onClose();
-  }, [activeField, effectiveUnitPrice, isValidSubmission, preset, netWeightKg, itemUnit, isOpenPrice, onAddToCart, onClose]);
+  }, [activeField, effectiveUnitPrice, isValidSubmission, preset, netWeightKg, itemUnit, isOpenPrice, needsHeavyConfirm, onAddToCart, onClose]);
 
   // Physical keyboard listener
   useEffect(() => {
@@ -459,11 +493,36 @@ export default function WeightEntryModal({
                     letterSpacing: '0.02em'
                   }}
                 >
-                  {weightStr || '0.000'}
+                  {weightStr || (isGrams ? '0' : '0.000')}
                 </span>
-                <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-                  {itemUnit}
-                </span>
+                {itemUnit === 'kg' ? (
+                  <div role="group" aria-label={t('weight_modal.entry_unit') || 'Jednotka'} style={{ display: 'flex', gap: '2px' }}>
+                    {['g', 'kg'].map((u) => (
+                      <button
+                        key={u}
+                        type="button"
+                        aria-pressed={entryUnit === u}
+                        onClick={(e) => { e.stopPropagation(); handleSetUnit(u); }}
+                        style={{
+                          minWidth: '44px',
+                          height: '36px',
+                          borderRadius: 'var(--radius-sm, 6px)',
+                          border: '1px solid var(--accent-blue)',
+                          background: entryUnit === u ? 'var(--accent-blue)' : 'transparent',
+                          color: entryUnit === u ? '#fff' : 'var(--accent-blue)',
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                    {shownUnit}
+                  </span>
+                )}
                 {activeField === 'weight' && (
                   <button
                     type="button"
@@ -491,6 +550,21 @@ export default function WeightEntryModal({
                 )}
               </div>
             </div>
+
+            {isGrams && weightStr && (
+              <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                = {grossWeightKg.toFixed(3)} kg
+              </div>
+            )}
+
+            {isOverLimit && (
+              <div
+                role="status"
+                style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-amber)' }}
+              >
+                {t('weight_modal.over_limit', { max: MAX_WEIGHT_KG })}
+              </div>
+            )}
 
             {/* Tare & Net Breakdown Row */}
             {tareGrams > 0 && (
@@ -681,7 +755,8 @@ export default function WeightEntryModal({
               type="button"
               className="key-btn"
               onClick={handleComma}
-              style={{ minHeight: '48px', height: '48px', fontSize: '1.5rem', fontWeight: '900', color: 'var(--accent-blue)' }}
+              disabled={isGrams && activeField === 'weight'}
+              style={{ minHeight: '48px', height: '48px', fontSize: '1.5rem', fontWeight: '900', color: 'var(--accent-blue)', opacity: isGrams && activeField === 'weight' ? 0.3 : 1 }}
               title="Čárka"
             >
               ,
@@ -746,7 +821,11 @@ export default function WeightEntryModal({
               ) : (
                 <>
                   <PlusCircle size={20} />
-                  <span>+ {t('weight_modal.add_to_cart') || 'Vložit do košíku'}</span>
+                  <span>
+                    {confirmedKg === netWeightKg && isOverLimit
+                      ? t('weight_modal.confirm_heavy', { kg: netWeightKg })
+                      : `+ ${t('weight_modal.add_to_cart') || 'Vložit do košíku'}`}
+                  </span>
                 </>
               )}
             </button>

@@ -38,21 +38,21 @@ export default function SalesLedgerTable({
         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Filter by document type */}
           <div style={{ display: 'flex', gap: '0.2rem', background: 'var(--bg-input)', padding: '0.15rem', borderRadius: 'var(--radius-sm)' }}>
-            <button
+            <button type="button"
               className={`nav-tab ${docTypeFilter === 'all' ? 'active' : ''}`}
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}
               onClick={() => setDocTypeFilter('all')}
             >
               {t('history.all_docs')}
             </button>
-            <button
+            <button type="button"
               className={`nav-tab ${docTypeFilter === 'sales' ? 'active' : ''}`}
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}
               onClick={() => setDocTypeFilter('sales')}
             >
               {t('history.sales_only')}
             </button>
-            <button
+            <button type="button"
               className={`nav-tab ${docTypeFilter === 'refunds' ? 'active' : ''}`}
               style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
               onClick={() => setDocTypeFilter('refunds')}
@@ -204,7 +204,7 @@ export default function SalesLedgerTable({
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
                           {!isRefund && !isFullyRefunded && onInitiateRefund && (
-                            <button
+                            <button type="button"
                               className="nav-tab"
                               style={{
                                 padding: '0.22rem 0.5rem',
@@ -227,7 +227,7 @@ export default function SalesLedgerTable({
                             </button>
                           )}
 
-                          <button
+                          <button type="button"
                             className="nav-tab"
                             style={{
                               padding: '0.22rem 0.5rem',
@@ -245,7 +245,7 @@ export default function SalesLedgerTable({
                           </button>
 
                           {isAdminMode && (
-                            <button
+                            <button type="button"
                               className="delete-item-btn"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -282,7 +282,7 @@ export default function SalesLedgerTable({
             </div>
 
             <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-              <button
+              <button type="button"
                 className="nav-tab"
                 style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === 1}
@@ -292,7 +292,7 @@ export default function SalesLedgerTable({
                 <ChevronsLeft size={14} />
               </button>
 
-              <button
+              <button type="button"
                 className="nav-tab"
                 style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === 1}
@@ -306,7 +306,7 @@ export default function SalesLedgerTable({
                 Stránka {validCurrentPage} z {totalPages}
               </span>
 
-              <button
+              <button type="button"
                 className="nav-tab"
                 style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === totalPages}
@@ -316,7 +316,7 @@ export default function SalesLedgerTable({
                 <ChevronRight size={14} />
               </button>
 
-              <button
+              <button type="button"
                 className="nav-tab"
                 style={{ padding: '0.2rem 0.45rem' }}
                 disabled={validCurrentPage === totalPages}

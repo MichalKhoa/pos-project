@@ -5,6 +5,8 @@ import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
 import { canRefund } from '../utils/saleSync';
+import { countCartItems } from '../utils/cartCount';
+import { formatReceiptMoney } from '../utils/receiptAmounts';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
   const [progress, setProgress] = useState(100);
@@ -109,7 +111,7 @@ function Cart({
   onReprintLastReceipt = null,
   onInitiateRefund = null
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
   const lastReceiptRef = useRef(null);
@@ -194,10 +196,12 @@ function Cart({
   }, [cartItems, cartDiscountPercent]);
 
   const isRefundTransaction = finalGrandTotal < 0;
-  const totalItemCount = useMemo(() => {
-    const sum = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-    return Number.isInteger(sum) ? sum : Number(sum.toFixed(3));
-  }, [cartItems]);
+  const totalItemCount = useMemo(() => countCartItems(cartItems), [cartItems]);
+  const itemCountLabel = (() => {
+    const category = new Intl.PluralRules(language).select(Math.abs(totalItemCount));
+    const word = t(`cart.items_${category}`);
+    return word.startsWith('cart.items_') ? t('cart.items_other') : word;
+  })();
 
   const activeItem = useMemo(() => {
     return cartItems.find(i => i.id === selectedItemId) || null;
@@ -302,9 +306,9 @@ function Cart({
             <Receipt size={16} className="last-receipt-chip-icon" />
             <span className="last-receipt-chip-text">
               {t('last_receipt.chip_label', {
-                amount: Math.abs(lastSaleAmount).toFixed(0),
+                amount: formatReceiptMoney(Math.abs(lastSaleAmount)),
                 time: lastSaleChipTime
-              }) || `Poslední: ${Math.abs(lastSaleAmount).toFixed(0)} Kč (${lastSaleChipTime})`}
+              }) || `Poslední: ${formatReceiptMoney(Math.abs(lastSaleAmount))} Kč (${lastSaleChipTime})`}
             </span>
             {lastSaleItems.length > 0 && (
               <span className="last-receipt-chip-count-badge">
@@ -362,7 +366,7 @@ function Cart({
                         <div key={item.id || idx} className="last-receipt-item-row">
                           <span className="last-receipt-item-qty">{item.quantity}×</span>
                           <span className="last-receipt-item-name" title={item.name}>{item.name}</span>
-                          <span className="last-receipt-item-price">{itemTotal.toFixed(0)} Kč</span>
+                          <span className="last-receipt-item-price">{formatReceiptMoney(itemTotal)} Kč</span>
                         </div>
                       );
                     })}
@@ -579,7 +583,7 @@ function Cart({
               {isRefundTransaction ? '↩️ K VRÁCENÍ' : t('cart.total')}
             </span>
             <span className="total-items-badge">
-              {totalItemCount} {totalItemCount === 1 ? 'položka' : (totalItemCount >= 2 && totalItemCount <= 4 ? 'položky' : 'položek')}
+              {totalItemCount} {itemCountLabel}
             </span>
           </div>
           <span className="total-hero-amount total-amount">

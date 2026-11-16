@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tag, Plus, Edit3, Trash2, Check, X, Layers, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 
 export default function CategoryManagerModal({
   categories,
@@ -13,6 +14,7 @@ export default function CategoryManagerModal({
   initialEditingCatId = null
 }) {
   const { t } = useTranslation();
+  const { askConfirm } = useConfirm();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCatId, setEditingCatId] = useState(initialEditingCatId);
   const [editingName, setEditingName] = useState(() => {
@@ -113,9 +115,9 @@ export default function CategoryManagerModal({
     setEditingName('');
   };
 
-  const handleDelete = (catId, catName) => {
+  const handleDelete = async (catId, catName) => {
     if (catId === 'all') return;
-    if (window.confirm(`Opravdu chcete smazat kategorii "${catName}"? Položky v ní obsažené nebudou smazány.`)) {
+    if (await askConfirm({ message: t('dialogs.delete_category', { name: catName }), danger: true, confirmLabel: t('dialogs.delete_button') })) {
       onDeleteCategory(catId);
     }
   };
@@ -128,7 +130,7 @@ export default function CategoryManagerModal({
             <Layers size={20} style={{ color: 'var(--accent-blue)' }} />
             <span>{t('presets.manage_categories')}</span>
           </div>
-          <button className="close-modal-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body" style={{ gap: '1.2rem' }}>

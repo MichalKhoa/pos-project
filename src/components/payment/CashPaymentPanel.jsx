@@ -194,7 +194,14 @@ export default function CashPaymentPanel({
             textAlign: 'right',
             transition: 'all 0.15s ease'
           }}>
-            {tenderedStr} Kč
+            {tenderedVal === 0 ? (
+              <span data-testid="tendered-exact" style={{ color: 'var(--text-muted)' }}>
+                {effectiveCashTotal.toFixed(0)} Kč
+                <small style={{ marginLeft: '0.5rem', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                  {t('payment.exact') || 'Přesně'}
+                </small>
+              </span>
+            ) : `${tenderedStr} Kč`}
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, Menu, X, BarChart3, Printer, Type, Wrench } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Package, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, BarChart3, Printer, Type, Wrench } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
@@ -57,7 +57,6 @@ function Navbar({
     return localStorage.getItem('pos_theme') || 'light';
   });
   const [soundEnabled, setSoundEnabled] = useState(() => soundFx.isSoundEnabled());
-  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
   const [latency, setLatency] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
@@ -66,11 +65,6 @@ function Navbar({
     const next = !soundEnabled;
     soundFx.setSoundEnabled(next);
     setSoundEnabled(next);
-  };
-
-  const handleNavTabSelect = (tabKey) => {
-    setActiveTab(tabKey);
-    setIsNavDrawerOpen(false);
   };
 
   // Apply theme attribute to html root element
@@ -196,11 +190,11 @@ function Navbar({
       <div className="nav-island-left">
         <div
           className="nav-status-indicator"
-          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : (isConnecting ? (t('backend_connecting') || 'Připojování k serveru...') : (t('offline') || 'Offline'))}
+          title={isOnline ? (import.meta.env.DEV ? `Vývojový režim • Backend ${latency !== null ? latency : '--'} ms` : (storeConfig?.eetEnabled ? `EET 2.0 Online • Odezva: ${latency !== null ? latency : '--'} ms` : `Online • Odezva: ${latency !== null ? latency : '--'} ms`)) : (isConnecting ? t('settings.backend_connecting') : t('nav.offline'))}
         >
           <span className={`status-pulse-dot ${isOnline ? 'online' : (isConnecting ? 'connecting' : 'offline')}`} />
           <span className="status-label">
-            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : (isConnecting ? (t('backend_status_connecting') || 'Připojování...') : (t('offline') || 'Offline'))}
+            {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : (isConnecting ? t('settings.backend_status_connecting') : t('nav.offline'))}
           </span>
         </div>
         {unsentCount > 0 && (
@@ -217,10 +211,11 @@ function Navbar({
           </button>
         )}
         {storeConfig?.eetEnabled && pendingCount > 0 && (
-          <button
+          <button type="button"
             className="status-badge badge-pending-sync pulse-badge nav-badge-sync"
             onClick={onOpenSyncModal}
             title="Klikněte pro odeslání neodeslaných účtenek na EET"
+            aria-label="Klikněte pro odeslání neodeslaných účtenek na EET"
           >
             <AlertTriangle size={14} />
             <span>{pendingCount}</span>
@@ -271,7 +266,7 @@ function Navbar({
             }}
           />
 
-          <button
+          <button type="button"
             ref={el => { tabRefs.current['register'] = el; }}
             className={`nav-tab ${activeTab === 'register' ? 'active' : ''}`}
             onClick={() => setActiveTab('register')}
@@ -280,7 +275,7 @@ function Navbar({
             <span>{t('nav.register')}</span>
           </button>
 
-          <button
+          <button type="button"
             ref={el => { tabRefs.current['presets'] = el; }}
             className={`nav-tab ${activeTab === 'presets' ? 'active' : ''}`}
             onClick={() => setActiveTab('presets')}
@@ -289,7 +284,16 @@ function Navbar({
             <span>{t('nav.presets')}</span>
           </button>
 
-          <button
+          <button type="button"
+            ref={el => { tabRefs.current['inventory'] = el; }}
+            className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''}`}
+            onClick={() => setActiveTab('inventory')}
+          >
+            <Package size={17} />
+            <span>{t('nav.inventory')}</span>
+          </button>
+
+          <button type="button"
             ref={el => { tabRefs.current['history'] = el; }}
             className={`nav-tab ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
@@ -298,7 +302,7 @@ function Navbar({
             <span>{t('nav.history')}</span>
           </button>
 
-          <button
+          <button type="button"
             ref={el => { tabRefs.current['analytics'] = el; }}
             className={`nav-tab ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
@@ -307,7 +311,7 @@ function Navbar({
             <span>{t('nav.analytics') || 'Analytika'}</span>
           </button>
 
-          <button
+          <button type="button"
             ref={el => { tabRefs.current['settings'] = el; }}
             className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
@@ -319,89 +323,9 @@ function Navbar({
       </div>
 
       {/* Right Island: Utility Actions & Time */}
-      <div className={`nav-island-right nav-meta ${isNavDrawerOpen ? 'drawer-open' : ''}`}>
-        {/* Hamburger Drawer Toggle Button (Visible on screens < 900px) */}
-        <button
-          type="button"
-          className="nav-hamburger-btn"
-          onClick={() => setIsNavDrawerOpen(!isNavDrawerOpen)}
-          title="Nabídka stavu a rychlých nástrojů"
-        >
-          {isNavDrawerOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-
-        {/* Status badges container (desktop flex row / mobile slide drawer) */}
-        <div className={`nav-status-group ${isNavDrawerOpen ? 'show-drawer' : ''}`}>
-          {/* Mobile View Drawer Nav Section (Visible inside mobile drawer) */}
-          <div className="drawer-nav-section">
-            <div className="drawer-section-title">{t('nav.section_title') || 'Navigace'}</div>
-            <div className="drawer-nav-grid">
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'register' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('register')}
-              >
-                <ShoppingBag size={18} />
-                <span>{t('nav.register')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'presets' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('presets')}
-              >
-                <Tag size={18} />
-                <span>{t('nav.presets')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('history')}
-              >
-                <History size={18} />
-                <span>{t('nav.history')}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('analytics')}
-              >
-                <BarChart3 size={18} />
-                <span>{t('nav.analytics') || 'Analytika'}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`drawer-nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
-                onClick={() => handleNavTabSelect('settings')}
-              >
-                <Settings size={18} />
-                <span>{t('nav.settings')}</span>
-              </button>
-            </div>
-          </div>
-
-          {isAdmin && (
-            <div className={`drawer-technician-banner ${remainingSeconds < 60 ? 'critical-warning' : ''}`}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Wrench size={14} />
-                <span>{t('nav.technician_active') || 'Technik'}</span>
-                <span className="technician-timer">{formatCountdown(remainingSeconds)}</span>
-              </div>
-              <button
-                type="button"
-                className="technician-drawer-exit-btn"
-                onClick={handleExitTechnician}
-                title={t('nav.technician_lock_now') || 'Uzamknout'}
-              >
-                <Lock size={12} />
-                <span>{t('nav.technician_lock_now') || 'Uzamknout'}</span>
-              </button>
-            </div>
-          )}
-
+      <div className="nav-island-right nav-meta">
+        {/* Status badges and quick tools */}
+        <div className="nav-status-group">
           {/* Language Switcher */}
           <LanguageSelector
             compact
@@ -422,6 +346,7 @@ function Navbar({
             className="nav-tool-btn"
             onClick={onOpenCashDrawer}
             title={t('nav.open_drawer') || 'Otevřít peněžní zásuvku'}
+            aria-label={t('nav.open_drawer') || 'Otevřít peněžní zásuvku'}
           >
             <CashDrawerIcon size={16} color="var(--text-secondary)" />
           </button>
@@ -432,6 +357,7 @@ function Navbar({
             className="nav-tool-btn"
             onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
             title={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
+            aria-label={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
           >
             {theme === 'light' ? <Moon size={15} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={15} style={{ color: 'var(--accent-amber)' }} />}
           </button>
@@ -442,6 +368,7 @@ function Navbar({
             className="nav-tool-btn nav-font-size-btn"
             onClick={cycleFontSize}
             title={`${t('nav.font_size_cycle') || 'Velikost písma'}: ${FONT_SIZE_LABELS[fontSize] || 'M'}`}
+            aria-label={`${t('nav.font_size_cycle') || 'Velikost písma'}: ${FONT_SIZE_LABELS[fontSize] || 'M'}`}
           >
             <Type size={15} style={{ color: 'var(--accent-indigo)' }} />
             <span className="nav-font-size-badge">{FONT_SIZE_LABELS[fontSize] || 'M'}</span>
@@ -453,6 +380,7 @@ function Navbar({
             className="nav-tool-btn"
             onClick={handleToggleSound}
             title={soundEnabled ? 'Zvuky jsou zapnuty (Klikněte pro ztišení)' : 'Zvuky jsou vypnuty (Klikněte pro zapnutí)'}
+            aria-label={soundEnabled ? 'Zvuky jsou zapnuty (Klikněte pro ztišení)' : 'Zvuky jsou vypnuty (Klikněte pro zapnutí)'}
           >
             {soundEnabled ? (
               <Volume2 size={15} style={{ color: 'var(--accent-blue)' }} />
@@ -468,6 +396,7 @@ function Navbar({
               className="nav-tool-btn"
               onClick={onPrintDailySummary}
               title={t('nav.print_daily_summary') || 'Vytisknout denní tržbu na tiskárnu a otevřít zásuvku'}
+              aria-label={t('nav.print_daily_summary') || 'Vytisknout denní tržbu na tiskárnu a otevřít zásuvku'}
             >
               <Printer size={15} style={{ color: '#0284c7' }} />
             </button>
@@ -479,6 +408,7 @@ function Navbar({
             className="nav-tool-btn"
             onClick={onLockApp}
             title="Zamknout pokladnu (Quick Lock)"
+            aria-label="Zamknout pokladnu (Quick Lock)"
           >
             <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
           </button>
@@ -504,6 +434,7 @@ function Navbar({
                 className="nav-clock-chip"
                 onClick={onOpenCalendarModal}
                 title="Klikněte pro otevření kalendáře a přehledu tržeb"
+                aria-label="Klikněte pro otevření kalendáře a přehledu tržeb"
               >
                 <Clock size={13} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
                 <span className="nav-clock-time">
@@ -525,6 +456,7 @@ function Navbar({
             className="nav-tool-btn btn-power"
             onClick={onOpenShutdownModal}
             title={t('nav.shutdown') || 'Ukončit směnu a vypnout pokladní systém'}
+            aria-label={t('nav.shutdown') || 'Ukončit směnu a vypnout pokladní systém'}
           >
             <Power size={15} style={{ color: 'var(--accent-rose)' }} />
           </button>

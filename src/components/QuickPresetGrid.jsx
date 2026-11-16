@@ -5,6 +5,7 @@ import CategoryManagerModal from './CategoryManagerModal';
 import PresetModal from './PresetModal';
 import CustomItemModal from './CustomItemModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
 import { usePresetDragDrop } from '../hooks/usePresetDragDrop';
 import CategoryFilterBar from './presets/CategoryFilterBar.jsx';
 import PresetTileCard from './presets/PresetTileCard.jsx';
@@ -36,6 +37,7 @@ function QuickPresetGrid({
   onOpenWeightModal = null
 }) {
   const { t } = useTranslation();
+  const { askConfirm } = useConfirm();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -132,13 +134,13 @@ function QuickPresetGrid({
     setIsOverTrash(false);
   };
 
-  const handleTrashDrop = (e) => {
+  const handleTrashDrop = async (e) => {
     e.preventDefault();
     setIsOverTrash(false);
     if (draggedIndex !== null && filteredPresets[draggedIndex]) {
       const targetPreset = filteredPresets[draggedIndex];
-      const confirmMsg = t('presets.confirm_delete_named', { name: targetPreset.name }) || `Opravdu chcete smazat ${targetPreset.name}?`;
-      if (window.confirm(confirmMsg)) {
+      const confirmMsg = t('presets.confirm_delete_named', { name: targetPreset.name });
+      if (await askConfirm({ message: confirmMsg, danger: true, confirmLabel: t('dialogs.delete_button') })) {
         onDeletePreset(targetPreset.id);
       }
     }
@@ -445,7 +447,7 @@ function QuickPresetGrid({
                 type="button"
                 className="preset-search-clear"
                 onClick={() => setSearchTerm('')}
-                title={t('common.clear') || 'Vymazat'}
+                title={t('common.clear')}
               >
                 <X size={12} />
               </button>
@@ -555,8 +557,8 @@ function QuickPresetGrid({
         defaultCategory={activeCategory}
         onClose={() => { setActiveModal(null); setEditingPreset(null); }}
         onSave={handleSavePreset}
-        onDelete={editingPreset ? () => {
-          if (window.confirm('Opravdu chcete toto tlačítko smazat?')) {
+        onDelete={editingPreset ? async () => {
+          if (await askConfirm({ message: t('dialogs.delete_preset'), danger: true, confirmLabel: t('dialogs.delete_button') })) {
             onDeletePreset(editingPreset.id);
             setActiveModal(null);
             setEditingPreset(null);

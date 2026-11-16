@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { useConfirm } from '../../context/useConfirm.js';
 import { useStoreConfig } from '../../context/StoreConfigContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
 import {
@@ -55,6 +56,7 @@ function formatUptime(seconds) {
 
 export default function TechnicianTab() {
   const { t } = useTranslation();
+  const { notify } = useConfirm();
   const { adminPin } = useStoreConfig();
 
   // Diagnostics state
@@ -263,11 +265,11 @@ export default function TechnicianTab() {
         soundFx.playSuccessChime?.();
       } else {
         soundFx.playErrorChime?.();
-        alert('Chyba při stahování zálohy: ' + (res.error || 'Neznámá chyba'));
+        notify(t('dialogs.backup_download_error', { message: res.error || t('dialogs.backup_unknown_error') }));
       }
     } catch (err) {
       soundFx.playErrorChime?.();
-      alert('Chyba při stahování: ' + err.message);
+      notify(t('dialogs.backup_download_error', { message: err.message }));
     } finally {
       setSnapshotLoading(false);
     }

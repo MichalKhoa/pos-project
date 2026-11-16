@@ -123,23 +123,18 @@ describe('App Shell & Navigation Regression Tests', () => {
   it('cycles font size on navbar button click and sets data-font-size attribute', async () => {
     renderAppWithProviders();
 
-    // Default font-size should be md
-    expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
+    // Default font-size should be lg (audit F-007: Large on the counter screen)
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('lg');
 
     // Find navbar font size cycle button
-    const fontBtn = screen.getByTitle(/Velikost písma: M\b/i);
+    const fontBtn = screen.getByTitle(/Velikost písma: L\b/i);
     expect(fontBtn).toBeInTheDocument();
-    expect(fontBtn).toHaveTextContent('M');
-
-    // Cycle to L
-    fireEvent.click(fontBtn);
-    expect(document.documentElement.getAttribute('data-font-size')).toBe('lg');
-    expect(localStorage.getItem('voltflow_font_size')).toBe('lg');
     expect(fontBtn).toHaveTextContent('L');
 
     // Cycle to XL
     fireEvent.click(fontBtn);
     expect(document.documentElement.getAttribute('data-font-size')).toBe('xl');
+    expect(localStorage.getItem('voltflow_font_size')).toBe('xl');
     expect(fontBtn).toHaveTextContent('XL');
 
     // Cycle to S
@@ -147,10 +142,15 @@ describe('App Shell & Navigation Regression Tests', () => {
     expect(document.documentElement.getAttribute('data-font-size')).toBe('sm');
     expect(fontBtn).toHaveTextContent('S');
 
-    // Cycle back to M
+    // Cycle to M
     fireEvent.click(fontBtn);
     expect(document.documentElement.getAttribute('data-font-size')).toBe('md');
     expect(fontBtn).toHaveTextContent('M');
+
+    // Cycle back to L
+    fireEvent.click(fontBtn);
+    expect(document.documentElement.getAttribute('data-font-size')).toBe('lg');
+    expect(fontBtn).toHaveTextContent('L');
   });
 
   it('prints receipt directly via hardware in background without lingering in ReceiptModal on payment completion', async () => {

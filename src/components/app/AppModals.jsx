@@ -250,7 +250,7 @@ export default function AppModals({
 
       {/* Toast Undo Notification Overlay */}
       <ToastUndo
-        undoToast={undoToast}
+        undoToast={paymentModalMethod ? null : undoToast}
         onUndo={onUndoLastAction}
         onDismiss={onDismissUndoToast}
       />

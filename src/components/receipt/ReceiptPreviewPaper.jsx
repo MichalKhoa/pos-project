@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Scissors } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { generateBarcodeSVG } from '../../utils/barcodeGenerator.js';
+import { formatReceiptMoney, receiptTotals } from '../../utils/receiptAmounts.js';
 
 export default function ReceiptPreviewPaper({
   saleData,
@@ -14,6 +15,8 @@ export default function ReceiptPreviewPaper({
   forceQrDemo = false
 }) {
   const isRefund = saleData.isRefund || saleData.is_refund;
+  const money = formatReceiptMoney;
+  const totals = receiptTotals(saleData);
   const fik = saleData.fik || saleData.pok || saleData.fik_code;
   const bkp = saleData.bkp || saleData.bkp_code;
   const pkp = saleData.pkp || saleData.pkp_code;
@@ -452,7 +455,7 @@ export default function ReceiptPreviewPaper({
                       fontFamily: 'monospace',
                       padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0'
                     }}>
-                      {(unitPrice * item.quantity).toFixed(0)}&nbsp;Kč
+                      {money(unitPrice * item.quantity)}&nbsp;Kč
                     </td>
                   </tr>
                 );
@@ -460,6 +463,19 @@ export default function ReceiptPreviewPaper({
             </tbody>
           </table>
         </>
+      )}
+
+      {totals.rounding !== 0 && (
+        <div style={{ fontSize: is58mm ? '11.52px' : '12.8px', margin: '3.2px 0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>Mezisoučet:</span>
+            <span style={{ fontFamily: 'monospace' }}>{money(totals.exact)} Kč</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>Zaokrouhlení:</span>
+            <span style={{ fontFamily: 'monospace' }}>{money(totals.rounding, { signed: true })} Kč</span>
+          </div>
+        </div>
       )}
 
       {/* High-Contrast Thermal Total Banner */}
@@ -479,7 +495,7 @@ export default function ReceiptPreviewPaper({
             textShadow: boldTotal ? '0.35px 0 0 currentColor' : 'none'
           }}
         >
-          {(saleData.totalAmount || 0).toFixed(0)} Kč
+          {money(totals.payable)} Kč
         </span>
       </div>
 
@@ -496,11 +512,11 @@ export default function ReceiptPreviewPaper({
           <div style={{ background: '#f8f9fa', border: '1px solid #e9ecef', padding: '5.6px 9.6px', borderRadius: '4px', marginTop: '3.2px', fontSize: '11.52px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>- Uhrazeno Hotově:</span>
-              <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{(saleData.splitDetails.cash || 0).toFixed(0)} Kč</span>
+              <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{money(saleData.splitDetails.cash)} Kč</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>- Uhrazeno Kartou:</span>
-              <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{(saleData.splitDetails.card || 0).toFixed(0)} Kč</span>
+              <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{money(saleData.splitDetails.card)} Kč</span>
             </div>
           </div>
         )}
@@ -509,11 +525,11 @@ export default function ReceiptPreviewPaper({
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Přijatá hotovost:</span>
-              <span style={{ fontWeight: '700', fontFamily: 'monospace' }}>{(saleData.tenderedAmount || 0).toFixed(0)} Kč</span>
+              <span style={{ fontWeight: '700', fontFamily: 'monospace' }}>{money(saleData.tenderedAmount)} Kč</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Vrácená hotovost:</span>
-              <span style={{ fontWeight: '800', fontFamily: 'monospace', color: '#059669' }}>{(saleData.changeDue || 0).toFixed(0)} Kč</span>
+              <span style={{ fontWeight: '800', fontFamily: 'monospace', color: '#059669' }}>{money(saleData.changeDue)} Kč</span>
             </div>
           </>
         )}

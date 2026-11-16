@@ -1075,7 +1075,7 @@ export default function BackupSection({
                   style={{ minHeight: '36px', padding: '0 0.75rem', fontSize: '0.78rem', fontWeight: '700' }}
                 >
                   <RefreshCw size={14} className={remoteLoading ? 'spin-icon' : ''} />
-                  <span>{t('tech_logs_refresh_btn') || 'Obnovit'}</span>
+                  <span>{t('settings.tech_logs_refresh_btn')}</span>
                 </button>
               </div>
 

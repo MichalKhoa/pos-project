@@ -133,6 +133,18 @@
   border: 1.5px solid #f87171;
 }
 
+.flash-banner-card.flash-warning {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #ffffff;
+  border: 1.5px solid #fbbf24;
+}
+
+.flash-banner-card.flash-info {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: 1.5px solid #60a5fa;
+}
+
 .flash-icon {
   display: flex;
   align-items: center;

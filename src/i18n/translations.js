@@ -30,6 +30,10 @@ export const translations = {
       discount: "Sleva na košík",
       discount_short: "Sleva",
       item_count: "položek",
+      items_one: "položka",
+      items_few: "položky",
+      items_many: "položky",
+      items_other: "položek",
       items_total: "Položky celkem:",
       tax_base: "Základ daně (Netto):",
       tax_total: "DPH celkem:",
@@ -89,6 +93,9 @@ export const translations = {
       print_success: "Denní tržba vytištěna na tiskárně"
     },
     keypad: {
+      backspace_title: "Smazat poslední znak (Backspace)",
+      total_return_preview: "↩️ Vratka celkem: ",
+      total_preview: "= Celkem: ",
       manual_title: "Ruční Zadání Částky",
       item_placeholder: "Název / popis položky (volitelné)...",
       amount_label: "Částka k úhradě",
@@ -137,6 +144,10 @@ export const translations = {
       note_placeholder: "Přidat poznámku (např. Inventura, Státní svátek)..."
     },
     payment: {
+      paid: "Zaplaceno!",
+      paid_no_print: "Zaplaceno, účtenka se netiskne",
+      receipt_printed: "✓ Účtenka #{n} vytištěna",
+      transaction_error: "Chyba transakce",
       title: "Platba Prodeje",
       refund_title: "↩️ Vrácení peněz / Storno",
       cash: "Hotovost",
@@ -190,7 +201,11 @@ export const translations = {
       split_step2_title: "Platba kartou pro zbývající částku: {amount} Kč",
       total_due: "Celkem k úhradě",
       sending_to_terminal: "Odesílám na ČSOB terminál...",
-      terminal_approved: "Transakce na terminálu schválena!"
+      terminal_approved: "Transakce na terminálu schválena!",
+      manual_card_confirm: "Terminál potvrdil platbu {amount} Kč?",
+      manual_card_yes: "Ano, zaplaceno",
+      manual_card_no: "Ne",
+      scan_blocked: "Sken během platby ignorován. Částka ani košík se nezměnily."
     },
     presets: {
       title: "Katalog položek",
@@ -265,6 +280,32 @@ export const translations = {
       print_shelf_label_short: "Cenovka",
       print_shelf_label_tooltip: "Vytisknout regálovou cenovku"
     },
+    dialogs: {
+      title: "Potvrzení",
+      confirm: "Potvrdit",
+      ok: "OK",
+      type_word_hint: "Pro potvrzení napište: {word}",
+      type_word_delete: "SMAZAT",
+      type_word_reset: "RESET",
+      delete_button: "Smazat",
+      delete_category: "Opravdu chcete smazat kategorii \"{name}\"? Položky v ní obsažené nebudou smazány.",
+      delete_sale: "Opravdu chcete smazat tento testovací prodej? Tržby se okamžitě přepočítají.",
+      purge_sales: "Opravdu chcete smazat VŠECHNY testovací prodeje? Všechny rozpracované účtenky budou vymazány.",
+      reset_data: "Opravdu chcete resetovat zálohy a vrátit výchozí nastavení?",
+      delete_preset: "Opravdu chcete toto tlačítko smazat z katalogu?",
+      delete_preset_named: "Opravdu chcete smazat {name}?",
+      delete_stock_item: "Opravdu chcete tuto položku smazat ze skladu?",
+      positive_qty: "Zadejte kladný počet kusů.",
+      csv_no_items: "V souboru CSV nebyly nalezeny žádné platné položky.",
+      csv_read_error: "Chyba při čtení CSV: {message}",
+      backup_download_error: "Chyba při stahování zálohy: {message}",
+      backup_unknown_error: "Neznámá chyba",
+      import_ok: "Data byla úspěšně importována. Stránka se obnoví.",
+      backup_read_error: "Chyba při čtení záložního souboru: {message}",
+      refund_select_item: "Vyberte prosím alespoň jednu položku k vrácení.",
+      export_no_sales: "Žádné prodeje k exportu.",
+      export_no_stock: "Žádné skladové položky k exportu."
+    },
     inventory: {
       title: "Správa Skladu & Čárových Kódů",
       subtitle: "Přehled skladových zásob, výstrahy minimálního stavu a evidencia EAN kódů.",
@@ -336,6 +377,7 @@ export const translations = {
       tax_reports_subtitle: "Oficiální podklady pro daňové přiznání k dani z příjmů a DPH z pokladního systému",
       deposit_ledger_title: "Kniha zálohovaných vratných obalů (Lahve & Přepravky)",
       deposit_ledger_subtitle: "Evidence stavu vratných lahví (3 Kč) a bas (100 Kč), závozů a vratek pivovarům",
+      deposit_load_error: "Knihu vratných obalů se nepodařilo načíst. Zkontrolujte spojení se serverem.",
       physical_audit_title: "Fyzická inventura skladu k 31. 12. (§ 29, 30 ZoÚ)",
       physical_audit_subtitle: "Skenování regálů čtečkou, vyčíslení mank/přebytků a narovnání skladu"
     },
@@ -1087,6 +1129,10 @@ export const translations = {
       err_price_invalid: "Zadejte platnou prodejní cenu"
     },
     common: {
+      optional: "volitelné",
+      clear: "Vymazat",
+      processing: "Zpracovávám...",
+      loading: "Načítám...",
       save: "Uložit",
       cancel: "Zrušit",
       close: "Zavřít",
@@ -1226,6 +1272,7 @@ export const translations = {
       actual_cash_label: "Zadaná hotovost v pokladně (Fyzický stav):",
       actual_cash_placeholder: "0.00",
       discrepancy: "Rozdíl (Stav):",
+      count_prompt: "Spočítejte hotovost v zásuvce a zadejte částku.",
       ok: "V pořádku (0 Kč)",
       surplus: "Přebytek (+{amount} Kč)",
       shortage: "Manko (-{amount} Kč)",
@@ -1326,6 +1373,9 @@ export const translations = {
       cancel: "Zrušit",
       clear: "Smazat",
       gross_minus_tare: "Hrubá {gross} kg − tára {tare} kg = {net} kg",
+      entry_unit: "Jednotka zadání",
+      over_limit: "Nad {max} kg. Zkontrolujte jednotku (g nebo kg).",
+      confirm_heavy: "Opravdu {kg} kg? Klepněte znovu",
       unit_price_title: "Cena za jednotku",
       unit_price_open_hint: "Zadejte cenu za jednotku",
       switch_to_weight: "Pokračovat na hmotnost ➡️",
@@ -1374,6 +1424,10 @@ export const translations = {
       discount: "Giảm giá giỏ hàng",
       discount_short: "Giảm giá",
       item_count: "sản phẩm",
+      items_one: "sản phẩm",
+      items_few: "sản phẩm",
+      items_many: "sản phẩm",
+      items_other: "sản phẩm",
       items_total: "Tổng số sản phẩm:",
       tax_base: "Tiền hàng (chưa thuế):",
       tax_total: "Tổng DPH:",
@@ -1433,6 +1487,9 @@ export const translations = {
       print_success: "Đã in tổng kết ngày ra máy in nhiệt"
     },
     keypad: {
+      backspace_title: "Xóa ký tự cuối (Backspace)",
+      total_return_preview: "↩️ Tổng trả hàng: ",
+      total_preview: "= Tổng: ",
       manual_title: "Nhập Số Tiền Thủ Công",
       item_placeholder: "Tên / mô tả sản phẩm (tùy chọn)...",
       amount_label: "Số tiền cần thanh toán",
@@ -1481,6 +1538,10 @@ export const translations = {
       note_placeholder: "Thêm ghi chú (vd: Kiểm kê, Ngày lễ)..."
     },
     payment: {
+      paid: "Đã thanh toán!",
+      paid_no_print: "Đã thanh toán, không in hóa đơn",
+      receipt_printed: "✓ Đã in hóa đơn #{n}",
+      transaction_error: "Lỗi giao dịch",
       title: "Thanh Toán Đơn Hàng",
       refund_title: "↩️ Hoàn tiền / Hủy giao dịch",
       cash: "Tiền mặt",
@@ -1534,7 +1595,11 @@ export const translations = {
       split_step2_title: "Thanh toán thẻ cho số tiền còn lại: {amount} Kč",
       total_due: "Tổng tiền cần trả",
       sending_to_terminal: "Đang gửi đến máy quẹt thẻ ČSOB...",
-      terminal_approved: "Giao dịch trên máy quẹt thẻ đã được chấp nhận!"
+      terminal_approved: "Giao dịch trên máy quẹt thẻ đã được chấp nhận!",
+      manual_card_confirm: "Máy quẹt thẻ đã xác nhận thanh toán {amount} Kč chưa?",
+      manual_card_yes: "Có, đã thanh toán",
+      manual_card_no: "Không",
+      scan_blocked: "Đã bỏ qua mã quét trong lúc thanh toán. Số tiền và giỏ hàng không thay đổi."
     },
     presets: {
       title: "Danh mục sản phẩm",
@@ -1609,6 +1674,32 @@ export const translations = {
       print_shelf_label_short: "Tem giá",
       print_shelf_label_tooltip: "In tem nhãn giá kệ"
     },
+    dialogs: {
+      title: "Xác nhận",
+      confirm: "Xác nhận",
+      ok: "OK",
+      type_word_hint: "Để xác nhận, hãy gõ: {word}",
+      type_word_delete: "XÓA",
+      type_word_reset: "RESET",
+      delete_button: "Xóa",
+      delete_category: "Bạn có chắc muốn xóa danh mục \"{name}\"? Các mặt hàng trong đó sẽ không bị xóa.",
+      delete_sale: "Bạn có chắc muốn xóa giao dịch thử này? Doanh thu sẽ được tính lại ngay.",
+      purge_sales: "Bạn có chắc muốn xóa TẤT CẢ giao dịch thử? Mọi hóa đơn đang dở sẽ bị xóa.",
+      reset_data: "Bạn có chắc muốn đặt lại bản sao lưu và khôi phục cài đặt mặc định?",
+      delete_preset: "Bạn có chắc muốn xóa nút này khỏi danh mục?",
+      delete_preset_named: "Bạn có chắc muốn xóa {name}?",
+      delete_stock_item: "Bạn có chắc muốn xóa mặt hàng này khỏi kho?",
+      positive_qty: "Hãy nhập số lượng lớn hơn 0.",
+      csv_no_items: "Không tìm thấy mặt hàng hợp lệ trong tệp CSV.",
+      csv_read_error: "Lỗi khi đọc CSV: {message}",
+      backup_download_error: "Lỗi khi tải bản sao lưu: {message}",
+      backup_unknown_error: "Lỗi không xác định",
+      import_ok: "Đã nhập dữ liệu thành công. Trang sẽ được tải lại.",
+      backup_read_error: "Lỗi khi đọc tệp sao lưu: {message}",
+      refund_select_item: "Hãy chọn ít nhất một mặt hàng để hoàn trả.",
+      export_no_sales: "Không có giao dịch nào để xuất.",
+      export_no_stock: "Không có mặt hàng kho nào để xuất."
+    },
     inventory: {
       title: "Quản Lý Kho Hàng & Mã Vạch",
       subtitle: "Tổng quan tồn kho, cảnh báo mức tối thiểu và quản lý mã EAN.",
@@ -1680,6 +1771,7 @@ export const translations = {
       tax_reports_subtitle: "Dữ liệu chính thức cho quyết toán thuế thu nhập và VAT từ máy POS",
       deposit_ledger_title: "Sổ theo dõi vỏ chai và két bia đặt cọc",
       deposit_ledger_subtitle: "Theo dõi tồn kho vỏ chai (3 Kč) và két (100 Kč), nhập từ nhà máy và trả lại",
+      deposit_load_error: "Không tải được sổ vỏ chai và két. Hãy kiểm tra kết nối với máy chủ.",
       physical_audit_title: "Kiểm kê kho thực tế k 31/12 (§ 29, 30 ZoÚ)",
       physical_audit_subtitle: "Quét mã vạch, tính thừa/thiếu và cân bằng kho"
     },
@@ -2431,6 +2523,10 @@ export const translations = {
       err_price_invalid: "Vui lòng nhập giá bán hợp lệ"
     },
     common: {
+      optional: "tùy chọn",
+      clear: "Xóa",
+      processing: "Đang xử lý...",
+      loading: "Đang tải...",
       save: "Lưu",
       cancel: "Hủy",
       close: "Đóng",
@@ -2570,6 +2666,7 @@ export const translations = {
       actual_cash_label: "Tiền mặt thực tế đếm được:",
       actual_cash_placeholder: "0.00",
       discrepancy: "Chênh lệch (Trạng thái):",
+      count_prompt: "Hãy đếm tiền mặt trong két và nhập số tiền.",
       ok: "Khớp hoàn toàn (0 Kč)",
       surplus: "Thừa tiền (+{amount} Kč)",
       shortage: "Thiếu tiền / Manko (-{amount} Kč)",
@@ -2670,6 +2767,9 @@ export const translations = {
       cancel: "Hủy",
       clear: "Xóa",
       gross_minus_tare: "Tổng {gross} kg − bì {tare} kg = {net} kg",
+      entry_unit: "Đơn vị nhập",
+      over_limit: "Trên {max} kg. Kiểm tra đơn vị (g hoặc kg).",
+      confirm_heavy: "Thật sự {kg} kg? Nhấn lại để xác nhận",
       unit_price_title: "Đơn giá theo đơn vị",
       unit_price_open_hint: "Nhập đơn giá cho mặt hàng",
       switch_to_weight: "Tiếp tục nhập khối lượng ➡️",
@@ -2718,6 +2818,10 @@ export const translations = {
       discount: "Cart Discount",
       discount_short: "Discount",
       item_count: "items",
+      items_one: "item",
+      items_few: "items",
+      items_many: "items",
+      items_other: "items",
       items_total: "Total items:",
       tax_base: "Tax base (Net):",
       tax_total: "Total VAT:",
@@ -2777,6 +2881,9 @@ export const translations = {
       print_success: "Daily summary printed on thermal printer"
     },
     keypad: {
+      backspace_title: "Delete last character (Backspace)",
+      total_return_preview: "↩️ Return total: ",
+      total_preview: "= Total: ",
       manual_title: "Manual Amount Entry",
       item_placeholder: "Item name / description (optional)...",
       amount_label: "Amount Due",
@@ -2825,6 +2932,10 @@ export const translations = {
       note_placeholder: "Add note (e.g. Stocktake, Holiday)..."
     },
     payment: {
+      paid: "Paid!",
+      paid_no_print: "Paid, receipt not printed",
+      receipt_printed: "✓ Receipt #{n} printed",
+      transaction_error: "Transaction error",
       title: "Complete Sale",
       refund_title: "↩️ Refund / Void Sale",
       cash: "Cash",
@@ -2878,7 +2989,11 @@ export const translations = {
       split_step2_title: "Card payment for remaining amount: {amount} CZK",
       total_due: "Total Due",
       sending_to_terminal: "Sending to ČSOB terminal...",
-      terminal_approved: "Transaction approved on terminal!"
+      terminal_approved: "Transaction approved on terminal!",
+      manual_card_confirm: "Did the terminal approve the payment of {amount} CZK?",
+      manual_card_yes: "Yes, paid",
+      manual_card_no: "No",
+      scan_blocked: "Scan ignored during payment. The amount and the cart did not change."
     },
     presets: {
       title: "Item Catalog",
@@ -2953,6 +3068,32 @@ export const translations = {
       print_shelf_label_short: "Shelf tag",
       print_shelf_label_tooltip: "Print shelf price tag"
     },
+    dialogs: {
+      title: "Confirmation",
+      confirm: "Confirm",
+      ok: "OK",
+      type_word_hint: "To confirm, type: {word}",
+      type_word_delete: "DELETE",
+      type_word_reset: "RESET",
+      delete_button: "Delete",
+      delete_category: "Delete the category \"{name}\"? The items in it will not be deleted.",
+      delete_sale: "Delete this test sale? Takings are recalculated at once.",
+      purge_sales: "Delete ALL test sales? All receipts in progress will be removed.",
+      reset_data: "Reset the backups and return to the default settings?",
+      delete_preset: "Delete this button from the catalog?",
+      delete_preset_named: "Delete {name}?",
+      delete_stock_item: "Delete this item from stock?",
+      positive_qty: "Enter a quantity above zero.",
+      csv_no_items: "No valid items were found in the CSV file.",
+      csv_read_error: "Error reading the CSV: {message}",
+      backup_download_error: "Error downloading the backup: {message}",
+      backup_unknown_error: "Unknown error",
+      import_ok: "Data imported successfully. The page will reload.",
+      backup_read_error: "Error reading the backup file: {message}",
+      refund_select_item: "Select at least one item to refund.",
+      export_no_sales: "No sales to export.",
+      export_no_stock: "No stock items to export."
+    },
     inventory: {
       title: "Warehouse & Barcode Management",
       subtitle: "Stock overview, minimum threshold alerts, and EAN barcode records.",
@@ -3024,6 +3165,7 @@ export const translations = {
       tax_reports_subtitle: "Official accounting and VAT statements from the POS register",
       deposit_ledger_title: "Returnable Deposit Packaging Ledger (Bottles & Crates)",
       deposit_ledger_subtitle: "Track inventory of returnable beer bottles (3 CZK) and crates (100 CZK)",
+      deposit_load_error: "Could not load the returnable packaging book. Check the connection to the server.",
       physical_audit_title: "Physical Inventory Audit as of 31.12. (§ 29, 30 ZoÚ)",
       physical_audit_subtitle: "Barcode shelf scanning, discrepancy calculation and stock reconciliation"
     },
@@ -3775,6 +3917,10 @@ export const translations = {
       err_price_invalid: "Please enter a valid price"
     },
     common: {
+      optional: "optional",
+      clear: "Clear",
+      processing: "Processing...",
+      loading: "Loading...",
       save: "Save",
       cancel: "Cancel",
       close: "Close",
@@ -3914,6 +4060,7 @@ export const translations = {
       actual_cash_label: "Actual Counted Cash:",
       actual_cash_placeholder: "0.00",
       discrepancy: "Discrepancy (Status):",
+      count_prompt: "Count the cash in the drawer and enter the amount.",
       ok: "Balanced (0 Kč)",
       surplus: "Surplus (+{amount} Kč)",
       shortage: "Shortage (-{amount} Kč)",
@@ -4014,6 +4161,9 @@ export const translations = {
       cancel: "Cancel",
       clear: "Clear",
       gross_minus_tare: "Gross {gross} kg − tare {tare} kg = {net} kg",
+      entry_unit: "Entry unit",
+      over_limit: "Over {max} kg. Check the unit (g or kg).",
+      confirm_heavy: "Really {kg} kg? Tap again",
       unit_price_title: "Unit price",
       unit_price_open_hint: "Enter unit price",
       switch_to_weight: "Proceed to weight ➡️",

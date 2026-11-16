@@ -4,6 +4,8 @@ import ReceiptModal from './ReceiptModal';
 import TouchCalendarModal from './TouchCalendarModal.jsx';
 import TouchDateRangeModal from './TouchDateRangeModal.jsx';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { useConfirm } from '../context/useConfirm.js';
+import { pluralWord } from '../utils/pluralWord';
 import { exportSalesToCSV } from '../utils/csvExporter';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
@@ -21,7 +23,8 @@ export default function SalesHistoryView({
   onInitiateRefund,
   initialDateFilter = null
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { notify } = useConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
@@ -203,7 +206,7 @@ export default function SalesHistoryView({
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
+          <button type="button"
             className="checkout-btn"
             style={{
               padding: '0.35rem 0.75rem',
@@ -216,14 +219,14 @@ export default function SalesHistoryView({
               gap: '0.35rem',
               fontWeight: '700'
             }}
-            onClick={() => exportSalesToCSV(searchFilteredSales, getPeriodLabel())}
+            onClick={() => { if (exportSalesToCSV(searchFilteredSales, getPeriodLabel()) === 'empty') notify(t('dialogs.export_no_sales')); }}
             title={t('history.export_csv_title')}
           >
             <Download size={14} />
             <span>{t('history.export_csv')}</span>
           </button>
 
-          <button
+          <button type="button"
             className="checkout-btn"
             style={{
               padding: '0.35rem 0.75rem',
@@ -244,7 +247,7 @@ export default function SalesHistoryView({
           </button>
 
           {isAdminMode && (
-            <button
+            <button type="button"
               className="clear-cart-btn"
               style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
               onClick={onClearAllTestSales}
@@ -255,7 +258,7 @@ export default function SalesHistoryView({
             </button>
           )}
 
-          <button
+          <button type="button"
             className="nav-tab"
             style={{
               padding: '0.35rem 0.75rem',
@@ -345,7 +348,7 @@ export default function SalesHistoryView({
 
         <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
           <Receipt size={13} />
-          <span>{totalItems} {t('shift_stats.receipts') || 'účtenek celkem'}</span>
+          <span>{totalItems} {pluralWord(t, language, 'shift_stats.receipts', totalItems)}</span>
         </div>
       </div>
 

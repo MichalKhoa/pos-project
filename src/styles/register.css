@@ -2408,7 +2408,7 @@ select.input-field:focus {
   }
 
   .category-chip {
-    height: 40px;
+    height: 44px;
     min-height: 40px;
     padding: 0 0.95rem;
     font-size: 0.92rem;

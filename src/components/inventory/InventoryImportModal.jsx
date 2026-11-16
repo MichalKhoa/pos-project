@@ -260,7 +260,7 @@ export default function InventoryImportModal({
             <Check size={18} />
             <span>
               {isImporting
-                ? (t('common.saving') || 'Importuji...')
+                ? t('common.processing')
                 : `${t('inventory.confirm_import') || 'Potvrdit import'} (${totalCount})`}
             </span>
           </button>

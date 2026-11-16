@@ -48,12 +48,12 @@ export function StoreConfigProvider({ children }) {
     document.documentElement.setAttribute('data-button-animation', animMode);
   }, [storeConfig?.buttonAnimationMode]);
 
-  // Sync font size to root element ('md' / 16px by default)
+  // Sync font size to root element ('lg' / 18px by default)
   const currentFontSize = storeConfig?.fontSize || (() => {
     try {
-      return localStorage.getItem('voltflow_font_size') || 'md';
+      return localStorage.getItem('voltflow_font_size') || 'lg';
     } catch {
-      return 'md';
+      return 'lg';
     }
   })();
 

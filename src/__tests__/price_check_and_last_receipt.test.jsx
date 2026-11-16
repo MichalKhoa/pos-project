@@ -104,6 +104,23 @@ describe('Last Receipt Quick Actions & Price Check Mode', () => {
       expect(chip).toBeInTheDocument();
     });
 
+    it('shows a 3.50 Kč sale as 3,50 Kč, not 4 Kč (F-016)', async () => {
+      const mockSale = {
+        id: 'sale-recent-decimal',
+        receiptNumber: '2026-000090',
+        timestamp: '2026-09-06T14:30:00.000Z',
+        totalAmount: 3.5,
+        paymentMethod: 'card',
+        items: [{ id: 'p1', name: 'Rohlík', price: 3.5, quantity: 1, vat: 12 }]
+      };
+      setStorageItem('sales', [mockSale]);
+      posApi.fetchSalesHistoryBackend.mockResolvedValue([mockSale]);
+
+      renderApp();
+
+      expect(await screen.findByRole('button', { name: /Poslední:\s*3,50\s*Kč/i })).toBeInTheDocument();
+    });
+
     it('opens popover on chip click with Re-print and Quick Storno options', async () => {
       const mockSale = {
         id: 'sale-recent-2',
