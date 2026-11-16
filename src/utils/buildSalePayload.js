@@ -1,4 +1,4 @@
-import { calculateCartTotals } from './tax';
+import { calculateCartTotals, roundCashTotal } from './tax';
 import { normalizeSale } from '../api/posApi';
 
 /**
@@ -59,8 +59,8 @@ export function buildSalePayload({
       vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
       discount_percent: item.discountPercent || 0
     })),
-    totalAmount: isCash ? Math.round(finalGrandTotal) : finalGrandTotal,
-    cashRounding: isCash ? Math.round((Math.round(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
+    totalAmount: isCash ? roundCashTotal(finalGrandTotal) : finalGrandTotal,
+    cashRounding: isCash ? Math.round((roundCashTotal(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
     cartDiscountPercent,
     paymentMethod: method,
     splitDetails: splitDetails || null,

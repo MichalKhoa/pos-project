@@ -28,6 +28,7 @@ Status per finding: VERIFIED (reproduced live), CODE (seen in code only, not rep
 | P5 Static and visual | DONE for i18n parity, missing keys, hard-coded text, inline styles, a11y counts | F-009, F-019, F-023, F-024 |
 | P6 Synthesis | DONE | [`FIX_RECOMMENDATIONS.md`](FIX_RECOMMENDATIONS.md) |
 | Batch A planning and Phase 0 | DONE | F-027, F-028 found while building the shared sale fixtures; both are covered by known-bug markers in the tests |
+| Batch A fixes (branch `fix/batch-a-sale-integrity`) | DONE | F-001, F-012, F-014, F-015, F-026, F-027, F-028 fixed with tests; see the Batch A plan for the results and what stays open |
 | P7 Owner review | PENDING | Needs the owner, see open questions in the plan |
 
 Not tested: real touch input, real hardware, W4, W6 to W10, W12, W13, W16 to W18, W20 to W22.

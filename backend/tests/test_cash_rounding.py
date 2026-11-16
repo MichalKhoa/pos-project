@@ -61,6 +61,35 @@ class TestCashRounding(TempDbTestCase):
     def test_rejects_cash_total_that_is_not_whole(self):
         self.assertEqual(self._post(sale("frac", 11.5, 11.7)).status_code, 422)
 
+    def test_cash_refund_goes_back_rounded_like_the_sale(self):
+        # 3.50 sale paid as 4; its storno refunds -4: exact -3.50 plus rounding -0.50
+        refund = sale("ref", -3.5, -4, rounding=-0.5)
+        refund["isRefund"] = True
+        refund["items"][0].update({"price": 3.5, "quantity": -1})
+        res = self._post(refund)
+        self.assertEqual(res.status_code, 201, res.text)
+        self.assertEqual(self._stored("ref"), (-3.5, -0.5))
+
+    def test_card_refund_is_not_rounded(self):
+        refund = sale("refcard", -3.5, -4, method="card")
+        refund["isRefund"] = True
+        refund["items"][0].update({"price": 3.5, "quantity": -1})
+        res = self._post(refund)
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(res.json()["detail"]["code"], "TOTAL_MISMATCH")
+
+    def test_cash_sale_and_its_refund_leave_the_drawer_unchanged(self):
+        before = self.client.get("/api/v1/cash/current-shift").json()
+        self.assertEqual(self._post(sale("pair-s", 3.5, 4, rounding=0.5)).status_code, 201)
+        refund = sale("pair-r", 3.5, -4, rounding=-0.5)
+        refund["isRefund"] = True
+        refund["items"][0]["quantity"] = -1
+        self.assertEqual(self._post(refund).status_code, 201)
+        after = self.client.get("/api/v1/cash/current-shift").json()
+        self.assertAlmostEqual(after["expected_cash"] - before["expected_cash"], 0.0, places=2)
+        self.assertAlmostEqual(after["total_cash_sales"] - before["total_cash_sales"], 4.0, places=2)
+        self.assertAlmostEqual(after["total_cash_refunds"] - before["total_cash_refunds"], 4.0, places=2)
+
     def test_rejects_rounded_total_for_card(self):
         res = self._post(sale("card", 11.5, 12, method="card"))
         self.assertEqual(res.status_code, 422)

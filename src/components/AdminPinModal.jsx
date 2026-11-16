@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, X, Check } from 'lucide-react';
 import { verifyPinBackend, verifyAdminPinBackend } from '../api/posApi';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
 export default function AdminPinModal({
@@ -9,6 +10,7 @@ export default function AdminPinModal({
   onSuccess,
   onClose
 }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(mode === 'CHANGE_PIN' ? 'CURRENT_PIN' : 'VERIFY_PIN');
   const [enteredPin, setEnteredPin] = useState('');
   const [newPin, setNewPin] = useState('');
@@ -44,8 +46,11 @@ export default function AdminPinModal({
         if (res?.valid === true) {
           isValid = true;
         } else if (res?.valid === null) {
-          const localPin = storeConfig?.adminPin || storeConfig?.cashierPin || '1234';
-          isValid = pinToTest === localPin;
+          // Server cannot answer: no local or default PIN is accepted (F-012)
+          setErrorMsg(t('lock_screen.server_unavailable'));
+          triggerShake();
+          setEnteredPin('');
+          return;
         }
       }
 
@@ -68,7 +73,7 @@ export default function AdminPinModal({
     } finally {
       setIsVerifying(false);
     }
-  }, [step, storeConfig?.adminPin, storeConfig?.cashierPin, onSuccess]);
+  }, [step, onSuccess, t]);
 
   const finalizePinChange = useCallback((confirmed) => {
     if (confirmed !== newPin) {

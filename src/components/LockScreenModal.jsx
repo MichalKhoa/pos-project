@@ -1,10 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Lock, KeyRound, HelpCircle, RefreshCw } from 'lucide-react';
 import { verifyPinBackend, verifyPukBackend } from '../api/posApi';
+import { useTranslation } from '../i18n/LanguageContext.jsx';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
+const RETRY_BASE_MS = 1000;
+const RETRY_MAX_MS = 5000;
+
 export default function LockScreenModal({ storeConfig, onUnlock }) {
+  const { t } = useTranslation();
   const [enteredPin, setEnteredPin] = useState('');
+  const [pukValue, setPukValue] = useState('');
+  // The server cannot say yes or no (starting up or down): wait and ask again, never guess (F-012)
+  const [waitingForServer, setWaitingForServer] = useState(false);
+  const retryTimerRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const verifyPinRef = useRef(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
@@ -12,6 +23,14 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
   const [showPukInput, setShowPukInput] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
+
+  useEffect(() => () => clearTimeout(retryTimerRef.current), []);
+
+  const cancelWaiting = () => {
+    clearTimeout(retryTimerRef.current);
+    retryCountRef.current = 0;
+    setWaitingForServer(false);
+  };
 
   useEffect(() => {
     if (lockoutSeconds <= 0) return;
@@ -29,7 +48,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
   }, [lockoutSeconds]);
 
   const handleNumClick = async (num) => {
-    if (enteredPin.length >= 8 || isVerifying || showPukInput || lockoutSeconds > 0) return;
+    if (enteredPin.length >= 8 || isVerifying || waitingForServer || showPukInput || lockoutSeconds > 0) return;
     const newPin = enteredPin + num;
     setEnteredPin(newPin);
     setErrorMsg('');
@@ -37,7 +56,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
     const targetLength = storeConfig?.cashierPin?.length || 4;
     if (newPin.length === targetLength) {
       const unlocked = await verifyPin(newPin, false);
-      if (!unlocked) {
+      if (unlocked === false) {
         setIsShaking(true);
         setTimeout(() => {
           setIsShaking(false);
@@ -48,18 +67,19 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
   };
 
   const handleUnlockSubmit = () => {
-    if (enteredPin.length < 4 || isVerifying || showPukInput || lockoutSeconds > 0) return;
+    if (enteredPin.length < 4 || isVerifying || waitingForServer || showPukInput || lockoutSeconds > 0) return;
     verifyPin(enteredPin, false);
   };
 
   const handleBackspace = () => {
-    if (isVerifying || showPukInput || lockoutSeconds > 0) return;
+    if (isVerifying || waitingForServer || showPukInput || lockoutSeconds > 0) return;
     setEnteredPin(prev => prev.slice(0, -1));
     setErrorMsg('');
   };
 
   const handleClear = () => {
     if (isVerifying || showPukInput || lockoutSeconds > 0) return;
+    cancelWaiting();
     setEnteredPin('');
     setErrorMsg('');
   };
@@ -70,6 +90,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
     try {
       const res = await verifyPinBackend(pinToTest);
       if (res.valid === true) {
+        cancelWaiting();
         setErrorMsg('');
         setFailedAttempts(0);
         setLockoutSeconds(0);
@@ -77,15 +98,16 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
         return true;
       }
       if (res.valid === null) {
-        const localPin = storeConfig?.cashierPin || '1234';
-        if (pinToTest === localPin) {
-          setErrorMsg('');
-          setFailedAttempts(0);
-          setLockoutSeconds(0);
-          onUnlock();
-          return true;
-        }
+        // No local PIN and no default: ask again with a short backoff. Not a failed attempt.
+        const delay = Math.min(RETRY_BASE_MS * 2 ** retryCountRef.current, RETRY_MAX_MS);
+        retryCountRef.current += 1;
+        setWaitingForServer(true);
+        setErrorMsg('');
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = setTimeout(() => verifyPinRef.current(pinToTest, false), delay);
+        return null;
       }
+      cancelWaiting();
 
       const newFailed = failedAttempts + 1;
       setFailedAttempts(newFailed);
@@ -109,6 +131,8 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
       setIsVerifying(false);
     }
   };
+
+  verifyPinRef.current = verifyPin;
 
   const handleVerifyPuk = async (e) => {
     e.preventDefault();
@@ -148,7 +172,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
         handleClear();
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (enteredPin.length >= 4 && !isVerifying) {
+        if (enteredPin.length >= 4 && !isVerifying && !waitingForServer) {
           verifyPin(enteredPin);
         }
       }
@@ -157,7 +181,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enteredPin, isVerifying, showPukInput]);
+  }, [enteredPin, isVerifying, waitingForServer, showPukInput]);
 
   return (
     <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.96)', backdropFilter: 'blur(16px)', zIndex: 99999 }}>
@@ -228,6 +252,12 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
                 );
               })}
             </div>
+
+            {waitingForServer && (
+              <div role="status" style={{ color: 'var(--accent-amber)', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.75rem' }}>
+                {t('lock_screen.server_starting')}
+              </div>
+            )}
 
             {errorMsg && (
               <div style={{ color: '#ef4444', fontSize: '0.82rem', fontWeight: '700', marginBottom: '0.75rem' }}>

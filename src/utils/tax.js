@@ -26,6 +26,12 @@ export const toQty = (value, fallback = 1) => {
   return Number.isFinite(n) ? Math.round(n * 1000) / 1000 : fallback;
 };
 
+/**
+ * Cash is paid in whole koruna. Rounds half away from zero, so a 3.50 sale is paid as 4 and its
+ * 3.50 refund is paid back as -4 (Math.round alone would turn -3.5 into -3).
+ */
+export const roundCashTotal = (amount) => Math.sign(amount) * Math.round(Math.abs(amount));
+
 export const calculateItemLineGross = (item) => {
   const price = parseFloat(item.price) || 0;
   const qty = toQty(item.quantity !== undefined ? item.quantity : (item.qty || 1));

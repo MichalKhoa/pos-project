@@ -143,6 +143,30 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
       expect(screen.getByRole('button', { name: /Rychlé storno/i })).toBeDisabled();
     });
 
+    it('a cash sale of 3.50 paid as 4 is refunded as 4 and the 0.50 is noted as rounding', async () => {
+      const posApi = await import('../api/posApi');
+      const stored = sale({
+        id: 'sale-3-50', receiptNumber: '2026-000011', totalAmount: 4, cashRounding: 0.5,
+        items: [{ id: 'p2', name: 'Rohlík', price: 3.5, quantity: 1, vat: 12 }]
+      });
+      posApi.fetchSalesHistoryBackend.mockResolvedValue([stored]);
+      posApi.createSaleBackend.mockClear();
+      posApi.createSaleBackend.mockResolvedValue({ status: 'SUCCESS', receipt_number: 'STORNO-2026-000012' });
+      localStorage.setItem('voltflow_pos_sales', JSON.stringify([stored]));
+      renderAppWithProviders();
+
+      fireEvent.click(await screen.findByRole('button', { name: /Poslední:\s*4\s*Kč/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Rychlé storno/i }));
+      await screen.findByText(/Vratka \/ Storno Účtenky/i);
+      fireEvent.click(screen.getByRole('button', { name: /Provést vratku|Potvrdit|Vystavit/i }));
+
+      await waitFor(() => expect(posApi.createSaleBackend).toHaveBeenCalled());
+      const storno = posApi.createSaleBackend.mock.calls[0][0];
+      expect(storno).toMatchObject({ isRefund: true, paymentMethod: 'cash', totalAmount: -4, cashRounding: -0.5, tenderedAmount: -4 });
+      expect(storno.items[0].quantity).toBe(-1);
+      posApi.fetchSalesHistoryBackend.mockResolvedValue([]);
+    });
+
     it('refused storno: error shown, original sale not marked refunded, no status update sent', async () => {
       const posApi = await import('../api/posApi');
       const stored = sale();

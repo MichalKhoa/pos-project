@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toQty, netFromGross, calculateItemLineGross, calculateCartTotals } from '../utils/tax';
+import { toQty, netFromGross, roundCashTotal, calculateItemLineGross, calculateCartTotals } from '../utils/tax';
 import { normalizeSale } from '../api/posApi';
 
 describe('fractional quantities (F-027)', () => {
@@ -53,5 +53,16 @@ describe('netFromGross (F-028)', () => {
     expect(netFromGross(3.5, 12)).toBe(3.13);
     expect(netFromGross(-14.7, 12)).toBe(-13.13);
     expect(netFromGross(100, 21)).toBe(82.64);
+  });
+});
+
+describe('roundCashTotal (cash goes back the way it came in)', () => {
+  it('rounds half away from zero, so 3.50 is paid as 4 and refunded as -4', () => {
+    expect(roundCashTotal(3.5)).toBe(4);
+    expect(roundCashTotal(-3.5)).toBe(-4);
+    expect(roundCashTotal(11.49)).toBe(11);
+    expect(roundCashTotal(-11.49)).toBe(-11);
+    expect(roundCashTotal(12)).toBe(12);
+    expect(Object.is(roundCashTotal(0), 0)).toBe(true);
   });
 });

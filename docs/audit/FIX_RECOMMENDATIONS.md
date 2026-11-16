@@ -26,7 +26,7 @@ Source: [`FINDINGS.md`](FINDINGS.md) (28 findings, F-001 to F-028). This file or
 
 ## 2. Fix batches
 
-**Batch A: Sale integrity (do first, one plan, backend and frontend together).** F-027, F-001, F-014, F-015, F-006, F-026, F-012, F-028.
+**Batch A: Sale integrity (DONE, see `docs/plans/BATCH_A_SALE_INTEGRITY_PLAN.md`).** F-027, F-001, F-014, F-015, F-006, F-026, F-012, F-028.
 Goal: a sale shown as "paid" is either recorded on the server or visibly queued, and every screen reads the same totals.
 Order inside the batch: (1) server accepts the cash-rounded total; (2) client distinguishes 4xx (rejected, show error) from network error (queue as `OFFLINE_PENDING`); (3) retry queue on `pos:backend-online`; (4) shift widget from a server summary; (5) server-assigned receipt numbers.
 

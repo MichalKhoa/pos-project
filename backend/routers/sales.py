@@ -946,12 +946,13 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     client_total = round_currency(sale.totalAmount)
     cash_rounding = 0.0
     if computed_total != client_total:
-        # Cash is rounded to whole koruna at the till (F-001). Accept that, and only that:
+        # Cash is rounded to whole koruna at the till (F-001), and a cash refund goes back the
+        # same way (a 3.50 sale paid as 4 is refunded as -4). Accept that, and only that:
         # a whole-number client total within 0.50 of the exact server total. The difference
         # is stored as cash_rounding; total_amount stays the exact FIN-C1 value.
         is_cash = (sale.paymentMethod or "").lower() in ("cash", "hotovost")
         diff = round_currency(client_total - computed_total)
-        if (is_cash and not sale.isRefund and client_total == float(round(client_total))
+        if (is_cash and client_total == float(round(client_total))
                 and abs(diff) <= 0.5):
             cash_rounding = diff
         else:

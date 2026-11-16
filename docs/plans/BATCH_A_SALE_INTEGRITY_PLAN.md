@@ -159,6 +159,24 @@ Files: `src/components/LockScreenModal.jsx`, translations, test `technician_sess
 6.2 Out of scope but recorded: the backend still defaults PINs to `1234` (`config.py`, `migrations.py`), the PUK flow resets to `1234`, and `verify-admin-pin` has a default master key string in code (`POS_MASTER_ADMIN_KEY` fallback). Propose a separate security batch: force PIN change on first run, no code default for the master key. Cross-check with `docs/guides/SECURITY_AUDIT.md` before planning it.
 Tests: backend unreachable -> no unlock with 1234, message shown, unlock after backend returns with the correct PIN.
 
+### Phase 6 result (done)
+- 6.1 `LockScreenModal`: when the server cannot answer (`valid: null`) there is no local PIN and no `'1234'` fallback. The modal shows "Server se spouští, zkouším znovu…", asks again with a backoff of 1, 2, 4, then 5 s, and does not count it as a wrong attempt. The keypad stays locked while waiting; "C" cancels. When the server answers, the PIN is accepted or rejected normally.
+- Same defect found in `AdminPinModal` (`adminPin || cashierPin || '1234'`): fixed the same way. With the server unreachable it shows "Server není dostupný…" and accepts nothing.
+- Found and fixed on the way: `LockScreenModal` used `pukValue` and `setPukValue` without declaring them, so opening the PUK recovery form crashed the lock screen. Now declared; a test opens the form.
+- 6.2 not done, as planned: the backend still defaults PINs to `1234` (`config.py`, `migrations.py`), the PUK flow resets to `1234`, and `verify-admin-pin` has a code default for the master key. Recorded for a separate security batch.
+- Tests: `lock_screen.test.jsx` (9). Frontend 285, backend 204, lint and build clean, 1 285 strings in each language.
+
+### Cash refunds rounded like the sale (owner decision during Phase 6)
+The Phase 5 observation (a 3.50 Kč cash sale is paid as 4 Kč but its storno refunded 3.50 Kč, leaving 0.50 Kč in the drawer) was answered by the owner: "3.50 is paid as 4 and it should also be noted that way."
+- Client: `roundCashTotal()` (half away from zero) is used for cash sales and for cash stornos, so a 3.50 sale is paid as 4 and its storno is -4 with `cashRounding` -0.50 and tendered -4. Card refunds stay exact.
+- Server: the whole-koruna cash acceptance from Phase 2 now also covers refunds. The storno stores exact -3.50 and `cash_rounding` -0.50.
+- Z-report: cash refunds are exact + rounding (4.00), so a cash sale and its refund leave the drawer at 0. `cash_rounding_total` still counts sales only.
+- Tests: backend (refund accepted, card refund refused, sale plus refund leave the drawer unchanged), `roundCashTotal`, App storno payload. Live: sale 3.50 -> 4, storno -4: expected cash 0.00.
+- Still open for the accountant: how the rounding on sale and storno is booked (see decision 1).
+
+## Batch A status
+All phases (0 to 6) are done on branch `fix/batch-a-sale-integrity`. Findings closed: F-001, F-012, F-014, F-015, F-026, F-027, F-028 (F-006 stays S3, no change needed). Open decisions: accountant check of the rounding treatment, and a security batch for the default PIN `1234` in the backend and the master key default.
+
 ## 5. Cross-cutting
 
 - **Order and dependencies:** 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6. Phase 1 and 2 touch the same payload code, so keep them sequential. Phase 6 is independent and can move earlier or run in a second session.

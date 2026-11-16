@@ -12,6 +12,7 @@ import { useAutoLock } from './hooks/useAutoLock';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useUnsentSales } from './hooks/useUnsentSales';
 import { SYNC, sendOutcome, applySendResult, markStranded, isLocalOnly, canRefund } from './utils/saleSync';
+import { roundCashTotal } from './utils/tax';
 import { buildRefundUpdate, revertRefund, settleRefundUpdate } from './utils/refundSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
@@ -359,6 +360,9 @@ export default function App() {
       return acc;
     }, {});
 
+    const isCashRefund = paymentMethod === 'cash';
+    const refundCashTotal = roundCashTotal(-totalRefundAmount);
+
     const stornoSale = normalizeSale({
       id: `sale-storno-${Date.now()}`,
       receiptNumber: nextStornoNum,
@@ -371,10 +375,13 @@ export default function App() {
         vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
         discount_percent: item.discountPercent || 0
       })),
-      totalAmount: -totalRefundAmount,
+      // Cash goes back in whole koruna like it came in: a 3.50 sale paid as 4 is refunded as 4,
+      // and the 0.50 is noted as rounding on the storno
+      totalAmount: isCashRefund ? refundCashTotal : -totalRefundAmount,
+      cashRounding: isCashRefund ? Math.round((refundCashTotal + totalRefundAmount) * 100) / 100 : 0,
       cartDiscountPercent: originalSale.cartDiscountPercent || 0,
       paymentMethod,
-      tenderedAmount: paymentMethod === 'cash' ? -totalRefundAmount : 0,
+      tenderedAmount: isCashRefund ? refundCashTotal : 0,
       changeDue: 0,
       taxSummary: formattedTaxSummary,
       isRefund: true,

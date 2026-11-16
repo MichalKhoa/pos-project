@@ -40,7 +40,8 @@ def _calculate_shift_metrics(shift: ShiftSessionModel, db: Session):
         # Extract cash portion
         cash_part = 0.0
         if pm in ("cash", "hotovost"):
-            # Drawer holds the whole-koruna amount the customer paid: exact total + rounding
+            # Drawer holds the whole-koruna amount that changed hands: exact total + rounding.
+            # For a cash refund both are negative (3.50 refunded as -4 = -3.50 + -0.50).
             rounding = float(s.cash_rounding or 0.0)
             cash_part = amt + rounding
             if not s.is_refund:

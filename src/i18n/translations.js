@@ -1176,6 +1176,10 @@ export const translations = {
       current_balance: "Aktuální očekávaný stav",
       cash_btn: "± Pokladna"
     },
+    lock_screen: {
+      server_starting: "Server se spouští, zkouším znovu…",
+      server_unavailable: "Server není dostupný. PIN nelze ověřit, zkuste to za chvíli znovu."
+    },
     refund_guard: {
       not_stored: "Prodej ještě není uložen na serveru. Počkejte na odeslání a zkuste storno znovu.",
       storno_rejected: "Server vratku odmítl. Původní prodej zůstává beze změny.",
@@ -2516,6 +2520,10 @@ export const translations = {
       current_balance: "Số dư tiền mặt dự kiến",
       cash_btn: "± Két tiền"
     },
+    lock_screen: {
+      server_starting: "Máy chủ đang khởi động, đang thử lại…",
+      server_unavailable: "Máy chủ không khả dụng. Không thể xác minh PIN, hãy thử lại sau ít phút."
+    },
     refund_guard: {
       not_stored: "Giao dịch chưa được lưu trên máy chủ. Hãy đợi gửi xong rồi thử hoàn tiền lại.",
       storno_rejected: "Máy chủ đã từ chối hoàn tiền. Giao dịch gốc không thay đổi.",
@@ -3855,6 +3863,10 @@ export const translations = {
       success_movement: "Cash movement recorded successfully",
       current_balance: "Current Expected Cash",
       cash_btn: "± Cash Drawer"
+    },
+    lock_screen: {
+      server_starting: "The server is starting, trying again…",
+      server_unavailable: "The server is unavailable. The PIN cannot be checked, try again in a moment."
     },
     refund_guard: {
       not_stored: "This sale is not stored on the server yet. Wait until it is sent, then refund again.",
