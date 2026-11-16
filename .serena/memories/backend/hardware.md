@@ -7,8 +7,8 @@ Hardware drivers & protocols for thermal receipt printers, ČSOB card terminals,
 - Network ESC/POS printer support via TCP socket (`RAW_SOCKET`, port 9100).
 - Windows Spooler driver support (`WIN32RAW` / `win32print`), backed by `Win32SpoolerRawFallback` direct raw spooler driver when python-escpos profile/capabilities fail.
 - ESC/POS Capabilities Resolution: `resolve_escpos_capabilities()` in `backend/paths.py` dynamically locates `capabilities.json` across PyInstaller `_MEIPASS`, executable directory, repo source, or persistent `%APPDATA%\VoltFlow POS\data`, setting `ESCPOS_CAPABILITIES_FILE` before library import. PyInstaller spec bundles `capabilities.json` via `collect_data_files('escpos')` and explicit datas mapping.
-- Dynamic ESC/POS paper width formatting: 80mm (`48` chars per line) vs 58mm (`32` chars per line).
-- Printer discovery isolated in `/backend/services/printer_discovery.py` (`detect_connected_printers` across Windows Win32Print, Linux `/dev/usb/lp*`, `/dev/tty*`, and CUPS).
+- Dynamic ESC/POS paper width & typography formatting: `receipt_font_size` (`compact` Font B vs `standard` Font A) and `receipt_line_columns` (`64`/`48`/`42` on 80mm 576-dot width, `42`/`32` on 58mm) keep edge-to-edge separator width and line pitch unified.
+- Printer discovery isolated in `/backend/services/printer_discovery.py` (`detect_connected_printers` across Windows Win32Print, Linux `/dev/usb/lp*`, `/dev/tty*`, and CUPS), prioritizing online/connected POS printers and avoiding offline virtual/spooler queues.
 - Automatic printer discovery scanner (`GET /api/v1/printer/scan`): Scans local subnets (`192.168.x.x:9100`) and USB ports (`/dev/usb/lp*`, COM ports) in parallel with a 1.5s socket timeout.
 - Cut command: `\x1b\x69` (ESC/POS full cut).
 - Cash drawer kick command: `\x1b\x70\x00\x19\xfa` (Pin 2 / Pin 5 pulse) broadcast on cash checkout, with direct Win32 spooler raw pulse fallback if ESC/POS device instance is unavailable.

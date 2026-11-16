@@ -232,7 +232,7 @@ The repository includes [`.github/workflows/release-windows.yml`](.github/workfl
 All code changes must pass the automated quality gates:
 
 ```bash
-# 1. Frontend Unit Tests (78 tests covering VAT, currency, keypad, modals, useTauri)
+# 1. Frontend Unit Tests (Vitest)
 npm run test
 
 # 2. Frontend Linter (0 errors, 0 warnings)
@@ -241,7 +241,7 @@ npm run lint
 # 3. Production UI Build
 npm run build
 
-# 4. Backend Unit Tests (45 tests covering sales, EET crypto, API, models)
+# 4. Backend Unit Tests (unittest)
 python -m unittest discover -s backend/tests -p "test_*.py"
 ```
 

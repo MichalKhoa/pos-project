@@ -70,7 +70,7 @@ All multi-cashier RBAC, Gastronomy floor plans & table tabs, Czech bottle deposi
 
 ## ✅ Completed & Verified Capabilities
 
-- **1-Tap Print on Demand**: Live in `PaymentModal.jsx` (`CashPaymentPanel`, `CardPaymentPanel`, `QrPaymentPanel`, `SplitPaymentPanel`).
+- **1-Tap Print on Demand**: Live in `PaymentModal.jsx` via shared `PaymentFinishBar.jsx` (`CashPaymentPanel`, `CardPaymentPanel`, `QrPaymentPanel`, `SplitPaymentPanel`).
 - **Thermal Shelf Price Tags**: Live in `BarcodeLabelModal.jsx` and thermal ESC/POS label generator.
 - **Custom Receipt Footer**: Live in Settings and thermal receipt print layout.
 - **2-Column Wide Presets Layout**: Live in `pos-layout-two-column` and `QuickPresetGrid.jsx`.
@@ -83,5 +83,5 @@ All multi-cashier RBAC, Gastronomy floor plans & table tabs, Czech bottle deposi
 - **Direct Cash Drawer Button (`Otevřít zásuvku`)**: Live in `Navbar.jsx` with `CashDrawerIcon`.
 - **Shift Stats & Daily Summary Widget**: Live in `ShiftStatsWidget.jsx` + 1-click daily summary print.
 - **Catalog Fast Search**: Live in `QuickPresetGrid.jsx` (`.preset-search-bar`).
-- **Fast Banknote & Coin Breakdown Tender**: Live in `CashPaymentPanel.jsx`.
+- **Fast Banknote & Coin Tender + Full-Width Change Banner**: Live in `CashPaymentPanel.jsx`.
 - **EET 2.0 Hardening, SQLite Safety, Inventory Ledger, Ergonomics**: Verified passing 100% quality gates (129 frontend tests, 86 backend tests, 0 lint errors).

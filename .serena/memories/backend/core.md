@@ -3,10 +3,10 @@
 Python FastAPI backend structure located in `/backend`.
 
 ## Core Files
-- `main.py`: Application entry point with modern `lifespan` context manager (starts SQLite WAL checkpoint daemon, hourly backup loop, background cache pre-warm daemon), CORS middleware, router registration, static asset serving, and `/api/v1/status` endpoint exposing hardware profile telemetry.
+- `main.py`: Application entry point with modern `lifespan` context manager (spawns non-blocking background workers for `PRAGMA quick_check`, Windows active printer DB auto-config, SQLite WAL checkpoint daemon, hourly backup loop, and cache pre-warm), CORS middleware, router registration, static asset serving, and `/api/v1/status` endpoint exposing hardware profile telemetry.
 - `paths.py`: Centralized freeze-safe path resolution (`DATA_DIR`, `DB_PATH`, `LOGS_DIR`, `CERTS_DIR`, `get_dist_dir()`). In frozen mode, resolves persistent data to per-user application storage (`%APPDATA%` on Windows, `~/.local/share` on Linux) to prevent permission crashes when installed in Program Files.
-- `pos_backend.spec` & `build_standalone.py`: PyInstaller freeze automation for zero-dependency standalone backend packaging.
-- `migrations.py`: Schema migrations runner (`run_schema_migrations`) isolating dynamic column alterations and index migrations.
+- `pos_backend.spec` & `build_standalone.py`: PyInstaller freeze automation for zero-dependency standalone backend packaging (`upx=False` to eliminate decompression and AV lag).
+- `migrations.py`: Schema migrations runner (`run_schema_migrations`) isolating dynamic column alterations and index migrations with per-table `PRAGMA table_info` caching during startup.
 - `database.py`: SQLAlchemy engine (SQLite WAL mode, `PRAGMA busy_timeout=15000`, `foreign_keys=ON`, dynamic hardware-profile PRAGMAs `cache_size`, `mmap_size`, `temp_store=MEMORY`), session maker (`SessionLocal`), and `get_db()` dependency. Persistent `DATA_DIR` from `paths.py`.
 - `models.py`: Database tables (`SaleModel` with compound indexes on `timestamp` and `payment_method`, `SaleItemModel`, `StoreConfigModel`, `PresetModel`, `ReceiptSequenceModel`).
 

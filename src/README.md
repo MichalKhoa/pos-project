@@ -15,7 +15,8 @@ src/
 │   ├── Cart.jsx                # Shopping cart view with item & global discount controls
 │   ├── ManualKeypad.jsx        # Touchpad keymat for direct custom price & name input
 │   ├── Navbar.jsx              # Navigation header bar with EET status & tab switcher
-│   ├── PaymentModal.jsx        # Payment dialog supporting Cash, Card, QR, and Split
+│   ├── PaymentModal.jsx        # Payment dialog supporting Cash, Card, QR, Split & optional B2B
+│   ├── payment/                # Payment workflow panels & shared PaymentFinishBar
 │   ├── PresetsCatalogView.jsx  # Product and category CRUD management interface
 │   ├── QuickPresetGrid.jsx     # Quick-access product catalog grid with category filters
 │   ├── ReceiptModal.jsx        # Printable thermal receipt preview dialog
@@ -69,11 +70,11 @@ src/
 ### 3. Payment & Receipt Modals
 
 #### [`PaymentModal.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/PaymentModal.jsx)
-- Interactive checkout dialog supporting four distinct payment workflows:
-  1. **Hotovost (Cash)**: Cash tendered input with quick denomination buttons (+100, +200, +500, +1000 CZK, Exact) and calculated change due.
-  2. **Karta (Card)**: Card terminal confirmation workflow.
+- Interactive checkout dialog with shared bottom `PaymentFinishBar` (`Dokončit bez tisku` / `Dokončit a vytisknout`) and optional header B2B corporate invoice toggle (hidden by default unless `storeConfig.enableB2bInvoicing` is enabled in Settings), supporting four payment workflows:
+  1. **Hotovost (Cash)**: Quick Exact/Reset pills, 6 Czech banknote cards (`100`–`5 000 Kč`), 4 quick coin buttons (`+5`, `+10`, `+20`, `+50 Kč`), expanded 3x4 numpad, and full-width change-due banner.
+  2. **Karta (Card)**: ČSOB terminal or manual card confirmation workflow.
   3. **QR Platba (QR Payment)**: Generates Czech Short Payment Descriptor (SPD) QR payload and QR image for instant mobile bank transfer.
-  4. **Kombinovaná (Split Payment)**: Allows splitting order total between cash and card amounts.
+  4. **Kombinovaná (Split Payment)**: Two-step checkout splitting order total across Cash and Card/QR.
 - Triggers transaction saving and EET signing via backend API.
 
 #### [`ReceiptModal.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/ReceiptModal.jsx)

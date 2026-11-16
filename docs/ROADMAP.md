@@ -293,8 +293,8 @@ Již implementované, plně ověřené a funkční moduly v systému VoltFlow PO
   - Oficiální podklady pro daňové přiznání k dani z příjmů fyzických osob (příjmy ze SVČ, nákup zásob, provozní režie, počáteční a konečné zásoby).
   - Měsíční/kvartální DPH přehled (výstupní DPH dle sazeb 21 %, 12 %, 0 % vs. vstupní DPH z příjemek).
   - Tisk souhrnů na termotiskárně + generování a tisk standardizovaného A4 daňového protokolu.
-- **24. B2B Fakturace z pokladny s ARES ověřením (§ 29 ZoDPH) (`PaymentModal.jsx`, `ReceiptPreviewPaper.jsx`, `routers/sales.py`, `services/escpos_service.py`)**:
-  - Režim firemní faktury při platbě s bleskovým ARES lookupem (<1s) názvu firmy a sídla dle IČO.
+- **24. B2B Fakturace z pokladny s ARES ověřením (§ 29 ZoDPH) (`PaymentModal.jsx`, `ReceiptSection.jsx`, `ReceiptPreviewPaper.jsx`, `routers/sales.py`, `services/escpos_service.py`)**:
+  - Režim firemní faktury při platbě s bleskovým ARES lookupem (<1s) názvu firmy a sídla dle IČO; volitelně přepínatelný v Nastavení účtenky (`enableB2bInvoicing`, ve výchozím stavu skrytý).
   - Sekvenční číslování faktur `FA-YYYY-XXXX`, tisk prodlouženého termálního daňového dokladu s rozpadem DPH i náhledem na obrazovce s možností A4 tisku.
 - **25. Kniha zálohovaných vratných obalů (`DepositPackagingModal.jsx`, `routers/stock.py`, `services/escpos_service.py`)**:
   - Evidence pivních lahví a přepravek: naskladnění, vyplacené zálohy zákazníkům, odvoz do pivovaru a zůstatek na prodejně.
