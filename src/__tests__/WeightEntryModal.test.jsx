@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WeightEntryModal from '../components/presets/WeightEntryModal';
 import { LanguageProvider } from '../i18n/LanguageContext';
@@ -28,6 +28,11 @@ function renderModal(props) {
 }
 
 describe('WeightEntryModal', () => {
+  // The older tests below type kilograms; grams are the default (F-003), so they opt in to kg
+  beforeEach(() => {
+    localStorage.setItem('voltflow_pos_weight_entry_unit', 'kg');
+  });
+
   it('renders preset information and unit price correctly', () => {
     renderModal({
       preset: {
@@ -315,5 +320,121 @@ describe('WeightEntryModal', () => {
       quantity: 0.5
     }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  describe('grams entry (F-003)', () => {
+    const apples = { id: 'p-apples', name: 'Jablka Gala', price: 42, unit: 'kg', isWeighted: true };
+    const type = (digits) => {
+      for (const d of digits) fireEvent.click(screen.getByRole('button', { name: d }));
+    };
+
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('defaults to grams: 350 means 0.350 kg, not 350 kg', () => {
+      const onAddToCart = vi.fn();
+      renderModal({ preset: apples, onAddToCart });
+      type('350');
+      expect(screen.getByRole('button', { name: 'g' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByText(/0\.350 kg/)).toBeInTheDocument();
+      expect(screen.getByText('14.70 Kč')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /\+ Vložit do košíku/i }));
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({ quantity: 0.35, unit: 'kg', price: 42 }));
+    });
+
+    it('has no decimal comma in grams mode', () => {
+      renderModal({ preset: apples });
+      expect(screen.getByRole('button', { name: ',' })).toBeDisabled();
+      type('5');
+      fireEvent.keyDown(window, { key: ',' });
+      expect(screen.queryByText('5.')).not.toBeInTheDocument();
+    });
+
+    it('takes at most six digits of grams', () => {
+      renderModal({ preset: apples });
+      type('12345678');
+      expect(screen.getByText('123456')).toBeInTheDocument();
+    });
+
+    it('toggling to kg keeps the same weight', () => {
+      renderModal({ preset: apples });
+      type('350');
+      fireEvent.click(screen.getByRole('button', { name: 'kg' }));
+      expect(screen.getByText('0.35')).toBeInTheDocument();
+      expect(screen.getByText('14.70 Kč')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'g' }));
+      expect(screen.getByText('350')).toBeInTheDocument();
+    });
+
+    it('remembers the chosen unit on this device', () => {
+      const first = renderModal({ preset: apples });
+      fireEvent.click(screen.getByRole('button', { name: 'kg' }));
+      first.unmount();
+      renderModal({ preset: apples });
+      expect(screen.getByRole('button', { name: 'kg' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: ',' })).toBeEnabled();
+    });
+
+    it('tare still takes grams off the net weight', () => {
+      const onAddToCart = vi.fn();
+      renderModal({ preset: apples, onAddToCart });
+      type('350');
+      fireEvent.click(screen.getByRole('button', { name: /-5 g/i }));
+      fireEvent.click(screen.getByRole('button', { name: /\+ Vložit do košíku/i }));
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({ quantity: 0.345 }));
+    });
+
+    it('asks a second time above 25 kg (350 kg typed by mistake)', () => {
+      const onAddToCart = vi.fn();
+      const onClose = vi.fn();
+      renderModal({ preset: apples, onAddToCart, onClose });
+      fireEvent.click(screen.getByRole('button', { name: 'kg' }));
+      type('350');
+      expect(screen.getByRole('status')).toHaveTextContent(/25 kg/);
+
+      fireEvent.click(screen.getByRole('button', { name: /\+ Vložit do košíku/i }));
+      expect(onAddToCart).not.toHaveBeenCalled();
+      const confirm = screen.getByRole('button', { name: /Opravdu 350 kg/i });
+      fireEvent.click(confirm);
+      expect(onAddToCart).toHaveBeenCalledTimes(1);
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({ quantity: 350 }));
+    });
+
+    it('editing the weight after the first tap asks again', () => {
+      const onAddToCart = vi.fn();
+      renderModal({ preset: apples, onAddToCart });
+      fireEvent.click(screen.getByRole('button', { name: 'kg' }));
+      type('350');
+      fireEvent.click(screen.getByRole('button', { name: /\+ Vložit do košíku/i }));
+      type('0');
+      fireEvent.click(screen.getByRole('button', { name: /Opravdu 3500 kg|\+ Vložit do košíku/i }));
+      expect(onAddToCart).not.toHaveBeenCalled();
+    });
+
+    it('Enter follows the same two-step rule', () => {
+      const onAddToCart = vi.fn();
+      renderModal({ preset: apples, onAddToCart });
+      fireEvent.click(screen.getByRole('button', { name: 'kg' }));
+      type('30');
+      fireEvent.keyDown(window, { key: 'Enter' });
+      expect(onAddToCart).not.toHaveBeenCalled();
+      fireEvent.keyDown(window, { key: 'Enter' });
+      expect(onAddToCart).toHaveBeenCalledTimes(1);
+    });
+
+    it('exactly 25 kg needs no confirmation', () => {
+      const onAddToCart = vi.fn();
+      renderModal({ preset: apples, onAddToCart });
+      type('25000');
+      fireEvent.click(screen.getByRole('button', { name: /\+ Vložit do košíku/i }));
+      expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({ quantity: 25 }));
+    });
+
+    it('items not sold per kg keep plain decimal entry without a unit toggle', () => {
+      renderModal({ preset: { id: 'p-oil', name: 'Olej', price: 60, unit: 'l', isWeighted: true } });
+      expect(screen.queryByRole('button', { name: 'g' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: ',' })).toBeEnabled();
+    });
   });
 });

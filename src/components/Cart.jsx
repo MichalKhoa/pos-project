@@ -5,6 +5,7 @@ import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
 import { canRefund } from '../utils/saleSync';
+import { countCartItems } from '../utils/cartCount';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
   const [progress, setProgress] = useState(100);
@@ -109,7 +110,7 @@ function Cart({
   onReprintLastReceipt = null,
   onInitiateRefund = null
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
   const lastReceiptRef = useRef(null);
@@ -194,10 +195,12 @@ function Cart({
   }, [cartItems, cartDiscountPercent]);
 
   const isRefundTransaction = finalGrandTotal < 0;
-  const totalItemCount = useMemo(() => {
-    const sum = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-    return Number.isInteger(sum) ? sum : Number(sum.toFixed(3));
-  }, [cartItems]);
+  const totalItemCount = useMemo(() => countCartItems(cartItems), [cartItems]);
+  const itemCountLabel = (() => {
+    const category = new Intl.PluralRules(language).select(Math.abs(totalItemCount));
+    const word = t(`cart.items_${category}`);
+    return word.startsWith('cart.items_') ? t('cart.items_other') : word;
+  })();
 
   const activeItem = useMemo(() => {
     return cartItems.find(i => i.id === selectedItemId) || null;
@@ -579,7 +582,7 @@ function Cart({
               {isRefundTransaction ? '↩️ K VRÁCENÍ' : t('cart.total')}
             </span>
             <span className="total-items-badge">
-              {totalItemCount} {totalItemCount === 1 ? 'položka' : (totalItemCount >= 2 && totalItemCount <= 4 ? 'položky' : 'položek')}
+              {totalItemCount} {itemCountLabel}
             </span>
           </div>
           <span className="total-hero-amount total-amount">

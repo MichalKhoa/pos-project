@@ -1,6 +1,6 @@
 # Batch B: Counter Safety — Implementation Plan
 
-Status: APPROVED with defaults. Phase 1 done (see result below). Phases 2 and 3 not started.
+Status: APPROVED with defaults. Phases 1 and 2 done (see results below). Phase 3 not started.
 Source: [`docs/audit/FINDINGS.md`](../audit/FINDINGS.md) and [`docs/audit/FIX_RECOMMENDATIONS.md`](../audit/FIX_RECOMMENDATIONS.md) section 3.3 and 3.4.
 Covers findings: F-002, F-003, F-005, F-022, F-008, F-004, F-021.
 
@@ -109,3 +109,15 @@ What differs from the plan:
 - **Handoff failure** after an approved charge unlocks the modal and shows the error, so the cashier is not stuck.
 
 Verified: 312 frontend tests pass (22 of the 27 new tests fail on the old code), lint clean, build ok. Live in the browser pane against a scratch backend: 13 digits plus Enter during cash payment left the modal open with the warning, the amount unchanged (greyed "4 Kč Přesně") and no sale; Enter in card mode did nothing; "Dokončit bez tisku" opened "Terminál potvrdil platbu 3.50 Kč?". Not tested: real scanner, real terminal charge (mocked in tests).
+
+## Phase 2 result (done)
+
+Files changed: `src/components/presets/WeightEntryModal.jsx`, `src/components/Cart.jsx`, `src/utils/cartCount.js` (new), `src/i18n/translations.js` (cs, vi, en), `src/__tests__/WeightEntryModal.test.jsx` (existing tests now opt in to kg entry; 11 new grams and limit tests), `src/__tests__/cart_count.test.js` (new, 5 tests).
+
+- **Entry unit:** g / kg toggle next to the weight, default grams, last choice stored on the device (`weight_entry_unit`). In grams the comma key is disabled, at most 6 digits, and the converted weight shows as `= 0.350 kg`. Switching unit keeps the same weight on screen. The quantity sent to the cart is still kg (0.35).
+- **Limit:** above 25 kg an amber line says to check the unit, and the add button needs a second tap ("Opravdu 350 kg? Klepněte znovu"). Editing the weight or tare asks again. Enter follows the same two steps. Exactly 25 kg needs no confirmation.
+- **Not per kg:** items whose unit is not `kg` (litres and so on) keep plain decimal entry with no toggle.
+- **Cart label:** pieces count by quantity, a weighed line counts as one item (`countCartItems`), so a mistyped 350 kg no longer reads "351 položek". The label uses `Intl.PluralRules` with new `cart.items_*` keys (the old text was hard-coded Czech).
+- Deviation: the dot is used as the decimal mark in the kg display, as elsewhere in the modal, not a comma.
+
+Verified: 328 frontend tests pass, lint clean, build ok. Live in the browser pane: 350 g showed `= 0.350 kg` and 14.70 Kč; after switching to kg (remembered on reopen), 350 showed the over-25 kg line, the first tap kept the modal open and relabelled the button, and the cart read "1 položka". Not tested: a real scale or touch screen.
