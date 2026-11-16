@@ -6,6 +6,7 @@ import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
 import { canRefund } from '../utils/saleSync';
 import { countCartItems } from '../utils/cartCount';
+import { formatReceiptMoney } from '../utils/receiptAmounts';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
   const [progress, setProgress] = useState(100);
@@ -305,9 +306,9 @@ function Cart({
             <Receipt size={16} className="last-receipt-chip-icon" />
             <span className="last-receipt-chip-text">
               {t('last_receipt.chip_label', {
-                amount: Math.abs(lastSaleAmount).toFixed(0),
+                amount: formatReceiptMoney(Math.abs(lastSaleAmount)),
                 time: lastSaleChipTime
-              }) || `Poslední: ${Math.abs(lastSaleAmount).toFixed(0)} Kč (${lastSaleChipTime})`}
+              }) || `Poslední: ${formatReceiptMoney(Math.abs(lastSaleAmount))} Kč (${lastSaleChipTime})`}
             </span>
             {lastSaleItems.length > 0 && (
               <span className="last-receipt-chip-count-badge">
@@ -365,7 +366,7 @@ function Cart({
                         <div key={item.id || idx} className="last-receipt-item-row">
                           <span className="last-receipt-item-qty">{item.quantity}×</span>
                           <span className="last-receipt-item-name" title={item.name}>{item.name}</span>
-                          <span className="last-receipt-item-price">{itemTotal.toFixed(0)} Kč</span>
+                          <span className="last-receipt-item-price">{formatReceiptMoney(itemTotal)} Kč</span>
                         </div>
                       );
                     })}

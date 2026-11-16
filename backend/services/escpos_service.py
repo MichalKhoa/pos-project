@@ -13,6 +13,23 @@ logger = logging.getLogger("pos-escpos")
 _hardware_printer_lock = threading.RLock()
 
 
+def receipt_totals(sale_data: dict):
+    """Return (exact, rounding, payable) for a receipt; mirror of receiptTotals() in src/utils/receiptAmounts.js.
+
+    A cash sale arrives in two shapes: local (totalAmount whole koruna + cashRounding) or from the
+    server (total_amount exact + cash_rounding). Either way the receipt shows the exact total, the
+    rounding and what the customer pays. Card, QR and split are never rounded.
+    """
+    total = round(float(sale_data.get("totalAmount", sale_data.get("total_amount")) or 0), 2)
+    method = str(sale_data.get("paymentMethod") or sale_data.get("payment_method") or "").lower()
+    if method not in ("cash", "hotovost"):
+        return (total, 0.0, total)
+    payable = float(int(abs(total) + 0.5)) * (1 if total >= 0 else -1)
+    stored = round(float(sale_data.get("cashRounding", sale_data.get("cash_rounding")) or 0), 2)
+    exact = round(total - stored, 2) if total == int(total) and stored != 0 else total
+    return (exact, round(payable - exact, 2), payable)
+
+
 def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
     """Decorator that automatically retries printer connection with exponential backoff on USB/Serial hardware hiccups."""
     def decorator(func):
@@ -763,7 +780,13 @@ class ESCPOSPrinterService:
                         set_escpos_font(printer, font=base_font, bold=False, align='left')
                         printer.text(double_line + "\n")
 
-                        tot_val_num = float(sale_data.get('totalAmount', 0))
+                        exact_total, cash_rounding, tot_val_num = receipt_totals(sale_data)
+                        if cash_rounding != 0:
+                            fmt_money = lambda v: f"{v:.0f} Kč" if v % 1 == 0 else f"{v:.2f} Kč"
+                            sub_lbl_w = 18 if is_58mm else (28 if line_width >= 64 else 22)
+                            sub_val_w = max(10, line_width - sub_lbl_w)
+                            write_receipt_text(printer, f"{'Mezisoučet:':<{sub_lbl_w}}{fmt_money(exact_total):>{sub_val_w}}\n", strip_diacritics, encoding)
+                            write_receipt_text(printer, f"{'Zaokrouhlení:':<{sub_lbl_w}}{('+' if cash_rounding > 0 else '') + fmt_money(cash_rounding):>{sub_val_w}}\n", strip_diacritics, encoding)
                         tot_val_str = f"{tot_val_num:.0f} Kč" if tot_val_num % 1 == 0 else f"{tot_val_num:.2f} Kč"
                         tot_label = "CELKEM K VRÁCENÍ:" if is_refund else "CELKEM K ÚHRADĚ:"
 
