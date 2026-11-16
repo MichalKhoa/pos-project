@@ -31,7 +31,7 @@ Status per finding: VERIFIED (reproduced live), CODE (seen in code only, not rep
 | Batch A fixes (branch `fix/batch-a-sale-integrity`) | DONE | F-001, F-012, F-014, F-015, F-026, F-027, F-028 fixed with tests; see the Batch A plan for the results and what stays open |
 | Batch B fixes (same branch) | DONE | F-002, F-003, F-004, F-005, F-008, F-021, F-022 fixed with tests; see the Batch B plan |
 | Batch C fixes (branch `fix/batch-c-receipt-text`) | DONE | F-016, F-019, F-011 fixed with tests; see the Batch C plan |
-| Batch D fixes (same branch) | PARTIAL | F-017 fixed (Sklad tab restored); Phase 3 first look at the stock screens added F-029 to F-032, not fixed yet; see the Batch D plan |
+| Batch D fixes (same branch) | PARTIAL | F-017, F-029, F-030 fixed with tests (Batch D and D2 plans); F-031 and F-032 are layout findings left for Batch E |
 | P7 Owner review | PENDING | Needs the owner, see open questions in the plan |
 
 Not tested: real touch input, real hardware, W4, W6 to W10, W12, W13, W16 to W18, W20 to W22.
@@ -184,13 +184,13 @@ Checkout flow as implemented (W2):
 - Effect: the VAT recap printed on the receipt differs by one haléř from the stored `tax_summary` (and from what EET/Pohoda export read) for prices such as 3.50 Kč and 14.70 Kč at 12%. The sale total is not affected. Four of the eight shared fixtures show it.
 - Recommendation: do the division in `Decimal` on the server (`Decimal(str(gross)) / (1 + Decimal(rate)/100)`), then quantize half-up; keep the client as is. Covered by the `backendTaxSummary` known-bug marker in the fixtures; Batch A Phase 1 step 1.4.
 
-### F-029 [S2] Stock list shows the old stock for up to 5 minutes after an intake or write-off — VERIFIED (Batch D Phase 3)
+### F-029 [S2] Stock list shows the old stock for up to 5 minutes after an intake or write-off — VERIFIED (Batch D Phase 3), FIXED in Batch D2
 - Where: `submitStockIntake` and the write-off call in `src/api/posApi.js` invalidate the cache tag `presets`, but `fetchPresetsBackend` caches the list under the tag `catalog` (5 minutes). The refresh that `InventoryView` runs after saving therefore returns the cached list.
 - Seen live: intake of 100 pieces of "Rohlík tukový" returned 201 and the server stock became 250, but the Sklad table still showed 150.
 - Effect: the cashier thinks the intake failed and enters it again, which doubles the stock.
 - Recommendation: invalidate `catalog` after intake, write-off, physical audit and deposit movements (one line each, or have those calls invalidate both tags). Add a test that the list refetches after an intake.
 
-### F-030 [S2] Tax reports, deposits and physical inventory call relative `/api/v1/...` URLs — VERIFIED in dev, CODE for Tauri (Batch D Phase 3)
+### F-030 [S2] Tax reports, deposits and physical inventory call relative `/api/v1/...` URLs — VERIFIED in dev, CODE for Tauri (Batch D Phase 3), FIXED in Batch D2
 - Where: `TaxReportsModal.jsx` (3 calls), `DepositPackagingModal.jsx` (2), `PhysicalInventoryModal.jsx` (2). Every other call uses `API_BASE_URL` (`http://<host>:8000/api/v1`).
 - Seen live on the Vite dev server: the tax modal shows "Unexpected token '<', "<!doctype "... is not valid JSON". The same URLs return 200 when called on port 8000. The deposits modal swallows the same error and shows an empty book with 0.00 Kč.
 - Effect: these screens work only when the page itself is served by the backend. When the app is loaded from the Tauri window or the Vite dev server, they fail. I could not run the packaged Tauri app, so that case is inferred.

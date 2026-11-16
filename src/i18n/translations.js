@@ -351,6 +351,7 @@ export const translations = {
       tax_reports_subtitle: "Oficiální podklady pro daňové přiznání k dani z příjmů a DPH z pokladního systému",
       deposit_ledger_title: "Kniha zálohovaných vratných obalů (Lahve & Přepravky)",
       deposit_ledger_subtitle: "Evidence stavu vratných lahví (3 Kč) a bas (100 Kč), závozů a vratek pivovarům",
+      deposit_load_error: "Knihu vratných obalů se nepodařilo načíst. Zkontrolujte spojení se serverem.",
       physical_audit_title: "Fyzická inventura skladu k 31. 12. (§ 29, 30 ZoÚ)",
       physical_audit_subtitle: "Skenování regálů čtečkou, vyčíslení mank/přebytků a narovnání skladu"
     },
@@ -1718,6 +1719,7 @@ export const translations = {
       tax_reports_subtitle: "Dữ liệu chính thức cho quyết toán thuế thu nhập và VAT từ máy POS",
       deposit_ledger_title: "Sổ theo dõi vỏ chai và két bia đặt cọc",
       deposit_ledger_subtitle: "Theo dõi tồn kho vỏ chai (3 Kč) và két (100 Kč), nhập từ nhà máy và trả lại",
+      deposit_load_error: "Không tải được sổ vỏ chai và két. Hãy kiểm tra kết nối với máy chủ.",
       physical_audit_title: "Kiểm kê kho thực tế k 31/12 (§ 29, 30 ZoÚ)",
       physical_audit_subtitle: "Quét mã vạch, tính thừa/thiếu và cân bằng kho"
     },
@@ -3085,6 +3087,7 @@ export const translations = {
       tax_reports_subtitle: "Official accounting and VAT statements from the POS register",
       deposit_ledger_title: "Returnable Deposit Packaging Ledger (Bottles & Crates)",
       deposit_ledger_subtitle: "Track inventory of returnable beer bottles (3 CZK) and crates (100 CZK)",
+      deposit_load_error: "Could not load the returnable packaging book. Check the connection to the server.",
       physical_audit_title: "Physical Inventory Audit as of 31.12. (§ 29, 30 ZoÚ)",
       physical_audit_subtitle: "Barcode shelf scanning, discrepancy calculation and stock reconciliation"
     },

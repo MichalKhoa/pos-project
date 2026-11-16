@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Search, Printer, CheckCircle2, AlertCircle, ShieldCheck, ClipboardCheck } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { API_BASE_URL, invalidateApiCache } from '../../api/posApi';
 
 export default function PhysicalInventoryModal({
   isOpen,
@@ -135,7 +136,7 @@ export default function PhysicalInventoryModal({
         }))
       };
 
-      const res = await fetch('/api/v1/inventory/audit', {
+      const res = await fetch(`${API_BASE_URL}/inventory/audit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -147,6 +148,7 @@ export default function PhysicalInventoryModal({
       }
 
       const protocol = await res.json();
+      invalidateApiCache('catalog');
       setCompletedProtocol(protocol);
       setConfirmDialog(false);
       if (onAuditCompleted) onAuditCompleted(protocol);
@@ -163,7 +165,7 @@ export default function PhysicalInventoryModal({
     setIsPrinting(true);
     setPrintStatus(null);
     try {
-      const res = await fetch('/api/v1/printer/print-inventory', {
+      const res = await fetch(`${API_BASE_URL}/printer/print-inventory`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

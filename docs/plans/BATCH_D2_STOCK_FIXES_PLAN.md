@@ -58,3 +58,14 @@ New file, today:
 Existing file: "submits audit reconciliation" and "records a supplier intake movement" fail because they now expect the full address.
 
 All 9 failures are for the intended reasons. Phase 2 makes them pass.
+
+## 8. Phase 2 result
+
+- `posApi.js`: `API_BASE_URL` is exported. Intake and write-off now clear the cache tag `catalog`, which is the tag the preset list uses.
+- `PhysicalInventoryModal.jsx`: clears `catalog` after a saved audit.
+- `TaxReportsModal.jsx`, `DepositPackagingModal.jsx`, `PhysicalInventoryModal.jsx`: all seven calls use `API_BASE_URL`.
+- `DepositPackagingModal.jsx`: a failed summary load shows a red alert (`inventory.deposit_load_error`, added in cs, vi, en) instead of an empty book.
+- Gates: 389 frontend tests pass, lint clean, build OK, 213 backend tests pass. One run showed a timing failure in `app_unsent_sales.test.jsx` (storno refusal) that passed alone and on the next full run; it is a slow-machine flake and unrelated to this change.
+- Live check on the Vite dev server against a backend with a throwaway data folder: an intake of 100 pieces moved the Sklad table from 150 to 250 at once; the tax report and the deposit book now load.
+- `/code-review` at `medium`: no findings.
+- Not checked live: the physical audit submit and the printer calls (covered by tests only), the Tauri window.

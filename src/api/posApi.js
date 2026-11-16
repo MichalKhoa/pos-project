@@ -10,7 +10,7 @@ export function getApiHost() {
 }
 
 const API_HOST = getApiHost();
-const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
+export const API_BASE_URL = `http://${API_HOST}:8000/api/v1`;
 
 /**
  * In-memory API cache & in-flight promise tracker
@@ -1544,7 +1544,7 @@ export async function submitStockIntake(intakeData) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || `Stock intake error ${res.status}`);
   }
-  invalidateApiCache('presets');
+  invalidateApiCache('catalog');
   return await res.json();
 }
 
@@ -1589,7 +1589,7 @@ export async function submitStockWriteOff(writeOffData) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || `Stock write-off error ${res.status}`);
   }
-  invalidateApiCache('presets');
+  invalidateApiCache('catalog');
   return await res.json();
 }
 
