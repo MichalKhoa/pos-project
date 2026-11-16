@@ -44,3 +44,17 @@ After an intake, write-off or physical audit the Sklad table shows the new stock
 ## 6. Out of scope
 
 F-031, F-032 (layout), second pass over ledger, CSV and labels, real printing.
+
+## 7. Phase 1 result
+
+Added `src/__tests__/stock_cache_and_urls.test.jsx` (8 tests) and changed two URL assertions in `tax_inventory_roadmap_features.test.jsx` to the full backend address.
+
+New file, today:
+- Control (two reads with no stock change fetch once): passes.
+- Refetch after stock intake, after write-off, and after a physical audit (driven through the modal): all fail with "expected 1 to be 2". That is F-029.
+- Deposit book and tax reports make a relative `/api` call: both fail. A source scan finds three files with a relative `/api` fetch. That is F-030.
+- Deposit book with a failing summary shows no `role="alert"` error: fails.
+
+Existing file: "submits audit reconciliation" and "records a supplier intake movement" fail because they now expect the full address.
+
+All 9 failures are for the intended reasons. Phase 2 makes them pass.

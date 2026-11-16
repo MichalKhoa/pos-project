@@ -124,7 +124,7 @@ describe('Roadmap 1.1 to 1.4 Frontend Feature Tests', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          '/api/v1/printer/print-inventory',
+          'http://127.0.0.1:8000/api/v1/printer/print-inventory',
           expect.objectContaining({ method: 'POST' })
         );
       });
@@ -211,7 +211,7 @@ describe('Roadmap 1.1 to 1.4 Frontend Feature Tests', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          '/api/v1/inventory/deposits/movement',
+          'http://127.0.0.1:8000/api/v1/inventory/deposits/movement',
           expect.objectContaining({
             method: 'POST',
             body: expect.stringContaining('"quantity":40')
