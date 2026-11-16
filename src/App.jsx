@@ -266,7 +266,7 @@ export default function App() {
       if (res && res.status === 'PRINTED' && res.physical !== false) {
         soundFx.playSuccessChime();
         setFlashBanner({
-          message: `✓ Účtenka #${sale.receiptNumber || sale.receipt_number || ''} vytištěna`,
+          message: t('payment.receipt_printed', { n: sale.receiptNumber || sale.receipt_number || '' }),
           type: 'success'
         });
       } else {
@@ -279,7 +279,7 @@ export default function App() {
     } catch {
       setCurrentReceiptData(sale);
     }
-  }, [storeConfig]);
+  }, [storeConfig, t]);
 
   // Open Cash Drawer Handler
   const handleOpenCashDrawer = useCallback(async () => {
@@ -903,7 +903,7 @@ export default function App() {
             if (outcome === 'ok') {
               setFlashBanner({
                 type: 'SUCCESS',
-                message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
+                message: t('payment.receipt_printed', { n: finalSaleToPrint.receiptNumber || '' }),
                 amount: finalGrandTotal
               });
             }
@@ -930,7 +930,7 @@ export default function App() {
 
     setFlashBanner({
       type: 'SUCCESS',
-      message: printReceipt ? 'Zaplaceno!' : 'Zaplaceno!',
+      message: printReceipt ? t('payment.paid') : t('payment.paid_no_print'),
       amount: finalGrandTotal
     });
   };

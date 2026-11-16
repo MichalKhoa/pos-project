@@ -33,7 +33,7 @@ Order inside the batch: (1) server accepts the cash-rounded total; (2) client di
 **Batch B: Counter safety (DONE, see `docs/plans/BATCH_B_COUNTER_SAFETY_PLAN.md`).** F-002, F-003, F-005, F-021, F-022, F-004, F-008.
 Goal: a mis-scan, a wrong unit or a stray Enter cannot record money that was not taken.
 
-**Batch C: Receipt and text correctness.** F-016, F-019, F-011.
+**Batch C: Receipt and text correctness (DONE, see `docs/plans/BATCH_C_RECEIPT_TEXT_PLAN.md`).** F-016, F-019, F-011.
 
 **Batch D: Product decision.** F-017 (where does stock management live).
 

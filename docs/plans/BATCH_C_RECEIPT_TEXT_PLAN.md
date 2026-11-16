@@ -1,6 +1,6 @@
 # Batch C: Receipt and Text Correctness — Implementation Plan
 
-Status: APPROVED with defaults. Phases 1 and 2 done (see results below); Phase 3 open.
+Status: APPROVED with defaults. All three phases done (see results below).
 Source: [`docs/audit/FINDINGS.md`](../audit/FINDINGS.md) and [`docs/audit/FIX_RECOMMENDATIONS.md`](../audit/FIX_RECOMMENDATIONS.md).
 Covers findings: F-016, F-019, F-011. One small add-on (section 5, item 3): the Czech plural on the history header.
 
@@ -94,3 +94,20 @@ Done on branch `fix/batch-c-receipt-text`.
 - Live check: the header chip reads "Připojování..." while connecting and "Offline" afterwards, with matching tooltips.
 - Gates: 347 frontend tests, lint and build pass. Review (high): no findings. The `cash_shift.test.jsx` unhandled error from Phase 1 is still there and unrelated.
 - Not covered: keys built from a variable or template string (`t(\`a.${x}\`)`) are not scanned.
+
+## 8. Phase 3 result
+
+Done on branch `fix/batch-c-receipt-text`.
+
+- **The banner problem was bigger than the dead ternary.** `CheckoutFlashBanner` treated only the exact string `'SUCCESS'` as success and drew everything else as a red error with a warning icon. About 15 banners pass lowercase types (`'success'`, `'info'`, `'warning'`, `'error'`, `'default'`): scan confirmations, "receipt printed", "cash drawer opened" and "price check on" all showed in red. Instead of editing every call site, the component now reads the type case-insensitively and has four looks: success (green), warning (amber, new), error (red) and info (blue, new; also used for `'default'` and unknown types).
+- Default texts and the close button title come from `t()` (`payment.paid`, `payment.transaction_error`, `common.close`), and the close button has an `aria-label`.
+- Checkout: `payment.paid` ("Zaplaceno!") with printing, `payment.paid_no_print` ("Zaplaceno, účtenka se netiskne") without; the "receipt printed" banner uses `payment.receipt_printed` in both places that show it. New keys in cs, vi and en.
+- Plural: new `src/utils/pluralWord.js`. The receipt count in the history header and in the analytics card now reads "1 účtenka", "2 účtenky", "5 účtenek" (the `shift_stats.receipts_*` keys already existed; the old code used the bare `receipts` key). Cart and the shift widget keep their own inline copy of the same logic; not touched.
+- Tests: `checkout_flash_banner.test.jsx` (12 cases, 6 failed before), `plural_word.test.js`, two checkout banner tests in `app_unsent_sales.test.jsx`.
+- Live check: switching price check on shows a blue info banner (it was red).
+- Gates: 368 frontend tests, lint and build pass. Review (high): no findings. The `cash_shift.test.jsx` unhandled error is unchanged.
+- Not changed: the remaining hard-coded Czech banner texts (cash drawer, scan, refund errors); they belong to F-009 in Batch F.
+
+## 9. Batch C status
+
+All three phases done. Open from this batch: the A4 invoice total for cash (section 6), the accountant check of the receipt wording (decision 2), and real thermal printer output.

@@ -144,6 +144,10 @@ export const translations = {
       note_placeholder: "Přidat poznámku (např. Inventura, Státní svátek)..."
     },
     payment: {
+      paid: "Zaplaceno!",
+      paid_no_print: "Zaplaceno, účtenka se netiskne",
+      receipt_printed: "✓ Účtenka #{n} vytištěna",
+      transaction_error: "Chyba transakce",
       title: "Platba Prodeje",
       refund_title: "↩️ Vrácení peněz / Storno",
       cash: "Hotovost",
@@ -1507,6 +1511,10 @@ export const translations = {
       note_placeholder: "Thêm ghi chú (vd: Kiểm kê, Ngày lễ)..."
     },
     payment: {
+      paid: "Đã thanh toán!",
+      paid_no_print: "Đã thanh toán, không in hóa đơn",
+      receipt_printed: "✓ Đã in hóa đơn #{n}",
+      transaction_error: "Lỗi giao dịch",
       title: "Thanh Toán Đơn Hàng",
       refund_title: "↩️ Hoàn tiền / Hủy giao dịch",
       cash: "Tiền mặt",
@@ -2870,6 +2878,10 @@ export const translations = {
       note_placeholder: "Add note (e.g. Stocktake, Holiday)..."
     },
     payment: {
+      paid: "Paid!",
+      paid_no_print: "Paid, receipt not printed",
+      receipt_printed: "✓ Receipt #{n} printed",
+      transaction_error: "Transaction error",
       title: "Complete Sale",
       refund_title: "↩️ Refund / Void Sale",
       cash: "Cash",

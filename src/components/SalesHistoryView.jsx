@@ -4,6 +4,7 @@ import ReceiptModal from './ReceiptModal';
 import TouchCalendarModal from './TouchCalendarModal.jsx';
 import TouchDateRangeModal from './TouchDateRangeModal.jsx';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
+import { pluralWord } from '../utils/pluralWord';
 import { exportSalesToCSV } from '../utils/csvExporter';
 import SalesPeriodBar from './history/SalesPeriodBar.jsx';
 import SalesLedgerTable from './history/SalesLedgerTable.jsx';
@@ -21,7 +22,7 @@ export default function SalesHistoryView({
   onInitiateRefund,
   initialDateFilter = null
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
@@ -345,7 +346,7 @@ export default function SalesHistoryView({
 
         <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
           <Receipt size={13} />
-          <span>{totalItems} {t('shift_stats.receipts') || 'účtenek celkem'}</span>
+          <span>{totalItems} {pluralWord(t, language, 'shift_stats.receipts', totalItems)}</span>
         </div>
       </div>
 

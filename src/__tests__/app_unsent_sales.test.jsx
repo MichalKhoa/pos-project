@@ -53,14 +53,14 @@ function renderAppWithProviders() {
 }
 
 
-async function payOneCustomItemInCash() {
+async function payOneCustomItemInCash(printButton = /Dokončit a vytisknout/i) {
   fireEvent.click(await screen.findByRole('button', { name: /Vlastní položka/i }));
   fireEvent.click(await screen.findByRole('button', { name: '1' }));
   fireEvent.click(screen.getByRole('button', { name: '5' }));
   fireEvent.click(screen.getByRole('button', { name: '0' }));
   fireEvent.click(screen.getByRole('button', { name: /Přidat do Košíku|Vložit do košíku/i }));
   fireEvent.click(screen.getByRole('button', { name: /^Hotovost$/i }));
-  fireEvent.click(await screen.findByRole('button', { name: /Dokončit a vytisknout/i }));
+  fireEvent.click(await screen.findByRole('button', { name: printButton }));
 }
 
 describe('sale that the server did not store (F-001 part 2, F-014)', () => {
@@ -84,6 +84,22 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
     expect(posApi.printReceiptBackend).not.toHaveBeenCalled();
     const stored = JSON.parse(localStorage.getItem('voltflow_pos_sales'));
     expect(stored[0]).toMatchObject({ syncState: 'REJECTED', syncError: 'TOTAL_MISMATCH' });
+  });
+
+  it('says the receipt was not printed when the cashier skips printing (F-011)', async () => {
+    const posApi = await import('../api/posApi');
+    renderAppWithProviders();
+    await payOneCustomItemInCash(/Dokončit bez tisku/i);
+
+    expect(await screen.findByText('Zaplaceno, účtenka se netiskne')).toBeInTheDocument();
+    expect(posApi.printReceiptBackend).not.toHaveBeenCalled();
+  });
+
+  it('confirms a printed receipt in the banner (F-011)', async () => {
+    renderAppWithProviders();
+    await payOneCustomItemInCash();
+
+    expect(await screen.findByText(/Účtenka #2026-000001 vytištěna/)).toBeInTheDocument();
   });
 
   it('server down: badge shows 1, then backend returns and the sale is sent exactly once more', async () => {
