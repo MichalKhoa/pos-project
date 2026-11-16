@@ -24,7 +24,8 @@ export default function ManualKeypad({
   isParkedModalOpen,
   onParkedModalOpenChange,
   hasCartItems = false,
-  salesHistory = [],
+  shift = null,
+  unsent = null,
   onPrintDailySummary,
   onOpenCashMovement,
   onOpenZReport,
@@ -401,7 +402,8 @@ export default function ManualKeypad({
         {/* Shift Quick Stats Mini-Widget Card */}
         {shiftWidgetPosition !== 'bottom_presets' && (
           <ShiftStatsWidget
-            salesHistory={salesHistory}
+            shift={shift}
+            unsent={unsent}
             onPrintDailySummary={onPrintDailySummary}
             onOpenZReport={onOpenZReport}
           />

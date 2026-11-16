@@ -5,6 +5,7 @@ import RefundModal from '../RefundModal';
 import CalendarModal from '../CalendarModal';
 import DiscountModal from '../DiscountModal';
 import PendingSyncModal from '../PendingSyncModal';
+import UnsentSalesModal from '../UnsentSalesModal';
 import ShutdownModal from '../ShutdownModal';
 import LockScreenModal from '../LockScreenModal';
 import ToastUndo from '../ToastUndo';
@@ -67,6 +68,13 @@ export default function AppModals({
   currentReceiptData,
   setCurrentReceiptData,
 
+  // Unsent sales (not stored on the server yet)
+  showUnsentModal = false,
+  unsentSales = [],
+  isFlushingUnsent = false,
+  onSendUnsent = null,
+  onCloseUnsent = null,
+
   // Sync Modal
   showSyncModal,
   pendingSyncCount,
@@ -110,6 +118,7 @@ export default function AppModals({
   onMovementRecorded = null,
 
   // Z-Report Modal
+  unsentSummary = null,
   isZReportModalOpen = false,
   setIsZReportModalOpen = null,
   onShiftClosed = null,
@@ -187,6 +196,17 @@ export default function AppModals({
           storeConfig={storeConfig}
           onClose={() => setCurrentReceiptData(null)}
           onNewSale={() => setCurrentReceiptData(null)}
+        />
+      )}
+
+      {/* Sales the server has not accepted yet */}
+      {showUnsentModal && (
+        <UnsentSalesModal
+          sales={unsentSales}
+          isFlushing={isFlushingUnsent}
+          onSend={onSendUnsent}
+          onSendAll={onSendUnsent}
+          onClose={onCloseUnsent}
         />
       )}
 
@@ -299,6 +319,7 @@ export default function AppModals({
             if (onShiftClosed) onShiftClosed(res);
           }}
           storeConfig={storeConfig}
+          unsent={unsentSummary}
         />
       )}
 

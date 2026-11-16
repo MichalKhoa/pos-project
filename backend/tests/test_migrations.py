@@ -53,6 +53,19 @@ class TestMigrations(unittest.TestCase):
         self.assertEqual(res2["status"], "SUCCESS")
         self.assertEqual(len(res2["added_columns"]), 0)
 
+    def test_old_sales_table_gets_cash_rounding_column(self):
+        engine = create_engine("sqlite:///:memory:")
+        with engine.connect() as conn:
+            conn.execute(text("CREATE TABLE sales (id VARCHAR PRIMARY KEY, receipt_number VARCHAR, total_amount NUMERIC)"))
+            conn.execute(text("INSERT INTO sales (id, receipt_number, total_amount) VALUES ('old', '2025-000001', 12)"))
+            conn.commit()
+        run_schema_migrations(engine=engine)
+        with engine.connect() as conn:
+            cols = [r[1] for r in conn.execute(text("PRAGMA table_info('sales')")).fetchall()]
+            self.assertIn("cash_rounding", cols)
+            value = conn.execute(text("SELECT cash_rounding FROM sales WHERE id = 'old'")).scalar()
+            self.assertIn(value, (0, 0.0))
+
 
 if __name__ == "__main__":
     unittest.main()

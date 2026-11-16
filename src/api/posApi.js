@@ -1,3 +1,5 @@
+import { toQty } from '../utils/tax';
+
 export function getApiHost() {
   if (typeof window === 'undefined') return '127.0.0.1';
   const hostname = window.location.hostname;
@@ -193,19 +195,31 @@ export async function processEetQueue() {
 }
 
 /**
- * Create a new sale transaction in backend (runs EET fiscalization & database save)
+ * Create a new sale transaction in backend (runs EET fiscalization & database save).
+ * Returns the server JSON on 2xx; { status: 'REJECTED', httpStatus, code, detail } when the server
+ * refuses the sale (4xx, so retrying is pointless); null when the server is unreachable or
+ * failing (network error, 5xx, 408/425/429), which is retryable. See utils/saleSync.js.
  */
 export async function createSaleBackend(saleData) {
   try {
+    // syncState, syncError and pendingRefundUpdate are local bookkeeping, never sent to the server
+    const { syncState: _syncState, syncError: _syncError, pendingRefundUpdate: _refundUpdate, ...payload } = saleData;
     const res = await fetch(`${API_BASE_URL}/sales/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(saleData)
+      body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    if (res.ok) return await res.json();
+    const retryable = [408, 425, 429].includes(res.status);
+    if (res.status >= 400 && res.status < 500 && !retryable) {
+      const body = await res.json().catch(() => null);
+      const detail = body?.detail ?? null;
+      const code = (detail && typeof detail === 'object' && detail.code) || (typeof detail === 'string' ? detail : null);
+      return { status: 'REJECTED', httpStatus: res.status, code: code || `HTTP_${res.status}`, detail };
+    }
+    throw new Error(`HTTP error ${res.status}`);
   } catch (err) {
-    console.warn('Backend sale submission failed, fallback to local standalone mode:', err);
+    console.warn('Backend sale submission failed, sale stays queued locally:', err);
     return null;
   }
 }
@@ -230,14 +244,14 @@ export function normalizeSale(sale) {
     id: item.id || item.item_id || `item-${idx}`,
     name: item.name || item.title || item.item_name || 'Položka',
     price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
-    quantity: item.quantity !== undefined ? parseInt(item.quantity, 10) : (item.qty !== undefined ? parseInt(item.qty, 10) : 1),
+    quantity: toQty(item.quantity !== undefined ? item.quantity : item.qty),
     vat: item.vat !== undefined ? parseInt(item.vat, 10) : (item.vat_rate !== undefined ? parseInt(item.vat_rate, 10) : 21),
     discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0),
     discount_percent: item.discount_percent !== undefined ? parseFloat(item.discount_percent) : (item.discountPercent !== undefined ? parseFloat(item.discountPercent) : 0),
-    refundedQuantity: item.refundedQuantity !== undefined ? parseInt(item.refundedQuantity, 10) : (item.refunded_quantity !== undefined ? parseInt(item.refunded_quantity, 10) : 0),
-    refunded_quantity: item.refunded_quantity !== undefined ? parseInt(item.refunded_quantity, 10) : (item.refundedQuantity !== undefined ? parseInt(item.refundedQuantity, 10) : 0),
-    remainingQuantity: item.remainingQuantity !== undefined ? parseInt(item.remainingQuantity, 10) : (item.remaining_quantity !== undefined ? parseInt(item.remaining_quantity, 10) : (item.quantity !== undefined ? parseInt(item.quantity, 10) : 1)),
-    remaining_quantity: item.remaining_quantity !== undefined ? parseInt(item.remaining_quantity, 10) : (item.remainingQuantity !== undefined ? parseInt(item.remainingQuantity, 10) : (item.quantity !== undefined ? parseInt(item.quantity, 10) : 1))
+    refundedQuantity: toQty(item.refundedQuantity !== undefined ? item.refundedQuantity : item.refunded_quantity, 0),
+    refunded_quantity: toQty(item.refunded_quantity !== undefined ? item.refunded_quantity : item.refundedQuantity, 0),
+    remainingQuantity: toQty(item.remainingQuantity !== undefined ? item.remainingQuantity : (item.remaining_quantity !== undefined ? item.remaining_quantity : item.quantity)),
+    remaining_quantity: toQty(item.remaining_quantity !== undefined ? item.remaining_quantity : (item.remainingQuantity !== undefined ? item.remainingQuantity : item.quantity))
   })) : [];
 
   return {

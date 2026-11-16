@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -10,11 +10,15 @@ import { useCart } from './hooks/useCart';
 import { usePosKeyboardShortcuts } from './hooks/usePosKeyboardShortcuts';
 import { useAutoLock } from './hooks/useAutoLock';
 import { useOfflineSync } from './hooks/useOfflineSync';
+import { useUnsentSales } from './hooks/useUnsentSales';
+import { SYNC, sendOutcome, applySendResult, markStranded, isLocalOnly, canRefund } from './utils/saleSync';
+import { roundCashTotal } from './utils/tax';
+import { buildRefundUpdate, revertRefund, settleRefundUpdate } from './utils/refundSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
 import { useTranslation } from './i18n/LanguageContext';
 import { soundFx } from './utils/audio';
-import { calculateCartTotals } from './utils/tax';
+import { buildSalePayload } from './utils/buildSalePayload';
 import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
 import { DEFAULT_STORE_CONFIG } from './data/initialData';
 import {
@@ -22,7 +26,6 @@ import {
   fetchSalesHistoryBackend,
   fetchBackendRoot,
   normalizeSale,
-  updateSaleRefundStatusBackend,
   fetchStoreConfigBackend,
   saveStoreConfigBackend,
   broadcastCustomerDisplay,
@@ -61,6 +64,7 @@ export default function App() {
   const [discountModalSelectedItem, setDiscountModalSelectedItem] = useState(null);
   const [historyDateFilter, setHistoryDateFilter] = useState(null);
   const [flashBanner, setFlashBanner] = useState(null);
+  const storageWarnedRef = useRef(false);
   const [unknownBarcode, setUnknownBarcode] = useState(null);
   const [mobilePosTab, setMobilePosTab] = useState('keypad');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
@@ -128,6 +132,33 @@ export default function App() {
     checkPendingOfflineSales
   } = useOfflineSync({ salesHistory, setSalesHistory });
 
+  const [currentShift, setCurrentShift] = useState(null);
+
+  const fetchShiftData = useCallback(async () => {
+    try {
+      const shift = await getCurrentShift();
+      if (shift) setCurrentShift(shift);
+    } catch (e) {
+      console.warn('Failed to fetch shift data:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchShiftData();
+  }, [fetchShiftData]);
+
+  const [showUnsentModal, setShowUnsentModal] = useState(false);
+  const {
+    unsentSales,
+    unsentCount,
+    isFlushing: isFlushingUnsent,
+    flush: flushUnsent
+  } = useUnsentSales({ salesHistory, setSalesHistory, onSent: fetchShiftData });
+  const unsentSummary = useMemo(() => ({
+    count: unsentSales.length,
+    amount: unsentSales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0)
+  }), [unsentSales]);
+
   const {
     isAppLocked,
     setIsAppLocked,
@@ -166,20 +197,6 @@ export default function App() {
   const [isCashMovementModalOpen, setIsCashMovementModalOpen] = useState(false);
   const [isZReportModalOpen, setIsZReportModalOpen] = useState(false);
   const [weightModalPreset, setWeightModalPreset] = useState(null);
-  const [currentShift, setCurrentShift] = useState(null);
-
-  const fetchShiftData = useCallback(async () => {
-    try {
-      const shift = await getCurrentShift();
-      if (shift) setCurrentShift(shift);
-    } catch (e) {
-      console.warn('Failed to fetch shift data:', e);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchShiftData();
-  }, [fetchShiftData]);
 
   const computedTotalAmount = useMemo(() => {
     return cartItems.reduce((sum, item) => {
@@ -310,6 +327,15 @@ export default function App() {
   };
 
   // Refund / Storno processing handler
+  // Every refund entry point (last-receipt chip, ledger, inspector, scanned receipt) ends here
+  const handleInitiateRefund = useCallback((sale) => {
+    if (sale && !canRefund(sale)) {
+      setFlashBanner({ type: 'ERROR', message: t('refund_guard.not_stored') });
+      return;
+    }
+    setRefundTargetSale(sale);
+  }, [t]);
+
   const handleProcessRefund = ({ originalSale, returnedItems, totalRefundAmount, refundTaxSummary, refundReason, paymentMethod, isFullRefund }) => {
     const currentYear = new Date().getFullYear().toString();
     const yearPrefix = `${currentYear}-`;
@@ -334,6 +360,9 @@ export default function App() {
       return acc;
     }, {});
 
+    const isCashRefund = paymentMethod === 'cash';
+    const refundCashTotal = roundCashTotal(-totalRefundAmount);
+
     const stornoSale = normalizeSale({
       id: `sale-storno-${Date.now()}`,
       receiptNumber: nextStornoNum,
@@ -346,10 +375,13 @@ export default function App() {
         vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
         discount_percent: item.discountPercent || 0
       })),
-      totalAmount: -totalRefundAmount,
+      // Cash goes back in whole koruna like it came in: a 3.50 sale paid as 4 is refunded as 4,
+      // and the 0.50 is noted as rounding on the storno
+      totalAmount: isCashRefund ? refundCashTotal : -totalRefundAmount,
+      cashRounding: isCashRefund ? Math.round((refundCashTotal + totalRefundAmount) * 100) / 100 : 0,
       cartDiscountPercent: originalSale.cartDiscountPercent || 0,
       paymentMethod,
-      tenderedAmount: paymentMethod === 'cash' ? -totalRefundAmount : 0,
+      tenderedAmount: isCashRefund ? refundCashTotal : 0,
       changeDue: 0,
       taxSummary: formattedTaxSummary,
       isRefund: true,
@@ -368,26 +400,36 @@ export default function App() {
       refunded_amount: updatedRefundedAmount
     });
 
-    createSaleBackend(stornoSale).then(backendRes => {
-      if (backendRes && backendRes.status === 'SUCCESS') {
-        const enrichedStorno = normalizeSale({
-          ...stornoSale,
-          fik: backendRes.fik,
-          pok: backendRes.fik,
-          bkp: backendRes.bkp,
-          pkp: backendRes.pkp,
-          eet_status: backendRes.eet_status || 'EVD_OK'
-        });
-        setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? enrichedStorno : s));
-        setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? enrichedStorno : prev);
+    // The original sale's refund status is sent only after the server stored the storno (F-026);
+    // until then it travels with the storno, and a refused storno undoes the change.
+    const refundUpdate = buildRefundUpdate(originalSale, newRefundStatus, updatedRefundedAmount);
+    const pendingStorno = { ...stornoSale, syncState: SYNC.PENDING, pendingRefundUpdate: refundUpdate };
+    createSaleBackend(pendingStorno).then(async backendRes => {
+      const outcome = sendOutcome(backendRes);
+      if (outcome === 'retry') return; // stays PENDING with its refund update, resent automatically
+      const settled = normalizeSale(applySendResult(pendingStorno, backendRes));
+      if (outcome === 'rejected') {
+        setSalesHistory(prev => revertRefund(
+          prev.map(s => s.id === stornoSale.id ? { ...settled, pendingRefundUpdate: null } : s),
+          refundUpdate
+        ));
+        setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? null : prev);
+        setFlashBanner({ type: 'ERROR', message: t('refund_guard.storno_rejected') });
+        setShowUnsentModal(true);
+        return;
       }
+      const statusUpdated = await settleRefundUpdate(pendingStorno);
+      const finalStorno = { ...settled, pendingRefundUpdate: statusUpdated ? null : refundUpdate };
+      setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? finalStorno : s));
+      setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? finalStorno : prev);
+      if (!statusUpdated) setFlashBanner({ type: 'ERROR', message: t('refund_guard.status_update_failed') });
+      fetchShiftData();
     });
 
-    updateSaleRefundStatusBackend(originalSale.id, newRefundStatus, updatedRefundedAmount);
 
-    setSalesHistory(prev => [stornoSale, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
+    setSalesHistory(prev => [pendingStorno, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
     setRefundTargetSale(null);
-    setCurrentReceiptData(stornoSale);
+    setCurrentReceiptData(pendingStorno);
   };
 
   // Sync storeConfig to LocalStorage
@@ -401,22 +443,35 @@ export default function App() {
 
   // Sync salesHistory to LocalStorage (sanitized: only persist offline pending + latest 50 completed to prevent QuotaExceededError)
   useEffect(() => {
-    const offlinePending = salesHistory.filter(s => s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false);
-    const recentCompleted = salesHistory.filter(s => s.eet_status !== 'OFFLINE_PENDING' && s.eetStatus !== 'OFFLINE_PENDING' && s.is_sent_to_eet !== false).slice(0, 50);
-    setStorageItem('sales', [...offlinePending, ...recentCompleted]);
-  }, [salesHistory]);
+    // Sales the server does not have (unsent, EET-pending) are never trimmed
+    const localOnly = salesHistory.filter(isLocalOnly);
+    const recentCompleted = salesHistory.filter(s => !isLocalOnly(s)).slice(0, 50);
+    const stored = setStorageItem('sales', [...localOnly, ...recentCompleted]);
+    if (!stored && !storageWarnedRef.current) {
+      storageWarnedRef.current = true;
+      setFlashBanner({ type: 'ERROR', message: t('unsent_sales.storage_full') });
+    } else if (stored) {
+      storageWarnedRef.current = false;
+    }
+  }, [salesHistory, t]);
 
   // Load store config & sales history from SQLite backend on mount
   useEffect(() => {
     let lastFocusReload = 0;
 
     const reloadBackendData = (isInitial = false) => {
+      fetchShiftData();
       fetchStoreConfigBackend().then(data => {
         if (data && typeof data === 'object') {
           setStoreConfig(prev => ({ ...prev, ...data }));
         }
       });
-      fetchSalesHistoryBackend({ limit: isInitial ? 100 : 50 }).then(backendSales => {
+      const pageLimit = isInitial ? 100 : 50;
+      fetchSalesHistoryBackend({ limit: pageLimit }).then(backendSales => {
+        // F-014 recovery: local sales the server lacks become STRANDED (manual resend) or NEEDS_REVIEW
+        if (isInitial && Array.isArray(backendSales)) {
+          setSalesHistory(prev => markStranded(prev, backendSales, pageLimit));
+        }
         if (Array.isArray(backendSales) && backendSales.length > 0) {
           // Sync highest receipt sequence number to localStorage
           const currentYear = new Date().getFullYear().toString();
@@ -439,8 +494,8 @@ export default function App() {
             const prevSaleMap = new Map(prev.map(s => [s.id, s]));
             const backendIds = new Set(backendSales.map(s => s.id));
             const backendReceipts = new Set(backendSales.map(s => s.receiptNumber).filter(Boolean));
-            const pendingLocalSales = prev.filter(s => 
-              (s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false) &&
+            const pendingLocalSales = prev.filter(s =>
+              isLocalOnly(s) &&
               !backendIds.has(s.id) &&
               !backendReceipts.has(s.receiptNumber)
             );
@@ -526,7 +581,7 @@ export default function App() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [fetchShiftData]);
 
   const handleSaveStoreConfig = async (newConfig) => {
     setStoreConfig(newConfig);
@@ -614,7 +669,7 @@ export default function App() {
 
       if (matchedSale) {
         soundFx.playSuccessChime();
-        setRefundTargetSale(matchedSale);
+        handleInitiateRefund(matchedSale);
         const rNum = matchedSale.receiptNumber || matchedSale.receipt_number;
         const total = (matchedSale.totalAmount !== undefined ? matchedSale.totalAmount : (matchedSale.total_amount || 0)).toFixed(0);
         setFlashBanner({
@@ -635,7 +690,7 @@ export default function App() {
         type: 'error'
       });
     }
-  }, [salesHistory, t]);
+  }, [salesHistory, t, handleInitiateRefund]);
 
   // Hook for hardware keyboard, numpad and USB barcode scanner listeners
   usePosKeyboardShortcuts({
@@ -772,11 +827,6 @@ export default function App() {
     const effectiveTendered = tenderedAmount !== undefined ? tenderedAmount : (tendered !== undefined ? tendered : 0);
     const effectiveChange = changeDue !== undefined ? changeDue : (change !== undefined ? change : 0);
 
-    const {
-      finalGrandTotal,
-      taxSummary
-    } = calculateCartTotals(cartItems, cartDiscountPercent);
-
     const currentYear = new Date().getFullYear().toString();
     const yearPrefix = `${currentYear}-`;
     let maxSeq = parseInt(getStorageItem('last_receipt_seq', '0'), 10) || 0;
@@ -790,41 +840,37 @@ export default function App() {
     setStorageItem('last_receipt_seq', String(nextSeq));
     const nextReceiptNum = `${currentYear}-${nextSeq.toString().padStart(6, '0')}`;
 
-    const newSale = normalizeSale({
+    const { sale: newSale, finalGrandTotal } = buildSalePayload({
       id: `sale-${Date.now()}`,
       receiptNumber: nextReceiptNum,
       timestamp: new Date().toISOString(),
-      items: cartItems.map(item => ({
-        id: item.id || `item-${Date.now()}`,
-        name: item.name,
-        price: parseFloat(item.price),
-        quantity: item.quantity,
-        vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
-        discount_percent: item.discountPercent || 0
-      })),
-      totalAmount: effectiveMethod === 'cash' ? Math.round(finalGrandTotal) : finalGrandTotal,
-      cashRounding: effectiveMethod === 'cash' ? Math.round((Math.round(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
+      cartItems,
       cartDiscountPercent,
-      paymentMethod: effectiveMethod,
-      splitDetails: splitDetails || null,
-      tenderedAmount: effectiveMethod === 'cash' ? effectiveTendered : finalGrandTotal,
-      changeDue: effectiveMethod === 'cash' ? effectiveChange : 0,
-      taxSummary,
-      isInvoice: isInvoice || is_invoice || false,
-      is_invoice: is_invoice || isInvoice || false,
-      customerIco: customerIco || customer_ico || null,
-      customer_ico: customer_ico || customerIco || null,
-      customerDic: customerDic || customer_dic || null,
-      customer_dic: customer_dic || customerDic || null,
-      customerName: customerName || customer_name || null,
-      customer_name: customer_name || customerName || null,
-      customerAddress: customerAddress || customer_address || null,
-      customer_address: customer_address || customerAddress || null
+      method: effectiveMethod,
+      tenderedAmount: effectiveTendered,
+      changeDue: effectiveChange,
+      splitDetails,
+      invoice: {
+        isInvoice,
+        is_invoice,
+        customerIco,
+        customer_ico,
+        customerDic,
+        customer_dic,
+        customerName,
+        customer_name,
+        customerAddress,
+        customer_address
+      }
     });
 
-    createSaleBackend(newSale).then(async backendRes => {
-      let finalSaleToPrint = newSale;
-      if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
+    // The cashier sees "Zaplaceno!" at once; the server answer below decides what is still owed
+    const pendingSale = { ...newSale, syncState: SYNC.PENDING };
+
+    createSaleBackend(pendingSale).then(async backendRes => {
+      let finalSaleToPrint = pendingSale;
+      const outcome = sendOutcome(backendRes);
+      if (outcome === 'ok') {
         const assignedRn = backendRes.receipt_number || newSale.receiptNumber;
         if (assignedRn && assignedRn.startsWith(yearPrefix)) {
           const num = parseInt(assignedRn.slice(yearPrefix.length), 10);
@@ -833,31 +879,34 @@ export default function App() {
             if (num > curSeq) setStorageItem('last_receipt_seq', String(num));
           }
         }
-        const enrichedSale = normalizeSale({
-          ...newSale,
-          receiptNumber: assignedRn,
-          invoiceNumber: backendRes.invoice_number || newSale.invoiceNumber,
-          invoice_number: backendRes.invoice_number || newSale.invoice_number,
-          fik: backendRes.fik,
-          pok: backendRes.fik,
-          bkp: backendRes.bkp,
-          pkp: backendRes.pkp,
-          eet_status: backendRes.eet_status || 'EVD_OK'
-        });
+        const enrichedSale = normalizeSale(applySendResult(pendingSale, backendRes));
         setSalesHistory(prev => prev.map(s => s.id === newSale.id ? enrichedSale : s));
         setCurrentReceiptData(prev => prev && prev.id === newSale.id ? enrichedSale : prev);
         finalSaleToPrint = enrichedSale;
+        fetchShiftData();
+      } else if (outcome === 'rejected') {
+        // Server refused the sale: no receipt for a sale that is not recorded; show the list.
+        setSalesHistory(prev => prev.map(s => s.id === newSale.id ? applySendResult(s, backendRes) : s));
+        setFlashBanner({ type: 'ERROR', message: t('unsent_sales.banner_rejected'), amount: finalGrandTotal });
+        setShowUnsentModal(true);
+        return;
+      } else {
+        // Server unreachable: the sale stays PENDING and is resent automatically
+        setFlashBanner({ type: 'WARNING', message: t('unsent_sales.banner_pending'), amount: finalGrandTotal });
       }
 
       if (printReceipt) {
         try {
           const res = await printReceiptBackend(finalSaleToPrint, storeConfig);
           if (res && res.status === 'PRINTED' && res.physical !== false) {
-            setFlashBanner({
-              type: 'SUCCESS',
-              message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
-              amount: finalGrandTotal
-            });
+            // Keep the "waiting for server" warning visible while the sale is still unsaved
+            if (outcome === 'ok') {
+              setFlashBanner({
+                type: 'SUCCESS',
+                message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
+                amount: finalGrandTotal
+              });
+            }
           } else {
             // Fallback to preview modal only if hardware direct print could not be executed
             setCurrentReceiptData(finalSaleToPrint);
@@ -870,11 +919,11 @@ export default function App() {
     }).catch(err => {
       console.warn('Backend sale registration failed:', err);
       if (printReceipt) {
-        setCurrentReceiptData(newSale);
+        setCurrentReceiptData(pendingSale);
       }
     });
 
-    setSalesHistory(prev => [newSale, ...prev]);
+    setSalesHistory(prev => [pendingSale, ...prev]);
     setPaymentModalMethod(null);
     setCartItems([]);
     setCartDiscountPercent(0);
@@ -898,6 +947,19 @@ export default function App() {
     }
   };
 
+  const handleSendUnsent = useCallback(async (ids) => {
+    const r = await flushUnsent({ ids });
+    if (r.sent > 0) fetchShiftData();
+    if (r.unreachable) {
+      setFlashBanner({ type: 'WARNING', message: t('unsent_sales.banner_still_down') });
+    } else if (r.sent > 0) {
+      setFlashBanner({ type: 'SUCCESS', message: t('unsent_sales.banner_sent', { n: r.sent }) });
+    } else if (r.rejected > 0) {
+      setFlashBanner({ type: 'ERROR', message: t('unsent_sales.banner_rejected') });
+    }
+  }, [flushUnsent, fetchShiftData, t]);
+  const handleOpenUnsentModal = useCallback(() => setShowUnsentModal(true), []);
+  const handleCloseUnsentModal = useCallback(() => setShowUnsentModal(false), []);
   const handleOpenSyncModal = useCallback(() => setShowSyncModal(true), [setShowSyncModal]);
   const handleOpenShutdownModal = useCallback(() => setShowShutdownModal(true), []);
   const handleOpenCalendarModal = useCallback(() => setIsCalendarModalOpen(true), []);
@@ -919,6 +981,8 @@ export default function App() {
         onToggleAdminMode={handleToggleAdminMode}
         pendingCount={pendingSyncCount}
         onOpenSyncModal={handleOpenSyncModal}
+        unsentCount={unsentCount}
+        onOpenUnsentSales={handleOpenUnsentModal}
         onOpenShutdownModal={handleOpenShutdownModal}
         onOpenCalendarModal={handleOpenCalendarModal}
         onLockApp={handleLockApp}
@@ -965,7 +1029,8 @@ export default function App() {
                       isParkedModalOpen={isParkedModalOpen}
                       onParkedModalOpenChange={setIsParkedModalOpen}
                       hasCartItems={cartItems.length > 0}
-                      salesHistory={salesHistory}
+                      shift={currentShift}
+                      unsent={unsentSummary}
                       shiftWidgetPosition={storeConfig?.shiftWidgetPosition || 'keypad'}
                     />
                   </div>
@@ -1004,7 +1069,8 @@ export default function App() {
                   {(storeConfig?.shiftWidgetPosition === 'bottom_presets' || (isTwoColumn && storeConfig?.shiftWidgetPosition !== 'under_cart')) && (
                     <ShiftStatsWidget
                       variant="slim"
-                      salesHistory={salesHistory}
+                      shift={currentShift}
+                      unsent={unsentSummary}
                       onPrintDailySummary={handlePrintDailySummary}
                       onOpenZReport={() => setIsZReportModalOpen(true)}
                     />
@@ -1034,12 +1100,13 @@ export default function App() {
                     cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
                     lastSale={lastSale}
                     onReprintLastReceipt={handleReprintSale}
-                    onInitiateRefund={setRefundTargetSale}
+                    onInitiateRefund={handleInitiateRefund}
                   />
                   {isTwoColumn && storeConfig?.shiftWidgetPosition === 'under_cart' && (
                     <ShiftStatsWidget
                       variant="card"
-                      salesHistory={salesHistory}
+                      shift={currentShift}
+                      unsent={unsentSummary}
                       onPrintDailySummary={handlePrintDailySummary}
                       onOpenZReport={() => setIsZReportModalOpen(true)}
                     />
@@ -1115,7 +1182,7 @@ export default function App() {
             onToggleAdminMode={handleToggleAdminMode}
             onDeleteSale={handleDeleteSale}
             onClearAllTestSales={handleClearAllTestSales}
-            onInitiateRefund={setRefundTargetSale}
+            onInitiateRefund={handleInitiateRefund}
             initialDateFilter={historyDateFilter}
           />
         )}
@@ -1164,6 +1231,12 @@ export default function App() {
         }}
         currentReceiptData={currentReceiptData}
         setCurrentReceiptData={setCurrentReceiptData}
+        showUnsentModal={showUnsentModal}
+        unsentSummary={unsentSummary}
+        unsentSales={unsentSales}
+        isFlushingUnsent={isFlushingUnsent}
+        onSendUnsent={handleSendUnsent}
+        onCloseUnsent={handleCloseUnsentModal}
         showSyncModal={showSyncModal}
         pendingSyncCount={pendingSyncCount}
         isSyncingQueue={isSyncingQueue}

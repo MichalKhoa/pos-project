@@ -9,7 +9,8 @@ export default function ZReportModal({
   isOpen = true,
   onClose,
   onShiftClosed,
-  storeConfig = null
+  storeConfig = null,
+  unsent = null
 }) {
   const { t } = useTranslation();
   const notesInputId = useId();
@@ -20,6 +21,7 @@ export default function ZReportModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [closedReport, setClosedReport] = useState(null);
+  const [ackUnsent, setAckUnsent] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,6 +29,7 @@ export default function ZReportModal({
     setNotes('');
     setErrorMsg(null);
     setClosedReport(null);
+    setAckUnsent(false);
     setIsSubmitting(false);
 
     getCurrentShift()
@@ -88,8 +91,12 @@ export default function ZReportModal({
     setActualCashStr(prev => prev + val);
   };
 
+  // Sales the server does not have are not in this report: closing needs an explicit yes (F-015)
+  const hasUnsent = Boolean(unsent) && unsent.count > 0;
+  const canClose = actualCashStr !== '' && !isSubmitting && (!hasUnsent || ackUnsent);
+
   const handleExecuteCloseShift = async () => {
-    if (actualCashStr === '' || isSubmitting) return;
+    if (!canClose) return;
 
     setIsSubmitting(true);
     setErrorMsg(null);
@@ -322,6 +329,12 @@ export default function ZReportModal({
                     <span>{t('z_report.cash_sales') || 'Tržba v hotovosti (+):'}</span>
                     <span style={{ fontWeight: '700' }}>+{(shiftData?.total_cash_sales || 0).toLocaleString('cs-CZ')} Kč</span>
                   </div>
+                  {Boolean(shiftData?.cash_rounding_total) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                      <span>{t('z_report.cash_rounding') || 'z toho zaokrouhlení:'}</span>
+                      <span>{shiftData.cash_rounding_total.toLocaleString('cs-CZ')} Kč</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--accent-rose)' }}>
                     <span>{t('z_report.cash_refunds') || 'Vratky hotovost (-):'}</span>
                     <span style={{ fontWeight: '700' }}>-{(shiftData?.total_cash_refunds || 0).toLocaleString('cs-CZ')} Kč</span>
@@ -496,6 +509,38 @@ export default function ZReportModal({
               )}
             </div>
 
+            {hasUnsent && (
+              <div
+                role="alert"
+                style={{
+                  margin: '0 1rem 0.75rem',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid color-mix(in srgb, var(--accent-amber) 45%, transparent)',
+                  background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.88rem',
+                  fontWeight: '700'
+                }}
+              >
+                <div>
+                  {t('z_report.unsent_warning', {
+                    n: unsent.count,
+                    amount: unsent.amount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  })}
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', minHeight: '44px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={ackUnsent}
+                    onChange={(e) => setAckUnsent(e.target.checked)}
+                    style={{ width: '22px', height: '22px' }}
+                  />
+                  <span>{t('z_report.unsent_ack')}</span>
+                </label>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="modal-footer footer-split">
               <button
@@ -521,7 +566,7 @@ export default function ZReportModal({
               <button
                 type="button"
                 onClick={handleExecuteCloseShift}
-                disabled={actualCashStr === '' || isSubmitting}
+                disabled={!canClose}
                 style={{
                   flex: 2,
                   minHeight: '48px',
@@ -531,8 +576,8 @@ export default function ZReportModal({
                   color: '#ffffff',
                   fontWeight: '800',
                   fontSize: '0.96rem',
-                  cursor: actualCashStr !== '' && !isSubmitting ? 'pointer' : 'not-allowed',
-                  opacity: actualCashStr !== '' && !isSubmitting ? 1 : 0.6,
+                  cursor: canClose ? 'pointer' : 'not-allowed',
+                  opacity: canClose ? 1 : 0.6,
                   boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
                   display: 'flex',
                   alignItems: 'center',

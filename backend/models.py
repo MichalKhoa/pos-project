@@ -12,6 +12,7 @@ class SaleModel(Base):
     receipt_number = Column(String, index=True, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     total_amount = Column(Numeric(10, 2), nullable=False)
+    cash_rounding = Column(Numeric(10, 2), default=0.0)  # cash sales: whole-koruna total minus exact total
     cart_discount_percent = Column(Numeric(10, 2), default=0.0)
     payment_method = Column(String, nullable=False)  # 'cash', 'card', 'qr', 'split'
     split_details = Column(JSON, nullable=True)     # {'cash': 500, 'card': 1000}

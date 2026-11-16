@@ -23,6 +23,8 @@ function Navbar({
   onToggleAdminMode,
   pendingCount = 0,
   onOpenSyncModal,
+  unsentCount = 0,
+  onOpenUnsentSales,
   onOpenShutdownModal,
   onOpenCalendarModal,
   onLockApp,
@@ -201,6 +203,19 @@ function Navbar({
             {isOnline ? (import.meta.env.DEV ? `DEV • ${latency !== null ? `${latency}ms` : 'OK'}` : (storeConfig?.eetEnabled ? 'Online • EET' : 'Online')) : (isConnecting ? (t('backend_status_connecting') || 'Připojování...') : (t('offline') || 'Offline'))}
           </span>
         </div>
+        {unsentCount > 0 && (
+          <button
+            type="button"
+            className="status-badge pulse-badge nav-badge-unsent"
+            onClick={onOpenUnsentSales}
+            title={t('unsent_sales.badge_title')}
+            aria-label={`${t('unsent_sales.title')}: ${unsentCount}`}
+            style={{ background: 'var(--accent-red)', color: '#ffffff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', minHeight: '34px', padding: '0 0.7rem', borderRadius: '999px', fontWeight: 700 }}
+          >
+            <AlertTriangle size={14} />
+            <span>{unsentCount}</span>
+          </button>
+        )}
         {storeConfig?.eetEnabled && pendingCount > 0 && (
           <button
             className="status-badge badge-pending-sync pulse-badge nav-badge-sync"

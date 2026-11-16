@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Receipt, RotateCcw, Eye, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { normalizeSale } from '../../api/posApi';
+import { canRefund } from '../../utils/saleSync';
 
 export default function SalesLedgerTable({
   totalItems,
@@ -218,7 +219,8 @@ export default function SalesLedgerTable({
                                 e.stopPropagation();
                                 onInitiateRefund(sale);
                               }}
-                              title="Vystavit vratku / storno účtenky"
+                              disabled={!canRefund(sale)}
+                              title={canRefund(sale) ? 'Vystavit vratku / storno účtenky' : t('refund_guard.not_stored')}
                             >
                               <RotateCcw size={13} />
                               <span>Storno</span>

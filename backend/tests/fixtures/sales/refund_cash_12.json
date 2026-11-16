@@ -1,0 +1,47 @@
+{
+  "name": "refund_cash_12",
+  "description": "Storno of a 12 Kč cash sale as built by handleProcessRefund (backend-only fixture).",
+  "payload": {
+    "id": "fixture-refund_cash_12",
+    "receiptNumber": "STORNO-2026-000002",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "items": [
+      {
+        "id": "fx-a",
+        "name": "STORNO: Pečivo",
+        "price": 12,
+        "quantity": -1,
+        "vat": 21,
+        "discount_percent": 0
+      }
+    ],
+    "totalAmount": -12,
+    "cashRounding": 0.0,
+    "cartDiscountPercent": 0,
+    "paymentMethod": "cash",
+    "splitDetails": null,
+    "tenderedAmount": -12,
+    "changeDue": 0,
+    "taxSummary": {
+      "21": {
+        "rate": 21,
+        "gross": -12.0,
+        "net": -9.92,
+        "tax": -2.08
+      }
+    },
+    "isRefund": true,
+    "originalReceiptNumber": "2026-000001",
+    "refundReason": "fixture"
+  },
+  "expectedServer": {
+    "total_amount": -12.0,
+    "cash_rounding": 0.0,
+    "items": [
+      {
+        "item_id": "fx-a",
+        "quantity": -1
+      }
+    ]
+  }
+}

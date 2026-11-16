@@ -219,5 +219,46 @@ describe('Cash Drawer & Shift Management Tests', () => {
         expect(screen.getByText(/Z-Uzávěrka byla úspěšně provedena/i)).toBeInTheDocument();
       });
     });
+
+    it('warns about unsent sales and needs an extra confirmation before closing (F-015)', async () => {
+      posApi.getCurrentShift.mockResolvedValue(mockShift);
+      posApi.closeShift.mockResolvedValue({ status: 'CLOSED', shift_number: 2, z_seq: 15, total_revenue: 5000, shift: { id: 'shift-10' } });
+      posApi.printZReport.mockResolvedValue({ success: true });
+
+      render(
+        <LanguageProvider>
+          <ZReportModal isOpen={true} onClose={vi.fn()} unsent={{ count: 2, amount: 123.5 }} />
+        </LanguageProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getAllByText(/5[\s\u00a0]*000/i).length).toBeGreaterThan(0);
+      });
+
+      expect(screen.getByRole('alert')).toHaveTextContent(/2 neuložených prodejů \(123,50 Kč\)/);
+      const confirmBtn = screen.getByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i });
+      expect(confirmBtn).toBeDisabled();
+      fireEvent.click(confirmBtn);
+      expect(posApi.closeShift).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('checkbox', { name: /uzavřít směnu bez nich/i }));
+      expect(confirmBtn).toBeEnabled();
+      fireEvent.click(confirmBtn);
+      await waitFor(() => expect(posApi.closeShift).toHaveBeenCalledTimes(1));
+    });
+
+    it('shows no warning and closes normally when nothing is unsent', async () => {
+      posApi.getCurrentShift.mockResolvedValue(mockShift);
+      render(
+        <LanguageProvider>
+          <ZReportModal isOpen={true} onClose={vi.fn()} unsent={{ count: 0, amount: 0 }} />
+        </LanguageProvider>
+      );
+      await waitFor(() => {
+        expect(screen.getAllByText(/5[\s\u00a0]*000/i).length).toBeGreaterThan(0);
+      });
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i })).toBeEnabled();
+    });
   });
 });

@@ -1,0 +1,90 @@
+{
+  "name": "cart_discount_10_cash",
+  "description": "Cash with 10% cart discount, two VAT rates, whole-koruna result 135.",
+  "payload": {
+    "id": "fixture-cart_discount_10_cash",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "items": [
+      {
+        "id": "fx-f",
+        "name": "Boty",
+        "price": 100,
+        "quantity": 1,
+        "vat": 21,
+        "discount_percent": 0
+      },
+      {
+        "id": "fx-g",
+        "name": "Ponožky",
+        "price": 50,
+        "quantity": 1,
+        "vat": 12,
+        "discount_percent": 0
+      }
+    ],
+    "totalAmount": 135,
+    "cashRounding": 0.0,
+    "cartDiscountPercent": 10,
+    "paymentMethod": "cash",
+    "splitDetails": null,
+    "tenderedAmount": 200,
+    "changeDue": 65,
+    "taxSummary": {
+      "21": {
+        "rate": 21,
+        "gross": 90.0,
+        "net": 74.38,
+        "tax": 15.62
+      },
+      "12": {
+        "rate": 12,
+        "gross": 45.0,
+        "net": 40.18,
+        "tax": 4.82
+      }
+    }
+  },
+  "expectedServer": {
+    "total_amount": 135.0,
+    "cash_rounding": 0.0,
+    "items": [
+      {
+        "item_id": "fx-f",
+        "quantity": 1
+      },
+      {
+        "item_id": "fx-g",
+        "quantity": 1
+      }
+    ]
+  },
+  "input": {
+    "id": "fixture-cart_discount_10_cash",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "cartItems": [
+      {
+        "id": "fx-f",
+        "name": "Boty",
+        "price": 100,
+        "quantity": 1,
+        "vat": 21,
+        "discountPercent": 0
+      },
+      {
+        "id": "fx-g",
+        "name": "Ponožky",
+        "price": 50,
+        "quantity": 1,
+        "vat": 12,
+        "discountPercent": 0
+      }
+    ],
+    "cartDiscountPercent": 10,
+    "method": "cash",
+    "tenderedAmount": 200,
+    "changeDue": 65,
+    "splitDetails": null
+  }
+}

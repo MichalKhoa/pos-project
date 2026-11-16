@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
+import { canRefund } from '../utils/saleSync';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
   const [progress, setProgress] = useState(100);
@@ -393,7 +394,8 @@ function Cart({
                       onInitiateRefund(lastSale);
                       setIsLastReceiptOpen(false);
                     }}
-                    title={t('last_receipt.quick_refund')}
+                    disabled={!canRefund(lastSale)}
+                    title={canRefund(lastSale) ? t('last_receipt.quick_refund') : t('refund_guard.not_stored')}
                   >
                     <RotateCcw size={15} strokeWidth={2.5} />
                     <span>{t('last_receipt.quick_refund')}</span>

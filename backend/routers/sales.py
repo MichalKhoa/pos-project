@@ -15,6 +15,7 @@ from services.pohoda_export import generate_pohoda_datapack_xml
 from pydantic import BaseModel, field_validator
 
 from datetime import datetime
+from decimal import Decimal
 
 router = APIRouter(prefix="/api/v1/sales", tags=["Sales Ledger"])
 eet_service = CzechEETService()
@@ -105,6 +106,7 @@ class CreateSaleSchema(BaseModel):
     receiptNumber: Optional[str] = ""
     timestamp: Optional[str] = None
     totalAmount: float
+    cashRounding: float = 0.0
     cartDiscountPercent: float = 0.0
     paymentMethod: str
     splitDetails: Optional[dict] = None
@@ -875,7 +877,8 @@ def recalculate_sale_totals(sale: "CreateSaleSchema"):
         item_final_gross = rc(item_gross * cart_factor)
 
         if rate > 0:
-            net = rc(item_final_gross / (1 + rate / 100))
+            # Decimal division: float division rounds some ties the wrong way (F-028)
+            net = rc(Decimal(str(item_final_gross)) / (1 + Decimal(rate) / 100))
             tax = rc(item_final_gross - net)
         else:
             net = item_final_gross
@@ -907,6 +910,10 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             idempotency_cache.set(idempotency_key, res)
         return res
 
+    # F-027: a zero quantity is never a real line; it means a client truncated a weight
+    if any(float(i.quantity if i.quantity is not None else 1) == 0 for i in sale.items):
+        raise HTTPException(status_code=422, detail={"code": "ZERO_QUANTITY"})
+
     # Ensure atomic receipt number assignment
     assigned_receipt_number = sale.receiptNumber
     if not assigned_receipt_number or db.query(SaleModel).filter(SaleModel.receipt_number == assigned_receipt_number).first():
@@ -937,19 +944,34 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
     _fin_log = _logging.getLogger(__name__)
     computed_total, computed_tax_summary = recalculate_sale_totals(sale)
     client_total = round_currency(sale.totalAmount)
+    cash_rounding = 0.0
     if computed_total != client_total:
-        _fin_log.warning(
-            "FIN-C1 total mismatch sale_id=%s client=%s server=%s",
-            sale.id, client_total, computed_total
-        )
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "code": "TOTAL_MISMATCH",
-                "client_total": client_total,
-                "server_total": computed_total,
-            }
-        )
+        # Cash is rounded to whole koruna at the till (F-001), and a cash refund goes back the
+        # same way (a 3.50 sale paid as 4 is refunded as -4). Accept that, and only that:
+        # a whole-number client total within 0.50 of the exact server total. The difference
+        # is stored as cash_rounding; total_amount stays the exact FIN-C1 value.
+        is_cash = (sale.paymentMethod or "").lower() in ("cash", "hotovost")
+        diff = round_currency(client_total - computed_total)
+        if (is_cash and client_total == float(round(client_total))
+                and abs(diff) <= 0.5):
+            cash_rounding = diff
+        else:
+            _fin_log.warning(
+                "FIN-C1 total mismatch sale_id=%s client=%s server=%s",
+                sale.id, client_total, computed_total
+            )
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "TOTAL_MISMATCH",
+                    "client_total": client_total,
+                    "server_total": computed_total,
+                }
+            )
+
+    # F-027: refuse a paid sale that computes to 0 (money tendered, nothing recorded)
+    if not sale.isRefund and computed_total == 0 and float(sale.tenderedAmount or 0) > 0:
+        raise HTTPException(status_code=422, detail={"code": "ZERO_TOTAL"})
 
     # Run EET Fiscal Signing (if EET is enabled in store config)
     sale_payload = sale.model_dump()
@@ -974,6 +996,7 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             receipt_number=assigned_receipt_number,
             timestamp=parse_iso_timestamp(sale.timestamp),
             total_amount=computed_total,           # FIN-C1: server-computed, never client
+            cash_rounding=cash_rounding,           # cash only: client whole-koruna total minus exact total
             cart_discount_percent=sale.cartDiscountPercent,
             payment_method=sale.paymentMethod,
             split_details=sale.splitDetails,

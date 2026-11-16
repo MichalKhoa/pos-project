@@ -74,6 +74,11 @@ export const translations = {
     shift_stats: {
       title: "Dnešní směna (Přehled)",
       receipts: "účtenek",
+      receipts_one: "účtenka",
+      receipts_few: "účtenky",
+      receipts_many: "účtenky",
+      receipts_other: "účtenek",
+      unsent: "Neuloženo: {n} prodejů ({amount} Kč)",
       today_revenue: "Dnešní tržba celkem",
       revenue_short: "Tržba:",
       cash: "Hotovost",
@@ -1171,6 +1176,38 @@ export const translations = {
       current_balance: "Aktuální očekávaný stav",
       cash_btn: "± Pokladna"
     },
+    lock_screen: {
+      server_starting: "Server se spouští, zkouším znovu…",
+      server_unavailable: "Server není dostupný. PIN nelze ověřit, zkuste to za chvíli znovu."
+    },
+    refund_guard: {
+      not_stored: "Prodej ještě není uložen na serveru. Počkejte na odeslání a zkuste storno znovu.",
+      storno_rejected: "Server vratku odmítl. Původní prodej zůstává beze změny.",
+      status_update_failed: "Vratka je uložena, ale stav původního prodeje se nepodařilo aktualizovat. Zkusí se to znovu."
+    },
+    unsent_sales: {
+      title: "Neuložené prodeje",
+      intro: "Tyto prodeje nejsou uložené na serveru. Zákazník je již zaplatil.",
+      rejected_notice: "Server prodej odmítl. Zavolejte správce a nic nemažte.",
+      empty: "Všechny prodeje jsou uložené.",
+      receipt: "Účtenka",
+      time: "Čas",
+      amount: "Částka",
+      state: "Stav",
+      state_pending: "Čeká na server",
+      state_stranded: "Chybí na serveru",
+      state_rejected: "Odmítnuto",
+      send: "Odeslat",
+      retry: "Zkusit znovu",
+      send_all: "Odeslat vše",
+      close: "Zavřít",
+      badge_title: "Neuložené prodeje: klikněte pro seznam",
+      banner_pending: "Prodej je zaplacen, ale čeká na uložení na serveru. Odešle se automaticky.",
+      banner_rejected: "Server prodej odmítl!",
+      banner_sent: "Odesláno prodejů: {n}",
+      banner_still_down: "Server je stále nedostupný.",
+      storage_full: "Paměť prohlížeče je plná: prodeje se nemusí uložit. Zavolejte správce."
+    },
     z_report: {
       title: "Denní Z-Uzávěrka",
       button: "Z-Uzávěrka",
@@ -1180,6 +1217,9 @@ export const translations = {
       summary_title: "Přehled pokladny a tržeb",
       opening_cash: "Počáteční hotovost:",
       cash_sales: "Tržba v hotovosti (+):",
+      cash_rounding: "z toho zaokrouhlení:",
+      unsent_warning: "Pozor: {n} neuložených prodejů ({amount} Kč) není v této uzávěrce. Nejdřív je odešlete.",
+      unsent_ack: "Rozumím, uzavřít směnu bez nich",
       cash_refunds: "Vratky v hotovosti (-):",
       movements: "Čisté pohyby hotovosti:",
       expected_cash: "Očekávaná hotovost v pokladně:",
@@ -1378,6 +1418,11 @@ export const translations = {
     shift_stats: {
       title: "Ca hôm nay (Tổng quan)",
       receipts: "hóa đơn",
+      receipts_one: "hóa đơn",
+      receipts_few: "hóa đơn",
+      receipts_many: "hóa đơn",
+      receipts_other: "hóa đơn",
+      unsent: "Chưa lưu: {n} giao dịch ({amount} Kč)",
       today_revenue: "Doanh thu hôm nay",
       revenue_short: "Doanh thu:",
       cash: "Tiền mặt",
@@ -2475,6 +2520,38 @@ export const translations = {
       current_balance: "Số dư tiền mặt dự kiến",
       cash_btn: "± Két tiền"
     },
+    lock_screen: {
+      server_starting: "Máy chủ đang khởi động, đang thử lại…",
+      server_unavailable: "Máy chủ không khả dụng. Không thể xác minh PIN, hãy thử lại sau ít phút."
+    },
+    refund_guard: {
+      not_stored: "Giao dịch chưa được lưu trên máy chủ. Hãy đợi gửi xong rồi thử hoàn tiền lại.",
+      storno_rejected: "Máy chủ đã từ chối hoàn tiền. Giao dịch gốc không thay đổi.",
+      status_update_failed: "Hoàn tiền đã lưu nhưng chưa cập nhật được trạng thái giao dịch gốc. Sẽ thử lại."
+    },
+    unsent_sales: {
+      title: "Giao dịch chưa lưu",
+      intro: "Các giao dịch này chưa được lưu trên máy chủ. Khách đã thanh toán.",
+      rejected_notice: "Máy chủ đã từ chối giao dịch. Hãy gọi quản trị viên và không xóa gì.",
+      empty: "Tất cả giao dịch đã được lưu.",
+      receipt: "Hóa đơn",
+      time: "Thời gian",
+      amount: "Số tiền",
+      state: "Trạng thái",
+      state_pending: "Đang chờ máy chủ",
+      state_stranded: "Thiếu trên máy chủ",
+      state_rejected: "Bị từ chối",
+      send: "Gửi",
+      retry: "Thử lại",
+      send_all: "Gửi tất cả",
+      close: "Đóng",
+      badge_title: "Giao dịch chưa lưu: nhấp để xem danh sách",
+      banner_pending: "Giao dịch đã thanh toán nhưng đang chờ lưu trên máy chủ. Sẽ tự động gửi.",
+      banner_rejected: "Máy chủ đã từ chối giao dịch!",
+      banner_sent: "Đã gửi giao dịch: {n}",
+      banner_still_down: "Máy chủ vẫn không khả dụng.",
+      storage_full: "Bộ nhớ trình duyệt đã đầy: giao dịch có thể không được lưu. Hãy gọi quản trị viên."
+    },
     z_report: {
       title: "Chốt ca Z-Report",
       button: "Z-Chốt ca",
@@ -2484,6 +2561,9 @@ export const translations = {
       summary_title: "Tổng kết két tiền và doanh thu",
       opening_cash: "Tiền mặt đầu ca:",
       cash_sales: "Doanh thu tiền mặt (+):",
+      cash_rounding: "trong đó làm tròn:",
+      unsent_warning: "Chú ý: {n} giao dịch chưa lưu ({amount} Kč) không có trong báo cáo này. Hãy gửi chúng trước.",
+      unsent_ack: "Tôi hiểu, đóng ca mà không có chúng",
       cash_refunds: "Trả hàng tiền mặt (-):",
       movements: "Thu/Chi tiền mặt ròng:",
       expected_cash: "Tiền mặt dự kiến trong két:",
@@ -2682,6 +2762,11 @@ export const translations = {
     shift_stats: {
       title: "Today's Shift (Summary)",
       receipts: "receipts",
+      receipts_one: "receipt",
+      receipts_few: "receipts",
+      receipts_many: "receipts",
+      receipts_other: "receipts",
+      unsent: "Unsaved: {n} sales ({amount} Kč)",
       today_revenue: "Today's Total Revenue",
       revenue_short: "Revenue:",
       cash: "Cash",
@@ -3779,6 +3864,38 @@ export const translations = {
       current_balance: "Current Expected Cash",
       cash_btn: "± Cash Drawer"
     },
+    lock_screen: {
+      server_starting: "The server is starting, trying again…",
+      server_unavailable: "The server is unavailable. The PIN cannot be checked, try again in a moment."
+    },
+    refund_guard: {
+      not_stored: "This sale is not stored on the server yet. Wait until it is sent, then refund again.",
+      storno_rejected: "The server refused the refund. The original sale is unchanged.",
+      status_update_failed: "The refund is saved, but the original sale's status could not be updated. It will be retried."
+    },
+    unsent_sales: {
+      title: "Unsaved sales",
+      intro: "These sales are not stored on the server. The customer has already paid.",
+      rejected_notice: "The server refused a sale. Call the administrator and do not delete anything.",
+      empty: "All sales are saved.",
+      receipt: "Receipt",
+      time: "Time",
+      amount: "Amount",
+      state: "State",
+      state_pending: "Waiting for server",
+      state_stranded: "Missing on server",
+      state_rejected: "Rejected",
+      send: "Send",
+      retry: "Try again",
+      send_all: "Send all",
+      close: "Close",
+      badge_title: "Unsaved sales: click for the list",
+      banner_pending: "The sale is paid but waiting to be saved on the server. It will be sent automatically.",
+      banner_rejected: "The server refused the sale!",
+      banner_sent: "Sales sent: {n}",
+      banner_still_down: "The server is still unreachable.",
+      storage_full: "Browser storage is full: sales may not be saved. Call the administrator."
+    },
     z_report: {
       title: "Daily Z-Report",
       button: "Z-Report",
@@ -3788,6 +3905,9 @@ export const translations = {
       summary_title: "Drawer & Sales Balance Summary",
       opening_cash: "Opening Float:",
       cash_sales: "Cash Sales (+):",
+      cash_rounding: "of which rounding:",
+      unsent_warning: "Warning: {n} unsaved sales ({amount} Kč) are not in this report. Send them first.",
+      unsent_ack: "I understand, close the shift without them",
       cash_refunds: "Cash Refunds (-):",
       movements: "Net Cash Movements:",
       expected_cash: "Expected Cash in Drawer:",

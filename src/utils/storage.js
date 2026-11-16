@@ -20,12 +20,15 @@ export function getStorageItem(baseKey, defaultValue = null) {
   return defaultValue;
 }
 
+/** Returns true when the value was stored, false when the write failed (e.g. quota full). */
 export function setStorageItem(baseKey, value) {
   try {
     const strVal = typeof value === 'string' ? value : JSON.stringify(value);
     localStorage.setItem(`voltflow_pos_${baseKey}`, strVal);
+    return true;
   } catch (e) {
     console.warn(`Error writing storage key ${baseKey}:`, e);
+    return false;
   }
 }
 
