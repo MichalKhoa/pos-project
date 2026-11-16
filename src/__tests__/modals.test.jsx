@@ -167,9 +167,11 @@ describe('Modals & Dialog Component Tests', () => {
         />
       );
 
-      // Finish without print
+      // Finish without print: a card sale with no terminal approval needs the cashier's confirmation (F-022)
       const noPrintBtn = screen.getByRole('button', { name: /Dokončit bez tisku/i });
       fireEvent.click(noPrintBtn);
+      expect(onCompleteSale).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: /Ano, zaplaceno/i }));
 
       expect(onCompleteSale).toHaveBeenCalledWith(expect.objectContaining({
         method: 'card',

@@ -190,7 +190,11 @@ export const translations = {
       split_step2_title: "Platba kartou pro zbývající částku: {amount} Kč",
       total_due: "Celkem k úhradě",
       sending_to_terminal: "Odesílám na ČSOB terminál...",
-      terminal_approved: "Transakce na terminálu schválena!"
+      terminal_approved: "Transakce na terminálu schválena!",
+      manual_card_confirm: "Terminál potvrdil platbu {amount} Kč?",
+      manual_card_yes: "Ano, zaplaceno",
+      manual_card_no: "Ne",
+      scan_blocked: "Sken během platby ignorován. Částka ani košík se nezměnily."
     },
     presets: {
       title: "Katalog položek",
@@ -1534,7 +1538,11 @@ export const translations = {
       split_step2_title: "Thanh toán thẻ cho số tiền còn lại: {amount} Kč",
       total_due: "Tổng tiền cần trả",
       sending_to_terminal: "Đang gửi đến máy quẹt thẻ ČSOB...",
-      terminal_approved: "Giao dịch trên máy quẹt thẻ đã được chấp nhận!"
+      terminal_approved: "Giao dịch trên máy quẹt thẻ đã được chấp nhận!",
+      manual_card_confirm: "Máy quẹt thẻ đã xác nhận thanh toán {amount} Kč chưa?",
+      manual_card_yes: "Có, đã thanh toán",
+      manual_card_no: "Không",
+      scan_blocked: "Đã bỏ qua mã quét trong lúc thanh toán. Số tiền và giỏ hàng không thay đổi."
     },
     presets: {
       title: "Danh mục sản phẩm",
@@ -2878,7 +2886,11 @@ export const translations = {
       split_step2_title: "Card payment for remaining amount: {amount} CZK",
       total_due: "Total Due",
       sending_to_terminal: "Sending to ČSOB terminal...",
-      terminal_approved: "Transaction approved on terminal!"
+      terminal_approved: "Transaction approved on terminal!",
+      manual_card_confirm: "Did the terminal approve the payment of {amount} CZK?",
+      manual_card_yes: "Yes, paid",
+      manual_card_no: "No",
+      scan_blocked: "Scan ignored during payment. The amount and the cart did not change."
     },
     presets: {
       title: "Item Catalog",

@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Banknote, CreditCard, QrCode, Split, Building2, Search } from 'lucide-react';
 import CashDrawerIcon from './CashDrawerIcon';
 import { fetchTerminalConfig, payWithTerminal, broadcastCustomerDisplay, lookupAres } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { soundFx } from '../utils/audio.js';
+import { createBurstTracker } from '../utils/scanBurst.js';
 import CashPaymentPanel from './payment/CashPaymentPanel.jsx';
 import CardPaymentPanel from './payment/CardPaymentPanel.jsx';
 import QrPaymentPanel from './payment/QrPaymentPanel.jsx';
 import SplitPaymentPanel from './payment/SplitPaymentPanel.jsx';
+
+// Largest amount the numpad or banknote buttons can build (6 digits). A scanned barcode must never become money.
+const MAX_TENDERED = 999999;
 
 export default function PaymentModal({
   method,
@@ -64,6 +68,27 @@ export default function PaymentModal({
   const [termConfig, setTermConfig] = useState(null);
   const [termLoading, setTermLoading] = useState(false);
   const [termResult, setTermResult] = useState(null);
+
+  // F-005: while a charge runs or the sale is being handed over, the modal must not close or change method
+  const [completing, setCompleting] = useState(false);
+  const isBusy = termLoading || completing;
+
+  // F-022: a card sale without terminal approval needs the cashier to confirm the terminal approved it
+  const [confirmOptions, setConfirmOptions] = useState(null);
+
+  // F-002: keys that arrive like a barcode scanner never reach the amount fields
+  const [scanWarning, setScanWarning] = useState(false);
+  const burstRef = useRef(null);
+  if (!burstRef.current) burstRef.current = createBurstTracker();
+  const snapshotRef = useRef(null);
+  const completeRef = useRef(null);
+
+  useEffect(() => {
+    if (!scanWarning) return undefined;
+    soundFx.playErrorChime();
+    const timer = setTimeout(() => setScanWarning(false), 4000);
+    return () => clearTimeout(timer);
+  }, [scanWarning]);
 
   useEffect(() => {
     fetchTerminalConfig().then(cfg => {
@@ -127,11 +152,8 @@ export default function PaymentModal({
     }
 
     const current = parseFloat(tenderedStr) || 0;
-    if (current === 0) {
-      setTenderedStr(val.toString());
-    } else {
-      setTenderedStr((current + val).toString());
-    }
+    const next = current === 0 ? val : current + val;
+    setTenderedStr(Math.min(next, MAX_TENDERED).toString());
   };
 
   const handleCashSet = (val) => {
@@ -153,7 +175,10 @@ export default function PaymentModal({
       return;
     }
 
-    setTenderedStr(prev => (prev === '0' ? digit : prev + digit));
+    setTenderedStr(prev => {
+      if (prev === '0') return digit;
+      return prev.replace('.', '').length >= 6 ? prev : prev + digit;
+    });
   };
 
   const handleSplitNumpadKey = (digit) => {
@@ -171,37 +196,66 @@ export default function PaymentModal({
       return;
     }
 
-    setSplitCashStr(prev => (prev === '0' || prev === '' ? digit : prev + digit));
+    setSplitCashStr(prev => {
+      if (prev === '0' || prev === '') return digit;
+      return prev.replace('.', '').length >= 6 ? prev : prev + digit;
+    });
   };
 
   // Keyboard listener for physical numpad
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (activeMethod === 'cash') {
-          if (tenderedVal === 0 || changeDue >= 0) handleComplete();
-        } else {
-          handleComplete();
+        if (burstRef.current.onEnter()) {
+          setScanWarning(true);
+          return;
         }
+        if (isBusy || confirmOptions) return;
+        // Enter finishes cash only with an explicit amount; card, QR and split never finish on Enter
+        if (activeMethod === 'cash' && tenderedVal > 0 && changeDue >= 0) handleComplete();
         return;
       }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (confirmOptions) setConfirmOptions(null);
+        else if (!isBusy) onClose();
+        return;
+      }
+
+      const isChar = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
+      if (isChar && burstRef.current.onChar()) {
+        // Second key of a burst: this is a scanner. Undo the first key it already typed.
+        if (snapshotRef.current) {
+          setTenderedStr(snapshotRef.current.tendered);
+          setSplitCashStr(snapshotRef.current.split);
+          snapshotRef.current = null;
+        }
+        setScanWarning(true);
+        return;
+      }
+      if (isBusy || confirmOptions) return;
+      if (isChar) snapshotRef.current = { tendered: tenderedStr, split: splitCashStr };
 
       if (activeMethod === 'cash') {
         if (/^[0-9]$/.test(e.key)) handleNumpadKey(e.key);
         else if (e.key === 'Backspace') handleNumpadKey('BACK');
-        else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') handleNumpadKey('CLEAR');
+        else if (e.key.toLowerCase() === 'c') handleNumpadKey('CLEAR');
       } else if (activeMethod === 'split') {
         if (/^[0-9]$/.test(e.key)) handleSplitNumpadKey(e.key);
         else if (e.key === 'Backspace') handleSplitNumpadKey('BACK');
-        else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') handleSplitNumpadKey('CLEAR');
+        else if (e.key.toLowerCase() === 'c') handleSplitNumpadKey('CLEAR');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMethod, tenderedStr, tenderedVal, splitCashStr, changeDue, totalAmount, effectiveCashTotal]);
+  }, [activeMethod, tenderedStr, tenderedVal, splitCashStr, changeDue, totalAmount, effectiveCashTotal, isBusy, confirmOptions, onClose]);
 
   const getB2bPayload = () => {
     if (!isB2B) return { isInvoice: false, is_invoice: false };
@@ -219,7 +273,7 @@ export default function PaymentModal({
     };
   };
 
-  const handleComplete = (options = {}) => {
+  const handleComplete = (options = {}, term = termResult) => {
     const printReceipt = typeof options === 'boolean' ? options : (options?.printReceipt !== false);
     const b2bData = getB2bPayload();
 
@@ -258,12 +312,26 @@ export default function PaymentModal({
       };
     }
 
-    if (termResult && termResult.success) {
-      payDetails.cardAuthCode = termResult.auth_code;
-      payDetails.cardMask = termResult.card_mask;
+    if (term && term.success) {
+      payDetails.cardAuthCode = term.auth_code;
+      payDetails.cardMask = term.card_mask;
     }
 
     onCompleteSale(payDetails);
+  };
+  completeRef.current = handleComplete;
+
+  const needsManualCardConfirm =
+    (activeMethod === 'card' || (activeMethod === 'split' && splitCardVal > 0)) && !termResult?.success;
+
+  // Every panel finishes through here
+  const requestComplete = (options = {}) => {
+    if (isBusy) return;
+    if (needsManualCardConfirm) {
+      setConfirmOptions(options);
+      return;
+    }
+    handleComplete(options);
   };
 
   const handleTerminalPay = async () => {
@@ -272,35 +340,27 @@ export default function PaymentModal({
 
     const chargeAmount = activeMethod === 'split' ? splitCardVal : totalAmount;
     const res = await payWithTerminal(chargeAmount);
-    setTermLoading(false);
     setTermResult(res);
-
     if (res?.success) {
-      setTimeout(() => {
-        let payDetails = {
-          method: activeMethod === 'split' ? 'split' : 'card',
-          tendered: totalAmount,
-          change: 0,
-          cardAuthCode: res.auth_code,
-          cardMask: res.card_mask,
-          ...getB2bPayload()
-        };
-        if (activeMethod === 'split') {
-          payDetails.splitDetails = {
-            cash: splitCashVal,
-            card: splitCardVal
-          };
-        }
-        onCompleteSale(payDetails);
-      }, 1000);
+      // Stay locked until the sale is handed over; the register closes this modal
+      setCompleting(true);
+      try {
+        completeRef.current({ printReceipt: true }, res);
+      } catch (err) {
+        // The handoff failed: unlock so the cashier is not stuck, and say so
+        setCompleting(false);
+        setTermResult({ ...res, success: false, message: err?.message || 'Error' });
+      }
     }
+    setTermLoading(false);
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={() => { if (!isBusy) onClose(); }}>
       <div
         className="modal-card modal-widescreen"
         onClick={e => e.stopPropagation()}
+        style={{ position: 'relative' }}
       >
         {/* Modal Header */}
         <div className="modal-header" style={{ padding: '0.85rem 1.25rem' }}>
@@ -322,9 +382,25 @@ export default function PaymentModal({
                 <span>{t('cart.open_drawer') || 'Otevřít zásuvku'}</span>
               </button>
             )}
-            <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
+            <button type="button" className="close-modal-btn" disabled={isBusy} onClick={onClose}>✕</button>
           </div>
         </div>
+
+        {scanWarning && (
+          <div
+            role="alert"
+            style={{
+              padding: '0.55rem 1.25rem',
+              background: 'rgba(225, 29, 72, 0.14)',
+              borderBottom: '1px solid rgba(225, 29, 72, 0.4)',
+              color: 'var(--accent-rose)',
+              fontWeight: 800,
+              fontSize: '0.9rem'
+            }}
+          >
+            {t('payment.scan_blocked')}
+          </div>
+        )}
 
         {/* Top Horizontal Segmented Tender Bar */}
         <div className="payment-top-bar">
@@ -332,6 +408,7 @@ export default function PaymentModal({
             <button
               type="button"
               className={`payment-nav-tab ${activeMethod === 'cash' ? 'active-cash' : ''}`}
+              disabled={isBusy}
               onClick={() => setActiveMethod('cash')}
             >
               <Banknote size={18} />
@@ -341,6 +418,7 @@ export default function PaymentModal({
             <button
               type="button"
               className={`payment-nav-tab ${activeMethod === 'card' ? 'active-card' : ''}`}
+              disabled={isBusy}
               onClick={() => setActiveMethod('card')}
             >
               <CreditCard size={18} />
@@ -350,6 +428,7 @@ export default function PaymentModal({
             <button
               type="button"
               className={`payment-nav-tab ${activeMethod === 'qr' ? 'active-qr' : ''}`}
+              disabled={isBusy}
               onClick={() => setActiveMethod('qr')}
             >
               <QrCode size={18} />
@@ -359,6 +438,7 @@ export default function PaymentModal({
             <button
               type="button"
               className={`payment-nav-tab ${activeMethod === 'split' ? 'active-split' : ''}`}
+              disabled={isBusy}
               onClick={() => setActiveMethod('split')}
             >
               <Split size={18} />
@@ -583,7 +663,7 @@ export default function PaymentModal({
                 onCashAdd={handleCashAdd}
                 onCashSet={handleCashSet}
                 onNumpadKey={handleNumpadKey}
-                onComplete={handleComplete}
+                onComplete={requestComplete}
               />
             )}
 
@@ -601,7 +681,7 @@ export default function PaymentModal({
                 termResult={termResult}
                 onSplitNumpadKey={handleSplitNumpadKey}
                 onTerminalPay={handleTerminalPay}
-                onComplete={handleComplete}
+                onComplete={requestComplete}
               />
             )}
 
@@ -612,7 +692,7 @@ export default function PaymentModal({
                 termLoading={termLoading}
                 termResult={termResult}
                 onTerminalPay={handleTerminalPay}
-                onComplete={handleComplete}
+                onComplete={requestComplete}
               />
             )}
 
@@ -620,11 +700,70 @@ export default function PaymentModal({
               <QrPaymentPanel
                 totalAmount={totalAmount}
                 storeConfig={storeConfig}
-                onComplete={handleComplete}
+                onComplete={requestComplete}
               />
             )}
           </div>
         </div>
+
+        {confirmOptions && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0, 0, 0, 0.6)'
+            }}
+          >
+            <div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="manual-card-confirm-text"
+              style={{
+                width: 'min(92%, 460px)',
+                padding: '1.5rem',
+                borderRadius: 'var(--radius-lg)',
+                background: 'var(--bg-card)',
+                border: '2px solid var(--accent-blue)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.1rem',
+                textAlign: 'center'
+              }}
+            >
+              <div id="manual-card-confirm-text" style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                {t('payment.manual_card_confirm', {
+                  amount: Math.abs(activeMethod === 'split' ? splitCardVal : totalAmount).toFixed(2)
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  className="pay-btn"
+                  style={{ flex: 1, height: '64px', fontSize: '1.05rem', fontWeight: 800, background: 'var(--bg-main)', color: 'var(--text-primary)', border: '1.5px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                  onClick={() => setConfirmOptions(null)}
+                >
+                  {t('payment.manual_card_no')}
+                </button>
+                <button
+                  type="button"
+                  className="pay-btn pay-btn-card"
+                  style={{ flex: 2, height: '64px', fontSize: '1.15rem', fontWeight: 900 }}
+                  onClick={() => {
+                    const options = confirmOptions;
+                    setConfirmOptions(null);
+                    handleComplete(options);
+                  }}
+                >
+                  {t('payment.manual_card_yes')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
