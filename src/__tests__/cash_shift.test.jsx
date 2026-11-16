@@ -138,6 +138,10 @@ describe('Cash Drawer & Shift Management Tests', () => {
       is_closed: false
     };
 
+    const typeCount = (digits) => {
+      for (const d of digits) fireEvent.click(screen.getByRole('button', { name: d }));
+    };
+
     it('calculates discrepancy in real-time: matching (0 Kč), manko (-), and přebytek (+)', async () => {
       posApi.getCurrentShift.mockResolvedValue(mockShift);
 
@@ -152,12 +156,18 @@ describe('Cash Drawer & Shift Management Tests', () => {
         expect(screen.getAllByText(/5[\s\u00a0]*000/i).length).toBeGreaterThan(0);
       });
 
-      // Default should pre-fill with expected cash (5000) -> discrepancy 0 Kč (V pořádku)
+      // Nothing is pre-filled (F-021): no verdict until the cashier counted
+      expect(screen.queryByText(/V pořádku \(0 Kč\)/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Manko/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/Spočítejte hotovost/i)).toBeInTheDocument();
+
+      // Counting exactly the expected amount -> 0 Kč (V pořádku)
+      typeCount('5000');
       expect(screen.getByText(/V pořádku \(0 Kč\)/i)).toBeInTheDocument();
 
       // Clear actual cash
       fireEvent.click(screen.getByRole('button', { name: 'C' }));
-      expect(screen.getByText(/Manko/i)).toBeInTheDocument();
+      expect(screen.getByText(/Spočítejte hotovost/i)).toBeInTheDocument();
 
       // Enter 4800 (shortage: manko -200)
       fireEvent.click(screen.getByRole('button', { name: '4' }));
@@ -207,6 +217,7 @@ describe('Cash Drawer & Shift Management Tests', () => {
       });
 
       const confirmBtn = screen.getByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i });
+      typeCount('5000');
       fireEvent.click(confirmBtn);
 
       await waitFor(() => {
@@ -237,6 +248,7 @@ describe('Cash Drawer & Shift Management Tests', () => {
 
       expect(screen.getByRole('alert')).toHaveTextContent(/2 neuložených prodejů \(123,50 Kč\)/);
       const confirmBtn = screen.getByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i });
+      typeCount('5000');
       expect(confirmBtn).toBeDisabled();
       fireEvent.click(confirmBtn);
       expect(posApi.closeShift).not.toHaveBeenCalled();
@@ -258,7 +270,39 @@ describe('Cash Drawer & Shift Management Tests', () => {
         expect(screen.getAllByText(/5[\s\u00a0]*000/i).length).toBeGreaterThan(0);
       });
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      typeCount('5000');
       expect(screen.getByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i })).toBeEnabled();
+    });
+
+    it('starts empty and cannot be closed before the cash is counted (F-021)', async () => {
+      posApi.getCurrentShift.mockResolvedValue(mockShift);
+      render(
+        <LanguageProvider>
+          <ZReportModal isOpen={true} onClose={vi.fn()} />
+        </LanguageProvider>
+      );
+      await waitFor(() => {
+        expect(screen.getAllByText(/5[\s\u00a0]*000/i).length).toBeGreaterThan(0);
+      });
+      const confirmBtn = screen.getByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i });
+      expect(confirmBtn).toBeDisabled();
+      fireEvent.click(confirmBtn);
+      expect(posApi.closeShift).not.toHaveBeenCalled();
+
+      typeCount('5000');
+      expect(confirmBtn).toBeEnabled();
+    });
+
+    it('an empty drawer (expected 0) starts at 0 and closes in one tap', async () => {
+      posApi.getCurrentShift.mockResolvedValue({ ...mockShift, opening_cash: 0, total_cash_sales: 0, total_cash_refunds: 0, float_in: 0, payouts: 0, net_movements: 0, expected_cash: 0 });
+      render(
+        <LanguageProvider>
+          <ZReportModal isOpen={true} onClose={vi.fn()} />
+        </LanguageProvider>
+      );
+      const confirmBtn = await screen.findByRole('button', { name: /Provést Z-Uzávěrku a vytisknout/i });
+      await waitFor(() => expect(confirmBtn).toBeEnabled());
+      expect(screen.getByText(/V pořádku \(0 Kč\)/i)).toBeInTheDocument();
     });
   });
 });

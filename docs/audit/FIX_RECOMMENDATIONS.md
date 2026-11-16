@@ -30,7 +30,7 @@ Source: [`FINDINGS.md`](FINDINGS.md) (28 findings, F-001 to F-028). This file or
 Goal: a sale shown as "paid" is either recorded on the server or visibly queued, and every screen reads the same totals.
 Order inside the batch: (1) server accepts the cash-rounded total; (2) client distinguishes 4xx (rejected, show error) from network error (queue as `OFFLINE_PENDING`); (3) retry queue on `pos:backend-online`; (4) shift widget from a server summary; (5) server-assigned receipt numbers.
 
-**Batch B: Counter safety.** F-002, F-003, F-005, F-021, F-022, F-004, F-008.
+**Batch B: Counter safety (DONE, see `docs/plans/BATCH_B_COUNTER_SAFETY_PLAN.md`).** F-002, F-003, F-005, F-021, F-022, F-004, F-008.
 Goal: a mis-scan, a wrong unit or a stray Enter cannot record money that was not taken.
 
 **Batch C: Receipt and text correctness.** F-016, F-019, F-011.

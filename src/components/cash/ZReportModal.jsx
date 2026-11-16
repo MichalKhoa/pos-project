@@ -35,9 +35,10 @@ export default function ZReportModal({
     getCurrentShift()
       .then((data) => {
         setShiftData(data);
-        if (data && data.expected_cash !== undefined) {
-          // Pre-populate actual cash with expected cash for quick 1-tap confirmation if drawer is balanced
-          setActualCashStr(parseFloat(data.expected_cash || 0).toString());
+        // F-021: the count starts empty so the shift cannot be closed without counting.
+        // Only a drawer that should be empty skips the count (one tap to close).
+        if (data && data.expected_cash !== undefined && parseFloat(data.expected_cash || 0) === 0) {
+          setActualCashStr('0');
         }
       })
       .catch((err) => {
@@ -64,6 +65,7 @@ export default function ZReportModal({
   const actualCash = actualCashStr !== '' ? parseFloat(actualCashStr) : 0;
   const discrepancy = roundCZK(actualCash - expectedCash);
 
+  const isCounted = actualCashStr !== '';
   const isDiscrepancyZero = Math.abs(discrepancy) < 0.01;
   const isSurplus = discrepancy > 0.01;
   const isShortage = discrepancy < -0.01;
@@ -396,7 +398,7 @@ export default function ZReportModal({
                     fontFamily: 'var(--font-mono)',
                     color: 'var(--text-primary)'
                   }}>
-                    {actualCashStr ? parseFloat(actualCashStr).toLocaleString('cs-CZ') : '0'} Kč
+                    {actualCashStr ? `${parseFloat(actualCashStr).toLocaleString('cs-CZ')} Kč` : '\u2014'}
                   </span>
                 </div>
 
@@ -409,24 +411,29 @@ export default function ZReportModal({
                   gap: '0.5rem',
                   fontSize: '0.88rem',
                   fontWeight: '800',
-                  background: isDiscrepancyZero
+                  background: !isCounted
+                    ? 'var(--bg-card)'
+                    : isDiscrepancyZero
                     ? 'color-mix(in srgb, var(--accent-emerald) 12%, var(--bg-card))'
                     : (isSurplus
                         ? 'color-mix(in srgb, var(--accent-amber) 12%, var(--bg-card))'
                         : 'color-mix(in srgb, var(--accent-rose) 12%, var(--bg-card))'),
-                  border: `1.5px solid ${isDiscrepancyZero ? 'var(--accent-emerald)' : (isSurplus ? 'var(--accent-amber)' : 'var(--accent-rose)')}`,
-                  color: isDiscrepancyZero
+                  border: `1.5px solid ${!isCounted ? 'var(--border-color)' : (isDiscrepancyZero ? 'var(--accent-emerald)' : (isSurplus ? 'var(--accent-amber)' : 'var(--accent-rose)'))}`,
+                  color: !isCounted
+                    ? 'var(--text-secondary)'
+                    : isDiscrepancyZero
                     ? 'var(--accent-emerald)'
                     : (isSurplus ? 'var(--accent-amber)' : 'var(--accent-rose)')
                 }}>
-                  {isDiscrepancyZero && <CheckCircle2 size={18} />}
-                  {isSurplus && <AlertTriangle size={18} />}
-                  {isShortage && <AlertOctagon size={18} />}
+                  {isCounted && isDiscrepancyZero && <CheckCircle2 size={18} />}
+                  {isCounted && isSurplus && <AlertTriangle size={18} />}
+                  {isCounted && isShortage && <AlertOctagon size={18} />}
 
                   <span>
-                    {isDiscrepancyZero && (t('z_report.ok') || 'V pořádku (0 Kč)')}
-                    {isSurplus && `${t('z_report.surplus', { amount: discrepancy.toLocaleString('cs-CZ') }) || `Přebytek (+${discrepancy.toLocaleString('cs-CZ')} Kč)`}`}
-                    {isShortage && `${t('z_report.shortage', { amount: Math.abs(discrepancy).toLocaleString('cs-CZ') }) || `Manko (-${Math.abs(discrepancy).toLocaleString('cs-CZ')} Kč)`}`}
+                    {!isCounted && t('z_report.count_prompt')}
+                    {isCounted && isDiscrepancyZero && (t('z_report.ok') || 'V pořádku (0 Kč)')}
+                    {isCounted && isSurplus && `${t('z_report.surplus', { amount: discrepancy.toLocaleString('cs-CZ') }) || `Přebytek (+${discrepancy.toLocaleString('cs-CZ')} Kč)`}`}
+                    {isCounted && isShortage && `${t('z_report.shortage', { amount: Math.abs(discrepancy).toLocaleString('cs-CZ') }) || `Manko (-${Math.abs(discrepancy).toLocaleString('cs-CZ')} Kč)`}`}
                   </span>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 # Batch B: Counter Safety — Implementation Plan
 
-Status: APPROVED with defaults. Phases 1 and 2 done (see results below). Phase 3 not started.
+Status: APPROVED with defaults. All three phases done (see results below). F-022 hardware checks still open.
 Source: [`docs/audit/FINDINGS.md`](../audit/FINDINGS.md) and [`docs/audit/FIX_RECOMMENDATIONS.md`](../audit/FIX_RECOMMENDATIONS.md) section 3.3 and 3.4.
 Covers findings: F-002, F-003, F-005, F-022, F-008, F-004, F-021.
 
@@ -121,3 +121,18 @@ Files changed: `src/components/presets/WeightEntryModal.jsx`, `src/components/Ca
 - Deviation: the dot is used as the decimal mark in the kg display, as elsewhere in the modal, not a comma.
 
 Verified: 328 frontend tests pass, lint clean, build ok. Live in the browser pane: 350 g showed `= 0.350 kg` and 14.70 Kč; after switching to kg (remembered on reopen), 350 showed the over-25 kg line, the first tap kept the modal open and relabelled the button, and the cart read "1 položka". Not tested: a real scale or touch screen.
+
+## Phase 3 result (done)
+
+Files changed: `src/components/cash/ZReportModal.jsx`, `src/i18n/translations.js` (cs, vi, en: `z_report.count_prompt`), `src/__tests__/cash_shift.test.jsx`.
+
+- **Counted cash starts empty.** The expected amount is shown, but nothing is entered, and "Provést Z-Uzávěrku" stays disabled until a count is typed. Until then the banner reads "Spočítejte hotovost v zásuvce a zadejte částku." instead of a verdict, and "Fyzicky spočteno" shows a dash (it used to read "V pořádku" or "Manko -5000" on an empty field).
+- **Exception:** when the expected cash is 0 the field starts at 0, so an empty drawer closes in one tap.
+- **Plural:** nothing to change in the Z-report. It shows no receipt count; the "2 účtenek" the audit saw was the shift widget, fixed in Batch A. `SalesHistoryView` still prints `{n} účtenek celkem` without plural forms; not touched here.
+- Existing Z-report tests now type the count first; two new tests cover the empty start and the zero-expected case.
+
+Verified: 330 frontend tests pass, lint clean, build ok. Live against a scratch backend: with 500 Kč expected the count started blank and the close button was disabled; with an empty drawer the field started at 0 and "V pořádku (0 Kč)" showed. Not covered: the denomination counter helper (left out on purpose).
+
+## Batch B status
+
+All seven findings (F-002, F-003, F-004, F-005, F-008, F-021, F-022) are fixed on branch `fix/batch-a-sale-integrity`. Still open from this batch: testing with the real scanner (what it sends, how fast) and a real card terminal charge and decline.

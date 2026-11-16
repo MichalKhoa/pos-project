@@ -29,6 +29,7 @@ Status per finding: VERIFIED (reproduced live), CODE (seen in code only, not rep
 | P6 Synthesis | DONE | [`FIX_RECOMMENDATIONS.md`](FIX_RECOMMENDATIONS.md) |
 | Batch A planning and Phase 0 | DONE | F-027, F-028 found while building the shared sale fixtures; both are covered by known-bug markers in the tests |
 | Batch A fixes (branch `fix/batch-a-sale-integrity`) | DONE | F-001, F-012, F-014, F-015, F-026, F-027, F-028 fixed with tests; see the Batch A plan for the results and what stays open |
+| Batch B fixes (same branch) | DONE | F-002, F-003, F-004, F-005, F-008, F-021, F-022 fixed with tests; see the Batch B plan |
 | P7 Owner review | PENDING | Needs the owner, see open questions in the plan |
 
 Not tested: real touch input, real hardware, W4, W6 to W10, W12, W13, W16 to W18, W20 to W22.
