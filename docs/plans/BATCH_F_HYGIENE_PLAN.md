@@ -50,3 +50,13 @@ Stop the debt from growing and fix the parts a cashier actually meets: native br
 ## 6. Out of scope
 
 Hex color and inline style enforcement, repo-wide string extraction, moving B2B into a dedicated step, receipt text (stays Czech), Batch E layout.
+
+## 7. Phase 1 result
+
+Added `src/__tests__/ui_hygiene.test.jsx` with four guard tests. All four are red for the intended reasons:
+- Native dialogs: 21 `confirm(` or `alert(` calls found (`App.jsx:316` and others).
+- Button type: 66 `<button>` tags without `type`. This corrects the plan: the 501 figure came from a line-based grep that counted every multi-line tag; the test reads whole tags, so 66 is the real number and Phase 2 is smaller than planned.
+- Navbar names: 6 navbar buttons have neither text nor an `aria-label` (the hamburger button and five others).
+- IČO field: no `inputmode="numeric"`.
+
+The Register-screen check of icon-only buttons is not in this phase; the navbar is the only screen covered, because rendering the whole app for it costs more than it finds. Phase 2 can add it if the live click-through shows unnamed buttons there.
