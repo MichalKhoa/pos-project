@@ -54,3 +54,19 @@ Added `src/__tests__/navbar_reachability.test.jsx`. It reads the view keys from 
 ## 8. Phase 2 result
 
 `Navbar.jsx` now has a "Sklad" button (Package icon, `t('nav.inventory')`) in the desktop bar and in the mobile drawer, placed after Katalog, with the same tab-pill ref handling as the other tabs. The reachability test is green. Gates: 381 frontend tests pass, lint clean, build OK, 213 backend tests pass. Live check in the browser pane: the tab opens the stock screen at 1366 px, and all six tabs fit at 1024 px. `/code-review` at `medium` found nothing. The Sklad tab is not admin-gated, as decided. Not checked: the mobile drawer on a real phone width (Batch E).
+
+## 9. Phase 3 result
+
+Opened the stock screens in the browser pane against a backend that used a throwaway data folder, so no real data was touched. Checked:
+- Stock intake: ran a full intake (100 pieces, 201 from the server, movement recorded). Found F-029 (list stays stale) and F-031 (table clipped).
+- Write-off: opened and rendered, did not submit. Found F-032.
+- Tax reports and deposits: opened; both fail on the Vite dev server because of relative URLs (F-030).
+- Physical inventory: opened and rendered an empty list; did not submit.
+
+Not checked: movement ledger content, CSV import and export, barcode labels, submitting a write-off or physical audit, real printing, touch use. These need a second pass, ideally after F-029 and F-030 are fixed.
+
+No code was changed in this phase. F-029 and F-030 are the two worth fixing first because they can double stock or break whole screens.
+
+## 10. Batch D status
+
+F-017 fixed. Four new findings (F-029 to F-032) recorded and not fixed.

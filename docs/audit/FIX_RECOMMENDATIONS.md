@@ -35,7 +35,7 @@ Goal: a mis-scan, a wrong unit or a stray Enter cannot record money that was not
 
 **Batch C: Receipt and text correctness (DONE, see `docs/plans/BATCH_C_RECEIPT_TEXT_PLAN.md`).** F-016, F-019, F-011.
 
-**Batch D: Product decision.** F-017 (where does stock management live).
+**Batch D: Stock access (F-017 DONE, see `docs/plans/BATCH_D_STOCK_ACCESS_PLAN.md`).** New findings F-029 to F-032 from the first look at the stock screens are open.
 
 **Batch E: Layout and touch ergonomics.** F-018, F-020, F-007.
 
