@@ -1,9 +1,6 @@
 {
   "name": "card_3_50",
   "description": "Card, fractional total, no rounding.",
-  "knownBugs": {
-    "backendTaxSummary": "F-028"
-  },
   "payload": {
     "id": "fixture-card_3_50",
     "receiptNumber": "2026-000001",

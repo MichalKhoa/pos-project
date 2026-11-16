@@ -1,10 +1,6 @@
 {
   "name": "cash_11_50",
   "description": "Cash, fractional total: client rounds to 12 and sends cashRounding 0.5 (F-001).",
-  "knownBugs": {
-    "backend": "F-001",
-    "backendTaxSummary": "F-028"
-  },
   "payload": {
     "id": "fixture-cash_11_50",
     "receiptNumber": "2026-000001",
@@ -61,6 +57,9 @@
         "quantity": 1
       }
     ]
+  },
+  "knownBugs": {
+    "backend": "F-001"
   },
   "input": {
     "id": "fixture-cash_11_50",

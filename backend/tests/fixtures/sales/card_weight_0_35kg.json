@@ -1,10 +1,6 @@
 {
   "name": "card_weight_0_35kg",
   "description": "Card, 0.35 kg of apples at 42 Kč/kg (F-027: client truncates quantity to 0).",
-  "knownBugs": {
-    "frontend": "F-027",
-    "backendTaxSummary": "F-028"
-  },
   "payload": {
     "id": "fixture-card_weight_0_35kg",
     "receiptNumber": "2026-000001",

@@ -1,7 +1,6 @@
 {
   "name": "cart_discount_10_cash",
   "description": "Cash with 10% cart discount, two VAT rates, whole-koruna result 135.",
-  "knownBugs": {},
   "payload": {
     "id": "fixture-cart_discount_10_cash",
     "receiptNumber": "2026-000001",

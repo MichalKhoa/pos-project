@@ -1,7 +1,6 @@
 {
   "name": "refund_cash_12",
   "description": "Storno of a 12 Kč cash sale as built by handleProcessRefund (backend-only fixture).",
-  "knownBugs": {},
   "payload": {
     "id": "fixture-refund_cash_12",
     "receiptNumber": "STORNO-2026-000002",

@@ -63,6 +63,14 @@ Files: `src/utils/tax.js`, `src/api/posApi.js` (`normalizeSale`), `backend/route
 Tests: 0.35 kg, 1.250 kg, scale barcode weight basket, 3 x 0.333 kg; refund of a fractional line; the two server guards; stored `tax_summary` equals the fixture for all fixtures.
 Verify: Phase 0 fractional fixture now passes; live replay of the audit repro stores 14.70 and reduces stock.
 
+### Phase 1 result (done)
+- 1.1 `toQty()` in `src/utils/tax.js` replaces `parseInt` on sold, refunded and remaining quantities (`tax.js`, `normalizeSale`, `ReceiptInspectorPanel`). Remaining `parseInt` hits are stock counts and the customer display, which are whole pieces by design.
+- 1.2 Server guards: 422 `ZERO_QUANTITY` and 422 `ZERO_TOTAL` (tendered > 0, non-refund). A free sale with nothing tendered still passes.
+- 1.3 `backend/scripts/find_zero_sales.py` (read-only report). It found 0 rows on the scratch DB; run it against the store DB.
+- 1.4 Server nets VAT with `Decimal`. The client had the same tie bug (14.70 / 1.12 = 13.1249999), so it now uses integer-cent `netFromGross` too. This went beyond "keep the client as is", because the fractional fixtures showed it.
+- Known-bug markers for F-027 and F-028 removed from the fixtures; only the F-001 `backend` marker remains (Phase 2). The generator no longer emits an empty `knownBugs`.
+- Tests: frontend 230, backend 191, lint clean.
+
 ### Phase 2: Cash rounding contract (F-001)
 Files: `backend/routers/sales.py`, `backend/models.py`, `backend/routers/cash.py`, `backend/migrations.py` (check only), `src/App.jsx`/`buildSalePayload.js`, tests.
 2.1 Schema: add `cashRounding: float = 0.0` to `CreateSaleSchema`; add `cash_rounding = Column(Numeric(10, 2), default=0.0)` to `SaleModel` (`run_schema_migrations` adds missing model columns automatically; confirm with `test_migrations.py` on a copy of an old DB).

@@ -1,7 +1,6 @@
 {
   "name": "split_100_50",
   "description": "Split cash 100 + card 50; split totals are not rounded.",
-  "knownBugs": {},
   "payload": {
     "id": "fixture-split_100_50",
     "receiptNumber": "2026-000001",

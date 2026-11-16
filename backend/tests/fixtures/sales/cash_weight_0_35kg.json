@@ -1,11 +1,6 @@
 {
   "name": "cash_weight_0_35kg",
   "description": "Cash, 0.35 kg of apples: total 14.70 rounds to 15 (F-027 client, F-001 server).",
-  "knownBugs": {
-    "frontend": "F-027",
-    "backend": "F-001",
-    "backendTaxSummary": "F-028"
-  },
   "payload": {
     "id": "fixture-cash_weight_0_35kg",
     "receiptNumber": "2026-000001",
@@ -44,6 +39,9 @@
         "quantity": 0.35
       }
     ]
+  },
+  "knownBugs": {
+    "backend": "F-001"
   },
   "input": {
     "id": "fixture-cash_weight_0_35kg",

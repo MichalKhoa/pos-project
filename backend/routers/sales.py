@@ -15,6 +15,7 @@ from services.pohoda_export import generate_pohoda_datapack_xml
 from pydantic import BaseModel, field_validator
 
 from datetime import datetime
+from decimal import Decimal
 
 router = APIRouter(prefix="/api/v1/sales", tags=["Sales Ledger"])
 eet_service = CzechEETService()
@@ -875,7 +876,8 @@ def recalculate_sale_totals(sale: "CreateSaleSchema"):
         item_final_gross = rc(item_gross * cart_factor)
 
         if rate > 0:
-            net = rc(item_final_gross / (1 + rate / 100))
+            # Decimal division: float division rounds some ties the wrong way (F-028)
+            net = rc(Decimal(str(item_final_gross)) / (1 + Decimal(rate) / 100))
             tax = rc(item_final_gross - net)
         else:
             net = item_final_gross
@@ -906,6 +908,10 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
         if idempotency_key:
             idempotency_cache.set(idempotency_key, res)
         return res
+
+    # F-027: a zero quantity is never a real line; it means a client truncated a weight
+    if any(float(i.quantity if i.quantity is not None else 1) == 0 for i in sale.items):
+        raise HTTPException(status_code=422, detail={"code": "ZERO_QUANTITY"})
 
     # Ensure atomic receipt number assignment
     assigned_receipt_number = sale.receiptNumber
@@ -950,6 +956,10 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
                 "server_total": computed_total,
             }
         )
+
+    # F-027: refuse a paid sale that computes to 0 (money tendered, nothing recorded)
+    if not sale.isRefund and computed_total == 0 and float(sale.tenderedAmount or 0) > 0:
+        raise HTTPException(status_code=422, detail={"code": "ZERO_TOTAL"})
 
     # Run EET Fiscal Signing (if EET is enabled in store config)
     sale_payload = sale.model_dump()

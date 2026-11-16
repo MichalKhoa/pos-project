@@ -1,7 +1,6 @@
 {
   "name": "cash_exact_12",
   "description": "Cash, whole-koruna total, two VAT rates.",
-  "knownBugs": {},
   "payload": {
     "id": "fixture-cash_exact_12",
     "receiptNumber": "2026-000001",

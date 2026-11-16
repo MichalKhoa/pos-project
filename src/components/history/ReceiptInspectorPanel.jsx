@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Printer, RotateCcw, Maximize2, Receipt } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { printReceiptBackend } from '../../api/posApi';
+import { toQty } from '../../utils/tax';
 import ReceiptPreviewPaper from '../receipt/ReceiptPreviewPaper';
 
 function parseSaleItems(saleData) {
@@ -19,7 +20,7 @@ function parseSaleItems(saleData) {
     id: item.id || item.item_id || `item-${idx}`,
     name: item.name || item.title || item.item_name || 'Položka',
     price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
-    quantity: item.quantity !== undefined ? parseInt(item.quantity, 10) : (item.qty !== undefined ? parseInt(item.qty, 10) : 1),
+    quantity: toQty(item.quantity !== undefined ? item.quantity : item.qty),
     vat: item.vat !== undefined ? parseInt(item.vat, 10) : (item.vat_rate !== undefined ? parseInt(item.vat_rate, 10) : 21),
     discountPercent: item.discountPercent !== undefined ? parseFloat(item.discountPercent) : (item.discount_percent !== undefined ? parseFloat(item.discount_percent) : 0)
   }));

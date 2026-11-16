@@ -8,9 +8,27 @@ export const roundCZK = (v) => {
   return Math.round((v + Number.EPSILON) * 100) / 100;
 };
 
+/**
+ * Net part of a gross amount for an integer VAT rate, rounded half away from zero on exact
+ * integer cents. Float division gets ties wrong (14.70 / 1.12 = 13.1249999...); the backend
+ * does the same split with Decimal (recalculate_sale_totals).
+ */
+export const netFromGross = (gross, rate) => {
+  const cents = Math.round(Math.abs(gross) * 100);
+  const divisor = 100 + rate;
+  const netCents = Math.floor((cents * 200 + divisor) / (2 * divisor));
+  return (gross < 0 ? -netCents : netCents) / 100;
+};
+
+/** Quantity as a number with up to 3 decimals (weighed goods). Never truncates 0.35 to 0. */
+export const toQty = (value, fallback = 1) => {
+  const n = parseFloat(value);
+  return Number.isFinite(n) ? Math.round(n * 1000) / 1000 : fallback;
+};
+
 export const calculateItemLineGross = (item) => {
   const price = parseFloat(item.price) || 0;
-  const qty = parseInt(item.quantity !== undefined ? item.quantity : (item.qty || 1), 10);
+  const qty = toQty(item.quantity !== undefined ? item.quantity : (item.qty || 1));
   const discount = parseFloat(item.discountPercent || item.discount_percent || 0);
   const effectivePrice = price * (1 - discount / 100);
   return roundCZK(effectivePrice * qty);
@@ -37,7 +55,7 @@ export const calculateCartTotals = (cartItems = [], cartDiscountPercent = 0) => 
     let taxAmount = 0;
 
     if (rate > 0) {
-      netPrice = roundCZK(itemFinalGross / (1 + rate / 100));
+      netPrice = netFromGross(itemFinalGross, rate);
       taxAmount = roundCZK(itemFinalGross - netPrice);
     }
 
