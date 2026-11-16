@@ -195,19 +195,31 @@ export async function processEetQueue() {
 }
 
 /**
- * Create a new sale transaction in backend (runs EET fiscalization & database save)
+ * Create a new sale transaction in backend (runs EET fiscalization & database save).
+ * Returns the server JSON on 2xx; { status: 'REJECTED', httpStatus, code, detail } when the server
+ * refuses the sale (4xx, so retrying is pointless); null when the server is unreachable or
+ * failing (network error, 5xx, 408/425/429), which is retryable. See utils/saleSync.js.
  */
 export async function createSaleBackend(saleData) {
   try {
+    // syncState and syncError are local bookkeeping, never part of the sale sent to the server
+    const { syncState: _syncState, syncError: _syncError, ...payload } = saleData;
     const res = await fetch(`${API_BASE_URL}/sales/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(saleData)
+      body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
+    if (res.ok) return await res.json();
+    const retryable = [408, 425, 429].includes(res.status);
+    if (res.status >= 400 && res.status < 500 && !retryable) {
+      const body = await res.json().catch(() => null);
+      const detail = body?.detail ?? null;
+      const code = (detail && typeof detail === 'object' && detail.code) || (typeof detail === 'string' ? detail : null);
+      return { status: 'REJECTED', httpStatus: res.status, code: code || `HTTP_${res.status}`, detail };
+    }
+    throw new Error(`HTTP error ${res.status}`);
   } catch (err) {
-    console.warn('Backend sale submission failed, fallback to local standalone mode:', err);
+    console.warn('Backend sale submission failed, sale stays queued locally:', err);
     return null;
   }
 }

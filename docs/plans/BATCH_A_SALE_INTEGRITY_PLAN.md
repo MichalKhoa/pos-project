@@ -103,6 +103,18 @@ Files: `src/api/posApi.js`, `src/App.jsx`, `src/hooks/useOfflineSync.js`, `src/c
 Tests: backend 422 -> `REJECTED` + dialog; network error -> `PENDING` + badge; backend returns -> exactly one POST per sale, state `SYNCED`; restart with local sale missing on server -> recovered; quota error -> banner.
 Verify: repeat audit repro 3 (stop backend, sell, restart backend): badge shows 1, then sale appears in Historie, DB has one row.
 
+### Phase 3 result (done)
+- 3.1 `createSaleBackend` returns the JSON on 2xx, `{ status: 'REJECTED', httpStatus, code, detail }` on 4xx (not 408, 425, 429), and `null` on network errors, 5xx and those retryable codes. It strips `syncState` and `syncError` before the POST.
+- 3.2 `syncState` is `PENDING`, `STRANDED`, `REJECTED` or `SYNCED` (none means synced). Logic lives in `src/utils/saleSync.js`. Deviation: I did **not** remove the `'EVD_OK'` default of `eet_status` in `normalizeSale`, because receipts and the EET badge read it and `syncState` is now the truth about "is it on the server". Revisit with the Batch C receipt work.
+- 3.3 `handleCompleteSale` saves the sale as `PENDING` and still shows "Zaplaceno!" at once. A 4xx marks it `REJECTED`, opens the blocking list dialog, shows an error banner and prints no receipt. A network error keeps it `PENDING` and shows a warning banner. Refunds (storno) use the same states.
+- 3.4 `useUnsentSales` resends `PENDING` sales oldest first, one at a time, on `pos:backend-online`, every 30 s and on demand. It stops at the first unreachable result. A 4xx becomes `REJECTED` and is not retried.
+- 3.5 Red navbar badge with the unsent count and `UnsentSalesModal` (receipt, time, amount, state, error code, "Odeslat", "Odeslat vše"). Strings are in CZ, VI and EN (1 273 keys each, no gaps).
+- 3.6 Local storage never trims unsent sales. `setStorageItem` now returns false on failure and a quota error shows a banner.
+- 3.7 Restart recovery: after the first backend contact, local sales without `syncState` that the server lacks become `STRANDED`. Decision 3 asked for manual sending, so they are **not** resent automatically (the plan text said PENDING; I used a separate state). Zero-quantity or zero-total sales become `REJECTED` with `NEEDS_REVIEW`. Sales older than a full backend page are not judged.
+- Tests: `sale_sync.test.js` (19) and `app_unsent_sales.test.jsx` (3). Frontend 252, backend 200, lint clean, build OK.
+- Live check (backend and Vite on a scratch DB): a 3.50 cash sale stored 3.50 with `cash_rounding` 0.50 and Z-report cash 4. Then with the backend stopped, a sale showed the warning and badge 1; after the backend restarted, one POST, the DB had both rows and the badge was gone.
+- Not covered: real printer behaviour, a 5xx loop while the backend is half-up (it just retries every 30 s), and the daily-total mismatch in Historie (Phase 4).
+
 ### Phase 4: One source for shift totals (F-015)
 Files: `backend/routers/cash.py` (`_build_shift_dict`), `src/components/keypad/ShiftStatsWidget.jsx`, `src/App.jsx`, `src/components/cash/ZReportModal.jsx`, tests `shift_stats_widget.test.jsx`, `cash_shift.test.jsx`.
 4.1 Backend: add `total_revenue`, `card_sales`, `qr_sales`, `receipts_count`, `refunds_count`, `cash_rounding_total` to `_build_shift_dict` (the numbers already exist in `metrics`).

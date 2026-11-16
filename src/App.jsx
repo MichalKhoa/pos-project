@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
@@ -10,6 +10,8 @@ import { useCart } from './hooks/useCart';
 import { usePosKeyboardShortcuts } from './hooks/usePosKeyboardShortcuts';
 import { useAutoLock } from './hooks/useAutoLock';
 import { useOfflineSync } from './hooks/useOfflineSync';
+import { useUnsentSales } from './hooks/useUnsentSales';
+import { SYNC, sendOutcome, applySendResult, markStranded, isLocalOnly } from './utils/saleSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
 import { useTranslation } from './i18n/LanguageContext';
@@ -61,6 +63,7 @@ export default function App() {
   const [discountModalSelectedItem, setDiscountModalSelectedItem] = useState(null);
   const [historyDateFilter, setHistoryDateFilter] = useState(null);
   const [flashBanner, setFlashBanner] = useState(null);
+  const storageWarnedRef = useRef(false);
   const [unknownBarcode, setUnknownBarcode] = useState(null);
   const [mobilePosTab, setMobilePosTab] = useState('keypad');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
@@ -127,6 +130,14 @@ export default function App() {
     handleSyncQueueNow,
     checkPendingOfflineSales
   } = useOfflineSync({ salesHistory, setSalesHistory });
+
+  const [showUnsentModal, setShowUnsentModal] = useState(false);
+  const {
+    unsentSales,
+    unsentCount,
+    isFlushing: isFlushingUnsent,
+    flush: flushUnsent
+  } = useUnsentSales({ salesHistory, setSalesHistory });
 
   const {
     isAppLocked,
@@ -368,26 +379,20 @@ export default function App() {
       refunded_amount: updatedRefundedAmount
     });
 
-    createSaleBackend(stornoSale).then(backendRes => {
-      if (backendRes && backendRes.status === 'SUCCESS') {
-        const enrichedStorno = normalizeSale({
-          ...stornoSale,
-          fik: backendRes.fik,
-          pok: backendRes.fik,
-          bkp: backendRes.bkp,
-          pkp: backendRes.pkp,
-          eet_status: backendRes.eet_status || 'EVD_OK'
-        });
-        setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? enrichedStorno : s));
-        setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? enrichedStorno : prev);
-      }
+    const pendingStorno = { ...stornoSale, syncState: SYNC.PENDING };
+    createSaleBackend(pendingStorno).then(backendRes => {
+      if (sendOutcome(backendRes) === 'retry') return; // stays PENDING, resent automatically
+      const settled = normalizeSale(applySendResult(pendingStorno, backendRes));
+      setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? settled : s));
+      setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? settled : prev);
+      if (settled.syncState === SYNC.REJECTED) setShowUnsentModal(true);
     });
 
     updateSaleRefundStatusBackend(originalSale.id, newRefundStatus, updatedRefundedAmount);
 
-    setSalesHistory(prev => [stornoSale, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
+    setSalesHistory(prev => [pendingStorno, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
     setRefundTargetSale(null);
-    setCurrentReceiptData(stornoSale);
+    setCurrentReceiptData(pendingStorno);
   };
 
   // Sync storeConfig to LocalStorage
@@ -401,10 +406,17 @@ export default function App() {
 
   // Sync salesHistory to LocalStorage (sanitized: only persist offline pending + latest 50 completed to prevent QuotaExceededError)
   useEffect(() => {
-    const offlinePending = salesHistory.filter(s => s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false);
-    const recentCompleted = salesHistory.filter(s => s.eet_status !== 'OFFLINE_PENDING' && s.eetStatus !== 'OFFLINE_PENDING' && s.is_sent_to_eet !== false).slice(0, 50);
-    setStorageItem('sales', [...offlinePending, ...recentCompleted]);
-  }, [salesHistory]);
+    // Sales the server does not have (unsent, EET-pending) are never trimmed
+    const localOnly = salesHistory.filter(isLocalOnly);
+    const recentCompleted = salesHistory.filter(s => !isLocalOnly(s)).slice(0, 50);
+    const stored = setStorageItem('sales', [...localOnly, ...recentCompleted]);
+    if (!stored && !storageWarnedRef.current) {
+      storageWarnedRef.current = true;
+      setFlashBanner({ type: 'ERROR', message: t('unsent_sales.storage_full') });
+    } else if (stored) {
+      storageWarnedRef.current = false;
+    }
+  }, [salesHistory, t]);
 
   // Load store config & sales history from SQLite backend on mount
   useEffect(() => {
@@ -416,7 +428,12 @@ export default function App() {
           setStoreConfig(prev => ({ ...prev, ...data }));
         }
       });
-      fetchSalesHistoryBackend({ limit: isInitial ? 100 : 50 }).then(backendSales => {
+      const pageLimit = isInitial ? 100 : 50;
+      fetchSalesHistoryBackend({ limit: pageLimit }).then(backendSales => {
+        // F-014 recovery: local sales the server lacks become STRANDED (manual resend) or NEEDS_REVIEW
+        if (isInitial && Array.isArray(backendSales)) {
+          setSalesHistory(prev => markStranded(prev, backendSales, pageLimit));
+        }
         if (Array.isArray(backendSales) && backendSales.length > 0) {
           // Sync highest receipt sequence number to localStorage
           const currentYear = new Date().getFullYear().toString();
@@ -439,8 +456,8 @@ export default function App() {
             const prevSaleMap = new Map(prev.map(s => [s.id, s]));
             const backendIds = new Set(backendSales.map(s => s.id));
             const backendReceipts = new Set(backendSales.map(s => s.receiptNumber).filter(Boolean));
-            const pendingLocalSales = prev.filter(s => 
-              (s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false) &&
+            const pendingLocalSales = prev.filter(s =>
+              isLocalOnly(s) &&
               !backendIds.has(s.id) &&
               !backendReceipts.has(s.receiptNumber)
             );
@@ -809,9 +826,13 @@ export default function App() {
       }
     });
 
-    createSaleBackend(newSale).then(async backendRes => {
-      let finalSaleToPrint = newSale;
-      if (backendRes && (backendRes.status === 'SUCCESS' || backendRes.status === 'ALREADY_EXISTS')) {
+    // The cashier sees "Zaplaceno!" at once; the server answer below decides what is still owed
+    const pendingSale = { ...newSale, syncState: SYNC.PENDING };
+
+    createSaleBackend(pendingSale).then(async backendRes => {
+      let finalSaleToPrint = pendingSale;
+      const outcome = sendOutcome(backendRes);
+      if (outcome === 'ok') {
         const assignedRn = backendRes.receipt_number || newSale.receiptNumber;
         if (assignedRn && assignedRn.startsWith(yearPrefix)) {
           const num = parseInt(assignedRn.slice(yearPrefix.length), 10);
@@ -820,31 +841,33 @@ export default function App() {
             if (num > curSeq) setStorageItem('last_receipt_seq', String(num));
           }
         }
-        const enrichedSale = normalizeSale({
-          ...newSale,
-          receiptNumber: assignedRn,
-          invoiceNumber: backendRes.invoice_number || newSale.invoiceNumber,
-          invoice_number: backendRes.invoice_number || newSale.invoice_number,
-          fik: backendRes.fik,
-          pok: backendRes.fik,
-          bkp: backendRes.bkp,
-          pkp: backendRes.pkp,
-          eet_status: backendRes.eet_status || 'EVD_OK'
-        });
+        const enrichedSale = normalizeSale(applySendResult(pendingSale, backendRes));
         setSalesHistory(prev => prev.map(s => s.id === newSale.id ? enrichedSale : s));
         setCurrentReceiptData(prev => prev && prev.id === newSale.id ? enrichedSale : prev);
         finalSaleToPrint = enrichedSale;
+      } else if (outcome === 'rejected') {
+        // Server refused the sale: no receipt for a sale that is not recorded; show the list.
+        setSalesHistory(prev => prev.map(s => s.id === newSale.id ? applySendResult(s, backendRes) : s));
+        setFlashBanner({ type: 'ERROR', message: t('unsent_sales.banner_rejected'), amount: finalGrandTotal });
+        setShowUnsentModal(true);
+        return;
+      } else {
+        // Server unreachable: the sale stays PENDING and is resent automatically
+        setFlashBanner({ type: 'WARNING', message: t('unsent_sales.banner_pending'), amount: finalGrandTotal });
       }
 
       if (printReceipt) {
         try {
           const res = await printReceiptBackend(finalSaleToPrint, storeConfig);
           if (res && res.status === 'PRINTED' && res.physical !== false) {
-            setFlashBanner({
-              type: 'SUCCESS',
-              message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
-              amount: finalGrandTotal
-            });
+            // Keep the "waiting for server" warning visible while the sale is still unsaved
+            if (outcome === 'ok') {
+              setFlashBanner({
+                type: 'SUCCESS',
+                message: `✓ Účtenka #${finalSaleToPrint.receiptNumber || ''} vytištěna`,
+                amount: finalGrandTotal
+              });
+            }
           } else {
             // Fallback to preview modal only if hardware direct print could not be executed
             setCurrentReceiptData(finalSaleToPrint);
@@ -857,11 +880,11 @@ export default function App() {
     }).catch(err => {
       console.warn('Backend sale registration failed:', err);
       if (printReceipt) {
-        setCurrentReceiptData(newSale);
+        setCurrentReceiptData(pendingSale);
       }
     });
 
-    setSalesHistory(prev => [newSale, ...prev]);
+    setSalesHistory(prev => [pendingSale, ...prev]);
     setPaymentModalMethod(null);
     setCartItems([]);
     setCartDiscountPercent(0);
@@ -885,6 +908,18 @@ export default function App() {
     }
   };
 
+  const handleSendUnsent = useCallback(async (ids) => {
+    const r = await flushUnsent({ ids });
+    if (r.unreachable) {
+      setFlashBanner({ type: 'WARNING', message: t('unsent_sales.banner_still_down') });
+    } else if (r.sent > 0) {
+      setFlashBanner({ type: 'SUCCESS', message: t('unsent_sales.banner_sent', { n: r.sent }) });
+    } else if (r.rejected > 0) {
+      setFlashBanner({ type: 'ERROR', message: t('unsent_sales.banner_rejected') });
+    }
+  }, [flushUnsent, t]);
+  const handleOpenUnsentModal = useCallback(() => setShowUnsentModal(true), []);
+  const handleCloseUnsentModal = useCallback(() => setShowUnsentModal(false), []);
   const handleOpenSyncModal = useCallback(() => setShowSyncModal(true), [setShowSyncModal]);
   const handleOpenShutdownModal = useCallback(() => setShowShutdownModal(true), []);
   const handleOpenCalendarModal = useCallback(() => setIsCalendarModalOpen(true), []);
@@ -906,6 +941,8 @@ export default function App() {
         onToggleAdminMode={handleToggleAdminMode}
         pendingCount={pendingSyncCount}
         onOpenSyncModal={handleOpenSyncModal}
+        unsentCount={unsentCount}
+        onOpenUnsentSales={handleOpenUnsentModal}
         onOpenShutdownModal={handleOpenShutdownModal}
         onOpenCalendarModal={handleOpenCalendarModal}
         onLockApp={handleLockApp}
@@ -1151,6 +1188,11 @@ export default function App() {
         }}
         currentReceiptData={currentReceiptData}
         setCurrentReceiptData={setCurrentReceiptData}
+        showUnsentModal={showUnsentModal}
+        unsentSales={unsentSales}
+        isFlushingUnsent={isFlushingUnsent}
+        onSendUnsent={handleSendUnsent}
+        onCloseUnsent={handleCloseUnsentModal}
         showSyncModal={showSyncModal}
         pendingSyncCount={pendingSyncCount}
         isSyncingQueue={isSyncingQueue}

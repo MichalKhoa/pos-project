@@ -5,6 +5,7 @@ import RefundModal from '../RefundModal';
 import CalendarModal from '../CalendarModal';
 import DiscountModal from '../DiscountModal';
 import PendingSyncModal from '../PendingSyncModal';
+import UnsentSalesModal from '../UnsentSalesModal';
 import ShutdownModal from '../ShutdownModal';
 import LockScreenModal from '../LockScreenModal';
 import ToastUndo from '../ToastUndo';
@@ -66,6 +67,13 @@ export default function AppModals({
   // Receipt Modal
   currentReceiptData,
   setCurrentReceiptData,
+
+  // Unsent sales (not stored on the server yet)
+  showUnsentModal = false,
+  unsentSales = [],
+  isFlushingUnsent = false,
+  onSendUnsent = null,
+  onCloseUnsent = null,
 
   // Sync Modal
   showSyncModal,
@@ -187,6 +195,17 @@ export default function AppModals({
           storeConfig={storeConfig}
           onClose={() => setCurrentReceiptData(null)}
           onNewSale={() => setCurrentReceiptData(null)}
+        />
+      )}
+
+      {/* Sales the server has not accepted yet */}
+      {showUnsentModal && (
+        <UnsentSalesModal
+          sales={unsentSales}
+          isFlushing={isFlushingUnsent}
+          onSend={onSendUnsent}
+          onSendAll={onSendUnsent}
+          onClose={onCloseUnsent}
         />
       )}
 
