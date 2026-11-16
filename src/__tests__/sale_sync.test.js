@@ -145,7 +145,7 @@ describe('useUnsentSales', () => {
     const { result } = setup([pending('a', '2026-11-16T09:00:00Z'), pending('b', '2026-11-16T10:00:00Z')]);
     let out;
     await act(async () => { out = await result.current.flush(); });
-    expect(out).toEqual({ sent: 0, rejected: 0, unreachable: true });
+    expect(out).toEqual({ sent: 0, rejected: 0, unreachable: true, refundUpdateFailed: 0 });
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(result.current.unsentCount).toBe(2);
   });

@@ -202,8 +202,8 @@ export async function processEetQueue() {
  */
 export async function createSaleBackend(saleData) {
   try {
-    // syncState and syncError are local bookkeeping, never part of the sale sent to the server
-    const { syncState: _syncState, syncError: _syncError, ...payload } = saleData;
+    // syncState, syncError and pendingRefundUpdate are local bookkeeping, never sent to the server
+    const { syncState: _syncState, syncError: _syncError, pendingRefundUpdate: _refundUpdate, ...payload } = saleData;
     const res = await fetch(`${API_BASE_URL}/sales/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -17,6 +17,9 @@ export const SYNC = Object.freeze({
 const isEetPending = s =>
   s.eet_status === 'OFFLINE_PENDING' || s.eetStatus === 'OFFLINE_PENDING' || s.is_sent_to_eet === false;
 
+/** A sale the server does not have cannot be refunded yet (audit F-026). */
+export const canRefund = s => !needsSync(s);
+
 /** Sale the server does not have yet and the cashier must know about. */
 export const needsSync = s =>
   s.syncState === SYNC.PENDING || s.syncState === SYNC.STRANDED || s.syncState === SYNC.REJECTED;

@@ -1176,6 +1176,11 @@ export const translations = {
       current_balance: "Aktuální očekávaný stav",
       cash_btn: "± Pokladna"
     },
+    refund_guard: {
+      not_stored: "Prodej ještě není uložen na serveru. Počkejte na odeslání a zkuste storno znovu.",
+      storno_rejected: "Server vratku odmítl. Původní prodej zůstává beze změny.",
+      status_update_failed: "Vratka je uložena, ale stav původního prodeje se nepodařilo aktualizovat. Zkusí se to znovu."
+    },
     unsent_sales: {
       title: "Neuložené prodeje",
       intro: "Tyto prodeje nejsou uložené na serveru. Zákazník je již zaplatil.",
@@ -2511,6 +2516,11 @@ export const translations = {
       current_balance: "Số dư tiền mặt dự kiến",
       cash_btn: "± Két tiền"
     },
+    refund_guard: {
+      not_stored: "Giao dịch chưa được lưu trên máy chủ. Hãy đợi gửi xong rồi thử hoàn tiền lại.",
+      storno_rejected: "Máy chủ đã từ chối hoàn tiền. Giao dịch gốc không thay đổi.",
+      status_update_failed: "Hoàn tiền đã lưu nhưng chưa cập nhật được trạng thái giao dịch gốc. Sẽ thử lại."
+    },
     unsent_sales: {
       title: "Giao dịch chưa lưu",
       intro: "Các giao dịch này chưa được lưu trên máy chủ. Khách đã thanh toán.",
@@ -3845,6 +3855,11 @@ export const translations = {
       success_movement: "Cash movement recorded successfully",
       current_balance: "Current Expected Cash",
       cash_btn: "± Cash Drawer"
+    },
+    refund_guard: {
+      not_stored: "This sale is not stored on the server yet. Wait until it is sent, then refund again.",
+      storno_rejected: "The server refused the refund. The original sale is unchanged.",
+      status_update_failed: "The refund is saved, but the original sale's status could not be updated. It will be retried."
     },
     unsent_sales: {
       title: "Unsaved sales",

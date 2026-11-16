@@ -129,4 +129,41 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
     await payOneCustomItemInCash();
     expect(await screen.findByText('1 účtenka')).toBeInTheDocument();
   });
+
+  describe('refund guards (F-026)', () => {
+    const sale = (extra = {}) => ({
+      id: 'sale-1', receiptNumber: '2026-000010', timestamp: new Date().toISOString(), totalAmount: 150,
+      paymentMethod: 'cash', items: [{ id: 'p1', name: 'Víno bílé', price: 150, quantity: 1, vat: 21 }], ...extra
+    });
+
+    it('quick storno is disabled for a sale the server does not have', async () => {
+      localStorage.setItem('voltflow_pos_sales', JSON.stringify([sale({ syncState: 'PENDING' })]));
+      renderAppWithProviders();
+      fireEvent.click(await screen.findByRole('button', { name: /Poslední:\s*150\s*Kč/i }));
+      expect(screen.getByRole('button', { name: /Rychlé storno/i })).toBeDisabled();
+    });
+
+    it('refused storno: error shown, original sale not marked refunded, no status update sent', async () => {
+      const posApi = await import('../api/posApi');
+      const stored = sale();
+      posApi.fetchSalesHistoryBackend.mockResolvedValue([stored]);
+      posApi.updateSaleRefundStatusBackend.mockClear();
+      posApi.createSaleBackend.mockResolvedValue({ status: 'REJECTED', httpStatus: 422, code: 'TOTAL_MISMATCH' });
+      localStorage.setItem('voltflow_pos_sales', JSON.stringify([stored]));
+      renderAppWithProviders();
+
+      fireEvent.click(await screen.findByRole('button', { name: /Poslední:\s*150\s*Kč/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Rychlé storno/i }));
+      await screen.findByText(/Vratka \/ Storno Účtenky/i);
+      fireEvent.click(screen.getByRole('button', { name: /Provést vratku|Potvrdit|Vystavit/i }));
+
+      expect(await screen.findByText(/Server vratku odmítl/i)).toBeInTheDocument();
+      expect(posApi.updateSaleRefundStatusBackend).not.toHaveBeenCalled();
+      const local = JSON.parse(localStorage.getItem('voltflow_pos_sales'));
+      expect(local.find(s => s.id === 'sale-1').refundStatus || 'NONE').toBe('NONE');
+      expect(local.find(s => s.isRefund)).toMatchObject({ syncState: 'REJECTED' });
+      posApi.fetchSalesHistoryBackend.mockResolvedValue([]);
+      posApi.createSaleBackend.mockResolvedValue({ status: 'SUCCESS', receipt_number: '2026-000001' });
+    });
+  });
 });

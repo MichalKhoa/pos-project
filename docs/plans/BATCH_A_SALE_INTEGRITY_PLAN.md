@@ -142,6 +142,17 @@ Files: `src/App.jsx` (`handleProcessRefund`), `src/components/Cart.jsx` (last-re
 5.2 `handleProcessRefund`: create the storno sale first; call `updateSaleRefundStatusBackend` only after a success result; handle `REJECTED` and `null` as in Phase 3 (the storno joins the same queue; the status update runs after it syncs). Check the result of `updateSaleRefundStatusBackend` and show an error if it fails.
 Tests: refund blocked for `PENDING`; storno rejected -> visible error and original sale unchanged; status update failure shown.
 
+### Phase 5 result (done)
+- 5.1 `canRefund(sale)` (a sale with `syncState` PENDING, STRANDED or REJECTED cannot be refunded). All entry points go through `App.handleInitiateRefund`: last-receipt chip, ledger row, receipt inspector and scanned receipt. The three buttons are also disabled with the reason "Prodej ještě není uložen na serveru" as tooltip; the guard shows an error banner if a blocked sale still gets through (scanner).
+- 5.2 `handleProcessRefund` creates the storno first. The refund status of the original sale is sent only after the server stored the storno. Until then it travels with the storno as `pendingRefundUpdate` (also kept in local storage and stripped before the POST).
+  - Storno stored: status update sent; if that fails, an error banner shows and the update stays owed and is retried by the queue (a stored storno with an owed update is re-sent, the server answers `ALREADY_EXISTS`).
+  - Storno refused (4xx): the original sale goes back to its earlier refund state (`previous`), the storno shows as REJECTED in the unsent list, the storno receipt is closed, and an error banner says so.
+  - Server unreachable: the storno stays PENDING with its update; the optimistic local change stays until the queue settles it.
+- Helpers in `src/utils/refundSync.js`; `useUnsentSales` handles owed updates and reverts.
+- Tests: `refund_guard.test.js` (7), App tests (2). Frontend 274, backend 201, lint and build clean. String parity 1 283 keys in CZ, VI and EN.
+- Live check: a sale and its storno both stored; the original shows FULL on the server; with the backend stopped the quick-storno button is disabled with the tooltip.
+- Observation for the owner and accountant: a cash sale of 3.50 Kč is paid as 4 Kč but its storno refunds 3.50 Kč (stornos are not rounded), so expected drawer cash after the pair is 0.50 Kč. Decide whether a cash refund should return the rounded amount; not changed here.
+
 ### Phase 6: Lock screen without default PIN (F-012)
 Files: `src/components/LockScreenModal.jsx`, translations, test `technician_session.test.jsx` plus a new lock test.
 6.1 When `verifyPinBackend` returns `valid: null`, do not compare with a local PIN. Show "Server se spouští, zkouším znovu…", retry with a short backoff, keep the keypad usable once the server answers. Remove `|| '1234'`.

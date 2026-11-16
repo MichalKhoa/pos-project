@@ -11,7 +11,8 @@ import { usePosKeyboardShortcuts } from './hooks/usePosKeyboardShortcuts';
 import { useAutoLock } from './hooks/useAutoLock';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useUnsentSales } from './hooks/useUnsentSales';
-import { SYNC, sendOutcome, applySendResult, markStranded, isLocalOnly } from './utils/saleSync';
+import { SYNC, sendOutcome, applySendResult, markStranded, isLocalOnly, canRefund } from './utils/saleSync';
+import { buildRefundUpdate, revertRefund, settleRefundUpdate } from './utils/refundSync';
 import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
 import { useTranslation } from './i18n/LanguageContext';
@@ -24,7 +25,6 @@ import {
   fetchSalesHistoryBackend,
   fetchBackendRoot,
   normalizeSale,
-  updateSaleRefundStatusBackend,
   fetchStoreConfigBackend,
   saveStoreConfigBackend,
   broadcastCustomerDisplay,
@@ -326,6 +326,15 @@ export default function App() {
   };
 
   // Refund / Storno processing handler
+  // Every refund entry point (last-receipt chip, ledger, inspector, scanned receipt) ends here
+  const handleInitiateRefund = useCallback((sale) => {
+    if (sale && !canRefund(sale)) {
+      setFlashBanner({ type: 'ERROR', message: t('refund_guard.not_stored') });
+      return;
+    }
+    setRefundTargetSale(sale);
+  }, [t]);
+
   const handleProcessRefund = ({ originalSale, returnedItems, totalRefundAmount, refundTaxSummary, refundReason, paymentMethod, isFullRefund }) => {
     const currentYear = new Date().getFullYear().toString();
     const yearPrefix = `${currentYear}-`;
@@ -384,17 +393,32 @@ export default function App() {
       refunded_amount: updatedRefundedAmount
     });
 
-    const pendingStorno = { ...stornoSale, syncState: SYNC.PENDING };
-    createSaleBackend(pendingStorno).then(backendRes => {
-      if (sendOutcome(backendRes) === 'retry') return; // stays PENDING, resent automatically
+    // The original sale's refund status is sent only after the server stored the storno (F-026);
+    // until then it travels with the storno, and a refused storno undoes the change.
+    const refundUpdate = buildRefundUpdate(originalSale, newRefundStatus, updatedRefundedAmount);
+    const pendingStorno = { ...stornoSale, syncState: SYNC.PENDING, pendingRefundUpdate: refundUpdate };
+    createSaleBackend(pendingStorno).then(async backendRes => {
+      const outcome = sendOutcome(backendRes);
+      if (outcome === 'retry') return; // stays PENDING with its refund update, resent automatically
       const settled = normalizeSale(applySendResult(pendingStorno, backendRes));
-      setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? settled : s));
-      setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? settled : prev);
-      if (settled.syncState === SYNC.REJECTED) setShowUnsentModal(true);
-      else fetchShiftData();
+      if (outcome === 'rejected') {
+        setSalesHistory(prev => revertRefund(
+          prev.map(s => s.id === stornoSale.id ? { ...settled, pendingRefundUpdate: null } : s),
+          refundUpdate
+        ));
+        setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? null : prev);
+        setFlashBanner({ type: 'ERROR', message: t('refund_guard.storno_rejected') });
+        setShowUnsentModal(true);
+        return;
+      }
+      const statusUpdated = await settleRefundUpdate(pendingStorno);
+      const finalStorno = { ...settled, pendingRefundUpdate: statusUpdated ? null : refundUpdate };
+      setSalesHistory(prev => prev.map(s => s.id === stornoSale.id ? finalStorno : s));
+      setCurrentReceiptData(prev => prev && prev.id === stornoSale.id ? finalStorno : prev);
+      if (!statusUpdated) setFlashBanner({ type: 'ERROR', message: t('refund_guard.status_update_failed') });
+      fetchShiftData();
     });
 
-    updateSaleRefundStatusBackend(originalSale.id, newRefundStatus, updatedRefundedAmount);
 
     setSalesHistory(prev => [pendingStorno, ...prev.map(s => s.id === originalSale.id ? updatedOriginalSale : s)]);
     setRefundTargetSale(null);
@@ -638,7 +662,7 @@ export default function App() {
 
       if (matchedSale) {
         soundFx.playSuccessChime();
-        setRefundTargetSale(matchedSale);
+        handleInitiateRefund(matchedSale);
         const rNum = matchedSale.receiptNumber || matchedSale.receipt_number;
         const total = (matchedSale.totalAmount !== undefined ? matchedSale.totalAmount : (matchedSale.total_amount || 0)).toFixed(0);
         setFlashBanner({
@@ -659,7 +683,7 @@ export default function App() {
         type: 'error'
       });
     }
-  }, [salesHistory, t]);
+  }, [salesHistory, t, handleInitiateRefund]);
 
   // Hook for hardware keyboard, numpad and USB barcode scanner listeners
   usePosKeyboardShortcuts({
@@ -1069,7 +1093,7 @@ export default function App() {
                     cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
                     lastSale={lastSale}
                     onReprintLastReceipt={handleReprintSale}
-                    onInitiateRefund={setRefundTargetSale}
+                    onInitiateRefund={handleInitiateRefund}
                   />
                   {isTwoColumn && storeConfig?.shiftWidgetPosition === 'under_cart' && (
                     <ShiftStatsWidget
@@ -1151,7 +1175,7 @@ export default function App() {
             onToggleAdminMode={handleToggleAdminMode}
             onDeleteSale={handleDeleteSale}
             onClearAllTestSales={handleClearAllTestSales}
-            onInitiateRefund={setRefundTargetSale}
+            onInitiateRefund={handleInitiateRefund}
             initialDateFilter={historyDateFilter}
           />
         )}

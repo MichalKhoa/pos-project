@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Printer, RotateCcw, Maximize2, Receipt } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { printReceiptBackend } from '../../api/posApi';
+import { canRefund } from '../../utils/saleSync';
 import { toQty } from '../../utils/tax';
 import ReceiptPreviewPaper from '../receipt/ReceiptPreviewPaper';
 
@@ -212,7 +213,8 @@ export default function ReceiptInspectorPanel({
               whiteSpace: 'nowrap'
             }}
             onClick={() => onInitiateRefund(saleData)}
-            title="Vystavit storno / vratku položek"
+            disabled={!canRefund(saleData)}
+            title={canRefund(saleData) ? 'Vystavit storno / vratku položek' : t('refund_guard.not_stored')}
           >
             <RotateCcw size={15} />
             <span>{t('history.refund_short') || 'Storno'}</span>
