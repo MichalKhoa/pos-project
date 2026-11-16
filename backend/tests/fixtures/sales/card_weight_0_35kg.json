@@ -1,0 +1,67 @@
+{
+  "name": "card_weight_0_35kg",
+  "description": "Card, 0.35 kg of apples at 42 Kč/kg (F-027: client truncates quantity to 0).",
+  "knownBugs": {
+    "frontend": "F-027",
+    "backendTaxSummary": "F-028"
+  },
+  "payload": {
+    "id": "fixture-card_weight_0_35kg",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "items": [
+      {
+        "id": "fx-d",
+        "name": "Jablka Gala",
+        "price": 42,
+        "quantity": 0.35,
+        "vat": 12,
+        "discount_percent": 0
+      }
+    ],
+    "totalAmount": 14.7,
+    "cashRounding": 0.0,
+    "cartDiscountPercent": 0,
+    "paymentMethod": "card",
+    "splitDetails": null,
+    "tenderedAmount": 14.7,
+    "changeDue": 0,
+    "taxSummary": {
+      "12": {
+        "rate": 12,
+        "gross": 14.7,
+        "net": 13.13,
+        "tax": 1.57
+      }
+    }
+  },
+  "expectedServer": {
+    "total_amount": 14.7,
+    "items": [
+      {
+        "item_id": "fx-d",
+        "quantity": 0.35
+      }
+    ]
+  },
+  "input": {
+    "id": "fixture-card_weight_0_35kg",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "cartItems": [
+      {
+        "id": "fx-d",
+        "name": "Jablka Gala",
+        "price": 42,
+        "quantity": 0.35,
+        "vat": 12,
+        "discountPercent": 0
+      }
+    ],
+    "cartDiscountPercent": 0,
+    "method": "card",
+    "tenderedAmount": 14.7,
+    "changeDue": 0,
+    "splitDetails": null
+  }
+}

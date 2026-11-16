@@ -1,0 +1,68 @@
+{
+  "name": "cash_weight_0_35kg",
+  "description": "Cash, 0.35 kg of apples: total 14.70 rounds to 15 (F-027 client, F-001 server).",
+  "knownBugs": {
+    "frontend": "F-027",
+    "backend": "F-001",
+    "backendTaxSummary": "F-028"
+  },
+  "payload": {
+    "id": "fixture-cash_weight_0_35kg",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "items": [
+      {
+        "id": "fx-d",
+        "name": "Jablka Gala",
+        "price": 42,
+        "quantity": 0.35,
+        "vat": 12,
+        "discount_percent": 0
+      }
+    ],
+    "totalAmount": 15,
+    "cashRounding": 0.3,
+    "cartDiscountPercent": 0,
+    "paymentMethod": "cash",
+    "splitDetails": null,
+    "tenderedAmount": 20,
+    "changeDue": 5,
+    "taxSummary": {
+      "12": {
+        "rate": 12,
+        "gross": 14.7,
+        "net": 13.13,
+        "tax": 1.57
+      }
+    }
+  },
+  "expectedServer": {
+    "total_amount": 14.7,
+    "items": [
+      {
+        "item_id": "fx-d",
+        "quantity": 0.35
+      }
+    ]
+  },
+  "input": {
+    "id": "fixture-cash_weight_0_35kg",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "cartItems": [
+      {
+        "id": "fx-d",
+        "name": "Jablka Gala",
+        "price": 42,
+        "quantity": 0.35,
+        "vat": 12,
+        "discountPercent": 0
+      }
+    ],
+    "cartDiscountPercent": 0,
+    "method": "cash",
+    "tenderedAmount": 20,
+    "changeDue": 5,
+    "splitDetails": null
+  }
+}

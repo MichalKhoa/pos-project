@@ -14,7 +14,7 @@ import { usePosCatalog } from './hooks/usePosCatalog';
 import { useStoreConfig } from './context/StoreConfigContext';
 import { useTranslation } from './i18n/LanguageContext';
 import { soundFx } from './utils/audio';
-import { calculateCartTotals } from './utils/tax';
+import { buildSalePayload } from './utils/buildSalePayload';
 import { getStorageItem, setStorageItem, removeStorageItem } from './utils/storage';
 import { DEFAULT_STORE_CONFIG } from './data/initialData';
 import {
@@ -772,11 +772,6 @@ export default function App() {
     const effectiveTendered = tenderedAmount !== undefined ? tenderedAmount : (tendered !== undefined ? tendered : 0);
     const effectiveChange = changeDue !== undefined ? changeDue : (change !== undefined ? change : 0);
 
-    const {
-      finalGrandTotal,
-      taxSummary
-    } = calculateCartTotals(cartItems, cartDiscountPercent);
-
     const currentYear = new Date().getFullYear().toString();
     const yearPrefix = `${currentYear}-`;
     let maxSeq = parseInt(getStorageItem('last_receipt_seq', '0'), 10) || 0;
@@ -790,36 +785,28 @@ export default function App() {
     setStorageItem('last_receipt_seq', String(nextSeq));
     const nextReceiptNum = `${currentYear}-${nextSeq.toString().padStart(6, '0')}`;
 
-    const newSale = normalizeSale({
+    const { sale: newSale, finalGrandTotal } = buildSalePayload({
       id: `sale-${Date.now()}`,
       receiptNumber: nextReceiptNum,
       timestamp: new Date().toISOString(),
-      items: cartItems.map(item => ({
-        id: item.id || `item-${Date.now()}`,
-        name: item.name,
-        price: parseFloat(item.price),
-        quantity: item.quantity,
-        vat: item.vat !== undefined ? parseInt(item.vat, 10) : 21,
-        discount_percent: item.discountPercent || 0
-      })),
-      totalAmount: effectiveMethod === 'cash' ? Math.round(finalGrandTotal) : finalGrandTotal,
-      cashRounding: effectiveMethod === 'cash' ? Math.round((Math.round(finalGrandTotal) - finalGrandTotal + Number.EPSILON) * 100) / 100 : 0,
+      cartItems,
       cartDiscountPercent,
-      paymentMethod: effectiveMethod,
-      splitDetails: splitDetails || null,
-      tenderedAmount: effectiveMethod === 'cash' ? effectiveTendered : finalGrandTotal,
-      changeDue: effectiveMethod === 'cash' ? effectiveChange : 0,
-      taxSummary,
-      isInvoice: isInvoice || is_invoice || false,
-      is_invoice: is_invoice || isInvoice || false,
-      customerIco: customerIco || customer_ico || null,
-      customer_ico: customer_ico || customerIco || null,
-      customerDic: customerDic || customer_dic || null,
-      customer_dic: customer_dic || customerDic || null,
-      customerName: customerName || customer_name || null,
-      customer_name: customer_name || customerName || null,
-      customerAddress: customerAddress || customer_address || null,
-      customer_address: customer_address || customerAddress || null
+      method: effectiveMethod,
+      tenderedAmount: effectiveTendered,
+      changeDue: effectiveChange,
+      splitDetails,
+      invoice: {
+        isInvoice,
+        is_invoice,
+        customerIco,
+        customer_ico,
+        customerDic,
+        customer_dic,
+        customerName,
+        customer_name,
+        customerAddress,
+        customer_address
+      }
     });
 
     createSaleBackend(newSale).then(async backendRes => {

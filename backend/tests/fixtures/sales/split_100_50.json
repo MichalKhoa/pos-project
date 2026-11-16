@@ -1,0 +1,70 @@
+{
+  "name": "split_100_50",
+  "description": "Split cash 100 + card 50; split totals are not rounded.",
+  "knownBugs": {},
+  "payload": {
+    "id": "fixture-split_100_50",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "items": [
+      {
+        "id": "fx-e",
+        "name": "Dárkový poukaz",
+        "price": 150,
+        "quantity": 1,
+        "vat": 21,
+        "discount_percent": 0
+      }
+    ],
+    "totalAmount": 150,
+    "cashRounding": 0.0,
+    "cartDiscountPercent": 0,
+    "paymentMethod": "split",
+    "splitDetails": {
+      "cash": 100,
+      "card": 50
+    },
+    "tenderedAmount": 150,
+    "changeDue": 0,
+    "taxSummary": {
+      "21": {
+        "rate": 21,
+        "gross": 150.0,
+        "net": 123.97,
+        "tax": 26.03
+      }
+    }
+  },
+  "expectedServer": {
+    "total_amount": 150.0,
+    "items": [
+      {
+        "item_id": "fx-e",
+        "quantity": 1
+      }
+    ]
+  },
+  "input": {
+    "id": "fixture-split_100_50",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "cartItems": [
+      {
+        "id": "fx-e",
+        "name": "Dárkový poukaz",
+        "price": 150,
+        "quantity": 1,
+        "vat": 21,
+        "discountPercent": 0
+      }
+    ],
+    "cartDiscountPercent": 0,
+    "method": "split",
+    "tenderedAmount": 150,
+    "changeDue": 0,
+    "splitDetails": {
+      "cash": 100,
+      "card": 50
+    }
+  }
+}

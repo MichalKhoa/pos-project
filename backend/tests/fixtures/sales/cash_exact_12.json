@@ -1,0 +1,90 @@
+{
+  "name": "cash_exact_12",
+  "description": "Cash, whole-koruna total, two VAT rates.",
+  "knownBugs": {},
+  "payload": {
+    "id": "fixture-cash_exact_12",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "items": [
+      {
+        "id": "fx-a",
+        "name": "Volný prodej",
+        "price": 8,
+        "quantity": 1,
+        "vat": 21,
+        "discount_percent": 0
+      },
+      {
+        "id": "fx-b",
+        "name": "Pečivo",
+        "price": 4,
+        "quantity": 1,
+        "vat": 12,
+        "discount_percent": 0
+      }
+    ],
+    "totalAmount": 12,
+    "cashRounding": 0.0,
+    "cartDiscountPercent": 0,
+    "paymentMethod": "cash",
+    "splitDetails": null,
+    "tenderedAmount": 20,
+    "changeDue": 8,
+    "taxSummary": {
+      "21": {
+        "rate": 21,
+        "gross": 8.0,
+        "net": 6.61,
+        "tax": 1.39
+      },
+      "12": {
+        "rate": 12,
+        "gross": 4.0,
+        "net": 3.57,
+        "tax": 0.43
+      }
+    }
+  },
+  "expectedServer": {
+    "total_amount": 12.0,
+    "items": [
+      {
+        "item_id": "fx-a",
+        "quantity": 1
+      },
+      {
+        "item_id": "fx-b",
+        "quantity": 1
+      }
+    ]
+  },
+  "input": {
+    "id": "fixture-cash_exact_12",
+    "receiptNumber": "2026-000001",
+    "timestamp": "2026-11-16T10:00:00.000Z",
+    "cartItems": [
+      {
+        "id": "fx-a",
+        "name": "Volný prodej",
+        "price": 8,
+        "quantity": 1,
+        "vat": 21,
+        "discountPercent": 0
+      },
+      {
+        "id": "fx-b",
+        "name": "Pečivo",
+        "price": 4,
+        "quantity": 1,
+        "vat": 12,
+        "discountPercent": 0
+      }
+    ],
+    "cartDiscountPercent": 0,
+    "method": "cash",
+    "tenderedAmount": 20,
+    "changeDue": 8,
+    "splitDetails": null
+  }
+}
