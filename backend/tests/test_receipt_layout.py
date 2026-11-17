@@ -129,15 +129,21 @@ class ItemRowTests(unittest.TestCase):
 
 
 class SnapshotTests(unittest.TestCase):
-    """Short non-weighted rows print exactly as before at 32, 48 and 64 columns."""
+    """Short non-weighted rows print exactly as before at 32, 48 and 64 columns.
+
+    The total line is double width too when it fits half the columns (Batch H phase 5, D14);
+    the expected padding below mirrors that same half-width rule.
+    """
 
     def test_item_row_and_total_unchanged(self):
+        total_label, total_value = "CELKEM K ÚHRADĚ:", "3.50 Kč"
         for paper, font, cols, name_w, qty_w, price_w in [("58", "standard", 32, 15, 5, 10), ("80", "standard", 48, 26, 7, 13), ("80", "compact", 64, 42, 7, 13)]:
             with self.subTest(cols=cols):
                 _, printer = print_sale(None, {"printerPaperWidth": paper, "receiptFontSize": font, "receiptLineColumns": cols, "receiptShowBarcode": False})
                 lines = receipt_lines(printer)
                 self.assertIn(f"{'Rohlik':<{name_w}} {'1':^{qty_w}} {'3.50 Kč':>{price_w}}", lines)
-                self.assertIn(f"CELKEM K ÚHRADĚ:{' ' * (cols - 16 - 7)}3.50 Kč", lines)
+                total_width = (cols // 2) if (len(total_label) + len(total_value) + 1 <= cols // 2) else cols
+                self.assertIn(f"{total_label}{' ' * (total_width - len(total_label) - len(total_value))}{total_value}", lines)
 
 
 class ReceiptMatrixTests(unittest.TestCase):

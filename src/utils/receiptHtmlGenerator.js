@@ -122,7 +122,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
           <div style="font-weight: ${boldItems ? '800' : '500'}; font-size: ${is58mm ? '9.5px' : '12px'}; color: #000;">
             ${itemName} ${showDisc && disc > 0 ? `<span style="font-style: italic; color: #dc2626;">(-${disc}%)</span>` : ''}
           </div>
-          ${isWeighted ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">${qtyFormatted} ${unitStr} × ${item.price.toFixed(2)} Kč</div>` : ''}
+          ${(isWeighted || item.quantity !== 1) ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">${isWeighted ? `${qtyFormatted} ${unitStr}` : qtyFormatted} × ${item.price.toFixed(2)} Kč</div>` : ''}
           ${showSku && barcode ? `<div style="font-size: ${is58mm ? '7px' : '8px'}; color: #777;">Kód: ${barcode}</div>` : ''}
           ${itemDensity === 'standard' && showVat ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">DPH ${item.vat}%</div>` : ''}
         </td>

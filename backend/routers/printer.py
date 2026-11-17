@@ -97,6 +97,26 @@ def open_cash_drawer(req: OpenDrawerRequest = OpenDrawerRequest(), db: Session =
     return {"status": res.get("status", "OPENED"), "physical": res.get("physical", False), "success": True}
 
 
+class PrintRulerRequest(BaseModel):
+    storeConfig: dict = {}
+
+
+@router.post("/print-ruler")
+def print_ruler(req: PrintRulerRequest = PrintRulerRequest(), db: Session = Depends(get_db)):
+    """Print a numbered column ruler in Font A and Font B to find the printer's real column count (D15)."""
+    config = db.query(StoreConfigModel).first()
+    interface = config.printer_interface if config else "USB"
+    address = config.printer_address if config else "/dev/usb/lp0"
+
+    printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
+    res = printer_service.print_ruler(req.storeConfig)
+
+    if isinstance(res, dict) and not res.get("success"):
+        raise HTTPException(status_code=500, detail=res.get("error", "Failed to print ruler"))
+
+    return {"status": res.get("status", "PRINTED"), "physical": res.get("physical", False), "success": True}
+
+
 class PrintDailySummaryRequest(BaseModel):
     summaryData: dict
     storeConfig: dict

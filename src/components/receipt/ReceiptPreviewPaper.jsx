@@ -432,9 +432,9 @@ export default function ReceiptPreviewPaper({
                       >
                         {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
                       </div>
-                      {isWeighted && (
+                      {(isWeighted || item.quantity !== 1) && (
                         <div style={{ fontSize: '9.5px', color: '#555' }}>
-                          {qtyFormatted} {unitStr} × {parseFloat(item.price).toFixed(2)} Kč
+                          {isWeighted ? `${qtyFormatted} ${unitStr}` : qtyFormatted} × {parseFloat(item.price).toFixed(2)} Kč
                         </div>
                       )}
                       {showSku && (item.barcode || item.sku) && (

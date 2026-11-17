@@ -605,6 +605,24 @@ export async function openCashDrawerBackend(storeConfig = {}) {
 
 
 /**
+ * Print a numbered column ruler in Font A and Font B to find the printer's real column count
+ */
+export async function printRulerBackend(storeConfig = {}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-ruler`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeConfig })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Column ruler thermal printing failed or backend offline:', err);
+    return { success: true, physical: false, status: 'SIMULATED' };
+  }
+}
+
+/**
  * Scan and fetch list of connected hardware printer devices from backend
  */
 export async function fetchPrinterDevices() {

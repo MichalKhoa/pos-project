@@ -1,0 +1,45 @@
+Potraviny Novak
+Hlavni 12
+110 00 Praha 1
+IČO: 12345678 | DIČ: CZ12345678
+(Plátce DPH)
+Provozovna: 11 | Pokladna #01
+--------------------------------
+DAŇOVÝ DOKLAD č. 2026-000123
+--------------------------------
+Datum a čas: 16.11.2026 15:05:09
+Obsluha: Jana
+--------------------------------
+Položka          Ks         Cena
+--------------------------------
+Rohlik tukovy     3     11.70 Kč
+  3 × 3.90 Kč            DPH 12%
+Mleko polotucne 1,5% trvanlive
+1l Madeta         1     29.90 Kč
+                         DPH 12%
+Salam Vysocina
+              0.350kg   31.47 Kč
+  0.350 kg × 89.90 Kč    DPH 12%
+Cola 0,5l         2     51.84 Kč
+  2 × 28.80 Kč (-10%)    DPH 21%
+--------------------------------
+================================
+Mezisoučet:             11.50 Kč
+Zaokrouhlení:           +0.50 Kč
+CELKEM K ÚHRADĚ:           12 Kč
+================================
+Způsob úhrady:          HOTOVOST
+Přijatá hotovost:          12 Kč
+Vrácená hotovost:           0 Kč
+--------------------------------
+REKAPITULACE DPH:
+Sazba        Základ          Daň
+--------------------------------
+12%        59.46 Kč      7.14 Kč
+21%        42.64 Kč      8.96 Kč
+--------------------------------
+--------------------------------
+Děkujeme za váš nákup!
+Vystaveno v pokladním systému
+VoltFlow POS
+

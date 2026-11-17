@@ -25,7 +25,7 @@ DEFAULT_SALE = {
 
 # Control sequences the receipt writes: (ESC|GS) command plus its fixed-size arguments.
 _CONTROL = re.compile(
-    rb"\x1b[!MEatJ3dpV-]."  # one argument byte
+    rb"\x1b[!MEatJ3dV-]."  # one argument byte; 'p' (drawer pulse) is 3 bytes, handled below
     rb"|\x1b[2@=]"          # no argument
     rb"|\x1bp..."           # drawer pulse: m t1 t2
     rb"|\x1d[VhwfHBLW]\x41?.?"  # GS V / h / w / f / H / B: one or two argument bytes

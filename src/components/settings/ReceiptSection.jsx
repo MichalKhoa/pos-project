@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import ReceiptPreviewPaper from '../receipt/ReceiptPreviewPaper.jsx';
-import { printReceiptBackend } from '../../api/posApi.js';
+import { printReceiptBackend, printRulerBackend } from '../../api/posApi.js';
 import { soundFx } from '../../utils/audio.js';
 import { receiptColumnOptions, effectiveReceiptColumns } from '../../utils/receiptColumns.js';
 
@@ -163,6 +163,28 @@ export default function ReceiptSection({
     }
   };
 
+  const handlePrintRuler = async () => {
+    setTestPrinting(true);
+    setTestMessage(null);
+    soundFx.playKeypadClick();
+    try {
+      const res = await printRulerBackend(config);
+      soundFx.playSuccessChime();
+      setTestMessage({
+        type: 'success',
+        text: res?.status === 'PRINTED'
+          ? (t('settings.receipt_ruler_printed') || 'Pravítko sloupců bylo odesláno na tiskárnu.')
+          : (t('settings.receipt_ruler_simulated') || 'Tisk pravítka simulován (tiskárna offline).')
+      });
+    } catch (err) {
+      soundFx.playErrorChime?.();
+      setTestMessage({ type: 'error', text: t('settings.receipt_ruler_failed') || `Chyba tisku: ${err.message}` });
+    } finally {
+      setTestPrinting(false);
+      setTimeout(() => setTestMessage(null), 4000);
+    }
+  };
+
   const is58mm = (config.printerPaperWidth || '80') === '58';
 
   return (
@@ -240,6 +262,15 @@ export default function ReceiptSection({
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              disabled={testPrinting}
+              onClick={handlePrintRuler}
+              className="settings-segmented-btn"
+              style={{ marginTop: '0.4rem', minHeight: '34px', fontSize: '0.75rem', width: '100%' }}
+            >
+              {t('settings.receipt_print_ruler_btn') || 'Vytisknout pravítko sloupců'}
+            </button>
           </div>
 
           {/* Separator Style */}
