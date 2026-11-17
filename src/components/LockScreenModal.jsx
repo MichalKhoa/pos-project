@@ -144,10 +144,12 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
       const res = await verifyPukBackend(pukValue.trim());
       if (res.valid) {
         setSuccessMsg('PIN byl úspěšně vyresetován na 1234!');
+        // The recovery code cleared both PINs and switched the locks off.
         setTimeout(() => {
           setShowPukInput(false);
           setSuccessMsg('');
           setEnteredPin('');
+          onUnlock();
         }, 1500);
       } else {
         setErrorMsg('Neplatný záchranný klíč (PUK)!');

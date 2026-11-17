@@ -3,6 +3,8 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 
+PIN_POLICY_VERSION = 1
+
 
 class SaleModel(Base):
     """DB Model for Sales Ledger Transactions."""
@@ -99,9 +101,17 @@ class StoreConfigModel(Base):
     csob_terminal_id = Column(String, default="")
 
     # Cashier Lock & Security Configuration
-    cashier_pin = Column(String, default="1234")
-    admin_pin = Column(String, default="1234")
+    # PINs are stored as SHA-256 hashes; None means no PIN set (no factory default).
+    cashier_pin = Column(String, nullable=True)
+    admin_pin = Column(String, nullable=True)
     auto_lock_minutes = Column(Integer, default=15)
+    lock_screen_enabled = Column(Boolean, default=False)
+    admin_pin_enabled = Column(Boolean, default=False)
+    recovery_code_hash = Column(String, nullable=True)
+    # 0/NULL = PIN settings from before Batch G, still to be normalised by
+    # migrations.migrate_pin_settings. New rows get the current version from a callable
+    # default on purpose: ALTER TABLE on an old database then adds the column as 0/NULL.
+    pin_policy_version = Column(Integer, default=lambda: PIN_POLICY_VERSION)
 
     # Hardware Direct Silent Printing vs Browser Debug Preview
     direct_hardware_print = Column(Boolean, default=True)

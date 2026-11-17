@@ -17,8 +17,8 @@ MIGRATIONS = [
     ("store_config", "csob_terminal_ip", "VARCHAR DEFAULT ''"),
     ("store_config", "csob_terminal_port", "INTEGER DEFAULT 8888"),
     ("store_config", "csob_terminal_id", "VARCHAR DEFAULT ''"),
-    ("store_config", "cashier_pin", "VARCHAR DEFAULT '1234'"),
-    ("store_config", "admin_pin", "VARCHAR DEFAULT '1234'"),
+    ("store_config", "cashier_pin", "VARCHAR"),
+    ("store_config", "admin_pin", "VARCHAR"),
     ("store_config", "auto_lock_minutes", "INTEGER DEFAULT 15"),
     ("store_config", "direct_hardware_print", "BOOLEAN DEFAULT 1"),
     ("store_config", "id_provozovny", "VARCHAR DEFAULT '11'"),
@@ -531,12 +531,51 @@ def run_schema_migrations(engine=None):
             except Exception as e:
                 logger.warning(f"Could not ensure index on sales.timestamp: {e}")
 
+    migrate_pin_settings(engine)
+
     if added_columns:
         logger.info(f"Schema migrations completed: {len(added_columns)} columns added: {', '.join(added_columns)}")
     else:
         logger.info("Database schema is fully up to date (no migrations required).")
 
     return {"status": "SUCCESS", "added_columns": added_columns}
+
+
+def migrate_pin_settings(engine) -> int:
+    """Normalise PIN settings stored before Batch G (pin_policy_version 0 or NULL).
+
+    The old factory PIN 1234 becomes "no PIN"; plaintext PINs are hashed. The old
+    "Change Admin PIN" button saved into cashier_pin, so a chosen cashier PIN is
+    copied into an unset admin PIN. A lock stays on only if its PIN was chosen.
+    """
+    from models import PIN_POLICY_VERSION
+    from services.pin_auth import stored_pin_hash
+
+    with engine.connect() as conn:
+        has_table = conn.execute(text(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='store_config'"
+        )).first()
+        if not has_table:
+            return 0
+        rows = conn.execute(text(
+            "SELECT id, cashier_pin, admin_pin FROM store_config "
+            "WHERE pin_policy_version IS NULL OR pin_policy_version < :v"
+        ), {"v": PIN_POLICY_VERSION}).fetchall()
+        for row_id, cashier, admin in rows:
+            cashier_hash = stored_pin_hash(cashier)
+            admin_hash = stored_pin_hash(admin) or cashier_hash
+            conn.execute(text(
+                "UPDATE store_config SET cashier_pin = :c, admin_pin = :a, lock_screen_enabled = :lock, "
+                "admin_pin_enabled = :admin, pin_policy_version = :v WHERE id = :id"
+            ), {
+                "c": cashier_hash, "a": admin_hash,
+                "lock": cashier_hash is not None, "admin": admin_hash is not None,
+                "v": PIN_POLICY_VERSION, "id": row_id,
+            })
+        conn.commit()
+    if rows:
+        logger.info(f"PIN settings migrated for {len(rows)} store_config row(s)")
+    return len(rows)
 
 
 if __name__ == "__main__":

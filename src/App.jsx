@@ -155,7 +155,7 @@ export default function App() {
     isAppLocked,
     setIsAppLocked,
     unlockApp
-  } = useAutoLock(storeConfig?.autoLockMinutes);
+  } = useAutoLock(storeConfig?.lockScreenEnabled ? storeConfig?.autoLockMinutes : 0);
 
   const {
     cartItems,
@@ -955,7 +955,10 @@ export default function App() {
   const handleOpenSyncModal = useCallback(() => setShowSyncModal(true), [setShowSyncModal]);
   const handleOpenShutdownModal = useCallback(() => setShowShutdownModal(true), []);
   const handleOpenCalendarModal = useCallback(() => setIsCalendarModalOpen(true), []);
-  const handleLockApp = useCallback(() => setIsAppLocked(true), [setIsAppLocked]);
+  // No lock without a PIN to unlock it (Batch G: the lock screen is a switch, off by default).
+  const handleLockApp = useCallback(() => {
+    if (storeConfig?.lockScreenEnabled) setIsAppLocked(true);
+  }, [setIsAppLocked, storeConfig?.lockScreenEnabled]);
   const handleOpenParkedModal = useCallback(() => setIsParkedModalOpen(true), []);
   const handleClearKeypadAmount = useCallback(() => setKeypadAmount(''), []);
 

@@ -984,10 +984,11 @@ export async function verifyAdminPinBackend(pin) {
  */
 export async function verifyPukBackend(puk) {
   try {
-    const res = await fetch(`${API_BASE_URL}/config/verify-puk`, {
+    // The PUK is now the one-time recovery code (Batch G); renamed in the UI in Phase 3.
+    const res = await fetch(`${API_BASE_URL}/config/verify-recovery`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ puk })
+      body: JSON.stringify({ code: puk })
     });
     if (res.status === 401) return { valid: false };
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);

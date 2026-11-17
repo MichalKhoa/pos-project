@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from unittest.mock import patch
 import io
 import zipfile
 import sqlite3
@@ -30,19 +31,22 @@ class TestSystemDiagnostics(unittest.TestCase):
             self.db.add(cfg)
             self.db.commit()
             self.db.refresh(cfg)
+        from tests.pin_fixture import use_admin_pin
+        use_admin_pin(self)
 
     def tearDown(self):
         self.db.close()
 
     def test_verify_admin_pin_endpoint(self):
         """Test POST /api/v1/config/verify-admin-pin with correct and incorrect PIN."""
-        # 1. Correct default PIN
-        res = self.client.post("/api/v1/config/verify-admin-pin", json={"pin": "1234"})
+        # 1. Correct Admin PIN
+        res = self.client.post("/api/v1/config/verify-admin-pin", json={"pin": "2580"})
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.json().get("valid"))
 
-        # 2. Master Recovery Key
-        res_master = self.client.post("/api/v1/config/verify-admin-pin", json={"pin": "VOLTFLOW-ADMIN-MASTER-RECOVERY"})
+        # 2. Master key, only when this machine's environment sets one
+        with patch.dict(os.environ, {"POS_MASTER_ADMIN_KEY": "support-key-0123456789"}):
+            res_master = self.client.post("/api/v1/config/verify-admin-pin", json={"pin": "support-key-0123456789"})
         self.assertEqual(res_master.status_code, 200)
         self.assertTrue(res_master.json().get("valid"))
 
@@ -61,7 +65,7 @@ class TestSystemDiagnostics(unittest.TestCase):
         self.assertEqual(res_wrong.status_code, 401)
 
         # 3. Correct PIN -> 200
-        res_ok = self.client.get("/api/v1/system/diagnostics", headers={"X-Admin-PIN": "1234"})
+        res_ok = self.client.get("/api/v1/system/diagnostics", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res_ok.status_code, 200)
         data = res_ok.json()
         self.assertEqual(data["status"], "SUCCESS")
@@ -78,7 +82,7 @@ class TestSystemDiagnostics(unittest.TestCase):
         self.assertEqual(res_no_auth.status_code, 401)
 
         # 2. Valid auth -> 200
-        res = self.client.post("/api/v1/system/db/vacuum", headers={"X-Admin-PIN": "1234"})
+        res = self.client.post("/api/v1/system/db/vacuum", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res.status_code, 200)
         data = res.json()
         self.assertEqual(data["status"], "SUCCESS")
@@ -93,7 +97,7 @@ class TestSystemDiagnostics(unittest.TestCase):
             f.write("[2026-09-05 00:00:01] [ERROR] [test] Test error line for diagnostic inspection\n")
 
         # 1. Fetch logs with auth
-        res = self.client.get("/api/v1/system/logs?lines=50", headers={"X-Admin-PIN": "1234"})
+        res = self.client.get("/api/v1/system/logs?lines=50", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res.status_code, 200)
         data = res.json()
         self.assertEqual(data["status"], "SUCCESS")
@@ -101,14 +105,14 @@ class TestSystemDiagnostics(unittest.TestCase):
         self.assertGreaterEqual(len(data["lines"]), 1)
 
         # 2. Filter by level ERROR
-        res_err = self.client.get("/api/v1/system/logs?lines=50&level=ERROR", headers={"X-Admin-PIN": "1234"})
+        res_err = self.client.get("/api/v1/system/logs?lines=50&level=ERROR", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res_err.status_code, 200)
         for line in res_err.json()["lines"]:
             self.assertIn("[ERROR]", line)
 
     def test_db_backup_download(self):
         """Test GET /api/v1/system/db/backup downloads valid ZIP."""
-        res = self.client.get("/api/v1/system/db/backup", headers={"X-Admin-PIN": "1234"})
+        res = self.client.get("/api/v1/system/db/backup", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.headers.get("content-type"), "application/zip")
         # Verify valid ZIP content
@@ -117,7 +121,7 @@ class TestSystemDiagnostics(unittest.TestCase):
 
     def test_export_diagnostic_bundle(self):
         """Test GET /api/v1/system/export-bundle generates diagnostic bundle ZIP."""
-        res = self.client.get("/api/v1/system/export-bundle", headers={"X-Admin-PIN": "1234"})
+        res = self.client.get("/api/v1/system/export-bundle", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.headers.get("content-type"), "application/zip")
         zf = zipfile.ZipFile(io.BytesIO(res.content))
@@ -131,12 +135,12 @@ class TestSystemDiagnostics(unittest.TestCase):
         remote_client = TestClient(app)
         remote_client._transport.client = ("192.168.1.100", 54321)
         # 1. Diagnostics endpoint
-        res = remote_client.get("/api/v1/system/diagnostics", headers={"X-Admin-PIN": "1234"})
+        res = remote_client.get("/api/v1/system/diagnostics", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res.status_code, 403)
         self.assertIn("detail", res.json())
 
         # 2. VACUUM endpoint
-        res_vac = remote_client.post("/api/v1/system/db/vacuum", headers={"X-Admin-PIN": "1234"})
+        res_vac = remote_client.post("/api/v1/system/db/vacuum", headers={"X-Admin-PIN": "2580"})
         self.assertEqual(res_vac.status_code, 403)
 
         # 3. Trigger backup endpoint
@@ -155,7 +159,7 @@ class TestSystemDiagnostics(unittest.TestCase):
         """Test that requests with untrusted Origin header receive 403 Forbidden."""
         # 1. Untrusted web origin -> 403
         bad_headers = {
-            "X-Admin-PIN": "1234",
+            "X-Admin-PIN": "2580",
             "Origin": "https://malicious-website.com"
         }
         res = self.client.get("/api/v1/system/diagnostics", headers=bad_headers)
@@ -164,7 +168,7 @@ class TestSystemDiagnostics(unittest.TestCase):
 
         # 2. Untrusted LAN origin -> 403
         bad_lan_headers = {
-            "X-Admin-PIN": "1234",
+            "X-Admin-PIN": "2580",
             "Origin": "http://192.168.1.88:3000"
         }
         res_lan = self.client.post("/api/v1/system/db/vacuum", headers=bad_lan_headers)
@@ -172,7 +176,7 @@ class TestSystemDiagnostics(unittest.TestCase):
 
         # 3. Allowed local origin (localhost:5173) -> 200
         good_headers = {
-            "X-Admin-PIN": "1234",
+            "X-Admin-PIN": "2580",
             "Origin": "http://localhost:5173"
         }
         res_ok = self.client.get("/api/v1/system/diagnostics", headers=good_headers)
@@ -180,7 +184,7 @@ class TestSystemDiagnostics(unittest.TestCase):
 
         # 4. Allowed Tauri origin (tauri://localhost) -> 200
         tauri_headers = {
-            "X-Admin-PIN": "1234",
+            "X-Admin-PIN": "2580",
             "Origin": "tauri://localhost"
         }
         res_tauri = self.client.get("/api/v1/system/diagnostics", headers=tauri_headers)
@@ -193,7 +197,7 @@ class TestSystemDiagnostics(unittest.TestCase):
         res_corrupt_file = self.client.post(
             "/api/v1/system/db/restore",
             files={"file": ("corrupt.db", fake_txt, "application/octet-stream")},
-            headers={"X-Admin-PIN": "1234"}
+            headers={"X-Admin-PIN": "2580"}
         )
         self.assertEqual(res_corrupt_file.status_code, 400)
         self.assertIn("není platná SQLite", res_corrupt_file.json().get("detail", ""))
@@ -207,7 +211,7 @@ class TestSystemDiagnostics(unittest.TestCase):
         res_bad_zip = self.client.post(
             "/api/v1/system/db/restore",
             files={"file": ("bad_archive.zip", bad_zip_buf, "application/zip")},
-            headers={"X-Admin-PIN": "1234"}
+            headers={"X-Admin-PIN": "2580"}
         )
         self.assertEqual(res_bad_zip.status_code, 400)
         self.assertIn("pos_store.db", res_bad_zip.json().get("detail", ""))
@@ -219,7 +223,7 @@ class TestSystemDiagnostics(unittest.TestCase):
         res_bad_pages = self.client.post(
             "/api/v1/system/db/restore",
             files={"file": ("corrupt_pages.db", corrupt_pages_io, "application/octet-stream")},
-            headers={"X-Admin-PIN": "1234"}
+            headers={"X-Admin-PIN": "2580"}
         )
         self.assertEqual(res_bad_pages.status_code, 400)
         self.assertIn("poškozena", res_bad_pages.json().get("detail", ""))
@@ -248,7 +252,7 @@ class TestSystemDiagnostics(unittest.TestCase):
             res = self.client.post(
                 "/api/v1/system/db/restore",
                 files={"file": ("valid_backup.db", io.BytesIO(valid_content), "application/octet-stream")},
-                headers={"X-Admin-PIN": "1234"}
+                headers={"X-Admin-PIN": "2580"}
             )
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json()["status"], "SUCCESS")

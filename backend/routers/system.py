@@ -3,7 +3,6 @@ import sys
 import time
 import shutil
 import sqlite3
-import hashlib
 import zipfile
 import tempfile
 import subprocess
@@ -62,7 +61,8 @@ def _enforce_loopback_and_origin(request: Request):
 
 def verify_technician_auth(request: Request, db: Session = Depends(get_db)):
     """
-    Enforces loopback caller restriction, rejects untrusted origins, and verifies Technician/Admin PIN or Master Recovery Key.
+    Enforces loopback caller restriction, rejects untrusted origins, and, when the Admin PIN
+    switch is on, verifies the Admin PIN or the environment master key.
     """
     _enforce_loopback_and_origin(request)
 
@@ -81,37 +81,10 @@ def verify_technician_auth(request: Request, db: Session = Depends(get_db)):
         # Check query param for direct download links in browser
         pin = request.query_params.get("admin_pin")
 
-    # 1. Master Recovery Key check
-    master_key = os.getenv("POS_MASTER_ADMIN_KEY", "VOLTFLOW-ADMIN-MASTER-RECOVERY")
-    if pin and pin.strip() == master_key:
-        return True
-
-    # 2. Database Admin/Cashier PIN check
+    from services.pin_auth import require_admin_pin
     config = db.query(StoreConfigModel).first()
-    stored_pins = []
-    if config:
-        if getattr(config, 'admin_pin', None):
-            stored_pins.append(config.admin_pin)
-        if getattr(config, 'cashier_pin', None):
-            stored_pins.append(config.cashier_pin)
-    if not stored_pins:
-        stored_pins = ["1234"]
-
-    if pin:
-        pin_hash = hashlib.sha256(pin.encode("utf-8")).hexdigest()
-        for candidate in stored_pins:
-            is_stored_hash = len(candidate) == 64 and all(c in "0123456789abcdefABCDEF" for c in candidate)
-            if not is_stored_hash:
-                if pin == candidate:
-                    return True
-            else:
-                if pin_hash == candidate or pin == candidate:
-                    return True
-
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Vyžadováno platné oprávnění technika (nesprávný Admin PIN)."
-    )
+    require_admin_pin(request, config, pin, "Vyžadováno platné oprávnění technika (nesprávný Admin PIN).")
+    return True
 
 
 def _inspect_eet_cert(config: Optional[StoreConfigModel]) -> dict:

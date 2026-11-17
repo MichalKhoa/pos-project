@@ -172,6 +172,8 @@ class TestBackendHardening(unittest.TestCase):
 
     def test_security_sales_deletion_protection(self):
         """Test that sale deletion requires valid PIN."""
+        from tests.pin_fixture import use_admin_pin
+        admin_pin = use_admin_pin(self)
         test_sale_id = "test-sec-sale-01"
         s = SaleModel(
             id=test_sale_id,
@@ -193,8 +195,8 @@ class TestBackendHardening(unittest.TestCase):
             res_wrong_pin = self.client.delete(f"/api/v1/sales/{test_sale_id}", headers={"X-Admin-PIN": "9999"})
             self.assertEqual(res_wrong_pin.status_code, 401)
 
-            # 3. With correct default PIN '1234' -> 200
-            res_valid = self.client.delete(f"/api/v1/sales/{test_sale_id}", headers={"X-Admin-PIN": "1234"})
+            # 3. With the correct Admin PIN -> 200
+            res_valid = self.client.delete(f"/api/v1/sales/{test_sale_id}", headers={"X-Admin-PIN": admin_pin})
             self.assertEqual(res_valid.status_code, 200)
             self.assertEqual(res_valid.json()["status"], "DELETED")
         finally:

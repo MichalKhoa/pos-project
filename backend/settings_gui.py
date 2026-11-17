@@ -98,21 +98,21 @@ class SettingsAPI:
         self.window = window
 
     def verify_pin(self, pin: str) -> dict:
-        """Validate PIN against stored config PIN hash."""
+        """Admin PIN gate: open when the Admin PIN switch is off, else Admin PIN or environment master key."""
         if not SessionLocal:
             return {"success": True, "message": "No DB lock"}
 
+        from migrations import migrate_pin_settings
+        from services.pin_auth import admin_pin_enabled, master_key_matches, pin_matches
+
+        # This tool can run before the POS backend has ever migrated the database.
+        migrate_pin_settings(engine)
         db = SessionLocal()
         try:
             config = db.query(StoreConfigModel).first()
-            if not config or not config.cashier_pin:
-                return {"success": True, "message": "Default PIN"}
-
-            input_hash = hash_pin(pin)
-            stored = config.cashier_pin
-
-            # Support both hashed and legacy raw 4-digit pin
-            if stored == input_hash or stored == pin or (stored == hash_pin("1234") and pin == "1234"):
+            if not admin_pin_enabled(config):
+                return {"success": True, "message": "Admin PIN switched off"}
+            if master_key_matches(pin) or pin_matches(pin, config.admin_pin):
                 return {"success": True}
             return {"success": False, "message": "Invalid PIN code"}
         except Exception as e:
@@ -220,7 +220,8 @@ class SettingsAPI:
 
                     # Update PIN if provided
                     new_pin = config_data.get("newPin")
-                    if new_pin and len(new_pin) >= 4:
+                    from services.pin_auth import valid_new_pin
+                    if new_pin and valid_new_pin(new_pin):
                         config.cashier_pin = hash_pin(new_pin)
 
                     db.commit()

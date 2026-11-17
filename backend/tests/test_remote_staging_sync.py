@@ -35,8 +35,6 @@ class TestRemoteStagingSync(unittest.TestCase):
             cloud_staging_enabled=True,
             cloud_staging_url="http://mock-cloud.test/api/v1",
             cloud_staging_token="secret_token_123",
-            admin_pin="1234",
-            cashier_pin="1234",
         )
         self.db.add(self.config)
 
@@ -283,6 +281,8 @@ class TestRemoteStagingSync(unittest.TestCase):
         self.assertIn("Connection refused", self.config.cloud_staging_last_status)
 
     def test_system_sync_staging_api(self):
+        from tests.pin_fixture import use_admin_pin
+        admin_pin = use_admin_pin(self)
         client = TestClient(app)
         # Without technician pin: 401
         res_unauth = client.post("/api/v1/system/sync-staging")
@@ -291,7 +291,7 @@ class TestRemoteStagingSync(unittest.TestCase):
         # With admin PIN header
         res_auth = client.post(
             "/api/v1/system/sync-staging",
-            headers={"X-Admin-PIN": "1234", "X-Admin-Override": "true"},
+            headers={"X-Admin-PIN": admin_pin, "X-Admin-Override": "true"},
         )
         self.assertEqual(res_auth.status_code, 200)
 
