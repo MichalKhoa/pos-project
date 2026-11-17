@@ -1026,6 +1026,8 @@ export async function verifyRecoveryCodeBackend(code) {
     });
     if (res.status === 401) return { valid: false };
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    // The PINs and switches changed on the server: drop the cached config read.
+    invalidateApiCache('config');
     return await res.json();
   } catch (err) {
     return { valid: false, error: err.message };

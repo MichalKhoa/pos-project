@@ -210,6 +210,24 @@ describe('Recovery code', () => {
   });
 });
 
+describe('Recovery drops the cached config read', () => {
+  it('reads /config again after a successful recovery code', async () => {
+    const real = await vi.importActual('../api/posApi');
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => ({
+      ok: true,
+      status: 200,
+      json: async () => (String(url).endsWith('/config') ? { lockScreenEnabled: true } : { valid: true })
+    }));
+    await real.fetchStoreConfigBackend();
+    await real.fetchStoreConfigBackend();
+    const configReads = () => fetchMock.mock.calls.filter(([u]) => String(u).endsWith('/config')).length;
+    expect(configReads()).toBe(1); // second read came from the cache
+    await real.verifyRecoveryCodeBackend('ABCD-EFGH-JKLM-NPQR');
+    await real.fetchStoreConfigBackend();
+    expect(configReads()).toBe(2);
+  });
+});
+
 describe('Whole-config save never carries PINs or switches', () => {
   it('strips the security keys before posting /config', async () => {
     const real = await vi.importActual('../api/posApi');

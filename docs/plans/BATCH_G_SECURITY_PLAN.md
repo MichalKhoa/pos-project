@@ -1,6 +1,6 @@
 # Batch G plan: PIN locks that can be switched on and off, and no built-in default or master keys
 
-Status: Phase 1 done and committed (section 9). Phase 2 done and committed (section 10). Phase 3 done, not committed (section 11). Phases 1 and 2 must land together: Phase 1 alone leaves Admin mode unreachable after the migration.
+Status: Phase 1 done and committed (section 9). Phase 2 done and committed (section 10). Phase 3 done and committed (section 11). Phase 4 done (section 12). Phases 1 and 2 must land together: Phase 1 alone leaves Admin mode unreachable after the migration.
 Branch: `fix/batch-g-security`, cut from `origin/master` (PRs 11, 12 and 13 are merged).
 
 ## 1. Goal
@@ -133,3 +133,18 @@ Recovery code UI and texts, tests first (`lock_screen.test.jsx`, `security_toggl
 - Open: a shop with only a cashier PIN cannot issue a new recovery code from the UI (the button needs an Admin PIN).
 
 Gates: 418 frontend tests, 25 security backend tests, lint clean, build ok.
+
+## 12. Phase 4 result
+
+Live check in the browser pane with a throwaway data folder (`POS_DATA_DIR`), real backend and Vite dev server.
+
+- Fresh install: both switches off, no PINs; Settings, Security opens without a PIN.
+- `1234` refused as a new PIN. Admin PIN `2580` set; the first PIN showed a recovery code once and the config read never returned a PIN. Lock screen switched on with cashier PIN `1470`; no second code appeared.
+- Lock screen unlocked with both the cashier PIN and the Admin PIN. Admin mode with the switch on refused the cashier PIN and accepted the Admin PIN.
+- A normal settings save (store name) kept both PINs and both switches.
+- "Issue a new recovery code" asked for the Admin PIN and showed a new code.
+- Lock screen recovery: a wrong code was refused; the right code cleared both PINs, switched both locks off, unlocked the screen and was refused on a second use.
+- Found and fixed: after recovery the navbar lock button stayed because the cached `/config` read still had the old switches. `verifyRecoveryCodeBackend` now clears that cache.
+- Not checked live: an upgraded copy of an old database (covered by the migration tests, `TestPinSettingsMigration`), hardware, and the standalone settings app.
+
+Gates: 419 frontend and 237 backend tests, lint clean, build ok.

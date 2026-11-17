@@ -62,6 +62,8 @@
 
 **Fix Applied:** Server-side SHA-256 PIN verification endpoint `POST /api/v1/config/verify-pin`.
 
+**Update (Batch G):** the lock screen and the Admin PIN are now two separate switches in Settings, both off until the owner turns them on and sets a PIN. No PIN, PUK or master key is built into the program: the `1234` default, the IČO based PUK and the default master key are gone. Recovery is a one-time recovery code shown when the first PIN is set (a new one needs the Admin PIN), and a support master key that works only when `POS_MASTER_ADMIN_KEY` (at least 16 characters) is set in the machine's environment. All PIN checks share one helper (`backend/services/pin_auth.py`) and one rate limit of 5 wrong tries per minute. Enforcement stays in the UI plus the existing technician and sale-delete checks; **C1 (no authentication on the rest of the API) is still open.** If the PIN and the recovery code are both lost and no master key is set, clear the `cashier_pin`, `admin_pin` and `recovery_code_hash` columns of `store_config` in the database file and set both switches to 0. Pins are still unsalted SHA-256.
+
 ---
 
 ### H3. ~~Missing React Error Boundary~~ ✅ RESOLVED
