@@ -1,3 +1,5 @@
+import { parseSaleTimestamp } from './dateUtils';
+
 /**
  * Local sync state of a sale (audit F-001 part 2, F-014). Kept apart from `eet_status`,
  * which describes fiscal registration, not whether the server has the sale at all.
@@ -76,12 +78,12 @@ export function markStranded(localSales, backendSales, limit) {
   const backendIds = new Set(backendSales.map(s => s.id));
   const pageIsFull = backendSales.length >= limit;
   const oldest = backendSales.reduce(
-    (min, s) => Math.min(min, new Date(s.timestamp).getTime()),
+    (min, s) => Math.min(min, parseSaleTimestamp(s.timestamp).getTime()),
     Infinity
   );
   return localSales.map(s => {
     if (s.syncState || isEetPending(s) || backendIds.has(s.id)) return s;
-    if (pageIsFull && new Date(s.timestamp).getTime() < oldest) return s;
+    if (pageIsFull && parseSaleTimestamp(s.timestamp).getTime() < oldest) return s;
     if (hasZeroLine(s) || Number(s.totalAmount) === 0) {
       return { ...s, syncState: SYNC.REJECTED, syncError: 'NEEDS_REVIEW' };
     }

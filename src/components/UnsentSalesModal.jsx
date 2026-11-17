@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../utils/dateUtils';
 import React from 'react';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
@@ -53,7 +54,7 @@ export default function UnsentSalesModal({ sales, isFlushing, onSend, onSendAll,
                   {sales.map(s => (
                     <tr key={s.id} style={{ borderTop: '1px solid var(--border-color)' }}>
                       <td>{s.receiptNumber}</td>
-                      <td>{new Date(s.timestamp).toLocaleString('cs-CZ')}</td>
+                      <td>{parseSaleTimestamp(s.timestamp).toLocaleString('cs-CZ')}</td>
                       <td style={{ textAlign: 'right' }}>{Number(s.totalAmount).toFixed(2)} Kč</td>
                       <td>
                         {t(`unsent_sales.${STATE_KEY[s.syncState]}`)}

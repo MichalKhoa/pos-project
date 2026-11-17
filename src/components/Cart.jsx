@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../utils/dateUtils';
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown, PauseCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
@@ -145,7 +146,7 @@ function Cart({
     const dateVal = lastSale.timestamp || lastSale.created_at || lastSale.date;
     if (!dateVal) return { lastSaleChipTime: '', lastSaleDateTime: '', isOlderThanToday: false };
     try {
-      const saleDate = new Date(dateVal);
+      const saleDate = parseSaleTimestamp(dateVal);
       if (isNaN(saleDate.getTime())) return { lastSaleChipTime: '', lastSaleDateTime: '', isOlderThanToday: false };
 
       const now = new Date();

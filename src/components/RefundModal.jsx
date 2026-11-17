@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../utils/dateUtils';
 import React, { useState } from 'react';
 import { RotateCcw, Banknote, CreditCard, Minus, Plus, Calendar, User, AlertTriangle, RotateCcw as ReturnIcon } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
@@ -122,7 +123,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
   };
 
   const rawDate = sale.timestamp || sale.created_at || sale.date;
-  const formattedDate = rawDate ? new Date(rawDate).toLocaleString('cs-CZ', {
+  const formattedDate = rawDate ? parseSaleTimestamp(rawDate).toLocaleString('cs-CZ', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

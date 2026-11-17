@@ -38,7 +38,7 @@ import {
   fetchSaleByReceiptNumber,
   getCurrentShift
 } from './api/posApi';
-import { formatLocalDate } from './utils/dateUtils';
+import { formatLocalDate, parseSaleTimestamp } from './utils/dateUtils';
 import SalesHistoryView from './components/SalesHistoryView';
 import AnalyticsView from './components/AnalyticsView';
 import PresetsCatalogView from './components/PresetsCatalogView';
@@ -505,7 +505,7 @@ export default function App() {
             const remainingLocal = prev.filter(s => !seenIds.has(s.id));
 
             const merged = [...pendingLocalSales, ...safelyMergedBackend, ...remainingLocal];
-            merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            merged.sort((a, b) => parseSaleTimestamp(b.timestamp) - parseSaleTimestamp(a.timestamp));
             return merged;
           });
         }

@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../../utils/dateUtils';
 import React from 'react';
 import { Search, Receipt, RotateCcw, Eye, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
@@ -149,7 +150,7 @@ export default function SalesLedgerTable({
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <span style={{ fontSize: '0.82rem' }}>
-                          {new Date(sale.timestamp).toLocaleString('cs-CZ')}
+                          {parseSaleTimestamp(sale.timestamp).toLocaleString('cs-CZ')}
                         </span>
                       </td>
                       <td>

@@ -9,7 +9,7 @@
  * @returns {string} 'YYYY-MM-DD'
  */
 export function formatLocalDate(dateInput) {
-  const d = dateInput instanceof Date ? dateInput : (dateInput ? new Date(dateInput) : new Date());
+  const d = dateInput instanceof Date ? dateInput : (dateInput ? parseSaleTimestamp(dateInput) : new Date());
   if (isNaN(d.getTime())) return '';
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');

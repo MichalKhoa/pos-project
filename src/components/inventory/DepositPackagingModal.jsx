@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { X, Wine, Plus, Truck, ArrowDownLeft } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -449,7 +450,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                     </tr>
                   ) : (
                     summary?.recent_movements?.map(m => {
-                      const dt = new Date(m.timestamp).toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
+                      const dt = parseSaleTimestamp(m.timestamp).toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
                       return (
                         <tr key={m.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                           <td style={{ padding: '0.5rem 0.75rem' }}>{dt}</td>

@@ -1,3 +1,5 @@
+import { parseSaleTimestamp } from './dateUtils';
+
 /**
  * Utility to export sales transactions to CSV format with UTF-8 BOM encoding for Microsoft Excel & Czech accents.
  */
@@ -34,7 +36,7 @@ export function exportSalesToCSV(salesHistory, periodLabel = 'vsechna_data') {
   const rows = salesHistory.map(sale => {
     const isRefund = sale.isRefund || sale.is_refund;
     const docType = isRefund ? 'Storno' : 'Prodej';
-    const dateStr = sale.timestamp ? new Date(sale.timestamp).toLocaleString('cs-CZ') : 'N/A';
+    const dateStr = sale.timestamp ? parseSaleTimestamp(sale.timestamp).toLocaleString('cs-CZ') : 'N/A';
     
     // Payment method mapping
     let pMethod = sale.paymentMethod || sale.payment_method || 'cash';
