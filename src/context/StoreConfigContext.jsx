@@ -1,7 +1,7 @@
 /* eslint-disable react/only-export-components, react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { DEFAULT_STORE_CONFIG } from '../data/initialData';
-import { fetchStoreConfigBackend, saveStoreConfigBackend } from '../api/posApi';
+import { fetchStoreConfigBackend, saveStoreConfigBackend, saveSecuritySettingsBackend } from '../api/posApi';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 
 const TECHNICIAN_SESSION_TIMEOUT_SECONDS = 10 * 60; // 10 minutes = 600s
@@ -108,6 +108,21 @@ export function StoreConfigProvider({ children }) {
     }
   }, [storeConfig]);
 
+  // Security settings (PINs, lock switches) go through their own endpoint call.
+  // Returns the server result; on success the status flags in storeConfig follow it.
+  const saveSecuritySettings = useCallback(async (updates) => {
+    const result = await saveSecuritySettingsBackend(updates);
+    if (result?.status === 'ERROR') return result;
+    const flags = {};
+    if (updates.lockScreenEnabled !== undefined) flags.lockScreenEnabled = updates.lockScreenEnabled;
+    if (updates.adminPinEnabled !== undefined) flags.adminPinEnabled = updates.adminPinEnabled;
+    if (updates.cashierPin) flags.hasPin = true;
+    if (updates.adminPin) flags.hasAdminPin = true;
+    if (result?.recoveryCode) flags.hasRecoveryCode = true;
+    setStoreConfig((prev) => ({ ...prev, ...flags }));
+    return result;
+  }, []);
+
   const enterAdminMode = useCallback((pin = null) => {
     lastAdminActivityRef.current = Date.now();
     setAdminPin(pin);
@@ -201,6 +216,7 @@ export function StoreConfigProvider({ children }) {
     storeConfig,
     setStoreConfig,
     updateStoreConfig,
+    saveSecuritySettings,
     isAdminMode,
     setIsAdminMode,
     adminSessionRemainingSeconds,

@@ -1,6 +1,6 @@
 # Batch G plan: PIN locks that can be switched on and off, and no built-in default or master keys
 
-Status: Phase 1 done (section 9), not committed. Phase 2 must land before any release: Phase 1 alone leaves Admin mode unreachable after the migration.
+Status: Phase 1 done and committed (section 9). Phase 2 done, not committed (section 10). Phases 1 and 2 must land together: Phase 1 alone leaves Admin mode unreachable after the migration.
 Branch: `fix/batch-g-security`, cut from `origin/master` (PRs 11, 12 and 13 are merged).
 
 ## 1. Goal
@@ -106,3 +106,17 @@ The `/code-review` at `high` found ten items. One cleanup was fixed: `pin_fixtur
 - Phase 2: Admin mode must open without a PIN when the switch is off (otherwise it is unreachable after the migration). `AdminPinModal` must drop the cashier-PIN fallback. The `SecuritySection` cashier PIN field and its `'1234'` fallback must go, because the server now rejects `1234` and that fails the whole config save. The generic config save must stop sending PINs and the switch flags, because today it re-posts the whole `storeConfig` and could restore a wiped PIN. The lock button must be hidden when the lock screen is off.
 - Phase 3: show the recovery code returned by `POST /config`, because today the first code is lost. Fix the recovery success text, which still says "reset to 1234". Decide where a support master key can be typed in, because the keypads take only digits and at most 8 of them.
 - Open, not planned: the standalone `settings_gui.py` still sets only the cashier PIN, does not touch the switches or the recovery code, and still returns the cashier PIN hash in `get_settings`.
+
+## 10. Phase 2 result
+
+Frontend toggles and gating, tests first (`src/__tests__/security_toggles.test.jsx`, 11 tests).
+
+- The Security tab has two switches. Turning one on without a stored PIN opens the set-PIN dialog and saves PIN and switch together; with a PIN already stored it only flips the switch. The old cashier PIN input and its `'1234'` fallback are gone, and its text keys were removed from all three languages. Each switch needs no extra PIN prompt: the Security tab is already behind Admin mode.
+- `AdminPinModal` accepts only the Admin PIN (or a support master key) and has a `SET_PIN` mode and a `kind` (admin or cashier) for its titles. It refuses `1234` as a new PIN.
+- `SettingsView.requireAdminPin` opens Admin mode without a PIN when the Admin PIN switch is off, and the locked tabs and the unlock button now share it. After the Admin PIN is set or changed, the open Admin session takes the new PIN.
+- `saveStoreConfigBackend` removes PINs, switches and status flags from every whole-config save. PINs and switches travel only through `saveSecuritySettingsBackend`, exposed as `saveSecuritySettings` in `StoreConfigContext`, which also updates the status flags. `App.handleSaveStoreConfig` keeps the live flags instead of the settings form's older copy.
+- The navbar lock button shows only when the lock screen is on. The auto-lock select is disabled when it is off.
+
+Gates: 412 frontend tests, lint clean, build ok. Review at high found two issues, both fixed (failed save kept a success message; the Admin session kept a stale PIN).
+
+Open for Phase 3: the PIN dialogs and the lock screen submit automatically after 4 digits, so a 5 to 8 digit PIN is checked too early and counts toward the rate limit. This predates Batch G because the server never returns the PIN length. Fix with an explicit confirm button or by storing the length. The first recovery code from `POST /config` is still not shown anywhere (Phase 3).

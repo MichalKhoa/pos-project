@@ -6,9 +6,11 @@ export default function SecuritySection({
   config,
   setConfig,
   saveConfigBatch,
+  security,
   isAdminMode,
   onToggleAdminMode,
-  onOpenPinChange
+  onToggleLock,
+  onSetPin
 }) {
   const { t } = useTranslation();
 
@@ -76,7 +78,7 @@ export default function SecuritySection({
         </div>
       </div>
 
-      {/* 🔑 Card 2: Změna Admin PIN */}
+      {/* 🔑 Card 2: Admin PIN switch */}
       <div className="settings-section-card">
         <div className="settings-section-header">
           <div>
@@ -88,35 +90,46 @@ export default function SecuritySection({
               {t('settings.security_pin_desc') || 'Ochranný kód bránící nepovolaným osobám v přístupu do pokročilých nastavení.'}
             </p>
           </div>
+          <label className="settings-switch-toggle" title={t('settings.security_admin_pin_switch')}>
+            <input
+              type="checkbox"
+              checked={!!security?.adminPinEnabled}
+              onChange={e => onToggleLock('admin', e.target.checked)}
+              aria-label={t('settings.security_admin_pin_switch')}
+            />
+            <span className="settings-switch-slider" />
+          </label>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
+          <div style={{ maxWidth: '520px' }}>
             <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-              {t('settings.security_pin_status') || 'Stav Admin PIN:'} <span style={{ fontFamily: 'monospace', letterSpacing: '3px', color: 'var(--accent-amber)' }}>••••</span>
+              {security?.adminPinEnabled ? t('settings.security_admin_pin_on') : t('settings.security_admin_pin_off')}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              {t('settings.security_pin_note') || 'Výchozí kód z výroby je 1234. Pro vyšší bezpečnost doporučujeme kód změnit.'}
+              {security?.adminPinEnabled ? t('settings.security_admin_pin_on_note') : t('settings.security_admin_pin_off_note')}
             </div>
           </div>
 
-          <button
-            type="button"
-            className="clear-cart-btn"
-            style={{
-              height: '44px',
-              padding: '0 1.25rem',
-              fontSize: '0.88rem',
-              fontWeight: '800',
-              borderColor: 'var(--accent-amber)',
-              color: 'var(--accent-amber)',
-              background: 'rgba(245, 158, 11, 0.1)'
-            }}
-            onClick={onOpenPinChange}
-          >
-            <Lock size={16} />
-            <span>{t('settings.security_change_pin_btn') || 'Změnit kód Admin PIN'}</span>
-          </button>
+          {security?.hasAdminPin && (
+            <button
+              type="button"
+              className="clear-cart-btn"
+              style={{
+                height: '44px',
+                padding: '0 1.25rem',
+                fontSize: '0.88rem',
+                fontWeight: '800',
+                borderColor: 'var(--accent-amber)',
+                color: 'var(--accent-amber)',
+                background: 'rgba(245, 158, 11, 0.1)'
+              }}
+              onClick={() => onSetPin('admin')}
+            >
+              <Lock size={16} />
+              <span>{t('settings.security_change_pin_btn') || 'Změnit kód Admin PIN'}</span>
+            </button>
+          )}
         </div>
       </div>
       </div>
@@ -139,18 +152,31 @@ export default function SecuritySection({
 
         <div className="settings-form-grid">
           <div className="settings-field">
-            <label className="settings-label">
-              {t('settings.security_cashier_pin_label') || 'PIN kód obsluhy pokladny (4–8 číslic)'}
+            <label className="settings-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <span>{t('settings.security_lock_switch')}</span>
+              <span className="settings-switch-toggle">
+                <input
+                  type="checkbox"
+                  checked={!!security?.lockScreenEnabled}
+                  onChange={e => onToggleLock('cashier', e.target.checked)}
+                />
+                <span className="settings-switch-slider" />
+              </span>
             </label>
-            <input
-              type="password"
-              className="settings-input"
-              maxLength={8}
-              value={config.cashierPin || '1234'}
-              onChange={e => setConfig({ ...config, cashierPin: e.target.value.replace(/\D/g, '').slice(0, 8) })}
-              onBlur={e => handleUpdate({ cashierPin: e.target.value })}
-              style={{ fontSize: '1.2rem', letterSpacing: '0.2em', textAlign: 'center' }}
-            />
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+              {security?.lockScreenEnabled ? t('settings.security_lock_on_note') : t('settings.security_lock_off_note')}
+            </div>
+            {security?.hasPin && (
+              <button
+                type="button"
+                className="clear-cart-btn"
+                style={{ height: '44px', padding: '0 1.25rem', marginTop: '0.6rem', fontSize: '0.88rem', fontWeight: '800' }}
+                onClick={() => onSetPin('cashier')}
+              >
+                <KeyRound size={16} />
+                <span>{t('settings.security_cashier_pin_change')}</span>
+              </button>
+            )}
           </div>
 
           <div className="settings-field">
@@ -159,6 +185,7 @@ export default function SecuritySection({
             </label>
             <select
               className="settings-input"
+              disabled={!security?.lockScreenEnabled}
               value={config.autoLockMinutes !== undefined ? config.autoLockMinutes : 15}
               onChange={e => handleUpdate({ autoLockMinutes: parseInt(e.target.value, 10) })}
             >

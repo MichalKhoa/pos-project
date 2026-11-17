@@ -224,7 +224,7 @@ describe('SettingsView Tab Gating', () => {
       <LanguageProvider>
         <StoreConfigProvider>
           <SettingsView
-            storeConfig={{}}
+            storeConfig={{ adminPinEnabled: true }}
             onSaveStoreConfig={() => {}}
             presets={[]}
             onResetData={() => {}}
@@ -271,7 +271,7 @@ describe('SettingsView Tab Gating', () => {
       const { isAdminMode, toggleAdminMode } = useStoreConfig();
       return (
         <SettingsView
-          storeConfig={{ cashierPin: '1234' }}
+          storeConfig={{ adminPinEnabled: true }}
           onSaveStoreConfig={() => {}}
           presets={[]}
           onResetData={() => {}}

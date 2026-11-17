@@ -576,7 +576,15 @@ export default function App() {
   }, [fetchShiftData]);
 
   const handleSaveStoreConfig = async (newConfig) => {
-    setStoreConfig(newConfig);
+    // The settings form holds an older copy of the lock switches; the live ones win.
+    setStoreConfig(prev => ({
+      ...newConfig,
+      lockScreenEnabled: prev.lockScreenEnabled,
+      adminPinEnabled: prev.adminPinEnabled,
+      hasPin: prev.hasPin,
+      hasAdminPin: prev.hasAdminPin,
+      hasRecoveryCode: prev.hasRecoveryCode
+    }));
     await saveStoreConfigBackend(newConfig);
     await checkPendingOfflineSales();
   };

@@ -921,12 +921,22 @@ export async function fetchStoreConfigBackend() {
 /**
  * Save store configuration settings to SQLite database backend
  */
+// PINs, the two lock switches and the status flags change only through
+// saveSecuritySettingsBackend. A whole-config save must never send them back:
+// it could restore a PIN that a recovery code has just cleared.
+const SECURITY_CONFIG_KEYS = [
+  'cashierPin', 'adminPin', 'lockScreenEnabled', 'adminPinEnabled',
+  'hasPin', 'hasAdminPin', 'hasRecoveryCode', 'recoveryCode'
+];
+
 export async function saveStoreConfigBackend(storeConfig) {
   try {
+    const body = { ...storeConfig };
+    SECURITY_CONFIG_KEYS.forEach((key) => delete body[key]);
     const res = await fetch(`${API_BASE_URL}/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(storeConfig)
+      body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
@@ -934,6 +944,31 @@ export async function saveStoreConfigBackend(storeConfig) {
     return data;
   } catch (err) {
     console.warn('Failed to save store config to backend DB:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Save only the security settings: cashierPin, adminPin, lockScreenEnabled, adminPinEnabled.
+ * The first PIN also returns a one-time recoveryCode.
+ * @returns {Promise<{status: string, message?: string, recoveryCode?: string}>}
+ */
+export async function saveSecuritySettingsBackend(updates) {
+  const body = {};
+  ['cashierPin', 'adminPin', 'lockScreenEnabled', 'adminPinEnabled'].forEach((key) => {
+    if (updates[key] !== undefined) body[key] = updates[key];
+  });
+  try {
+    const res = await fetch(`${API_BASE_URL}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    invalidateApiCache('config');
+    if (!res.ok) return { status: 'ERROR', message: data.detail || `HTTP error ${res.status}` };
+    return data;
+  } catch (err) {
     return { status: 'ERROR', message: err.message };
   }
 }

@@ -54,7 +54,8 @@ export default function SettingsView({
   const {
     isAdminMode: ctxIsAdminMode,
     enterAdminMode,
-    exitAdminMode
+    exitAdminMode,
+    saveSecuritySettings
   } = useStoreConfig();
   const effectiveIsAdmin = isAdminMode !== undefined ? isAdminMode : ctxIsAdminMode;
   const [activeSubTab, setActiveSubTab] = useState('store');
@@ -196,6 +197,14 @@ export default function SettingsView({
   const requireAdminPin = (callback) => {
     if (effectiveIsAdmin) {
       callback();
+    } else if (!storeConfig?.adminPinEnabled) {
+      // Owner has the Admin PIN switched off: Admin mode opens without a PIN.
+      if (enterAdminMode) {
+        enterAdminMode(null);
+      } else if (onToggleAdminMode) {
+        onToggleAdminMode();
+      }
+      callback();
     } else {
       setPinModalState({
         mode: 'VERIFY',
@@ -212,18 +221,38 @@ export default function SettingsView({
     }
   };
 
-  const handleOpenPinChange = () => {
-    requireAdminPin(() => {
-      setPinModalState({
-        mode: 'CHANGE_PIN',
-        onAuthenticated: (newPinVal) => {
-          const updated = { ...config, cashierPin: newPinVal };
-          setConfig(updated);
-          onSaveStoreConfig(updated);
-          setPinModalState(null);
-        }
-      });
+  // Saves lock switches and PINs through their own call (never with the whole config).
+  const saveSecurity = async (updates) => {
+    const res = await saveSecuritySettings(updates);
+    if (res?.status === 'ERROR') notify(res.message || t('settings.security_save_failed'));
+    return res;
+  };
+
+  // kind: 'cashier' (lock screen) or 'admin'. enable: also switch the lock on once the PIN is saved.
+  const handleSetPin = (kind, enable = false) => {
+    const isAdminKind = kind === 'admin';
+    const mode = isAdminKind && storeConfig?.hasAdminPin && storeConfig?.adminPinEnabled ? 'CHANGE_PIN' : 'SET_PIN';
+    setPinModalState({
+      mode,
+      kind,
+      onAuthenticated: async (newPinVal) => {
+        const updates = isAdminKind ? { adminPin: newPinVal } : { cashierPin: newPinVal };
+        if (enable) updates[isAdminKind ? 'adminPinEnabled' : 'lockScreenEnabled'] = true;
+        const res = await saveSecurity(updates);
+        setPinModalState(null);
+        // The open Admin session must carry the new PIN, or sale delete answers 401 until the next login.
+        if (isAdminKind && res?.status !== 'ERROR' && enterAdminMode) enterAdminMode(newPinVal);
+      }
     });
+  };
+
+  const handleToggleLock = (kind, next) => {
+    const hasPin = kind === 'admin' ? storeConfig?.hasAdminPin : storeConfig?.hasPin;
+    if (next && !hasPin) {
+      handleSetPin(kind, true);
+      return;
+    }
+    saveSecurity(kind === 'admin' ? { adminPinEnabled: next } : { lockScreenEnabled: next });
   };
 
   const handleExportJSON = () => {
@@ -310,18 +339,7 @@ export default function SettingsView({
 
   const handleSelectSubTab = (tab) => {
     if (tab.locked && !effectiveIsAdmin) {
-      setPinModalState({
-        mode: 'VERIFY',
-        onAuthenticated: (verifiedPin) => {
-          if (enterAdminMode) {
-            enterAdminMode(verifiedPin);
-          } else if (onToggleAdminMode && !effectiveIsAdmin) {
-            onToggleAdminMode();
-          }
-          setActiveSubTab(tab.id);
-          setPinModalState(null);
-        }
-      });
+      requireAdminPin(() => setActiveSubTab(tab.id));
       return;
     }
     setActiveSubTab(tab.id);
@@ -439,19 +457,7 @@ export default function SettingsView({
                   type="button"
                   className="pay-btn pay-btn-card"
                   style={{ height: '44px', padding: '0 1.5rem', fontWeight: '800' }}
-                  onClick={() => {
-                    setPinModalState({
-                      mode: 'VERIFY',
-                      onAuthenticated: (verifiedPin) => {
-                        if (enterAdminMode) {
-                          enterAdminMode(verifiedPin);
-                        } else if (onToggleAdminMode && !effectiveIsAdmin) {
-                          onToggleAdminMode();
-                        }
-                        setPinModalState(null);
-                      }
-                    });
-                  }}
+                  onClick={() => requireAdminPin(() => {})}
                 >
                   <Lock size={16} />
                   <span>{t('settings.tab_locked_btn') || 'Odemknout režim technika'}</span>
@@ -535,7 +541,9 @@ export default function SettingsView({
                 saveConfigBatch={saveConfigBatch}
                 isAdminMode={effectiveIsAdmin}
                 onToggleAdminMode={effectiveIsAdmin ? (exitAdminMode || onToggleAdminMode) : () => requireAdminPin(() => {})}
-                onOpenPinChange={handleOpenPinChange}
+                security={storeConfig}
+                onToggleLock={handleToggleLock}
+                onSetPin={handleSetPin}
               />
             )}
 
@@ -688,7 +696,7 @@ export default function SettingsView({
       {pinModalState && (
         <AdminPinModal
           mode={pinModalState.mode}
-          storeConfig={config}
+          kind={pinModalState.kind}
           onSuccess={(pin) => {
             if (pinModalState.onAuthenticated) pinModalState.onAuthenticated(pin);
           }}
