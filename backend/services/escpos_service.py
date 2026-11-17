@@ -30,6 +30,29 @@ def receipt_totals(sale_data: dict):
     return (exact, round(payable - exact, 2), payable)
 
 
+def compute_item_line_totals(items: list, cart_discount_percent: float = 0) -> list:
+    """Per-item printed gross, Decimal HALF_UP like sales.py's recalculate_sale_totals.
+
+    Each line's own discount first, then the cart discount applied proportionally to every
+    line (the same `cart_factor` the server uses), so the printed lines sum to the printed total.
+    """
+    item_grosses = []
+    for item in items:
+        price = float(item.get('price', 0) or 0)
+        qty = float(item.get('quantity', 1))
+        discount = float(item.get('discountPercent') or item.get('discount_percent') or 0)
+        item_grosses.append(round_currency(price * qty * (1 - discount / 100)))
+
+    raw_subtotal = round_currency(sum(item_grosses))
+    cart_factor = 1.0
+    if cart_discount_percent and raw_subtotal:
+        cart_discount_amount = round_currency(raw_subtotal * cart_discount_percent / 100)
+        final_grand_total = round_currency(raw_subtotal - cart_discount_amount)
+        cart_factor = final_grand_total / raw_subtotal
+
+    return [round_currency(g * cart_factor) for g in item_grosses]
+
+
 def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
     """Decorator that automatically retries printer connection with exponential backoff on USB/Serial hardware hiccups."""
     def decorator(func):
@@ -51,6 +74,7 @@ def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
 
 
 from services.printer_discovery import detect_connected_printers
+from services.security_utils import round_currency
 
 
 def get_receipt_separator(style: str, width: int) -> str:
@@ -651,6 +675,8 @@ class ESCPOSPrinterService:
                     orig_num = str(sale_data.get("originalReceiptNumber") or sale_data.get("original_receipt_number") or "")
                     refund_reason = str(sale_data.get("refundReason") or sale_data.get("refund_reason") or "")
                     pm = str(sale_data.get('paymentMethod', '')).upper()
+                    cart_discount_pct = float(sale_data.get("cartDiscountPercent", sale_data.get("cart_discount_percent", 0)) or 0)
+                    line_totals = compute_item_line_totals(sale_data.get('items', []), cart_discount_pct)
 
                     for copy_idx in range(copies):
                         # Top Margin Feed
@@ -681,7 +707,8 @@ class ESCPOSPrinterService:
                             write_wrapped(printer, str(store_config.get('city')), line_width, strip_diacritics, encoding)
 
                         vat_status = store_config.get("receiptVatPayerStatus", "payer")
-                        vat_badge = "Plátce DPH" if vat_status == "payer" else "Neplátce DPH"
+                        is_payer = vat_status == "payer"
+                        vat_badge = "Plátce DPH" if is_payer else "Neplátce DPH"
                         ico_str = store_config.get('ico', '')
                         dic_str = store_config.get('dic', '')
                         if ico_str or dic_str:
@@ -715,7 +742,10 @@ class ESCPOSPrinterService:
 
                         if is_inv:
                             # ==================== FORMAL B2B INVOICE THERMAL LAYOUT ====================
-                            inv_title = f"OPRAVNÝ DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}" if is_refund else f"FAKTURA - DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}"
+                            if is_refund:
+                                inv_title = f"OPRAVNÝ DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}" if is_payer else f"OPRAVNÁ FAKTURA č. {inv_num_val or receipt_num}"
+                            else:
+                                inv_title = f"FAKTURA - DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}" if is_payer else f"FAKTURA č. {inv_num_val or receipt_num}"
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
                             printer.text(separator + "\n")
                             write_wrapped(printer, inv_title, line_width, strip_diacritics, encoding)
@@ -791,6 +821,7 @@ class ESCPOSPrinterService:
 
                             # Itemized Line Items for Invoice
                             inv_name_w, inv_qty_w, inv_vat_w, inv_price_w = receipt_columns(line_width, "invoice")
+                            inv_vat_w = inv_vat_w if is_payer else 0
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
                             inv_head = f"{'Položka':<{inv_name_w}} {'Ks':^{inv_qty_w}} "
                             if inv_vat_w:
@@ -798,12 +829,10 @@ class ESCPOSPrinterService:
                             write_receipt_text(printer, inv_head + f"{'Celk.':>{inv_price_w}}\n", strip_diacritics, encoding)
                             printer.text(dash_line + "\n")
 
-                            for item in sale_data.get('items', []):
+                            for idx, item in enumerate(sale_data.get('items', [])):
                                 qty = float(item.get('quantity', 1))
-                                disc = float(item.get('discountPercent') or item.get('discount_percent') or 0)
-                                price_inc = float(item.get('price', 0)) * (1.0 - disc / 100.0)
                                 vat_rate = float(item.get('vat', 21))
-                                tot_inc = price_inc * qty
+                                tot_inc = line_totals[idx]
                                 name_raw = str(item.get('name', 'Položka'))
                                 unit_val = item.get('unit') or ('kg' if (item.get('is_weighted') or item.get('isWeighted')) else 'ks')
                                 is_weighted = bool(item.get('is_weighted') or item.get('isWeighted') or (qty % 1 != 0) or (unit_val in ['kg', 'g']))
@@ -821,7 +850,10 @@ class ESCPOSPrinterService:
 
                         else:
                             # ==================== RETAIL RECEIPT LAYOUT ====================
-                            raw_title = f"STORNO DOKLAD č. {receipt_num}" if is_refund else f"DAŇOVÝ DOKLAD č. {receipt_num}"
+                            if is_refund:
+                                raw_title = f"STORNO DOKLAD č. {receipt_num}"
+                            else:
+                                raw_title = f"DAŇOVÝ DOKLAD č. {receipt_num}" if is_payer else f"ÚČTENKA č. {receipt_num}"
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
 
                             if title_style == "framed":
@@ -878,11 +910,10 @@ class ESCPOSPrinterService:
                             printer.text(dash_line + "\n")
 
                             # Line Items
-                            for item in sale_data.get('items', []):
+                            for idx, item in enumerate(sale_data.get('items', [])):
                                 qty = float(item.get('quantity', 1))
                                 disc = float(item.get('discountPercent') or item.get('discount_percent') or 0)
-                                unit_price = float(item.get('price', 0)) * (1.0 - disc / 100.0)
-                                tot = unit_price * qty
+                                tot = line_totals[idx]
                                 tot_str = f"{tot:.2f} Kč" if tot % 1 != 0 else f"{tot:.0f} Kč"
                                 name_raw = str(item.get('name', 'Položka'))
                                 unit_val = item.get('unit') or ('kg' if (item.get('is_weighted') or item.get('isWeighted')) else 'ks')
@@ -904,7 +935,7 @@ class ESCPOSPrinterService:
                                 if item_density == "standard":
                                     if show_disc and disc > 0:
                                         write_receipt_text(printer, f"  (-{disc:.0f}% sleva)\n", strip_diacritics, encoding)
-                                    if show_vat:
+                                    if show_vat and is_payer:
                                         vat_rate = item.get('vat', 21)
                                         write_receipt_text(printer, f"  DPH {vat_rate}%\n", strip_diacritics, encoding)
 
@@ -956,7 +987,7 @@ class ESCPOSPrinterService:
 
                         # ==================== REKAPITULACE DPH ====================
                         tax_summary = sale_data.get("taxSummary") or sale_data.get("tax_summary")
-                        if tax_matrix_style != "none" and tax_summary and isinstance(tax_summary, dict):
+                        if tax_matrix_style != "none" and tax_summary and isinstance(tax_summary, dict) and is_payer:
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
                             printer.text(separator + "\n")
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
