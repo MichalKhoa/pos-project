@@ -4,7 +4,7 @@ import glob
 import logging
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger("pos-escpos")
@@ -112,6 +112,24 @@ def print_receipt_logo(printer, logo_base64: str, is_58mm: bool):
         logger.warning(f"Failed to print receipt logo image: {img_err}")
 
 
+def _local_dt(ts) -> datetime:
+    """Local time for an ISO string or datetime. A naive value is UTC: the server stores datetime.utcnow()."""
+    dt = ts if isinstance(ts, datetime) else datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone()
+
+
+# Letters that NFKD cannot reduce to ASCII and that would otherwise vanish in strip mode.
+_ASCII_FALLBACK = str.maketrans({"×": "x", "Đ": "D", "đ": "d", "═": "=", "–": "-", "—": "-",
+                                 "„": '"', "“": '"', "”": '"', "‚": "'", "‘": "'", "’": "'", "€": "EUR"})
+
+
+def _to_ascii(text: str) -> str:
+    import unicodedata
+    return unicodedata.normalize('NFKD', text.translate(_ASCII_FALLBACK)).encode('ASCII', 'ignore').decode('ascii')
+
+
 def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encoding: str = "CP852"):
     """
     Safely writes Czech text to ESC/POS thermal printer with CP852/CP1250 encoding,
@@ -120,9 +138,7 @@ def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encod
     if not text:
         return
     if strip_diacritics:
-        import unicodedata
-        clean = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
-        printer.text(clean)
+        printer.text(_to_ascii(text))
         return
 
     try:
@@ -135,9 +151,7 @@ def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encod
             else:
                 printer.text(raw_bytes.decode(encoding, errors='replace'))
         except Exception:
-            import unicodedata
-            clean = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
-            printer.text(clean)
+            printer.text(_to_ascii(text))
 
 
 def set_escpos_font(printer, font: str = 'b', bold: bool = False, double_height: bool = False, double_width: bool = False, align: str = 'left'):
@@ -637,7 +651,7 @@ class ESCPOSPrinterService:
                             if store_config.get("receiptStoreEmail"):
                                 contacts.append(f"Email: {store_config.get('receiptStoreEmail')}")
                             if contacts:
-                                write_wrapped(printer, " • ".join(contacts), line_width, strip_diacritics, encoding)
+                                write_wrapped(printer, " | ".join(contacts), line_width, strip_diacritics, encoding)
 
                         reg_no = store_config.get('registerNo') or 'Pokladna #01'
                         prov_no = store_config.get('idProvozovny') or '11'
@@ -708,7 +722,7 @@ class ESCPOSPrinterService:
                             ts_val = str(sale_data.get("timestamp", ""))
                             if ts_val:
                                 try:
-                                    dt = datetime.fromisoformat(ts_val.replace("Z", "+00:00"))
+                                    dt = _local_dt(ts_val)
                                     formatted_ts = dt.strftime("%d.%m.%Y %H:%M:%S")
                                     duzp_str = dt.strftime("%d.%m.%Y")
                                 except Exception:
@@ -737,7 +751,7 @@ class ESCPOSPrinterService:
                             inv_head = f"{'Položka':<{inv_name_w}} {'Ks':^{inv_qty_w}} "
                             if inv_vat_w:
                                 inv_head += f"{'DPH':^{inv_vat_w}} "
-                            printer.text(inv_head + f"{'Celk.':>{inv_price_w}}\n")
+                            write_receipt_text(printer, inv_head + f"{'Celk.':>{inv_price_w}}\n", strip_diacritics, encoding)
                             printer.text(dash_line + "\n")
 
                             for item in sale_data.get('items', []):
@@ -756,7 +770,7 @@ class ESCPOSPrinterService:
                                     set_escpos_font(printer, font=base_font, bold=bold_items, align='left')
                                     write_receipt_text(printer, left, strip_diacritics, encoding)
                                     set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                    printer.text(right + "\n")
+                                    write_receipt_text(printer, right + "\n", strip_diacritics, encoding)
 
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
                             printer.text(separator + "\n")
@@ -797,8 +811,7 @@ class ESCPOSPrinterService:
                             ts_val = str(sale_data.get("timestamp", ""))
                             if ts_val:
                                 try:
-                                    dt = datetime.fromisoformat(ts_val.replace("Z", "+00:00"))
-                                    formatted_ts = dt.strftime("%d.%m.%Y %H:%M:%S")
+                                    formatted_ts = _local_dt(ts_val).strftime("%d.%m.%Y %H:%M:%S")
                                 except Exception:
                                     formatted_ts = ts_val[:19].replace('T', ' ')
                             else:
@@ -817,7 +830,7 @@ class ESCPOSPrinterService:
                             name_w, qty_w, price_w = receipt_columns(line_width, "retail")
 
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
-                            printer.text(f"{'Položka':<{name_w}} {'Ks':^{qty_w}} {'Cena':>{price_w}}\n")
+                            write_receipt_text(printer, f"{'Položka':<{name_w}} {'Ks':^{qty_w}} {'Cena':>{price_w}}\n", strip_diacritics, encoding)
                             printer.text(dash_line + "\n")
 
                             # Line Items
@@ -836,7 +849,7 @@ class ESCPOSPrinterService:
                                     set_escpos_font(printer, font=base_font, bold=bold_items, align='left')
                                     write_receipt_text(printer, left, strip_diacritics, encoding)
                                     set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                    printer.text(right + "\n")
+                                    write_receipt_text(printer, right + "\n", strip_diacritics, encoding)
 
                                 # Sub-details in base_font (normal, indented)
                                 set_escpos_font(printer, font=base_font, bold=False, align='left')
@@ -882,10 +895,12 @@ class ESCPOSPrinterService:
                         if pm in ["CASH", "HOTOVOST"]:
                             tend = float(sale_data.get("tenderedAmount") or sale_data.get("tendered_amount") or 0)
                             chg = float(sale_data.get("changeDue") or sale_data.get("change_due") or 0)
-                            tend_str = f"{tend:.0f} Kč" if tend % 1 == 0 else f"{tend:.2f} Kč"
-                            chg_str = f"{chg:.0f} Kč" if chg % 1 == 0 else f"{chg:.2f} Kč"
-                            write_label_value(printer, "Přijatá hotovost:", tend_str, line_width, strip_diacritics, encoding)
-                            write_label_value(printer, "Vrácená hotovost:", chg_str, line_width, strip_diacritics, encoding)
+                            # A refund has no tendered cash; a reprint has no stored tendered amount.
+                            if not is_refund and tend > 0:
+                                tend_str = f"{tend:.0f} Kč" if tend % 1 == 0 else f"{tend:.2f} Kč"
+                                chg_str = f"{chg:.0f} Kč" if chg % 1 == 0 else f"{chg:.2f} Kč"
+                                write_label_value(printer, "Přijatá hotovost:", tend_str, line_width, strip_diacritics, encoding)
+                                write_label_value(printer, "Vrácená hotovost:", chg_str, line_width, strip_diacritics, encoding)
                         elif pm == "SPLIT" and sale_data.get("splitDetails"):
                             split = sale_data.get("splitDetails")
                             c_part = float(split.get('cash') or 0)
@@ -916,7 +931,7 @@ class ESCPOSPrinterService:
                                 if all(len(c) + 4 <= w for c, w in zip(cells, widths_)):
                                     cells = [f"{c} Kč" for c in cells]  # room for the currency, otherwise the bare number
                                 row = f"{str(t.get('rate')) + '%':<{rate_w}}" + "".join(f" {c:>{w}}" for c, w in zip(cells, widths_))
-                                printer.text(row + "\n")
+                                write_receipt_text(printer, row + "\n", strip_diacritics, encoding)
 
                         # ==================== FISCAL EET BLOCK ====================
                         fik = sale_data.get("fik") or sale_data.get("fik_code")
@@ -1602,12 +1617,7 @@ class ESCPOSPrinterService:
 
         ts_raw = protocol_data.get("timestamp")
         try:
-            if isinstance(ts_raw, str):
-                ts = datetime.fromisoformat(ts_raw.replace("Z", ""))
-            elif isinstance(ts_raw, datetime):
-                ts = ts_raw
-            else:
-                ts = datetime.now()
+            ts = _local_dt(ts_raw) if isinstance(ts_raw, (str, datetime)) else datetime.now()
             date_str = ts.strftime("%d.%m.%Y %H:%M")
         except Exception:
             date_str = str(ts_raw or "")
@@ -1756,12 +1766,7 @@ class ESCPOSPrinterService:
 
         ts_raw = protocol_data.get("timestamp")
         try:
-            if isinstance(ts_raw, str):
-                ts = datetime.fromisoformat(ts_raw.replace("Z", ""))
-            elif isinstance(ts_raw, datetime):
-                ts = ts_raw
-            else:
-                ts = datetime.now()
+            ts = _local_dt(ts_raw) if isinstance(ts_raw, (str, datetime)) else datetime.now()
             date_str = ts.strftime("%d.%m.%Y %H:%M")
         except Exception:
             date_str = str(ts_raw or "")
