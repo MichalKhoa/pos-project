@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import glob
 import logging
@@ -391,6 +392,38 @@ def print_ruler(printer, line_width: int):
     set_escpos_font(printer, font='a', bold=False, align='left')
 
 
+# Control sequences the receipt writes: (ESC|GS) command plus its fixed-size arguments.
+# Shared by the debug preview below and by backend/tests/escpos_helpers.py.
+_ESCPOS_CONTROL = re.compile(
+    rb"\x1b[!MEatJ3dV-]."  # one argument byte; 'p' (drawer pulse) is 3 bytes, handled below
+    rb"|\x1b[2@=]"          # no argument
+    rb"|\x1bp..."           # drawer pulse: m t1 t2
+    rb"|\x1d[VhwfHBLW]\x41?.?"  # GS V / h / w / f / H / B: one or two argument bytes
+    rb"|\x1d\(k.{3}[\x00-\xff]*?(?=\x1d\(k|\Z)",  # native QR blocks
+    re.DOTALL,
+)
+
+
+def _strip_escpos_barcode(data: bytes) -> bytes:
+    """Remove `GS k m n d1..dn` barcode blocks (variable length, so not a fixed regex)."""
+    out = bytearray()
+    i = 0
+    while i < len(data):
+        if data[i:i + 2] == b"\x1dk" and i + 3 < len(data):
+            n = data[i + 3]
+            i += 4 + n
+            continue
+        out.append(data[i])
+        i += 1
+    return bytes(out)
+
+
+def decode_escpos_preview(data: bytes, encoding: str = "cp852") -> list:
+    """Decode raw ESC/POS bytes to text lines with control sequences removed (debug preview)."""
+    raw = _ESCPOS_CONTROL.sub(b"", _strip_escpos_barcode(data))
+    return raw.decode(encoding, errors="replace").split("\n")
+
+
 def begin_job(printer, encoding: str = "CP852", font: str = "a"):
     """Reset the printer (ESC @), select the codepage, then set the line pitch for the font (D11)."""
     if hasattr(printer, '_raw'):
@@ -645,6 +678,30 @@ class ESCPOSPrinterService:
         with _hardware_printer_lock:
             return self._do_print_receipt(sale_data, store_config, open_drawer)
 
+    def preview_receipt(self, sale_data: dict, store_config: dict) -> dict:
+        """
+        Debug tool: render the exact ESC/POS output for the given sale/settings against a
+        Dummy printer, with no hardware touched, and return it as decoded text lines.
+        """
+        from escpos.printer import Dummy
+
+        dummy = Dummy()
+        original_get_device = self._get_printer_device
+        self._get_printer_device = lambda *args, **kwargs: dummy
+        try:
+            # A Dummy device never touches hardware, so this never needs the
+            # lock that serializes real print/drawer/ruler/summary jobs.
+            result = self._do_print_receipt(sale_data, store_config, open_drawer=False)
+        finally:
+            self._get_printer_device = original_get_device
+
+        if not result.get("success", True):
+            return {"success": False, "error": result.get("error", "Preview failed"), "lines": []}
+
+        encoding = str(store_config.get("receiptEncoding", "CP852")).lower()
+        lines = decode_escpos_preview(dummy.output, encoding)
+        return {"success": True, "lines": lines}
+
     def _do_print_receipt(self, sale_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
         paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
         is_a4 = paper_width == "A4"
@@ -761,6 +818,10 @@ class ESCPOSPrinterService:
                                         double_height=True, double_width=name_half_fits)
                         write_wrapped(printer, store_name_val, (line_width // 2) if name_half_fits else line_width,
                                       strip_diacritics, encoding)
+
+                        # Short centered mark under the store name, distinct from the full-width separators.
+                        set_escpos_font(printer, font=base_font, bold=False, align='center')
+                        write_receipt_text(printer, "---\n", strip_diacritics, encoding)
 
                         set_escpos_font(printer, font=base_font, bold=False, align='center')
                         if store_config.get('street'):
@@ -962,11 +1023,12 @@ class ESCPOSPrinterService:
                             else:
                                 formatted_ts = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
-                            write_wrapped(printer, f"Datum a čas: {formatted_ts}", line_width, strip_diacritics, encoding)
+                            set_escpos_font(printer, font=base_font, bold=False, align='left')
+                            write_label_value(printer, "Datum a čas:", formatted_ts, line_width, strip_diacritics, encoding)
 
                             if show_cashier:
                                 cashier_name = sale_data.get("cashier") or sale_data.get("cashierName") or "Pokladní"
-                                write_wrapped(printer, f"Obsluha: {cashier_name}", line_width, strip_diacritics, encoding)
+                                write_label_value(printer, "Obsluha:", cashier_name, line_width, strip_diacritics, encoding)
 
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
                             print_separator(printer, separator, sep_spacing)

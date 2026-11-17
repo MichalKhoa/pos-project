@@ -38,13 +38,13 @@ class ReceiptLocalTimeTests(PragueTimeCase):
         return [line for line in receipt_lines(printer) if line.startswith(("Datum", "DUZP"))]
 
     def test_utc_winter_time_prints_one_hour_later(self):
-        self.assertEqual(self.receipt_date_line("2026-11-16T14:00:00Z"), ["Datum a čas: 16.11.2026 15:00:00"])
+        self.assertEqual(self.receipt_date_line("2026-11-16T14:00:00Z"), ["Datum a čas:                 16.11.2026 15:00:00"])
 
     def test_utc_summer_time_prints_two_hours_later(self):
-        self.assertEqual(self.receipt_date_line("2026-07-16T14:00:00.123Z"), ["Datum a čas: 16.07.2026 16:00:00"])
+        self.assertEqual(self.receipt_date_line("2026-07-16T14:00:00.123Z"), ["Datum a čas:                 16.07.2026 16:00:00"])
 
     def test_naive_timestamp_counts_as_utc(self):
-        self.assertEqual(self.receipt_date_line("2026-11-16T14:00:00"), ["Datum a čas: 16.11.2026 15:00:00"])
+        self.assertEqual(self.receipt_date_line("2026-11-16T14:00:00"), ["Datum a čas:                 16.11.2026 15:00:00"])
 
     def test_invoice_date_and_duzp_are_local(self):
         lines = self.receipt_date_line("2026-11-16T23:30:00Z", {"isInvoice": True, "invoiceNumber": "FV-1"})

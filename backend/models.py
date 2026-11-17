@@ -84,6 +84,7 @@ class StoreConfigModel(Base):
     printer_interface = Column(String, default="USB") # 'USB', 'NETWORK', 'SERIAL'
     printer_address = Column(String, default="/dev/usb/lp0")
     printer_paper_width = Column(String, default="80") # '58' or '80' mm
+    drawer_pin = Column(Integer, default=2) # cash drawer kick pin: 2 or 5
 
     # EET 2.0 Configuration
     eet_enabled = Column(Boolean, default=False)
@@ -271,6 +272,17 @@ class ReceiptSequenceModel(Base):
 
     year = Column(Integer, primary_key=True)
     last_seq = Column(Integer, default=0, nullable=False)
+
+
+class PrintLogModel(Base):
+    """DB Model for recent printer debug attempts (receipt/ruler/drawer/daily-summary)."""
+    __tablename__ = "print_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    kind = Column(String, nullable=False)  # 'receipt', 'print-ruler', 'open-drawer', 'daily-summary'
+    success = Column(Boolean, nullable=False)
+    message = Column(String, default="")
 
 
 class EetAuditLogModel(Base):

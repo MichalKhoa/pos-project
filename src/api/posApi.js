@@ -623,6 +623,39 @@ export async function printRulerBackend(storeConfig = {}) {
 }
 
 /**
+ * Debug tool: render the exact ESC/POS output for the given sale/settings, no hardware touched.
+ */
+export async function previewReceiptBackend(saleData, storeConfig) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ saleData, storeConfig })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Receipt preview unavailable:', err);
+    return { lines: [] };
+  }
+}
+
+/**
+ * Recent print/debug attempts (newest first), for self-diagnosing printing problems.
+ */
+export async function fetchPrintLogBackend(limit = 20) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-log?limit=${limit}`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data?.attempts || [];
+  } catch (err) {
+    console.warn('Print log unavailable:', err);
+    return [];
+  }
+}
+
+/**
  * Scan and fetch list of connected hardware printer devices from backend
  */
 export async function fetchPrinterDevices() {

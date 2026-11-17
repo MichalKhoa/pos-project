@@ -17,6 +17,8 @@ import {
   openCashDrawerBackend,
   printReceiptBackend,
   printDailySummaryBackend,
+  previewReceiptBackend,
+  fetchPrintLogBackend,
   fetchShiftStats,
   fetchBackendRoot
 } from '../../api/posApi.js';
@@ -37,7 +39,47 @@ export default function DiagnosticsSection({
   const [actionMessage, setActionMessage] = useState(null);
   const [shiftData, setShiftData] = useState(null);
   const [restartingBackend, setRestartingBackend] = useState(false);
+  const [previewLines, setPreviewLines] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [printLog, setPrintLog] = useState([]);
+  const [logLoading, setLogLoading] = useState(false);
   const { isTauri, restartBackend } = useTauri();
+
+  const buildSampleSale = () => ({
+    receiptNumber: `TST-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
+    timestamp: new Date().toISOString(),
+    paymentMethod: 'cash',
+    totalAmount: 153.70,
+    tenderedAmount: 200,
+    items: [
+      { name: 'Mléko plnotučné 1L (Test)', price: 28.90, quantity: 1, vat: 12 },
+      { name: 'Rohlík tukový (Test)', price: 2.90, quantity: 2, vat: 12 },
+      { name: 'Káva zrnková 250g (Test)', price: 119.00, quantity: 1, vat: 21 }
+    ]
+  });
+
+  const refreshPrintLog = async () => {
+    setLogLoading(true);
+    try {
+      setPrintLog(await fetchPrintLogBackend(10));
+    } finally {
+      setLogLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshPrintLog();
+  }, []);
+
+  const handlePreviewRaw = async () => {
+    setPreviewLoading(true);
+    try {
+      const res = await previewReceiptBackend(buildSampleSale(), config);
+      setPreviewLines(res.lines || []);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const handleRestartBackend = async () => {
     setRestartingBackend(true);
@@ -127,6 +169,7 @@ export default function DiagnosticsSection({
     } finally {
       setPrintLoading(false);
       setTimeout(() => setActionMessage(null), 4500);
+      refreshPrintLog();
     }
   };
 
@@ -143,6 +186,7 @@ export default function DiagnosticsSection({
     } finally {
       setDrawerLoading(false);
       setTimeout(() => setActionMessage(null), 4000);
+      refreshPrintLog();
     }
   };
 
@@ -168,6 +212,7 @@ export default function DiagnosticsSection({
     } finally {
       setSummaryLoading(false);
       setTimeout(() => setActionMessage(null), 4000);
+      refreshPrintLog();
     }
   };
 
@@ -487,6 +532,84 @@ export default function DiagnosticsSection({
               <span className={`diag-pill ${config.eetEnabled ? 'diag-pill-success' : 'diag-pill-neutral'}`}>
                 {config.eetEnabled ? t('settings.diag_status_on') || 'ZAPNUTO' : t('settings.diag_status_off') || 'VYPNUTO'}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 🔍 Mini-Card: Syrový náhled tisku & historie pokusů */}
+        <div className="settings-section-card">
+          <div className="settings-section-header">
+            <div>
+              <h3 className="settings-section-title">
+                <Printer size={19} style={{ color: 'var(--accent-purple)' }} />
+                <span>{t('settings.diag_raw_preview_title') || 'Syrový výstup a historie tisku'}</span>
+              </h3>
+              <p className="settings-section-desc">
+                {t('settings.diag_raw_preview_desc') || 'Co se skutečně odešle na tiskárnu podle aktuálního nastavení, bez tisku na papír.'}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <button
+              type="button"
+              className="settings-action-btn secondary"
+              style={{ width: '100%', minHeight: '40px', gap: '0.5rem' }}
+              onClick={handlePreviewRaw}
+              disabled={previewLoading}
+            >
+              <RefreshCw size={15} className={previewLoading ? 'spin-icon' : ''} />
+              <span>{previewLoading ? (t('settings.diag_raw_preview_loading') || 'Generuji náhled...') : (t('settings.diag_raw_preview_btn') || 'Zobrazit syrový výstup')}</span>
+            </button>
+
+            {previewLines && (
+              <pre style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.75rem',
+                fontSize: '0.72rem',
+                lineHeight: '1.4',
+                maxHeight: '220px',
+                overflow: 'auto',
+                whiteSpace: 'pre-wrap',
+                margin: 0
+              }}>
+                {previewLines.join('\n')}
+              </pre>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.3rem' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                {t('settings.diag_print_log_title') || 'Poslední pokusy o tisk'}
+              </span>
+              <button
+                type="button"
+                onClick={refreshPrintLog}
+                disabled={logLoading}
+                style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.75rem', cursor: 'pointer' }}
+              >
+                <RefreshCw size={12} className={logLoading ? 'spin-icon' : ''} style={{ marginRight: '4px' }} />
+                {t('settings.diag_print_log_refresh') || 'Obnovit'}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {printLog.length === 0 && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  {t('settings.diag_print_log_empty') || 'Žádné pokusy o tisk zatím nebyly zaznamenány.'}
+                </span>
+              )}
+              {printLog.map((entry, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontSize: '0.78rem', padding: '0.3rem 0', borderBottom: idx < printLog.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {entry.timestamp ? new Date(entry.timestamp + 'Z').toLocaleString('cs-CZ') : '—'} · {entry.kind}
+                  </span>
+                  <span style={{ color: entry.success ? 'var(--accent-emerald)' : 'var(--accent-red)', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                    {entry.success ? (t('settings.diag_print_log_ok') || 'OK') : (entry.message || t('settings.diag_print_log_failed') || 'CHYBA')}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -1,11 +1,48 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from models import StoreConfigModel
+from models import StoreConfigModel, PrintLogModel
 from services.escpos_service import ESCPOSPrinterService, detect_connected_printers
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/printer", tags=["Hardware Printer"])
+
+
+PRINT_LOG_RETENTION = 200
+
+
+def _log_print_attempt(db: Session, kind: str, success: bool, message: str = ""):
+    """Best-effort record of a print/debug attempt; never breaks the calling endpoint.
+
+    Keeps only the newest PRINT_LOG_RETENTION rows — this is a live diagnostics log,
+    not an audit trail, so it doesn't grow unbounded on a POS running for years.
+    """
+    try:
+        db.add(PrintLogModel(kind=kind, success=success, message=(message or "")[:500]))
+        db.commit()
+        cutoff = db.query(PrintLogModel.id).order_by(PrintLogModel.id.desc()).offset(PRINT_LOG_RETENTION).limit(1).scalar()
+        if cutoff is not None:
+            db.query(PrintLogModel).filter(PrintLogModel.id <= cutoff).delete(synchronize_session=False)
+            db.commit()
+    except Exception:
+        db.rollback()
+
+
+@router.get("/print-log")
+def get_print_log(limit: int = 20, db: Session = Depends(get_db)):
+    """Recent print/debug attempts (newest first), for self-diagnosing printing problems."""
+    rows = db.query(PrintLogModel).order_by(PrintLogModel.id.desc()).limit(max(1, min(limit, 100))).all()
+    return {
+        "attempts": [
+            {
+                "timestamp": row.timestamp.isoformat() if row.timestamp else None,
+                "kind": row.kind,
+                "success": row.success,
+                "message": row.message or ""
+            }
+            for row in rows
+        ]
+    }
 
 
 class PrintReceiptRequest(BaseModel):
@@ -63,6 +100,7 @@ def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
     res = printer_service.print_receipt(req.saleData, req.storeConfig, req.openDrawer)
 
     if isinstance(res, dict):
+        _log_print_attempt(db, "receipt", bool(res.get("success")), res.get("error", "") if not res.get("success") else res.get("status", ""))
         if not res.get("success"):
             raise HTTPException(status_code=500, detail=res.get("error", "Failed to print to hardware thermal printer"))
         return {
@@ -75,6 +113,19 @@ def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Failed to print to hardware thermal printer")
 
     return {"status": "PRINTED", "physical": True, "receiptNumber": req.saleData.get("receiptNumber")}
+
+
+class PreviewReceiptRequest(BaseModel):
+    saleData: dict
+    storeConfig: dict
+
+
+@router.post("/preview")
+def preview_receipt(req: PreviewReceiptRequest):
+    """Debug tool: render the exact ESC/POS output for the given settings, no hardware touched."""
+    printer_service = ESCPOSPrinterService("DUMMY")
+    res = printer_service.preview_receipt(req.saleData, req.storeConfig)
+    return {"lines": res.get("lines", [])}
 
 
 class OpenDrawerRequest(BaseModel):
@@ -91,6 +142,8 @@ def open_cash_drawer(req: OpenDrawerRequest = OpenDrawerRequest(), db: Session =
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
     res = printer_service.open_cash_drawer(req.storeConfig)
 
+    if isinstance(res, dict):
+        _log_print_attempt(db, "open-drawer", bool(res.get("success")), res.get("error", "") if not res.get("success") else res.get("status", ""))
     if isinstance(res, dict) and not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to open cash drawer"))
 
@@ -111,6 +164,8 @@ def print_ruler(req: PrintRulerRequest = PrintRulerRequest(), db: Session = Depe
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
     res = printer_service.print_ruler(req.storeConfig)
 
+    if isinstance(res, dict):
+        _log_print_attempt(db, "print-ruler", bool(res.get("success")), res.get("error", "") if not res.get("success") else res.get("status", ""))
     if isinstance(res, dict) and not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to print ruler"))
 
@@ -133,6 +188,8 @@ def print_daily_summary(req: PrintDailySummaryRequest, db: Session = Depends(get
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
     res = printer_service.print_daily_summary(req.summaryData, req.storeConfig, open_drawer=req.openDrawer)
 
+    if isinstance(res, dict):
+        _log_print_attempt(db, "daily-summary", bool(res.get("success")), res.get("error", "") if not res.get("success") else res.get("status", ""))
     if isinstance(res, dict) and not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to print daily summary slip"))
 

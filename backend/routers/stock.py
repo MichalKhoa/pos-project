@@ -251,7 +251,7 @@ def get_price_history(preset_id: str, db: Session = Depends(get_db)):
 def generate_next_write_off_number(db: Session, year: Optional[int] = None) -> str:
     """
     Atomically increments and retrieves the next write-off protocol sequence number (§ 25 ZoÚ).
-    Format: ODP-YYYY-XXXX (e.g. ODP-2026-0001)
+    Format: ODP-YYYY-XXXXXXX (e.g. ODP-2026-0000001)
     """
     if not year:
         year = datetime.now().year
@@ -274,13 +274,13 @@ def generate_next_write_off_number(db: Session, year: Optional[int] = None) -> s
 
     seq_obj.last_seq += 1
     next_num = seq_obj.last_seq
-    return f"ODP-{year}-{next_num:04d}"
+    return f"ODP-{year}-{next_num:07d}"
 
 
 def generate_next_audit_number(db: Session, year: Optional[int] = None) -> str:
     """
     Atomically increments and retrieves the next physical inventory protocol sequence number (§ 29, 30 ZoÚ).
-    Format: INV-YYYY-XXXX (e.g. INV-2026-0001)
+    Format: INV-YYYY-XXXXXXX (e.g. INV-2026-0000001)
     """
     if not year:
         year = datetime.now().year
@@ -303,7 +303,7 @@ def generate_next_audit_number(db: Session, year: Optional[int] = None) -> str:
 
     seq_obj.last_seq += 1
     next_num = seq_obj.last_seq
-    return f"INV-{year}-{next_num:04d}"
+    return f"INV-{year}-{next_num:07d}"
 
 
 class WriteOffItemRequestSchema(BaseModel):
