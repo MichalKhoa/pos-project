@@ -215,7 +215,6 @@
   border-color: var(--accent-blue) !important;
   border-style: solid !important;
   background: rgba(59, 130, 246, 0.18) !important;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.35) !important;
 }
 
 /* Light separator between Category Bar and Presets Grid */
@@ -365,16 +364,14 @@
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-left-stripe:hover,
   .preset-card:not([class*="style-"]):hover {
-    background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 7%, var(--bg-card));
-    border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 40%, var(--border-color));
+    background: var(--bg-card-hover);
+    border-color: var(--border-subtle);
     border-left-color: var(--card-accent, var(--accent-blue));
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   }
 }
 
 .preset-card.style-left-stripe:active,
 .preset-card:not([class*="style-"]):active {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, var(--bg-card));
   filter: brightness(0.92);
 }
 
@@ -430,7 +427,7 @@
   line-height: 1.22;
 }
 .preset-card.style-modern-card .preset-corner-icon {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 18%, transparent);
+  background: var(--bg-input);
   border-radius: var(--radius-sm);
   padding: 3px 5px;
   display: flex;
@@ -447,7 +444,7 @@
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, transparent);
+  background: var(--bg-input);
   padding: 1px 5px;
   border-radius: 4px;
 }
@@ -455,28 +452,25 @@
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-modern-card:hover {
     background: var(--bg-card);
-    border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 55%, var(--border-color));
+    border-color: var(--border-subtle);
     border-top-color: var(--card-accent, var(--accent-blue));
-    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.28), 0 0 14px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 25%, transparent);
   }
 }
 
 .preset-card.style-modern-card:active {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 28%, var(--bg-card));
   filter: brightness(0.92);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Style 4: Modern Glass (Translucent Frosted Surface with Glowing Accent) */
 .preset-card.style-modern-glass {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 10%, rgba(255, 255, 255, 0.04));
-  border: 1.5px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 38%, rgba(255, 255, 255, 0.12));
+  background: var(--bg-card);
+  border: 1.5px solid var(--card-accent, var(--accent-blue));
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   padding: 0.65rem 0.75rem 0.55rem 0.75rem;
 }
 .preset-card.style-modern-glass .preset-corner-icon {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 20%, transparent);
+  background: var(--bg-input);
   border-radius: var(--radius-sm);
   padding: 3px 5px;
   color: var(--card-accent, var(--accent-blue));
@@ -489,23 +483,19 @@
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 15%, transparent);
+  background: var(--bg-input);
   padding: 1px 5px;
   border-radius: 4px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-modern-glass:hover {
-    background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 18%, rgba(255, 255, 255, 0.08));
-    border-color: var(--card-accent, var(--accent-blue));
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 0 16px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 35%, transparent);
+    background: var(--bg-card-hover);
   }
 }
 
 .preset-card.style-modern-glass:active {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 26%, rgba(255, 255, 255, 0.08));
   filter: brightness(0.92);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .preset-multiplier-badge {
@@ -660,7 +650,6 @@
   border-color: var(--accent-rose);
   background: rgba(244, 63, 94, 0.14);
   color: #ffffff;
-  box-shadow: 0 0 12px rgba(244, 63, 94, 0.25);
 }
 
 .preset-trash-dropzone.drag-active .trash-icon {
@@ -672,7 +661,6 @@
   border-style: solid;
   background: #e11d48;
   color: #ffffff;
-  box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
 }
 
 .preset-trash-dropzone.over-trash .trash-icon {
@@ -681,11 +669,9 @@
 
 @keyframes pulse-trash {
   0%, 100% {
-    box-shadow: 0 0 6px rgba(244, 63, 94, 0.2);
     border-color: rgba(244, 63, 94, 0.6);
   }
   50% {
-    box-shadow: 0 0 16px rgba(244, 63, 94, 0.45);
     border-color: rgba(244, 63, 94, 1);
   }
 }
@@ -1162,8 +1148,7 @@ select.input-field:focus {
 }
 
 [data-button-animation="animated"] .key-btn.key-enter.key-enter-active:active {
-  transform: translateY(2px) !important;
-  box-shadow: 0 1px 0 #065f46, 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+  transform: translateY(1px) !important;
 }
 
 .key-btn.active-return {
@@ -2043,21 +2028,19 @@ select.input-field:focus {
 
 /* Total Hero Card */
 .total-hero-card {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 0.65rem 0.95rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.1);
   margin-top: 0.25rem;
 }
 
 .total-hero-card.is-refund {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.4);
-  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15);
+  background: color-mix(in srgb, var(--accent-rose) 8%, var(--bg-card));
+  border-color: var(--accent-rose);
 }
 
 .total-hero-label {
@@ -2071,7 +2054,7 @@ select.input-field:focus {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-success);
+  color: var(--text-secondary);
 }
 
 .total-hero-card.is-refund .total-hero-title {
@@ -2088,7 +2071,7 @@ select.input-field:focus {
   font-family: var(--font-mono);
   font-size: 1.9rem;
   font-weight: 900;
-  color: var(--text-success);
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -2127,13 +2110,12 @@ select.input-field:focus {
 }
 
 .pay-btn-cash {
-  background: #059669;
-  box-shadow: 0 3px 0 #047857, 0 4px 14px rgba(16, 185, 129, 0.35);
+  background: var(--accent-highlight);
+  color: var(--accent-highlight-text);
 }
 
 .pay-btn-cash:hover:not(:disabled) {
-  background: #047857;
-  box-shadow: 0 3px 0 #065f46, 0 6px 18px rgba(16, 185, 129, 0.45);
+  background: var(--accent-highlight-hover);
 }
 
 .pay-btn-cash:active:not(:disabled) {
@@ -2146,13 +2128,12 @@ select.input-field:focus {
 }
 
 .pay-btn-card {
-  background: #2563eb;
-  box-shadow: 0 3px 0 #1d4ed8, 0 4px 14px rgba(37, 99, 235, 0.35);
+  background: var(--accent-highlight);
+  color: var(--accent-highlight-text);
 }
 
 .pay-btn-card:hover:not(:disabled) {
-  background: #1d4ed8;
-  box-shadow: 0 3px 0 #1e40af, 0 6px 18px rgba(37, 99, 235, 0.45);
+  background: var(--accent-highlight-hover);
 }
 
 .pay-btn-card:active:not(:disabled) {
@@ -2160,8 +2141,7 @@ select.input-field:focus {
 }
 
 [data-button-animation="animated"] .pay-btn-card:active:not(:disabled) {
-  transform: translateY(2px) !important;
-  box-shadow: 0 1px 0 #1e40af, 0 2px 6px rgba(37, 99, 235, 0.3) !important;
+  transform: translateY(1px) !important;
 }
 
 .pay-btn:disabled {

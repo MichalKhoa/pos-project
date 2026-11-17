@@ -254,23 +254,12 @@
   color: var(--text-primary);
 }
 
-.payment-nav-tab.active-cash {
-  background: var(--accent-emerald);
-  color: #ffffff;
-  box-shadow: var(--shadow-glow);
-}
-
-.payment-nav-tab.active-card {
-  background: var(--accent-blue);
-  color: #ffffff;
-  box-shadow: var(--shadow-blue-glow);
-}
-
+.payment-nav-tab.active-cash,
+.payment-nav-tab.active-card,
 .payment-nav-tab.active-qr,
 .payment-nav-tab.active-split {
-  background: var(--accent-purple);
-  color: #ffffff;
-  box-shadow: 0 0 16px rgba(124, 58, 237, 0.25);
+  background: var(--accent-highlight);
+  color: var(--accent-highlight-text);
 }
 
 /* Hero Total Due Banner */
@@ -367,13 +356,12 @@
 }
 
 .pay-btn-qr {
-  background: #7c3aed;
-  box-shadow: 0 3px 0 #6d28d9, 0 4px 14px rgba(124, 58, 237, 0.35);
+  background: var(--accent-highlight);
+  color: var(--accent-highlight-text);
 }
 
 .pay-btn-qr:hover:not(:disabled) {
-  background: #6d28d9;
-  box-shadow: 0 3px 0 #5b21b6, 0 6px 18px rgba(124, 58, 237, 0.45);
+  background: var(--accent-highlight-hover);
 }
 
 .pay-btn-qr:active:not(:disabled) {
@@ -448,11 +436,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem 0 1.25rem;
-  transition: transform 0.08s ease, filter 0.08s ease, box-shadow 0.08s ease;
+  transition: background-color 0.08s ease, border-color 0.08s ease;
   user-select: none;
   touch-action: manipulation;
   overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 3px 0 rgba(0, 0, 0, 0.22);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-subtle);
 }
 
 .czech-banknote-card::before {
@@ -462,24 +451,22 @@
   top: 0;
   bottom: 0;
   width: 7px;
-  background: transparent;
-  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  background: var(--note-color, transparent);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .czech-banknote-card:hover {
-    filter: brightness(1.08);
+    background: var(--bg-card-hover);
   }
 }
 
 .czech-banknote-card:active {
-  filter: brightness(0.9);
-  transform: translateY(1px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 0 rgba(0, 0, 0, 0.22);
+  filter: brightness(0.92);
 }
 
-[data-button-animation="animated"] .czech-banknote-card:active {
-  transform: translateY(1px) scale(0.985);
+.czech-banknote-card.active-tender {
+  border-color: var(--accent-highlight);
+  border-width: 2px;
 }
 
 .banknote-val {
@@ -487,81 +474,23 @@
   font-size: 1.38rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
 }
 
 .banknote-watermark {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
 }
 
-.czech-banknote-card:hover .banknote-watermark {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* 100 Kč: Deep Emerald / Forest Green (Karel IV) */
-.banknote-100 {
-  background: #047857;
-  border: 1.5px solid #10b981;
-}
-.banknote-100.active-tender {
-  border-color: #34d399;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.55);
-}
-
-/* 200 Kč: Deep Warm Terracotta / Orange (Jan Amos Komenský) */
-.banknote-200 {
-  background: #c2410c;
-  border: 1.5px solid #f97316;
-}
-.banknote-200.active-tender {
-  border-color: #fb923c;
-  box-shadow: 0 0 16px rgba(249, 115, 22, 0.55);
-}
-
-/* 500 Kč: Deep Crimson Rose / Pink-Brown (Božena Němcová) */
-.banknote-500 {
-  background: #be123c;
-  border: 1.5px solid #f43f5e;
-}
-.banknote-500.active-tender {
-  border-color: #fb7185;
-  box-shadow: 0 0 16px rgba(244, 63, 94, 0.55);
-}
-
-/* 1 000 Kč: Deep Royal Violet / Purple (František Palacký) */
-.banknote-1000 {
-  background: #6d28d9;
-  border: 1.5px solid #8b5cf6;
-}
-.banknote-1000.active-tender {
-  border-color: #c084fc;
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.55);
-}
-
-/* 2 000 Kč: Deep Olive Green (Ema Destinnová) — distinct from 100 Kč emerald */
-.banknote-2000 {
-  background: #4d7c0f;
-  border: 1.5px solid #84cc16;
-}
-.banknote-2000.active-tender {
-  border-color: #bef264;
-  box-shadow: 0 0 16px rgba(132, 204, 22, 0.55);
-}
-
-/* 5 000 Kč: Deep Sapphire Navy / Blue (T. G. Masaryk) */
-.banknote-5000 {
-  background: #1d4ed8;
-  border: 1.5px solid #3b82f6;
-}
-.banknote-5000.active-tender {
-  border-color: #60a5fa;
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.55);
-}
+/* Note colour shows only as the left strip (Czech banknote hues) */
+.banknote-100 { --note-color: #047857; }
+.banknote-200 { --note-color: #c2410c; }
+.banknote-500 { --note-color: #be123c; }
+.banknote-1000 { --note-color: #6d28d9; }
+.banknote-2000 { --note-color: #4d7c0f; }
+.banknote-5000 { --note-color: #1d4ed8; }
 
 /* Streamlined Czech Quick Coins Bar (4 Coins Dedicated Grid) */
 .czech-coins-bar {

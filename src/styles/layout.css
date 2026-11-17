@@ -680,7 +680,6 @@ input, textarea, [contenteditable="true"] {
   height: 8px;
   border-radius: 50%;
   background: var(--accent-emerald);
-  box-shadow: 0 0 8px var(--accent-emerald);
 }
 
 .time-display-btn {

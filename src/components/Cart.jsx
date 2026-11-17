@@ -572,7 +572,7 @@ function Cart({
 
           <div className="summary-row">
             <span>{t('cart.tax_total')}</span>
-            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)' }}>{totalTax.toFixed(2)} Kč</span>
+            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{totalTax.toFixed(2)} Kč</span>
           </div>
         </div>
 
@@ -606,7 +606,7 @@ function Cart({
           <button
             type="button"
             className="pay-btn pay-btn-card"
-            style={{ background: isRefundTransaction ? '#7c3aed' : undefined }}
+            style={isRefundTransaction ? { background: 'var(--accent-rose)', color: '#ffffff' } : undefined}
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('card')}
           >

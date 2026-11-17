@@ -66,25 +66,28 @@
 
 .banner-close-btn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(127, 127, 127, 0.18);
 }
 
 .sync-notification-banner.banner-success {
-  background: #047857;
-  color: #ffffff;
-  border: 1px solid #10b981;
+  background: color-mix(in srgb, #047857 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #047857 35%, var(--border-color));
+  border-left: 5px solid #047857;
 }
 
 .sync-notification-banner.banner-error {
-  background: #b91c1c;
-  color: #ffffff;
-  border: 1px solid #ef4444;
+  background: color-mix(in srgb, #b91c1c 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #b91c1c 35%, var(--border-color));
+  border-left: 5px solid #b91c1c;
 }
 
 .sync-notification-banner.banner-info {
-  background: #1d4ed8;
-  color: #ffffff;
-  border: 1px solid #3b82f6;
+  background: color-mix(in srgb, #1d4ed8 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #1d4ed8 35%, var(--border-color));
+  border-left: 5px solid #1d4ed8;
 }
 
 /* 2. Checkout Flash Banner (CheckoutFlashBanner.jsx) */
@@ -121,27 +124,31 @@
 }
 
 .flash-banner-card.flash-success {
-  background: #047857;
-  color: #ffffff;
-  border: 1.5px solid #34d399;
+  background: color-mix(in srgb, #047857 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #047857 35%, var(--border-color));
+  border-left: 5px solid #047857;
 }
 
 .flash-banner-card.flash-error {
-  background: #b91c1c;
-  color: #ffffff;
-  border: 1.5px solid #f87171;
+  background: color-mix(in srgb, #b91c1c 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #b91c1c 35%, var(--border-color));
+  border-left: 5px solid #b91c1c;
 }
 
 .flash-banner-card.flash-warning {
-  background: #b45309;
-  color: #ffffff;
-  border: 1.5px solid #fbbf24;
+  background: color-mix(in srgb, #b45309 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #b45309 35%, var(--border-color));
+  border-left: 5px solid #b45309;
 }
 
 .flash-banner-card.flash-info {
-  background: #1d4ed8;
-  color: #ffffff;
-  border: 1.5px solid #60a5fa;
+  background: color-mix(in srgb, #1d4ed8 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #1d4ed8 35%, var(--border-color));
+  border-left: 5px solid #1d4ed8;
 }
 
 .flash-icon {
@@ -168,7 +175,7 @@
   font-family: var(--font-mono);
   font-size: 1.1rem;
   font-weight: 900;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(127, 127, 127, 0.15);
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-sm);
 }
@@ -176,7 +183,7 @@
 .flash-close-btn {
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: inherit;
   opacity: 0.8;
   cursor: pointer;
   display: flex;
@@ -188,7 +195,7 @@
 
 .flash-close-btn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(127, 127, 127, 0.18);
 }
 
 /* 3. Undo Toast Card (ToastUndo.jsx) */
