@@ -271,7 +271,7 @@ describe('SettingsView Tab Gating', () => {
       const { isAdminMode, toggleAdminMode } = useStoreConfig();
       return (
         <SettingsView
-          storeConfig={{ adminPinEnabled: true }}
+          storeConfig={{ adminPinEnabled: true, adminPinLength: 4 }}
           onSaveStoreConfig={() => {}}
           presets={[]}
           onResetData={() => {}}

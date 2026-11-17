@@ -117,7 +117,28 @@ class TestSecurityApi(TempDbTestCase):
         return self.client.get("/api/v1/config").json()
 
     def _save(self, **fields):
-        return self.client.post("/api/v1/config", json=fields)
+        # Once the Admin PIN switch is on, PIN settings need the Admin PIN; sending it is harmless before.
+        return self.client.post("/api/v1/config", json=fields, headers={"X-Admin-PIN": ADMIN_PIN})
+
+    def _save_with(self, headers, **fields):
+        return self.client.post("/api/v1/config", json=fields, headers=headers)
+
+    def _stored(self, column):
+        db = SessionLocal()
+        try:
+            return getattr(db.query(StoreConfigModel).first(), column)
+        finally:
+            db.close()
+
+    def _set_stored(self, **columns):
+        db = SessionLocal()
+        try:
+            config = db.query(StoreConfigModel).first()
+            for key, value in columns.items():
+                setattr(config, key, value)
+            db.commit()
+        finally:
+            db.close()
 
     def _admin_on(self):
         res = self._save(adminPin=ADMIN_PIN, adminPinEnabled=True)
@@ -245,6 +266,100 @@ class TestSecurityApi(TempDbTestCase):
         res = self.client.post("/api/v1/config/recovery-code", json={"pin": ""})
         self.assertEqual(res.status_code, 400)
 
+    # salted hashes
+    def test_new_pins_are_stored_salted_and_still_verify(self):
+        self._admin_on()
+        self._save(cashierPin=CASHIER_PIN)
+        admin_stored, cashier_stored = self._stored("admin_pin"), self._stored("cashier_pin")
+        self.assertTrue(admin_stored.startswith("scrypt$"))
+        self.assertNotIn(ADMIN_PIN, admin_stored)
+        self.assertEqual(self.client.post("/api/v1/config/verify-admin-pin", json={"pin": ADMIN_PIN}).status_code, 200)
+        self.assertEqual(self.client.post("/api/v1/config/verify-pin", json={"pin": CASHIER_PIN}).status_code, 200)
+        # the same PIN set again gets a different salt
+        self._save(adminPin=ADMIN_PIN)
+        self.assertNotEqual(self._stored("admin_pin"), admin_stored)
+
+    def test_legacy_sha256_hash_verifies_and_is_upgraded_on_login(self):
+        self._set_stored(admin_pin=hash_secret(ADMIN_PIN), admin_pin_enabled=True)
+        self.assertEqual(self.client.post("/api/v1/config/verify-admin-pin", json={"pin": "0000"}).status_code, 401)
+        self.assertEqual(self._stored("admin_pin"), hash_secret(ADMIN_PIN))  # a wrong PIN changes nothing
+        self.assertEqual(self.client.post("/api/v1/config/verify-admin-pin", json={"pin": ADMIN_PIN}).status_code, 200)
+        self.assertTrue(self._stored("admin_pin").startswith("scrypt$"))
+        self.assertEqual(self.client.post("/api/v1/config/verify-admin-pin", json={"pin": ADMIN_PIN}).status_code, 200)
+
+    def test_technician_check_upgrades_a_legacy_hash_too(self):
+        self._set_stored(admin_pin=hash_secret(ADMIN_PIN), admin_pin_enabled=True)
+        res = self.client.get("/api/v1/system/logs?lines=50", headers={"X-Admin-PIN": ADMIN_PIN})
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(self._stored("admin_pin").startswith("scrypt$"))
+
+    # PIN length
+    def test_config_reports_pin_lengths_but_never_the_pin(self):
+        self._save(cashierPin="147025", lockScreenEnabled=True)
+        self._save(adminPin=ADMIN_PIN, adminPinEnabled=True)
+        cfg = self._config()
+        self.assertEqual((cfg["cashierPinLength"], cfg["adminPinLength"]), (6, 4))
+        self.assertNotIn("147025", str(cfg))
+
+    def test_unknown_length_of_an_old_pin_is_learned_on_first_successful_entry(self):
+        self._set_stored(cashier_pin=hash_secret("147025"), lock_screen_enabled=True, cashier_pin_length=None)
+        self.assertIsNone(self._config()["cashierPinLength"])
+        self.client.post("/api/v1/config/verify-pin", json={"pin": "000000"})
+        self.assertIsNone(self._config()["cashierPinLength"])
+        self.client.post("/api/v1/config/verify-pin", json={"pin": "147025"})
+        self.assertEqual(self._config()["cashierPinLength"], 6)
+
+    def test_recovery_clears_the_stored_lengths(self):
+        code = self._admin_on()
+        self._save(cashierPin=CASHIER_PIN)
+        self.client.post("/api/v1/config/verify-recovery", json={"code": code})
+        cfg = self._config()
+        self.assertIsNone(cfg["cashierPinLength"])
+        self.assertIsNone(cfg["adminPinLength"])
+
+    # C1 for PIN settings
+    def test_pin_settings_are_open_while_the_admin_switch_is_off(self):
+        self.assertEqual(self._save_with({}, cashierPin=CASHIER_PIN, lockScreenEnabled=True).status_code, 200)
+
+    def test_pin_settings_need_the_admin_pin_once_the_switch_is_on(self):
+        self._admin_on()
+        attempts = [
+            ({}, {"lockScreenEnabled": False}),
+            ({"X-Admin-PIN": "0000"}, {"adminPinEnabled": False}),
+            ({"X-Admin-PIN": CASHIER_PIN}, {"adminPin": "9999"}),
+            ({}, {"cashierPin": "9999"}),
+        ]
+        for headers, fields in attempts:
+            pin_rate_limiter.attempts.clear()
+            self.assertEqual(self._save_with(headers, **fields).status_code, 401, fields)
+        cfg = self._config()
+        self.assertTrue(cfg["adminPinEnabled"])
+        self.assertEqual(self.client.post("/api/v1/config/verify-admin-pin", json={"pin": ADMIN_PIN}).status_code, 200)
+        self.assertEqual(self._save_with({"X-Admin-PIN": ADMIN_PIN}, adminPinEnabled=False).status_code, 200)
+        self.assertFalse(self._config()["adminPinEnabled"])
+
+    def test_other_settings_are_not_gated_by_the_pin_check(self):
+        self._admin_on()
+        self.assertEqual(self._save_with({}, storeName="Shop").status_code, 200)
+
+    def test_pin_settings_accept_the_environment_master_key(self):
+        self._admin_on()
+        with patch.dict(os.environ, {"POS_MASTER_ADMIN_KEY": SUPPORT_KEY}):
+            res = self._save_with({"X-Admin-PIN": SUPPORT_KEY}, adminPinEnabled=False)
+        self.assertEqual(res.status_code, 200)
+
+    def test_pin_settings_check_is_rate_limited(self):
+        self._admin_on()
+        for _ in range(5):
+            self._save_with({"X-Admin-PIN": "0000"}, lockScreenEnabled=False)
+        self.assertEqual(self._save_with({"X-Admin-PIN": ADMIN_PIN}, lockScreenEnabled=False).status_code, 429)
+
+    def test_a_refused_pin_change_applies_nothing(self):
+        self._admin_on()
+        res = self._save_with({}, storeName="Changed", adminPinEnabled=False)
+        self.assertEqual(res.status_code, 401)
+        self.assertNotEqual(self._config()["storeName"], "Changed")
+
     # server-side checks on protected endpoints
     def test_technician_endpoint_open_when_admin_pin_switched_off(self):
         self.assertEqual(self.client.get("/api/v1/system/logs?lines=50").status_code, 200)
@@ -272,6 +387,37 @@ class TestSecurityApi(TempDbTestCase):
         self.assertEqual(purge({}), 401)
         self.assertEqual(purge({"X-Admin-PIN": CASHIER_PIN}), 401)
         self.assertEqual(purge({"X-Admin-PIN": ADMIN_PIN}), 200)
+
+
+class TestApplySecuritySettings(unittest.TestCase):
+    """The rules shared by POST /config and the standalone settings app."""
+
+    def _config(self):
+        from types import SimpleNamespace
+        return SimpleNamespace(
+            cashier_pin=None, admin_pin=None, cashier_pin_length=None, admin_pin_length=None,
+            lock_screen_enabled=False, admin_pin_enabled=False, recovery_code_hash=None,
+        )
+
+    def test_first_pin_sets_hash_length_and_returns_a_code_once(self):
+        from services.pin_auth import apply_security_settings, pin_matches
+        config = self._config()
+        code = apply_security_settings(config, cashier_pin="147025", lock_screen=True)
+        self.assertRegex(code, RECOVERY_CODE_RE)
+        self.assertTrue(pin_matches("147025", config.cashier_pin))
+        self.assertEqual(config.cashier_pin_length, 6)
+        self.assertTrue(config.lock_screen_enabled)
+        self.assertIsNone(apply_security_settings(config, admin_pin=ADMIN_PIN))
+
+    def test_bad_input_raises_and_changes_nothing(self):
+        from services.pin_auth import apply_security_settings
+        config = self._config()
+        for kwargs in ({"cashier_pin": "1234"}, {"admin_pin": "12ab"}, {"lock_screen": True}, {"admin_switch": True}):
+            with self.assertRaises(ValueError):
+                apply_security_settings(config, **kwargs)
+        self.assertIsNone(config.cashier_pin)
+        self.assertIsNone(config.recovery_code_hash)
+        self.assertFalse(config.lock_screen_enabled)
 
 
 class TestRestoreMigratesPins(unittest.TestCase):

@@ -26,10 +26,10 @@
 - 4x4 keypad, category presets, and barcode scanner auto-focus.
 
 ### 4. Quality Gates & Testing
-- Frontend unit tests: `npm run test` (Vitest, 420 tests passing).
+- Frontend unit tests: `npm run test` (Vitest, 427 tests passing).
 - Frontend linter: `npm run lint` (Oxlint, 0 errors, 0 warnings).
 - Frontend production build: `npm run build` (Vite to `dist/`).
-- Backend unit tests: `python -m unittest discover -s backend/tests -p "test_*.py"` (238 tests passing).
+- Backend unit tests: `python -m unittest discover -s backend/tests -p "test_*.py"` (252 tests passing).
 
 ## Mandatory Agent Discipline
 - **Implementation Planning First**: Create phased `implementation_plan.md` + get approval before multi-file/feature code changes.

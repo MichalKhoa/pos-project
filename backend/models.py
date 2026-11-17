@@ -104,6 +104,8 @@ class StoreConfigModel(Base):
     # PINs are stored as SHA-256 hashes; None means no PIN set (no factory default).
     cashier_pin = Column(String, nullable=True)
     admin_pin = Column(String, nullable=True)
+    cashier_pin_length = Column(Integer, nullable=True)  # learned when the PIN is set or first entered
+    admin_pin_length = Column(Integer, nullable=True)
     auto_lock_minutes = Column(Integer, default=15)
     lock_screen_enabled = Column(Boolean, default=False)
     admin_pin_enabled = Column(Boolean, default=False)

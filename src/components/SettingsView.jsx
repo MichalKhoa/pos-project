@@ -718,6 +718,7 @@ export default function SettingsView({
         <AdminPinModal
           mode={pinModalState.mode}
           kind={pinModalState.kind}
+          storeConfig={storeConfig}
           onSuccess={(pin) => {
             if (pinModalState.onAuthenticated) pinModalState.onAuthenticated(pin);
           }}

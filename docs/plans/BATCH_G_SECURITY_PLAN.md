@@ -156,3 +156,25 @@ Gates: 420 frontend and 238 backend tests, lint clean, build ok.
 - The standalone settings app no longer returns the cashier PIN hash; it returns `hasPin`.
 - Still open: unauthenticated `POST /config` (C1), the standalone app still sets only the cashier PIN, old 5 to 8 digit PINs against the 4-digit auto-submit, unsalted SHA-256.
 
+## 14. Follow-up: the four open items (owner decisions)
+
+Decisions: C1 for PIN settings only; store the PIN length; salted scrypt with upgrade on login; settings app gets the full PIN model.
+
+1. **Salted hashes.** New PINs are stored as `scrypt$<salt>$<hash>` (standard library, no new dependency). Old SHA-256 hashes and plaintext still verify; a successful PIN entry rewrites them in the new format. The recovery code stays SHA-256: it has 80 bits of randomness, so salting adds nothing.
+2. **PIN length.** `cashier_pin_length` and `admin_pin_length` columns, returned by `GET /config` as `cashierPinLength` and `adminPinLength` (the length, never the PIN). Old PINs get their length on the first successful entry. The dialogs and the lock screen auto-submit only when every set PIN has a known, equal length; otherwise they show a confirm button. New PINs may again be 4 to 8 digits.
+3. **C1 for PIN settings.** `POST /config` that changes a PIN or a switch needs the Admin PIN (`X-Admin-PIN`) while the Admin PIN switch is on. The frontend sends the PIN that opened Admin mode. The rest of the API stays open and C1 stays open for it.
+4. **Settings app.** `settings_gui.py` and its page set the cashier PIN, Admin PIN and both switches with the same rules, show the recovery code once, and no longer return any PIN hash.
+
+Order: backend with tests (1, 2, 3), frontend (2, 3), settings app (4), live check, `/code-review` at high.
+
+### Result of the follow-up (section 14)
+
+- **Salted hashes:** `pin_auth.hash_pin` (scrypt, stdlib). `verify_pin_column` checks a PIN against a column, rewrites an old SHA-256 or plaintext value salted on success and learns an unknown length. Every check (lock screen, Admin mode, technician and sale endpoints, new-code endpoint, settings app) goes through it. The recovery code stays SHA-256 by decision.
+- **PIN length:** new columns `cashier_pin_length` and `admin_pin_length`; `GET /config` returns the lengths. The Admin PIN dialog auto-submits only at the known length and otherwise shows a confirm button. The lock screen auto-submits only when every set PIN has the same known length, otherwise the unlock button or Enter is needed. New PINs are 4 to 8 digits again.
+- **C1 for PIN settings:** `POST /config` that sets a PIN or a switch needs `X-Admin-PIN` (Admin PIN or environment master key) while the Admin PIN switch is on; it is rate limited, and a refused call applies nothing. Other settings and the rest of the API stay open, so C1 stays open for them. The frontend sends the PIN that opened Admin mode.
+- **Settings app:** `apply_security_settings` is the one rule set for `POST /config` and `settings_gui.py`; the page has both switches and both PIN fields and shows the recovery code once. It no longer returns any PIN hash. The settings app itself was not run (it needs pywebview); the shared function is unit tested.
+- Live check on a throwaway data folder: a 6 digit Admin PIN opened Admin mode only after the 6th digit; `POST /config` without the PIN was refused with 401, with a wrong PIN 401, with the right PIN 200; the stored value starts with `scrypt$`; setting the lock PIN from the UI sent the Admin PIN; the lock screen with PINs of 4 and 6 digits waited for the unlock button.
+- Still open: C1 for the rest of the API (by decision) and the settings app page was not opened in a window.
+
+Gates: 427 frontend and 252 backend tests, lint clean, build ok.
+

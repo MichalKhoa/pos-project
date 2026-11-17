@@ -926,7 +926,7 @@ export async function fetchStoreConfigBackend() {
 // it could restore a PIN that a recovery code has just cleared.
 const SECURITY_CONFIG_KEYS = [
   'cashierPin', 'adminPin', 'lockScreenEnabled', 'adminPinEnabled',
-  'hasPin', 'hasAdminPin', 'hasRecoveryCode', 'recoveryCode'
+  'hasPin', 'hasAdminPin', 'hasRecoveryCode', 'recoveryCode', 'cashierPinLength', 'adminPinLength'
 ];
 
 export async function saveStoreConfigBackend(storeConfig) {
@@ -950,18 +950,21 @@ export async function saveStoreConfigBackend(storeConfig) {
 
 /**
  * Save only the security settings: cashierPin, adminPin, lockScreenEnabled, adminPinEnabled.
- * The first PIN also returns a one-time recoveryCode.
+ * The first PIN also returns a one-time recoveryCode. While the Admin PIN switch is on the
+ * server wants the Admin PIN, sent as adminPin (header X-Admin-PIN).
  * @returns {Promise<{status: string, message?: string, recoveryCode?: string}>}
  */
-export async function saveSecuritySettingsBackend(updates) {
+export async function saveSecuritySettingsBackend(updates, adminPin = null) {
   const body = {};
   ['cashierPin', 'adminPin', 'lockScreenEnabled', 'adminPinEnabled'].forEach((key) => {
     if (updates[key] !== undefined) body[key] = updates[key];
   });
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (adminPin) headers['X-Admin-PIN'] = adminPin;
     const res = await fetch(`${API_BASE_URL}/config`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body)
     });
     const data = await res.json().catch(() => ({}));

@@ -1247,7 +1247,8 @@ export const translations = {
       recovery_invalid: "Neplatný záchranný kód.",
       recovery_error: "Záchranný kód se nepodařilo ověřit.",
       recovery_ok: "Hotovo. PIN i zamykání jsou vypnuté, nastavte je znovu v Nastavení.",
-      pin_hint: "Zadejte PIN kód (4 číslice) pro odemčení"
+      pin_hint: "Zadejte PIN kód (4–8 číslic) pro odemčení",
+      confirm_pin: "Potvrdit ↵"
     },
     refund_guard: {
       not_stored: "Prodej ještě není uložen na serveru. Počkejte na odeslání a zkuste storno znovu.",
@@ -2664,7 +2665,8 @@ export const translations = {
       recovery_invalid: "Mã cứu hộ không hợp lệ.",
       recovery_error: "Không thể kiểm tra mã cứu hộ.",
       recovery_ok: "Xong. PIN và khóa màn hình đã tắt, hãy đặt lại trong Cài đặt.",
-      pin_hint: "Nhập mã PIN (4 chữ số) để mở khóa"
+      pin_hint: "Nhập mã PIN (4–8 chữ số) để mở khóa",
+      confirm_pin: "Xác nhận ↵"
     },
     refund_guard: {
       not_stored: "Giao dịch chưa được lưu trên máy chủ. Hãy đợi gửi xong rồi thử hoàn tiền lại.",
@@ -4081,7 +4083,8 @@ export const translations = {
       recovery_invalid: "Invalid recovery code.",
       recovery_error: "Could not check the recovery code.",
       recovery_ok: "Done. The PINs and locks are off; set them again in Settings.",
-      pin_hint: "Enter the PIN (4 digits) to unlock"
+      pin_hint: "Enter the PIN (4–8 digits) to unlock",
+      confirm_pin: "Confirm ↵"
     },
     refund_guard: {
       not_stored: "This sale is not stored on the server yet. Wait until it is sent, then refund again.",

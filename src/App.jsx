@@ -583,6 +583,8 @@ export default function App() {
       adminPinEnabled: prev.adminPinEnabled,
       hasPin: prev.hasPin,
       hasAdminPin: prev.hasAdminPin,
+      cashierPinLength: prev.cashierPinLength,
+      adminPinLength: prev.adminPinLength,
       hasRecoveryCode: prev.hasRecoveryCode
     }));
     await saveStoreConfigBackend(newConfig);
@@ -975,6 +977,8 @@ export default function App() {
       adminPinEnabled: false,
       hasPin: false,
       hasAdminPin: false,
+      cashierPinLength: null,
+      adminPinLength: null,
       hasRecoveryCode: false
     }));
   }, [setStoreConfig]);

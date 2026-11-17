@@ -99,7 +99,7 @@ describe('AdminPinModal', () => {
     const onSuccess = vi.fn();
     render(
       <LanguageProvider>
-        <AdminPinModal mode="VERIFY" onClose={() => {}} onSuccess={onSuccess} />
+        <AdminPinModal mode="VERIFY" storeConfig={{ adminPinLength: 4 }} onClose={() => {}} onSuccess={onSuccess} />
       </LanguageProvider>
     );
     typePin('2468');
@@ -109,16 +109,32 @@ describe('AdminPinModal', () => {
     expect(await screen.findByText(/Nesprávný Admin PIN/i)).toBeInTheDocument();
   });
 
-  it('wants exactly 4 digits for a new PIN', () => {
+  it('takes a new PIN of 4 to 8 digits', () => {
     render(
       <LanguageProvider>
         <AdminPinModal mode="SET_PIN" onClose={() => {}} onSuccess={() => {}} />
       </LanguageProvider>
     );
-    typePin('2468');
-    expect(screen.getByRole('button', { name: /Pokračovat/i })).toBeEnabled();
-    typePin('1');
+    typePin('246');
     expect(screen.getByRole('button', { name: /Pokračovat/i })).toBeDisabled();
+    typePin('8');
+    expect(screen.getByRole('button', { name: /Pokračovat/i })).toBeEnabled();
+    typePin('13579');
+    expect(screen.getByRole('button', { name: /Pokračovat/i })).toBeEnabled();
+  });
+
+  it('an old Admin PIN of unknown length is checked by the confirm button, not automatically', async () => {
+    posApi.verifyAdminPinBackend.mockResolvedValue({ valid: true });
+    const onSuccess = vi.fn();
+    render(
+      <LanguageProvider>
+        <AdminPinModal mode="VERIFY" storeConfig={{ adminPinLength: null }} onClose={() => {}} onSuccess={onSuccess} />
+      </LanguageProvider>
+    );
+    typePin('2468');
+    expect(posApi.verifyAdminPinBackend).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Potvrdit/ }));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('2468'));
   });
 
   it('refuses 1234 as a new PIN', () => {
@@ -149,7 +165,7 @@ describe('Security tab switches', () => {
     fireEvent.click(screen.getByRole('button', { name: /Pokračovat/i }));
     typePin('2468');
     await waitFor(() =>
-      expect(posApi.saveSecuritySettingsBackend).toHaveBeenCalledWith({ cashierPin: '2468', lockScreenEnabled: true }),
+      expect(posApi.saveSecuritySettingsBackend).toHaveBeenCalledWith({ cashierPin: '2468', lockScreenEnabled: true }, null),
       { timeout: 3000 } // the modal shows its success message for 1.2 s first
     );
   });
@@ -158,7 +174,7 @@ describe('Security tab switches', () => {
     renderSettings({ adminPinEnabled: false, hasPin: true, lockScreenEnabled: false }, true);
     openSecurityTab();
     fireEvent.click(lockSwitch());
-    await waitFor(() => expect(posApi.saveSecuritySettingsBackend).toHaveBeenCalledWith({ lockScreenEnabled: true }));
+    await waitFor(() => expect(posApi.saveSecuritySettingsBackend).toHaveBeenCalledWith({ lockScreenEnabled: true }, null));
     expect(screen.queryByText(/nový PIN obsluhy/i)).not.toBeInTheDocument();
   });
 
@@ -200,13 +216,35 @@ describe('Recovery code', () => {
   it('issues a new code only after the Admin PIN is checked', async () => {
     posApi.verifyAdminPinBackend.mockResolvedValue({ valid: true });
     posApi.createRecoveryCodeBackend.mockResolvedValue({ status: 'SUCCESS', recoveryCode: 'WXYZ-2345-6789-ABCD' });
-    renderSettings({ adminPinEnabled: true, hasAdminPin: true, hasPin: true }, true);
+    renderSettings({ adminPinEnabled: true, hasAdminPin: true, hasPin: true, adminPinLength: 4 }, true);
     openSecurityTab();
     fireEvent.click(screen.getByRole('button', { name: /Vydat nový záchranný kód/i }));
     expect(posApi.createRecoveryCodeBackend).not.toHaveBeenCalled();
     typePin('2580');
     await waitFor(() => expect(posApi.createRecoveryCodeBackend).toHaveBeenCalledWith('2580'));
     expect(await screen.findByTestId('recovery-code')).toHaveTextContent('WXYZ-2345-6789-ABCD');
+  });
+});
+
+describe('Context passes the Admin PIN that opened Admin mode', () => {
+  it('saveSecuritySettings sends the PIN used to enter Admin mode', async () => {
+    function Probe() {
+      const { enterAdminMode } = useStoreConfig();
+      return (
+        <button onClick={async () => { enterAdminMode('2580'); await Promise.resolve(); }}>
+          enter
+        </button>
+      );
+    }
+    function Save() {
+      const { saveSecuritySettings } = useStoreConfig();
+      return <button onClick={() => saveSecuritySettings({ lockScreenEnabled: false })}>save</button>;
+    }
+    render(<LanguageProvider><StoreConfigProvider><Probe /><Save /></StoreConfigProvider></LanguageProvider>);
+    fireEvent.click(screen.getByText('enter'));
+    await waitFor(() => {});
+    fireEvent.click(screen.getByText('save'));
+    await waitFor(() => expect(posApi.saveSecuritySettingsBackend).toHaveBeenCalledWith({ lockScreenEnabled: false }, '2580'));
   });
 });
 
@@ -244,6 +282,24 @@ describe('Recovery drops the cached config read', () => {
     await real.verifyRecoveryCodeBackend('ABCD-EFGH-JKLM-NPQR');
     await real.fetchStoreConfigBackend();
     expect(configReads()).toBe(2);
+  });
+});
+
+describe('PIN settings carry the Admin PIN', () => {
+  it('sends the Admin PIN header when one is given and none when not', async () => {
+    const real = await vi.importActual('../api/posApi');
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({}) });
+    await real.saveSecuritySettingsBackend({ lockScreenEnabled: false }, '2580');
+    await real.saveSecuritySettingsBackend({ lockScreenEnabled: true });
+    expect(fetchMock.mock.calls[0][1].headers['X-Admin-PIN']).toBe('2580');
+    expect(fetchMock.mock.calls[1][1].headers['X-Admin-PIN']).toBeUndefined();
+  });
+
+  it('shows the server message when the Admin PIN is refused', async () => {
+    const real = await vi.importActual('../api/posApi');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: false, status: 401, json: async () => ({ detail: 'Změna PIN kódu nebo zamykání vyžaduje Admin PIN.' }) });
+    const res = await real.saveSecuritySettingsBackend({ adminPinEnabled: false }, '0000');
+    expect(res).toEqual({ status: 'ERROR', message: 'Změna PIN kódu nebo zamykání vyžaduje Admin PIN.' });
   });
 });
 

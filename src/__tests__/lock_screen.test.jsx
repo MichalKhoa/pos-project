@@ -13,7 +13,7 @@ vi.mock('../api/posApi', () => ({
 }));
 
 const renderLock = onUnlock =>
-  render(<LanguageProvider><LockScreenModal storeConfig={{ cashierPin: '9999' }} onUnlock={onUnlock} /></LanguageProvider>);
+  render(<LanguageProvider><LockScreenModal storeConfig={{ hasPin: true, cashierPinLength: 4 }} onUnlock={onUnlock} /></LanguageProvider>);
 
 const typePin = pin => pin.split('').forEach(d => fireEvent.click(screen.getByRole('button', { name: d })));
 const flush = async (ms = 0) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
@@ -142,6 +142,54 @@ describe('lock screen never falls back to a default PIN (audit F-012)', () => {
   });
 });
 
+describe('auto-submit follows the stored PIN length', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const lockWith = (storeConfig) =>
+    render(<LanguageProvider><LockScreenModal storeConfig={storeConfig} onUnlock={vi.fn()} /></LanguageProvider>);
+
+  it('a 6 digit PIN is checked only after the 6th digit', async () => {
+    posApi.verifyPinBackend.mockResolvedValue({ valid: true });
+    lockWith({ hasPin: true, cashierPinLength: 6 });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).not.toHaveBeenCalled();
+    typePin('25');
+    await flush();
+    expect(posApi.verifyPinBackend).toHaveBeenCalledWith('147025');
+  });
+
+  it('an old PIN of unknown length is not checked automatically; the unlock button checks it', async () => {
+    posApi.verifyPinBackend.mockResolvedValue({ valid: true });
+    lockWith({ hasPin: true, cashierPinLength: null });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Odemknout/ }));
+    await flush();
+    expect(posApi.verifyPinBackend).toHaveBeenCalledWith('1470');
+  });
+
+  it('two PINs of different lengths are not auto-checked (either one may be typed)', async () => {
+    lockWith({ hasPin: true, cashierPinLength: 4, hasAdminPin: true, adminPinLength: 6 });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).not.toHaveBeenCalled();
+  });
+
+  it('two PINs of the same length are auto-checked at that length', async () => {
+    posApi.verifyPinBackend.mockResolvedValue({ valid: false });
+    lockWith({ hasPin: true, cashierPinLength: 4, hasAdminPin: true, adminPinLength: 4 });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).toHaveBeenCalledWith('1470');
+  });
+});
+
 describe('admin PIN dialog has no default PIN either', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -155,7 +203,7 @@ describe('admin PIN dialog has no default PIN either', () => {
     const onSuccess = vi.fn();
     render(
       <LanguageProvider>
-        <AdminPinModal mode="VERIFY" storeConfig={{}} onClose={() => {}} onSuccess={onSuccess} />
+        <AdminPinModal mode="VERIFY" storeConfig={{ adminPinLength: 4 }} onClose={() => {}} onSuccess={onSuccess} />
       </LanguageProvider>
     );
     typePin('1234');

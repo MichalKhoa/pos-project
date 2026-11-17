@@ -333,7 +333,7 @@ describe('Modals & Dialog Component Tests', () => {
       wrapWithLanguage(
         <AdminPinModal
           mode="VERIFY"
-          storeConfig={{ ...DEFAULT_STORE_CONFIG, cashierPin: '1234' }}
+          storeConfig={{ ...DEFAULT_STORE_CONFIG, adminPinLength: 4 }}
           onClose={() => {}}
           onSuccess={onSuccess}
         />

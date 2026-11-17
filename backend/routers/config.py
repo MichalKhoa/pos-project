@@ -6,9 +6,9 @@ from typing import Optional
 from database import get_db
 from models import StoreConfigModel
 from services.pin_auth import (
-    admin_pin_enabled, client_ip, hash_secret, lock_screen_enabled, master_key_matches,
-    new_recovery_code, pin_is_set, pin_matches, recovery_code_hash, recovery_code_matches,
-    valid_new_pin,
+    admin_pin_enabled, apply_security_settings, client_ip, lock_screen_enabled, master_key_matches,
+    new_recovery_code, pin_is_set, recovery_code_hash, recovery_code_matches,
+    require_admin_pin, verify_pin_column,
 )
 from services.rate_limiter import pin_rate_limiter
 
@@ -125,6 +125,8 @@ def get_store_config(db: Session = Depends(get_db)):
         "hasAdminPin": pin_is_set(config.admin_pin),
         "lockScreenEnabled": lock_screen_enabled(config),
         "adminPinEnabled": admin_pin_enabled(config),
+        "cashierPinLength": config.cashier_pin_length if pin_is_set(config.cashier_pin) else None,
+        "adminPinLength": config.admin_pin_length if pin_is_set(config.admin_pin) else None,
         "hasRecoveryCode": bool(config.recovery_code_hash),
         "autoLockMinutes": config.auto_lock_minutes if config.auto_lock_minutes is not None else 15,
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
@@ -177,11 +179,17 @@ def get_store_config(db: Session = Depends(get_db)):
 
 
 @router.post("")
-def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
+def update_store_config(request: Request, data: StoreConfigSchema, db: Session = Depends(get_db)):
     config = db.query(StoreConfigModel).first()
     if not config:
         config = StoreConfigModel()
         db.add(config)
+
+    # Changing a PIN or a lock switch needs the Admin PIN while the Admin PIN switch is on.
+    # Other settings stay open (audit item C1 remains open for the rest of the API).
+    if any(v is not None for v in (data.cashierPin, data.adminPin, data.lockScreenEnabled, data.adminPinEnabled)):
+        require_admin_pin(request, config, request.headers.get("X-Admin-PIN"),
+                          "Změna PIN kódu nebo zamykání vyžaduje Admin PIN.")
 
     if data.storeName is not None: config.store_name = data.storeName
     if data.street is not None: config.street = data.street
@@ -206,27 +214,12 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.csobTerminalIp is not None: config.csob_terminal_ip = data.csobTerminalIp
     if data.csobTerminalPort is not None: config.csob_terminal_port = data.csobTerminalPort
     if data.csobTerminalId is not None: config.csob_terminal_id = data.csobTerminalId
-    if data.cashierPin is not None:
-        if not valid_new_pin(data.cashierPin):
-            raise HTTPException(status_code=400, detail="PIN kód musí mít 4 až 8 číslic a nesmí být 1234.")
-        config.cashier_pin = hash_secret(data.cashierPin)
-    if data.adminPin is not None:
-        if not valid_new_pin(data.adminPin):
-            raise HTTPException(status_code=400, detail="Admin PIN kód musí mít 4 až 8 číslic a nesmí být 1234.")
-        config.admin_pin = hash_secret(data.adminPin)
-    if data.lockScreenEnabled is not None:
-        if data.lockScreenEnabled and not pin_is_set(config.cashier_pin):
-            raise HTTPException(status_code=400, detail="Nejprve nastavte PIN obsluhy.")
-        config.lock_screen_enabled = data.lockScreenEnabled
-    if data.adminPinEnabled is not None:
-        if data.adminPinEnabled and not pin_is_set(config.admin_pin):
-            raise HTTPException(status_code=400, detail="Nejprve nastavte Admin PIN.")
-        config.admin_pin_enabled = data.adminPinEnabled
-    # The first PIN ever set comes with a recovery code, shown to the owner once.
-    recovery_code = None
-    if (data.cashierPin is not None or data.adminPin is not None) and not config.recovery_code_hash:
-        recovery_code = new_recovery_code()
-        config.recovery_code_hash = recovery_code_hash(recovery_code)
+    try:
+        recovery_code = apply_security_settings(
+            config, data.cashierPin, data.adminPin, data.lockScreenEnabled, data.adminPinEnabled
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if data.autoLockMinutes is not None: config.auto_lock_minutes = data.autoLockMinutes
     if data.directHardwarePrint is not None: config.direct_hardware_print = data.directHardwarePrint
     if data.autoPrintReceipt is not None: config.auto_print_receipt = data.autoPrintReceipt
@@ -298,7 +291,7 @@ def verify_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(g
     """Lock screen: the cashier PIN or the Admin PIN unlocks. No PIN set means nothing matches."""
     pin_rate_limiter.check_rate_limit(client_ip(request))
     config = db.query(StoreConfigModel).first()
-    ok = bool(config) and (pin_matches(data.pin, config.cashier_pin) or pin_matches(data.pin, config.admin_pin))
+    ok = bool(config) and (verify_pin_column(data.pin, config, "cashier_pin") or verify_pin_column(data.pin, config, "admin_pin"))
     _verify_or_count_failure(request, ok, "Nesprávný PIN kód")
     return {"status": "SUCCESS", "valid": True}
 
@@ -310,7 +303,7 @@ def verify_admin_pin(request: Request, data: PinVerifyRequest, db: Session = Dep
     if master_key_matches(data.pin):
         return {"status": "SUCCESS", "valid": True, "is_master": True}
     config = db.query(StoreConfigModel).first()
-    _verify_or_count_failure(request, bool(config) and pin_matches(data.pin, config.admin_pin), "Nesprávný Admin PIN kód")
+    _verify_or_count_failure(request, bool(config) and verify_pin_column(data.pin, config, "admin_pin"), "Nesprávný Admin PIN kód")
     return {"status": "SUCCESS", "valid": True}
 
 
@@ -366,8 +359,8 @@ def issue_recovery_code(request: Request, data: PinVerifyRequest, db: Session = 
     config = db.query(StoreConfigModel).first()
     if not config or not (pin_is_set(config.admin_pin) or pin_is_set(config.cashier_pin)):
         raise HTTPException(status_code=400, detail="Není nastaven žádný PIN.")
-    guard = config.admin_pin if pin_is_set(config.admin_pin) else config.cashier_pin
-    _verify_or_count_failure(request, master_key_matches(data.pin) or pin_matches(data.pin, guard), "Nesprávný PIN kód")
+    guard = "admin_pin" if pin_is_set(config.admin_pin) else "cashier_pin"
+    _verify_or_count_failure(request, master_key_matches(data.pin) or verify_pin_column(data.pin, config, guard), "Nesprávný PIN kód")
     code = new_recovery_code()
     config.recovery_code_hash = recovery_code_hash(code)
     db.commit()
@@ -383,6 +376,8 @@ def verify_recovery(request: Request, data: RecoveryCodeRequest, db: Session = D
     _verify_or_count_failure(request, ok, "Neplatný záchranný kód.")
     config.cashier_pin = None
     config.admin_pin = None
+    config.cashier_pin_length = None
+    config.admin_pin_length = None
     config.lock_screen_enabled = False
     config.admin_pin_enabled = False
     config.recovery_code_hash = None

@@ -7,6 +7,7 @@ import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 export default function AdminPinModal({
   mode = 'VERIFY', // 'VERIFY' | 'CHANGE_PIN' | 'SET_PIN' (new PIN only, caller already authorised)
   kind = 'admin', // 'admin' | 'cashier': which PIN is being set (titles only)
+  storeConfig, // adminPinLength tells when to auto-submit
   onSuccess,
   onClose
 }) {
@@ -20,6 +21,7 @@ export default function AdminPinModal({
   const [isShaking, setIsShaking] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const adminPinLength = storeConfig?.adminPinLength || null;
   const pinName = kind === 'cashier' ? 'PIN obsluhy' : 'Admin PIN';
   const activePin = step === 'CONFIRM_PIN' ? confirmPin : step === 'NEW_PIN' ? newPin : enteredPin;
 
@@ -83,8 +85,8 @@ export default function AdminPinModal({
     if (step === 'VERIFY_PIN' || step === 'CURRENT_PIN') {
       const next = enteredPin + num;
       setEnteredPin(next);
-      const targetLen = 4;
-      if (next.length === targetLen) {
+      // Auto-submit only at the known PIN length; an old PIN of unknown length needs the confirm button.
+      if (adminPinLength && next.length === adminPinLength) {
         verifyEnteredPin(next);
       }
     } else if (step === 'NEW_PIN') {
@@ -96,7 +98,7 @@ export default function AdminPinModal({
         finalizePinChange(next);
       }
     }
-  }, [activePin.length, isVerifying, step, enteredPin, verifyEnteredPin, confirmPin, newPin.length, finalizePinChange]);
+  }, [activePin.length, isVerifying, step, enteredPin, adminPinLength, verifyEnteredPin, confirmPin, newPin.length, finalizePinChange]);
 
   const handleBackspace = useCallback(() => {
     if (isVerifying) return;
@@ -124,8 +126,8 @@ export default function AdminPinModal({
 
   const handleNextStep = useCallback(() => {
     if (step === 'NEW_PIN') {
-      if (newPin.length !== 4) {
-        setErrorMsg('PIN musí mít 4 číslice.');
+      if (newPin.length < 4 || newPin.length > 8) {
+        setErrorMsg('PIN musí mít 4 až 8 číslic.');
         triggerShake();
         return;
       }
@@ -164,7 +166,7 @@ export default function AdminPinModal({
   const getStepTitle = () => {
     if (step === 'VERIFY_PIN') return 'Ověření Admin PIN';
     if (step === 'CURRENT_PIN') return 'Zadejte současný Admin PIN';
-    if (step === 'NEW_PIN') return `Zadejte nový ${pinName} (4 číslice)`;
+    if (step === 'NEW_PIN') return `Zadejte nový ${pinName} (4–8 číslic)`;
     if (step === 'CONFIRM_PIN') return `Potvrďte nový ${pinName}`;
     return 'Admin PIN';
   };
@@ -278,11 +280,23 @@ export default function AdminPinModal({
           </button>
         </div>
 
+        {(step === 'VERIFY_PIN' || step === 'CURRENT_PIN') && !adminPinLength && (
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={enteredPin.length < 4 || isVerifying}
+            onClick={handleNextStep}
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
+          >
+            {t('lock_screen.confirm_pin')}
+          </button>
+        )}
+
         {step === 'NEW_PIN' && (
           <button
             type="button"
             className="btn-primary"
-            disabled={newPin.length !== 4}
+            disabled={newPin.length < 4}
             onClick={handleNextStep}
             style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
           >

@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import hashlib
 import shutil
 import subprocess
 import urllib.request
@@ -38,11 +37,6 @@ except Exception as e:
 
 ENV_PATH = BACKEND_DIR / ".env"
 ENV_EXAMPLE_PATH = BACKEND_DIR / ".env.example"
-
-
-def hash_pin(pin: str) -> str:
-    """SHA-256 hash of PIN string."""
-    return hashlib.sha256(pin.encode("utf-8")).hexdigest()
 
 
 def read_env_file() -> dict:
@@ -103,7 +97,7 @@ class SettingsAPI:
             return {"success": True, "message": "No DB lock"}
 
         from migrations import migrate_pin_settings
-        from services.pin_auth import admin_pin_enabled, master_key_matches, pin_matches
+        from services.pin_auth import admin_pin_enabled, master_key_matches, verify_pin_column
 
         # This tool can run before the POS backend has ever migrated the database.
         migrate_pin_settings(engine)
@@ -112,7 +106,7 @@ class SettingsAPI:
             config = db.query(StoreConfigModel).first()
             if not admin_pin_enabled(config):
                 return {"success": True, "message": "Admin PIN switched off"}
-            if master_key_matches(pin) or pin_matches(pin, config.admin_pin):
+            if master_key_matches(pin) or verify_pin_column(pin, config, "admin_pin"):
                 return {"success": True}
             return {"success": False, "message": "Invalid PIN code"}
         except Exception as e:
@@ -122,7 +116,7 @@ class SettingsAPI:
 
     def get_settings(self) -> dict:
         """Return merged dictionary of .env and store_config database row."""
-        from services.pin_auth import pin_is_set
+        from services.pin_auth import admin_pin_enabled, lock_screen_enabled, pin_is_set
         env_vars = read_env_file()
         db_config = {}
 
@@ -159,6 +153,9 @@ class SettingsAPI:
                     "csobTerminalPort": config.csob_terminal_port or 8888,
                     "csobTerminalId": config.csob_terminal_id or "",
                     "hasPin": pin_is_set(config.cashier_pin),
+                    "hasAdminPin": pin_is_set(config.admin_pin),
+                    "lockScreenEnabled": lock_screen_enabled(config),
+                    "adminPinEnabled": admin_pin_enabled(config),
                     "autoLockMinutes": config.auto_lock_minutes or 15,
                     "directHardwarePrint": bool(config.direct_hardware_print),
                     "defaultLanguage": config.default_language or "cs",
@@ -179,6 +176,7 @@ class SettingsAPI:
         try:
             env_data = payload.get("env", {})
             config_data = payload.get("config", {})
+            recovery_code = None
 
             # 1. Update .env
             if env_data:
@@ -219,17 +217,28 @@ class SettingsAPI:
                     if "defaultLanguage" in config_data: config.default_language = config_data["defaultLanguage"]
                     if "cartPosition" in config_data: config.cart_position = config_data["cartPosition"]
 
-                    # Update PIN if provided
-                    new_pin = config_data.get("newPin")
-                    from services.pin_auth import valid_new_pin
-                    if new_pin and valid_new_pin(new_pin):
-                        config.cashier_pin = hash_pin(new_pin)
+                    # PINs and lock switches follow the same rules as the web settings.
+                    from services.pin_auth import apply_security_settings
+                    try:
+                        recovery_code = apply_security_settings(
+                            config,
+                            cashier_pin=config_data.get("cashierPin") or None,
+                            admin_pin=config_data.get("adminPin") or None,
+                            lock_screen=config_data.get("lockScreenEnabled"),
+                            admin_switch=config_data.get("adminPinEnabled"),
+                        )
+                    except ValueError as e:
+                        db.rollback()
+                        return {"success": False, "message": str(e)}
 
                     db.commit()
                 finally:
                     db.close()
 
-            return {"success": True, "message": "Settings saved successfully"}
+            result = {"success": True, "message": "Settings saved successfully"}
+            if recovery_code:
+                result["recoveryCode"] = recovery_code
+            return result
         except Exception as e:
             return {"success": False, "message": str(e)}
 

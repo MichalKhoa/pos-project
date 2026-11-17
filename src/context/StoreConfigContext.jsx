@@ -23,6 +23,8 @@ export function StoreConfigProvider({ children }) {
   const [adminSessionRemainingSeconds, setAdminSessionRemainingSeconds] = useState(0);
   const [adminPin, setAdminPin] = useState(null);
   const lastAdminActivityRef = useRef(Date.now());
+  const adminPinRef = useRef(null);
+  adminPinRef.current = adminPin;
 
   // Sync highlight accent to root element
   useEffect(() => {
@@ -116,13 +118,19 @@ export function StoreConfigProvider({ children }) {
   // Security settings (PINs, lock switches) go through their own endpoint call.
   // Returns the server result; on success the status flags in storeConfig follow it.
   const saveSecuritySettings = useCallback(async (updates) => {
-    const result = await saveSecuritySettingsBackend(updates);
+    const result = await saveSecuritySettingsBackend(updates, adminPinRef.current);
     if (result?.status === 'ERROR') return result;
     const flags = {};
     if (updates.lockScreenEnabled !== undefined) flags.lockScreenEnabled = updates.lockScreenEnabled;
     if (updates.adminPinEnabled !== undefined) flags.adminPinEnabled = updates.adminPinEnabled;
-    if (updates.cashierPin) flags.hasPin = true;
-    if (updates.adminPin) flags.hasAdminPin = true;
+    if (updates.cashierPin) {
+      flags.hasPin = true;
+      flags.cashierPinLength = updates.cashierPin.length;
+    }
+    if (updates.adminPin) {
+      flags.hasAdminPin = true;
+      flags.adminPinLength = updates.adminPin.length;
+    }
     if (result?.recoveryCode) flags.hasRecoveryCode = true;
     setStoreConfig((prev) => ({ ...prev, ...flags }));
     return result;

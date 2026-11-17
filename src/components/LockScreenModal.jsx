@@ -47,14 +47,21 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
     return () => clearInterval(timer);
   }, [lockoutSeconds]);
 
+  // Auto-submit only when every set PIN has the same known length (cashier PIN and Admin PIN both unlock).
+  // An old PIN of unknown length, or two different lengths, needs the unlock button or Enter.
+  const setLengths = [];
+  if (storeConfig?.hasPin) setLengths.push(storeConfig.cashierPinLength);
+  if (storeConfig?.hasAdminPin) setLengths.push(storeConfig.adminPinLength);
+  const autoSubmitLength =
+    setLengths.length > 0 && setLengths.every((l) => l && l === setLengths[0]) ? setLengths[0] : null;
+
   const handleNumClick = async (num) => {
     if (enteredPin.length >= 8 || isVerifying || waitingForServer || showRecoveryInput || lockoutSeconds > 0) return;
     const newPin = enteredPin + num;
     setEnteredPin(newPin);
     setErrorMsg('');
 
-    const targetLength = storeConfig?.cashierPin?.length || 4;
-    if (newPin.length === targetLength) {
+    if (autoSubmitLength && newPin.length === autoSubmitLength) {
       const unlocked = await verifyPin(newPin, false);
       if (unlocked === false) {
         setIsShaking(true);
