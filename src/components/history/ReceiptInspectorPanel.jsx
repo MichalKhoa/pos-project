@@ -86,7 +86,7 @@ export default function ReceiptInspectorPanel({
 
     try {
       if (storeConfig?.directHardwarePrint !== false) {
-        const res = await printReceiptBackend({ ...saleData, items: resolvedItems }, storeConfig);
+        const res = await printReceiptBackend({ ...saleData, items: resolvedItems }, storeConfig, false);
         if (res && res.status === 'PRINTED' && res.physical !== false) {
           setTimeout(() => setIsPrinting(false), 500);
           return;

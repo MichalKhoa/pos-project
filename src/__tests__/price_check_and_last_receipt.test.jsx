@@ -197,7 +197,8 @@ describe('Last Receipt Quick Actions & Price Check Mode', () => {
       await waitFor(() => {
         expect(posApi.printReceiptBackend).toHaveBeenCalledWith(
           expect.objectContaining({ receiptNumber: '2026-000090', totalAmount: 100 }),
-          expect.anything()
+          expect.anything(),
+          false
         );
       });
     });

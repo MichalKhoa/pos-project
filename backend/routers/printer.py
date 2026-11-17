@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api/v1/printer", tags=["Hardware Printer"])
 class PrintReceiptRequest(BaseModel):
     saleData: dict
     storeConfig: dict
+    openDrawer: bool = True
 
 
 import threading
@@ -59,7 +60,7 @@ def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
     address = config.printer_address if config else "/dev/usb/lp0"
 
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
-    res = printer_service.print_receipt(req.saleData, req.storeConfig)
+    res = printer_service.print_receipt(req.saleData, req.storeConfig, req.openDrawer)
 
     if isinstance(res, dict):
         if not res.get("success"):
@@ -76,15 +77,19 @@ def print_receipt(req: PrintReceiptRequest, db: Session = Depends(get_db)):
     return {"status": "PRINTED", "physical": True, "receiptNumber": req.saleData.get("receiptNumber")}
 
 
+class OpenDrawerRequest(BaseModel):
+    storeConfig: dict = {}
+
+
 @router.post("/open-drawer")
-def open_cash_drawer(db: Session = Depends(get_db)):
+def open_cash_drawer(req: OpenDrawerRequest = OpenDrawerRequest(), db: Session = Depends(get_db)):
     """Trigger physical ESC/POS pulse signal to release the cash drawer."""
     config = db.query(StoreConfigModel).first()
     interface = config.printer_interface if config else "USB"
     address = config.printer_address if config else "/dev/usb/lp0"
 
     printer_service = ESCPOSPrinterService(interface_type=interface, address=address)
-    res = printer_service.open_cash_drawer()
+    res = printer_service.open_cash_drawer(req.storeConfig)
 
     if isinstance(res, dict) and not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to open cash drawer"))

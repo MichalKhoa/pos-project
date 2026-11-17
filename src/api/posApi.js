@@ -530,12 +530,12 @@ export async function shutdownBackend() {
 /**
  * Send print receipt request to backend hardware thermal printer service
  */
-export async function printReceiptBackend(saleData, storeConfig) {
+export async function printReceiptBackend(saleData, storeConfig, openDrawer = true) {
   try {
     const res = await fetch(`${API_BASE_URL}/printer/print`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ saleData, storeConfig })
+      body: JSON.stringify({ saleData, storeConfig, openDrawer })
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -588,10 +588,12 @@ export async function printBarcodeLabelBackend(itemData, copies = 1, storeConfig
 /**
  * Trigger physical cash drawer release pulse via printer service
  */
-export async function openCashDrawerBackend() {
+export async function openCashDrawerBackend(storeConfig = {}) {
   try {
     const res = await fetch(`${API_BASE_URL}/printer/open-drawer`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeConfig })
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();

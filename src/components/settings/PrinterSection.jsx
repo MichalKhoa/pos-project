@@ -30,7 +30,7 @@ export default function PrinterSection({
     setDrawerMessage(null);
     soundFx.playCashChime();
     try {
-      await openCashDrawerBackend();
+      await openCashDrawerBackend(config);
       setDrawerMessage(t('settings.drawer_success') || 'Signál pro otevření zásuvky byl úspěšně odeslán.');
       setTimeout(() => setDrawerMessage(null), 3500);
     } catch {

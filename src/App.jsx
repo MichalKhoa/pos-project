@@ -254,7 +254,7 @@ export default function App() {
     if (!sale) return;
     soundFx.playScanChime();
     try {
-      const res = await printReceiptBackend(sale, storeConfig);
+      const res = await printReceiptBackend(sale, storeConfig, false);
       if (res && res.status === 'PRINTED' && res.physical !== false) {
         soundFx.playSuccessChime();
         setFlashBanner({
@@ -281,7 +281,7 @@ export default function App() {
       message: 'Otevírání peněžní zásuvky...'
     });
     try {
-      const res = await openCashDrawerBackend();
+      const res = await openCashDrawerBackend(storeConfig);
       if (res && res.success) {
         setFlashBanner({
           type: 'success',
@@ -300,7 +300,7 @@ export default function App() {
       });
     }
     setTimeout(() => setFlashBanner(null), 3000);
-  }, []);
+  }, [storeConfig]);
 
   // Test Sales Management
 

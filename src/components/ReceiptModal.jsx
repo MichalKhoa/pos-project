@@ -46,7 +46,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
 
     // 1. Attempt hardware direct print silently if directHardwarePrint is enabled
     if (isDirectPrint) {
-      const res = await printReceiptBackend({ ...saleData, items: resolvedItems }, storeConfig);
+      const res = await printReceiptBackend({ ...saleData, items: resolvedItems }, storeConfig, false);
       if (res && res.status === 'PRINTED' && res.physical !== false) {
         setTimeout(() => setIsPrinting(false), 600);
         return;

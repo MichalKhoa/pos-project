@@ -134,7 +134,7 @@ export default function DiagnosticsSection({
     setDrawerLoading(true);
     setActionMessage(null);
     try {
-      const res = await openCashDrawerBackend();
+      const res = await openCashDrawerBackend(config);
       soundFx.playCashChime();
       setActionMessage({ type: 'success', text: res.message || t('settings.diag_drawer_open_success') || 'Zásuvka byla otevřena.' });
     } catch (err) {

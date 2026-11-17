@@ -310,6 +310,56 @@ def write_label_value(printer, label: str, value: str, width: int, strip_diacrit
         write_receipt_text(printer, f"{line}\n", strip_diacritics, encoding)
 
 
+def begin_job(printer, encoding: str = "CP852"):
+    """Reset the printer (ESC @) and select the codepage; call once at the start of a receipt job."""
+    if hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1b@')
+        except Exception:
+            pass
+    try:
+        if hasattr(printer, 'charcode'):
+            printer.charcode(encoding if encoding in ['CP852', 'CP1250'] else 'CP852')
+    except Exception:
+        pass
+    if hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1b2')  # restore standard 1/6-inch line pitch
+        except Exception:
+            pass
+
+
+def end_job(printer):
+    """Reset the printer (ESC @) once at the end of a receipt job, after the cut."""
+    if hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1b@')
+        except Exception:
+            pass
+
+
+def kick_drawer(printer, pin: int = 2):
+    """Kick the cash drawer on the configured pin (2 or 5)."""
+    try:
+        printer.cashdraw(5 if pin == 5 else 2)
+    except Exception:
+        pass
+
+
+def drawer_pin_from(store_config: dict) -> int:
+    """Read the configured drawer pin (2 or 5, default 2); coerces so '5' from config matches too."""
+    try:
+        return 5 if int(store_config.get("drawerPin", 2)) == 5 else 2
+    except (ValueError, TypeError):
+        return 2
+
+
+def build_spayd_payload(iban: str, amount: float, receipt_num: str, store_name: str) -> str:
+    """Build a Czech SPAYD QR payload. AM is the absolute amount; MSG is ASCII upper case without '*'."""
+    msg = _to_ascii(store_name).upper().replace('*', '').strip()[:30]
+    return f"SPD*1.0*ACC:{iban}*AM:{abs(amount):.2f}*CC:CZK*X-VS:{receipt_num}*MSG:{msg}"
+
+
 class Win32SpoolerRawFallback:
     """
     Direct win32print spooler driver fallback when python-escpos profile/capabilities fail.
@@ -319,6 +369,7 @@ class Win32SpoolerRawFallback:
     def __init__(self, printer_name: str):
         self.printer_name = printer_name
         self.handle = None
+        self._encoding = 'cp852'
 
     def open(self, job_name: str = "VoltFlow_POS_Job"):
         import win32print
@@ -345,13 +396,16 @@ class Win32SpoolerRawFallback:
         if not txt:
             return
         try:
-            raw = txt.encode('cp852', errors='replace')
+            raw = txt.encode(self._encoding, errors='replace')
         except Exception:
             raw = txt.encode('ascii', errors='replace')
         self._raw(raw)
 
     def charcode(self, code: str = 'CP852'):
-        pass
+        # ESC t n: slot 18 = CP852, slot 45 = CP1250 (same slots python-escpos uses on the normal path)
+        n = 45 if code == 'CP1250' else 18
+        self._raw(b'\x1bt' + bytes([n]))
+        self._encoding = 'cp1250' if code == 'CP1250' else 'cp852'
 
     def cut(self, mode: str = 'PART', **kwargs):
         # GS V 66 0 (Feed and partial cut)
@@ -501,16 +555,16 @@ class ESCPOSPrinterService:
 
         return printer
 
-    def print_receipt(self, sale_data: dict, store_config: dict) -> dict:
+    def print_receipt(self, sale_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
         """
         Prints a formatted 58mm or 80mm thermal receipt using python-escpos.
         If physical printer is not connected, logs receipt output cleanly to console.
         Returns a dict: {"success": True, "physical": True/False, "status": "PRINTED"/"SIMULATED"}
         """
         with _hardware_printer_lock:
-            return self._do_print_receipt(sale_data, store_config)
+            return self._do_print_receipt(sale_data, store_config, open_drawer)
 
-    def _do_print_receipt(self, sale_data: dict, store_config: dict) -> dict:
+    def _do_print_receipt(self, sale_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
         paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
         is_a4 = paper_width == "A4"
         is_58mm = not is_a4 and paper_width in ["58", "48"]
@@ -556,11 +610,12 @@ class ESCPOSPrinterService:
             double_line = get_receipt_separator("double", sec_line_width)
             item_dash_line = get_receipt_separator("dashed", line_width)
 
-            top_margin = int(store_config.get("receiptTopMargin", 0))
-            bottom_margin = int(store_config.get("receiptBottomMargin", 1))
+            top_margin = max(0, min(5, int(store_config.get("receiptTopMargin", 0))))
+            bottom_margin = max(0, min(5, int(store_config.get("receiptBottomMargin", 1))))
             copies = max(1, min(2, int(store_config.get("receiptCopies", 1))))
             encoding = store_config.get("receiptEncoding", "CP852")
             strip_diacritics = bool(store_config.get("stripDiacritics", False))
+            drawer_pin = drawer_pin_from(store_config)
 
             bold_store = bool(store_config.get("receiptBoldStoreName", True))
             bold_items = bool(store_config.get("receiptBoldItemNames", True))
@@ -588,19 +643,8 @@ class ESCPOSPrinterService:
 
             if printer:
                 try:
-                    # Set ESC/POS codepage to CP852 / CP1250 if supported
-                    try:
-                        if hasattr(printer, 'charcode'):
-                            printer.charcode(encoding if encoding in ['CP852', 'CP1250'] else 'CP852')
-                    except Exception:
-                        pass
-
-                    # Restore standard 1/6-inch line pitch (prevents line collision / text overlapping)
-                    if hasattr(printer, '_raw'):
-                        try:
-                            printer._raw(b'\x1b2')
-                        except Exception:
-                            pass
+                    # Job start: ESC @ reset, then codepage and line pitch
+                    begin_job(printer, encoding)
 
                     is_refund = bool(sale_data.get("isRefund") or sale_data.get("is_refund") or (sale_data.get("totalAmount") is not None and sale_data.get("totalAmount") < 0))
                     receipt_num = str(sale_data.get("receiptNumber", ""))
@@ -954,18 +998,18 @@ class ESCPOSPrinterService:
                         # ==================== QR CODE ====================
                         raw_iban = (store_config.get('bankAccountIban') or store_config.get('bank_account_iban') or '').replace(' ', '').upper()
                         store_name = store_config.get('storeName') or store_config.get('store_name') or 'VoltFlow POS'
-                        if qr_type == "spayd" and raw_iban and raw_iban != 'CZ6508000000001234567890':
+                        if qr_type == "spayd" and raw_iban and raw_iban != 'CZ6508000000001234567890' and not is_refund:
                             tot_czk = float(sale_data.get('totalAmount', 0))
-                            spayd_payload = f"SPD*1.0*ACC:{raw_iban}*AM:{tot_czk:.2f}*CC:CZK*X-VS:{receipt_num}*MSG:{store_name[:30]}"
+                            spayd_payload = build_spayd_payload(raw_iban, tot_czk, receipt_num, store_name)
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
                             printer.text(separator + "\n")
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
                             write_wrapped(printer, "QR PLATBA (PŘEVOD NA ÚČET)", line_width, strip_diacritics, encoding)
                             try:
                                 if hasattr(printer, 'qr'):
-                                    printer.qr(spayd_payload, size=3)
+                                    printer.qr(spayd_payload, size=3, native=True)
                             except Exception as qr_err:
-                                logger.debug(f"ESC/POS QR print note: {qr_err}")
+                                logger.warning(f"ESC/POS QR print note: {qr_err}")
                         elif qr_type == "url":
                             qr_url = store_config.get("receiptQrCodeUrl") or store_config.get("receipt_qr_code_url")
                             if qr_url:
@@ -977,7 +1021,7 @@ class ESCPOSPrinterService:
                                     if hasattr(printer, 'qr'):
                                         printer.qr(qr_url, size=3)
                                 except Exception as qr_err:
-                                    logger.debug(f"ESC/POS QR print note: {qr_err}")
+                                    logger.warning(f"ESC/POS QR print note: {qr_err}")
 
                         # ==================== BARCODE ====================
                         if show_barcode and receipt_num:
@@ -986,11 +1030,11 @@ class ESCPOSPrinterService:
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
                             try:
                                 if hasattr(printer, 'barcode'):
-                                    printer.barcode(receipt_num, 'CODE128', height=46, width=2, pos='BELOW', align_ct=True)
+                                    printer.barcode("{B" + receipt_num, 'CODE128', height=46, width=2, pos='BELOW', align_ct=True)
                                 else:
                                     write_wrapped(printer, f"||| {receipt_num} |||", line_width, strip_diacritics, encoding)
                             except Exception as bc_err:
-                                logger.debug(f"ESC/POS Barcode print note: {bc_err}")
+                                logger.warning(f"ESC/POS Barcode print note: {bc_err}")
                                 try:
                                     write_wrapped(printer, f"||| {receipt_num} |||", line_width, strip_diacritics, encoding)
                                 except Exception:
@@ -1009,9 +1053,8 @@ class ESCPOSPrinterService:
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
                             write_wrapped(printer, "Vystaveno v pokladním systému VoltFlow POS", line_width, strip_diacritics, encoding)
 
-                        # Bottom feed: minimal 1-2 lines before cutter to prevent paper waste
-                        feed_lines = max(1, min(2, bottom_margin))
-                        for _ in range(feed_lines):
+                        # Bottom feed before the cutter
+                        for _ in range(bottom_margin):
                             printer.text("\n")
 
                         # Partial cut between copies or full cut at end
@@ -1019,15 +1062,8 @@ class ESCPOSPrinterService:
                             if copy_idx < copies - 1:
                                 printer.cut(mode='PART')
                             else:
-                                if pm in ["CASH", "HOTOVOST", "SPLIT"]:
-                                    try:
-                                        printer.cashdraw(2)
-                                    except Exception:
-                                        pass
-                                    try:
-                                        printer.cashdraw(5)
-                                    except Exception:
-                                        pass
+                                if pm in ["CASH", "HOTOVOST", "SPLIT"] and open_drawer:
+                                    kick_drawer(printer, drawer_pin)
                                 # Use partial cut with minimal feed (GS V 65 2) or standard cut
                                 try:
                                     if hasattr(printer, '_raw'):
@@ -1039,6 +1075,7 @@ class ESCPOSPrinterService:
                         except Exception:
                             pass
 
+                    end_job(printer)
                     return {"success": True, "physical": True, "status": "PRINTED"}
                 except Exception as print_exec_err:
                     logger.error(f"Error during ESC/POS print execution: {print_exec_err}")
@@ -1139,14 +1176,7 @@ class ESCPOSPrinterService:
 
                     printer.cut()
                     if open_drawer:
-                        try:
-                            printer.cashdraw(2)
-                        except Exception:
-                            pass
-                        try:
-                            printer.cashdraw(5)
-                        except Exception:
-                            pass
+                        kick_drawer(printer, drawer_pin_from(store_config))
 
                     return {"success": True, "physical": True, "status": "PRINTED"}
                 except Exception as print_err:
@@ -1373,14 +1403,7 @@ class ESCPOSPrinterService:
 
                     printer.cut()
                     if open_drawer:
-                        try:
-                            printer.cashdraw(2)
-                        except Exception:
-                            pass
-                        try:
-                            printer.cashdraw(5)
-                        except Exception:
-                            pass
+                        kick_drawer(printer, drawer_pin_from(store_config))
 
                     return {"success": True, "physical": True, "status": "PRINTED"}
                 except Exception as print_err:
@@ -1408,28 +1431,21 @@ class ESCPOSPrinterService:
             return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
 
 
-    def open_cash_drawer(self) -> dict:
+    def open_cash_drawer(self, store_config: dict = None) -> dict:
         """
         Sends pulse signal to thermal printer cash drawer RJ11/RJ12 port to kick the drawer open.
         """
         with _hardware_printer_lock:
-            return self._do_open_cash_drawer()
+            return self._do_open_cash_drawer(store_config)
 
-    def _do_open_cash_drawer(self) -> dict:
+    def _do_open_cash_drawer(self, store_config: dict = None) -> dict:
         logger.info(f"Opening cash drawer via printer interface {self.interface_type}")
+        drawer_pin = drawer_pin_from(store_config or {})
         try:
             printer = self._get_printer_device("VoltFlow_POS_Drawer_Kick")
             if printer:
                 try:
-                    # Try kicking pin 2 and pin 5 to cover all cash drawer wiring types
-                    try:
-                        printer.cashdraw(2)
-                    except Exception:
-                        pass
-                    try:
-                        printer.cashdraw(5)
-                    except Exception:
-                        pass
+                    kick_drawer(printer, drawer_pin)
                     return {"success": True, "physical": True, "status": "OPENED"}
                 except Exception as kick_err:
                     logger.warning(f"Cash drawer kick warning: {kick_err}")
@@ -1464,7 +1480,7 @@ class ESCPOSPrinterService:
                         try:
                             win32print.StartDocPrinter(h, 1, ("VoltFlow_POS_Drawer_Kick", None, "RAW"))
                             win32print.StartPagePrinter(h)
-                            win32print.WritePrinter(h, b'\x1b\x70\x00\x19\xfa\x1b\x70\x01\x19\xfa')
+                            win32print.WritePrinter(h, b'\x1b\x70' + bytes([1 if drawer_pin == 5 else 0]) + b'\x19\xfa')
                             win32print.EndPagePrinter(h)
                             win32print.EndDocPrinter(h)
                             return {"success": True, "physical": True, "status": "OPENED"}

@@ -39,13 +39,27 @@ def print_sale(sale=None, store_config=None, **kwargs):
     service = ESCPOSPrinterService("DUMMY")
     printer = Dummy()
     with patch.object(service, "_get_printer_device", return_value=printer):
-        res = service.print_receipt({**DEFAULT_SALE, **(sale or {})}, {"storeName": "Test", **(store_config or {})})
+        res = service.print_receipt({**DEFAULT_SALE, **(sale or {})}, {"storeName": "Test", **(store_config or {})}, **kwargs)
     return res, printer
+
+
+def _strip_barcode(data: bytes) -> bytes:
+    """Remove `GS k m n d1..dn` barcode blocks (variable length, so not a fixed regex)."""
+    out = bytearray()
+    i = 0
+    while i < len(data):
+        if data[i:i + 2] == b"\x1dk" and i + 3 < len(data):
+            n = data[i + 3]
+            i += 4 + n
+            continue
+        out.append(data[i])
+        i += 1
+    return bytes(out)
 
 
 def receipt_lines(printer, encoding="cp852"):
     """Decode the recorded bytes to text lines, with control sequences removed."""
-    raw = _CONTROL.sub(b"", printer.output)
+    raw = _CONTROL.sub(b"", _strip_barcode(printer.output))
     return raw.decode(encoding, errors="replace").split("\n")
 
 
