@@ -259,7 +259,7 @@ export default function PresetModal({
                 height: '38px',
                 padding: '0 1.25rem',
                 fontSize: '0.88rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem'
@@ -290,11 +290,11 @@ export default function PresetModal({
               }}>
                 <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: '0.75rem' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                    <span style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       <span>{formData.showInPresets ? '📌' : '🏷️'}</span>
                       <span>{t('presets.show_in_presets') || 'Zobrazit jako rychlou dlaždici na pokladně'}</span>
                     </span>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {formData.showInPresets
                         ? (t('presets.show_in_presets_on_desc') || 'Položka bude zobrazena na pokladně jako rychlé dotykové tlačítko.')
                         : (t('presets.show_in_presets_off_desc') || 'Položka bude evidována ve skladu. Na pokladně ji prodáte naskenováním čárového kódu.')}
@@ -311,7 +311,7 @@ export default function PresetModal({
 
               {/* Basic Info Card */}
               <div style={sectionCardStyle}>
-                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   Základní údaje
                 </div>
 
@@ -369,7 +369,7 @@ export default function PresetModal({
 
               {/* Price & VAT Card */}
               <div style={sectionCardStyle}>
-                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   Cena a Sazba DPH
                 </div>
 
@@ -407,7 +407,7 @@ export default function PresetModal({
                     gap: '0.5rem',
                     lineHeight: 1.4
                   }}>
-                    <span style={{ color: 'var(--accent-blue)', fontWeight: '800', fontSize: '1rem' }}>ℹ</span>
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: '700', fontSize: '1rem' }}>ℹ</span>
                     <span>{t('presets.open_price_label')}</span>
                   </div>
                 ) : (
@@ -430,13 +430,13 @@ export default function PresetModal({
                           border: '1px solid var(--border-color)',
                           borderRadius: 'var(--radius-md)',
                           color: 'var(--text-primary)',
-                          fontWeight: '800',
+                          fontWeight: '700',
                           fontFamily: 'var(--font-mono)',
                           fontSize: '1.05rem'
                         }}
                         required={!formData.isOpenPrice}
                       />
-                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '800', color: 'var(--text-muted)' }}>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--text-muted)' }}>
                         Kč
                       </span>
                     </div>
@@ -461,8 +461,8 @@ export default function PresetModal({
                         style={{
                           flex: 1,
                           padding: '0.45rem 0.2rem',
-                          fontSize: '0.78rem',
-                          fontWeight: '800',
+                          fontSize: '0.8rem',
+                          fontWeight: '700',
                           justifyContent: 'center',
                           background: formData.vat === rate ? 'var(--accent-blue)' : 'var(--bg-input)'
                         }}
@@ -498,7 +498,7 @@ export default function PresetModal({
                         fontSize: '0.95rem'
                       }}
                     />
-                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '800', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                       Kč
                     </span>
                   </div>
@@ -549,7 +549,7 @@ export default function PresetModal({
                           flex: 1,
                           padding: '0.45rem 0.2rem',
                           fontSize: '0.82rem',
-                          fontWeight: '800',
+                          fontWeight: '700',
                           justifyContent: 'center',
                           background: formData.unit === u.id ? 'var(--accent-blue)' : 'var(--bg-input)'
                         }}
@@ -578,10 +578,10 @@ export default function PresetModal({
                 }}>
                   <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: '0.75rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                         {t('presets.weighted_goods') || '⚖️ Váhové zboží (dotykové zadání hmotnosti)'}
                       </span>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {t('presets.weighted_goods_desc') || 'Při výběru položky se automaticky otevře dotykový dialog pro zadání hmotnosti a táry.'}
                       </span>
                     </div>
@@ -604,7 +604,7 @@ export default function PresetModal({
 
               {/* Behavior, Stock & Barcode Card */}
               <div style={sectionCardStyle}>
-                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   Sklad a Čárový kód
                 </div>
 
@@ -661,12 +661,12 @@ export default function PresetModal({
                     </label>
                     {scannedFeedback && (
                       <span style={{
-                        fontSize: '0.75rem',
-                        fontWeight: '800',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
                         color: 'var(--accent-emerald)',
                         background: 'rgba(16, 185, 129, 0.15)',
                         padding: '2px 8px',
-                        borderRadius: '10px',
+                        borderRadius: '6px',
                         border: '1px solid var(--accent-emerald)',
                         animation: 'fadeIn 0.2s ease'
                       }}>
@@ -691,7 +691,7 @@ export default function PresetModal({
                       transition: 'border-color 0.2s ease'
                     }}
                   />
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+                  <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
                     {t('presets.scan_barcode_hint')}
                   </span>
                 </div>
@@ -709,10 +709,9 @@ export default function PresetModal({
                     gap: '0.75rem'
                   }}>
                     <div style={{
-                      fontSize: '0.75rem',
-                      fontWeight: '800',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
                       color: 'var(--text-muted)',
-                      textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                       alignSelf: 'flex-start',
                       display: 'flex',
@@ -774,10 +773,10 @@ export default function PresetModal({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
                     <span style={{ fontSize: '1.4rem' }}>🏷️</span>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                         {t('inventory.barcode_only') || 'Skladová položka (Pouze čárový kód)'}
                       </h4>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         Bez dotykového tlačítka na ploše pokladny
                       </p>
                     </div>
@@ -821,7 +820,7 @@ export default function PresetModal({
                     background: 'rgba(59, 130, 246, 0.08)',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid rgba(59, 130, 246, 0.2)',
-                    fontSize: '0.78rem',
+                    fontSize: '0.8rem',
                     color: 'var(--text-secondary)',
                     lineHeight: 1.45
                   }}>

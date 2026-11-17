@@ -83,7 +83,7 @@ export default function DiscountModal({
       >
         <div className="modal-header">
           <div className="modal-title">
-            <Percent size={22} style={{ color: 'var(--accent-purple)' }} />
+            <Percent size={22} style={{ color: 'var(--text-secondary)' }} />
             <span>{t('discount.title')}</span>
           </div>
           <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
@@ -118,7 +118,7 @@ export default function DiscountModal({
             <button
               type="button"
               className={`nav-tab ${discountType === 'percent' ? 'active' : ''}`}
-              style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem', padding: '0.5rem', fontWeight: '800' }}
+              style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem', padding: '0.5rem', fontWeight: '700' }}
               onClick={() => { setDiscountType('percent'); setValStr('0'); }}
             >
               <Percent size={16} />
@@ -128,7 +128,7 @@ export default function DiscountModal({
             <button
               type="button"
               className={`nav-tab ${discountType === 'amount' ? 'active' : ''}`}
-              style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem', padding: '0.5rem', fontWeight: '800' }}
+              style={{ flex: 1, justifyContent: 'center', fontSize: '0.85rem', padding: '0.5rem', fontWeight: '700' }}
               onClick={() => { setDiscountType('amount'); setValStr('0'); }}
             >
               <Banknote size={16} />
@@ -146,14 +146,14 @@ export default function DiscountModal({
             flexDirection: 'column',
             gap: '0.3rem'
           }}>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.04em' }}>
               {discountType === 'percent' ? t('discount.entered_percent') : t('discount.entered_amount')}
             </div>
             <div style={{
               fontFamily: 'var(--font-mono)',
               fontSize: '2.3rem',
-              fontWeight: '800',
-              color: 'var(--accent-purple)'
+              fontWeight: '700',
+              color: 'var(--text-secondary)'
             }}>
               {valStr} {discountType === 'percent' ? '%' : 'Kč'}
             </div>
@@ -167,10 +167,10 @@ export default function DiscountModal({
               borderTop: '1px dashed var(--border-color)',
               fontSize: '0.88rem'
             }}>
-              <span style={{ color: 'var(--accent-rose)', fontWeight: '800' }}>
+              <span style={{ color: 'var(--accent-rose)', fontWeight: '700' }}>
                 {t('discount.savings')}: -{savingsAmount.toFixed(2)} Kč
               </span>
-              <span style={{ color: 'var(--accent-emerald)', fontWeight: '800' }}>
+              <span style={{ color: 'var(--accent-emerald)', fontWeight: '700' }}>
                 {t('discount.new_price')}: {finalAmount.toFixed(2)} Kč
               </span>
             </div>
@@ -183,7 +183,7 @@ export default function DiscountModal({
                   key={pct}
                   type="button"
                   className="vat-btn"
-                  style={{ flex: 1, minWidth: '60px', padding: '0.55rem 0.2rem', fontWeight: '800', fontSize: '0.9rem' }}
+                  style={{ flex: 1, minWidth: '60px', padding: '0.55rem 0.2rem', fontWeight: '700', fontSize: '0.9rem' }}
                   onClick={() => setValStr(pct.toString())}
                 >
                   -{pct}%
@@ -195,7 +195,7 @@ export default function DiscountModal({
                   key={amt}
                   type="button"
                   className="vat-btn"
-                  style={{ flex: 1, minWidth: '65px', padding: '0.55rem 0.2rem', fontWeight: '800', fontSize: '0.85rem' }}
+                  style={{ flex: 1, minWidth: '65px', padding: '0.55rem 0.2rem', fontWeight: '700', fontSize: '0.85rem' }}
                   onClick={() => setValStr(amt.toString())}
                 >
                   -{amt} Kč
@@ -205,7 +205,7 @@ export default function DiscountModal({
             <button
               type="button"
               className="vat-btn"
-              style={{ color: 'var(--accent-rose)', padding: '0.55rem 0.4rem', fontWeight: '800' }}
+              style={{ color: 'var(--accent-rose)', padding: '0.55rem 0.4rem', fontWeight: '700' }}
               onClick={() => setValStr('0')}
             >
               <RotateCcw size={14} /> {t('payment.reset')}
@@ -239,7 +239,7 @@ export default function DiscountModal({
           <button
             type="button"
             className="pay-btn pay-btn-cash"
-            style={{ width: '100%', height: '56px', background: 'linear-gradient(135deg, var(--accent-purple), #6d28d9)', fontSize: '1.1rem', fontWeight: '800' }}
+            style={{ width: '100%', height: '56px', background: '#6d28d9', fontSize: '1.1rem', fontWeight: '700' }}
             onClick={handleApply}
           >
             <CheckCircle2 size={22} />

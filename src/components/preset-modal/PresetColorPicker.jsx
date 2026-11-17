@@ -24,9 +24,8 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <span style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.78rem',
+            fontSize: '0.8rem',
             color: 'var(--text-muted)',
-            textTransform: 'uppercase',
             fontWeight: '700',
             letterSpacing: '0.04em'
           }}>
@@ -91,7 +90,7 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
             style={{
               height: '32px',
               padding: '0 0.65rem',
-              borderRadius: '16px',
+              borderRadius: '12px',
               background: !isPresetColor ? selectedColor : 'var(--bg-card)',
               color: !isPresetColor ? '#ffffff' : 'var(--text-primary)',
               border: !isPresetColor ? '2px solid #ffffff' : '1px dashed var(--border-color)',
@@ -100,7 +99,7 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.35rem',
-              fontSize: '0.78rem',
+              fontSize: '0.8rem',
               fontWeight: '700',
               transition: 'all 0.15s ease',
               flexShrink: 0

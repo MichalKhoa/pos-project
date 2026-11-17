@@ -35,7 +35,7 @@ export default function StockKeypadModal({
         }}
       >
         <div className="modal-header" style={{ padding: '0.85rem 1.25rem' }}>
-          <div className="modal-title" style={{ fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="modal-title" style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Package size={18} style={{ color: 'var(--accent-blue)' }} />
             <span>Zadat stav skladu: {stockKeypadTarget.name}</span>
           </div>
@@ -53,10 +53,10 @@ export default function StockKeypadModal({
             border: '2px solid var(--accent-blue)',
             boxShadow: '0 0 12px rgba(59, 130, 246, 0.2)'
           }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
               Počet kusů na skladě
             </div>
-            <div style={{ fontSize: '2.2rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: '700', fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)' }}>
               {stockKeypadValue || '0'} ks
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn key-action"
-              style={{ fontSize: '1.15rem', fontWeight: '900' }}
+              style={{ fontSize: '1.15rem', fontWeight: '700' }}
               onClick={() => setStockKeypadValue('0')}
             >
               C
@@ -113,7 +113,7 @@ export default function StockKeypadModal({
             <button
               type="button"
               className="key-btn"
-              style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--accent-blue)' }}
+              style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--accent-blue)' }}
               onClick={() => setStockKeypadValue(prev => (parseInt(prev || '0', 10) + 10).toString())}
             >
               +10
@@ -163,7 +163,7 @@ export default function StockKeypadModal({
                 minHeight: '52px',
                 aspectRatio: 'auto',
                 fontSize: '1.05rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 gap: '0.5rem'
               }}
               onClick={onConfirm}

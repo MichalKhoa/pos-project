@@ -41,7 +41,7 @@ export default function CardPaymentPanel({
         }}>
           <CreditCard size={36} />
         </div>
-        <div style={{ fontWeight: '900', fontSize: '1.3rem', color: 'var(--text-primary)' }}>
+        <div style={{ fontWeight: '700', fontSize: '1.3rem', color: 'var(--text-primary)' }}>
           {t('payment.card_instruction')}
         </div>
 
@@ -57,13 +57,13 @@ export default function CardPaymentPanel({
           alignItems: 'center',
           boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)'
         }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
             {t('payment.total_due')}
           </span>
           <span style={{
             fontFamily: 'var(--font-mono)',
             fontSize: '2.6rem',
-            fontWeight: '900',
+            fontWeight: '700',
             color: 'var(--accent-blue)',
             lineHeight: 1.1,
             letterSpacing: '-0.02em'
@@ -84,7 +84,7 @@ export default function CardPaymentPanel({
           textAlign: 'left',
           fontSize: '0.85rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: '800', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: '700', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
             <Wifi size={15} />
             <span>
               {(termConfig?.enabled && termConfig?.ip)
@@ -110,7 +110,7 @@ export default function CardPaymentPanel({
           border: `1px solid ${termResult.success ? 'rgba(5, 150, 105, 0.35)' : 'rgba(225, 29, 72, 0.35)'}`,
           fontSize: '0.85rem'
         }}>
-          <div style={{ fontWeight: '800', color: termResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
+          <div style={{ fontWeight: '700', color: termResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
             {termResult.success ? `✓ ${t('payment.terminal_approved')}` : `✕ ${termResult.message}`}
           </div>
           {termResult.auth_code && (

@@ -109,7 +109,6 @@ export default function TaxReportsModal({ isOpen, onClose }) {
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(4px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -148,10 +147,10 @@ export default function TaxReportsModal({ isOpen, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <FileText size={22} style={{ color: 'var(--accent-blue)' }} />
             <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
                 {t('inventory.tax_reports_title') || 'Daňové přehledy & Příloha č. 1 DPFO (§ 7b ZDP)'}
               </h2>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                 {t('inventory.tax_reports_subtitle') || 'Oficiální podklady pro daňové přiznání k dani z příjmů a DPH z pokladního systému'}
               </div>
             </div>
@@ -332,10 +331,10 @@ export default function TaxReportsModal({ isOpen, onClose }) {
                     <TrendingUp size={16} />
                     <span>Zdanitelné příjmy (§ 7 ZDP)</span>
                   </div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900, marginTop: '0.35rem', color: 'var(--accent-emerald)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: '0.35rem', color: 'var(--accent-emerald)' }}>
                     {taxData.revenue?.net_revenue?.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                     Tržby {taxData.revenue?.total_sales?.toFixed(0)} Kč − Vratky {taxData.revenue?.total_refunds?.toFixed(0)} Kč
                   </div>
                 </div>
@@ -346,10 +345,10 @@ export default function TaxReportsModal({ isOpen, onClose }) {
                     <TrendingDown size={16} />
                     <span>Daňově uznatelné výdaje</span>
                   </div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900, marginTop: '0.35rem', color: 'var(--accent-amber)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: '0.35rem', color: 'var(--accent-amber)' }}>
                     {taxData.expenses?.total_deductible_expenses?.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                     Nákup zboží {taxData.expenses?.goods_intake_expenses?.toFixed(0)} Kč + Výdaje {taxData.expenses?.cash_payouts_expenses?.toFixed(0)} Kč
                   </div>
                 </div>
@@ -360,10 +359,10 @@ export default function TaxReportsModal({ isOpen, onClose }) {
                     <DollarSign size={16} />
                     <span>Dílčí základ daně (§ 7)</span>
                   </div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900, marginTop: '0.35rem', color: 'var(--accent-blue)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: '0.35rem', color: 'var(--accent-blue)' }}>
                     {taxData.operating_profit_tax_base?.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                     Příjmy minus daňové výdaje
                   </div>
                 </div>
@@ -371,9 +370,9 @@ export default function TaxReportsModal({ isOpen, onClose }) {
 
               {/* Table: Tabulka D - Údaje o zásobách (§ 7b ZDP) */}
               <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 800, fontSize: '0.92rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 700, fontSize: '0.92rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>Příloha č. 1, Tabulka D: Stav zásob na začátku a konci zdaňovacího období</span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Ocenění v pořizovacích cenách</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ocenění v pořizovacích cenách</span>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                   <thead>
@@ -393,7 +392,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
                       <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700 }}>
                         {taxData.inventory_valuation?.closing_inventory_valuation?.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč
                       </td>
-                      <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 800, color: (taxData.inventory_valuation?.inventory_difference || 0) >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                      <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, color: (taxData.inventory_valuation?.inventory_difference || 0) >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
                         {(taxData.inventory_valuation?.inventory_difference || 0) >= 0 ? '+' : ''}
                         {taxData.inventory_valuation?.inventory_difference?.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč
                       </td>
@@ -403,7 +402,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
               </div>
 
               {/* Note / Disclaimer */}
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                 <ShieldAlert size={14} />
                 <span>
                   Hodnoty vycházejí z evidence naskladněných položek (příjemek), hotovostních plateb pokladny a evidence skladových pohybů k 31.12.
@@ -439,7 +438,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
 
               {/* VAT Breakdown Table */}
               <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 800, fontSize: '0.92rem' }}>
+                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 700, fontSize: '0.92rem' }}>
                   Rozpis DPH podle sazeb (§ 47 ZDPH) — {vatPeriod === 'FULL_YEAR' ? `Rok ${selectedYear}` : `${vatPeriod}/${selectedYear}`}
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
@@ -471,7 +470,7 @@ export default function TaxReportsModal({ isOpen, onClose }) {
                         </tr>
                       );
                     })}
-                    <tr style={{ background: 'rgba(59, 130, 246, 0.05)', fontWeight: 800 }}>
+                    <tr style={{ background: 'rgba(59, 130, 246, 0.05)', fontWeight: 700 }}>
                       <td style={{ padding: '0.85rem 1rem' }}>CELKEM</td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
                         {vatData.total_base?.toLocaleString('cs-CZ', { minimumFractionDigits: 2 })} Kč

@@ -22,7 +22,7 @@ function PresetTileCard({
 }) {
   const { t } = useLanguage();
   const IconComponent = !preset.imageUrl ? getPresetIconComponent(preset.icon) : null;
-  const shouldShowVat = storeConfig?.showPresetVat !== false && preset.vat !== undefined;
+  const shouldShowVat = storeConfig?.showPresetVat === true && preset.vat !== undefined;
   const activeStyle = buttonStyle || storeConfig?.presetButtonStyle || 'left-stripe';
 
   const isStockTracked = Boolean(preset.trackStock ?? preset.track_stock);

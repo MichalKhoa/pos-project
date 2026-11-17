@@ -365,7 +365,7 @@ export default function PaymentModal({
       >
         {/* Modal Header */}
         <div className="modal-header" style={{ padding: '0.85rem 1.25rem' }}>
-          <div className="modal-title" style={{ fontSize: '1.2rem', fontWeight: '800' }}>
+          <div className="modal-title" style={{ fontSize: '1.2rem', fontWeight: '700' }}>
             {isRefund ? t('payment.refund_title') : t('payment.title')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -406,7 +406,7 @@ export default function PaymentModal({
               background: 'rgba(225, 29, 72, 0.14)',
               borderBottom: '1px solid rgba(225, 29, 72, 0.4)',
               color: 'var(--accent-rose)',
-              fontWeight: 800,
+              fontWeight: 700,
               fontSize: '0.9rem'
             }}
           >
@@ -495,7 +495,7 @@ export default function PaymentModal({
             }}>
               {/* ICO + ARES */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
                   IČO Odběratele
                 </label>
                 <div style={{ display: 'flex', gap: '0.35rem' }}>
@@ -552,7 +552,7 @@ export default function PaymentModal({
 
               {/* Company Name */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
                   Název firmy / Jméno
                 </label>
                 <input
@@ -575,7 +575,7 @@ export default function PaymentModal({
 
               {/* DIC */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
                   DIČ (volitelné)
                 </label>
                 <input
@@ -598,7 +598,7 @@ export default function PaymentModal({
 
               {/* Address */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', fontWeight: 600 }}>
                   Sídlo / Adresa odběratele
                 </label>
                 <input
@@ -622,7 +622,7 @@ export default function PaymentModal({
               {aresStatus && (
                 <div style={{
                   gridColumn: '1 / -1',
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   color: aresStatus.type === 'success' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
                   fontWeight: 600
                 }}>
@@ -717,7 +717,7 @@ export default function PaymentModal({
                 textAlign: 'center'
               }}
             >
-              <div id="manual-card-confirm-text" style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+              <div id="manual-card-confirm-text" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {t('payment.manual_card_confirm', {
                   amount: Math.abs(activeMethod === 'split' ? splitCardVal : totalAmount).toFixed(2)
                 })}
@@ -726,7 +726,7 @@ export default function PaymentModal({
                 <button
                   type="button"
                   className="pay-btn"
-                  style={{ flex: 1, height: '64px', fontSize: '1.05rem', fontWeight: 800, background: 'var(--bg-main)', color: 'var(--text-primary)', border: '1.5px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                  style={{ flex: 1, height: '64px', fontSize: '1.05rem', fontWeight: 700, background: 'var(--bg-main)', color: 'var(--text-primary)', border: '1.5px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
                   onClick={() => setConfirmOptions(null)}
                 >
                   {t('payment.manual_card_no')}
@@ -734,7 +734,7 @@ export default function PaymentModal({
                 <button
                   type="button"
                   className="pay-btn pay-btn-card"
-                  style={{ flex: 2, height: '64px', fontSize: '1.15rem', fontWeight: 900 }}
+                  style={{ flex: 2, height: '64px', fontSize: '1.15rem', fontWeight: 700 }}
                   onClick={() => {
                     const options = confirmOptions;
                     setConfirmOptions(null);

@@ -389,16 +389,14 @@ export default function SettingsView({
                 key={tab.id}
                 type="button"
                 className={`settings-sidebar-btn ${isActive ? 'active' : ''} ${isTabGated ? 'locked-subtab' : ''}`}
+                title={tab.subtitle}
                 onClick={() => handleSelectSubTab(tab)}
               >
                 <div className="settings-sidebar-icon">
                   <IconComponent size={20} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
-                  <span style={{ fontSize: '0.92rem', whiteSpace: 'nowrap' }}>{tab.title}</span>
-                  <span style={{ fontSize: '0.72rem', color: isActive ? 'var(--accent-blue)' : 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                    {tab.subtitle}
-                  </span>
+                  <span style={{ fontSize: '0.92rem', whiteSpace: 'normal', lineHeight: 1.25 }}>{tab.title}</span>
                 </div>
                 {isTabGated && (
                   <div className="subtab-lock-indicator" title={t('settings.tab_locked_badge') || 'Zamčeno'}>
@@ -417,7 +415,7 @@ export default function SettingsView({
               color: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)',
               border: 'none',
               padding: '0.2rem 0.5rem',
-              fontSize: '0.75rem'
+              fontSize: '0.8rem'
             }}>
               <span className="status-dot" style={{ background: backendConnected ? 'var(--accent-emerald)' : 'var(--accent-rose)' }} />
               <span>{backendLoading ? 'Ověřuji...' : (backendConnected ? 'Online' : 'Offline')}</span>
@@ -474,7 +472,7 @@ export default function SettingsView({
                 <button
                   type="button"
                   className="pay-btn pay-btn-card"
-                  style={{ height: '44px', padding: '0 1.5rem', fontWeight: '800' }}
+                  style={{ height: '44px', padding: '0 1.5rem', fontWeight: '700' }}
                   onClick={() => requireAdminPin(() => {})}
                 >
                   <Lock size={16} />
@@ -606,7 +604,7 @@ export default function SettingsView({
                       borderRadius: 'var(--radius-sm)',
                       border: 'none',
                       fontSize: '0.84rem',
-                      fontWeight: '800',
+                      fontWeight: '700',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.45rem',
@@ -629,7 +627,7 @@ export default function SettingsView({
                       borderRadius: 'var(--radius-sm)',
                       border: 'none',
                       fontSize: '0.84rem',
-                      fontWeight: '800',
+                      fontWeight: '700',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.45rem',

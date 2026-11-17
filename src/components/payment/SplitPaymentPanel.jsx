@@ -27,13 +27,13 @@ export default function SplitPaymentPanel({
         {/* COLUMN 1: Cash Portion Inputs, Calculation & Shortcuts */}
         <div className="cash-col-left" style={{ gap: '0.85rem' }}>
           <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.25rem', letterSpacing: '0.04em' }}>
               {t('payment.split_cash_portion')}
             </div>
             <div style={{
               fontFamily: 'var(--font-mono)',
               fontSize: '1.9rem',
-              fontWeight: '900',
+              fontWeight: '700',
               color: 'var(--accent-emerald)',
               background: 'var(--bg-main)',
               border: '1px solid var(--border-color)',
@@ -55,10 +55,10 @@ export default function SplitPaymentPanel({
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-color)'
           }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
               {t('payment.split_card_remaining')}:
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.5rem', fontWeight: '900', color: 'var(--accent-blue)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.5rem', fontWeight: '700', color: 'var(--accent-blue)' }}>
               {splitCardVal.toFixed(2)} Kč
             </span>
           </div>
@@ -68,7 +68,7 @@ export default function SplitPaymentPanel({
             <button
               type="button"
               className="vat-btn"
-              style={{ padding: '0.55rem', fontWeight: '900', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--accent-purple)', borderColor: 'rgba(124, 58, 237, 0.3)' }}
+              style={{ padding: '0.55rem', fontWeight: '700', background: 'rgba(71, 85, 105, 0.1)', color: 'var(--text-secondary)', borderColor: 'rgba(124, 58, 237, 0.3)' }}
               onClick={() => setSplitCashStr((totalAmount / 2).toFixed(0))}
             >
               50% / 50%
@@ -137,11 +137,11 @@ export default function SplitPaymentPanel({
           type="button"
           className="nav-tab"
           onClick={() => setSplitStep(1)}
-          style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', fontWeight: '800', height: '36px' }}
+          style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', fontWeight: '700', height: '36px' }}
         >
           ← {t('payment.back_to_cash')}
         </button>
-        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '800' }}>
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '700' }}>
           {t('payment.cash')}: {splitCashVal.toFixed(2)} Kč | {t('payment.card')}: {splitCardVal.toFixed(2)} Kč
         </div>
       </div>
@@ -170,7 +170,7 @@ export default function SplitPaymentPanel({
         }}>
           <CreditCard size={32} />
         </div>
-        <div style={{ fontWeight: '900', fontSize: '1.3rem', color: 'var(--text-primary)' }}>
+        <div style={{ fontWeight: '700', fontSize: '1.3rem', color: 'var(--text-primary)' }}>
           {t('payment.card_instruction')}
         </div>
 
@@ -186,13 +186,13 @@ export default function SplitPaymentPanel({
           alignItems: 'center',
           boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)'
         }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
             {t('payment.split_card_remaining')}
           </span>
           <span style={{
             fontFamily: 'var(--font-mono)',
             fontSize: '2.5rem',
-            fontWeight: '900',
+            fontWeight: '700',
             color: 'var(--accent-blue)',
             lineHeight: 1.1,
             letterSpacing: '-0.02em'
@@ -213,7 +213,7 @@ export default function SplitPaymentPanel({
           textAlign: 'left',
           fontSize: '0.85rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: '800', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: '700', color: (termConfig?.enabled && termConfig?.ip) ? 'var(--accent-emerald)' : 'var(--accent-blue)', marginBottom: '0.2rem' }}>
             <Wifi size={15} />
             <span>
               {(termConfig?.enabled && termConfig?.ip)
@@ -239,7 +239,7 @@ export default function SplitPaymentPanel({
           border: `1px solid ${termResult.success ? 'rgba(5, 150, 105, 0.35)' : 'rgba(225, 29, 72, 0.35)'}`,
           fontSize: '0.85rem'
         }}>
-          <div style={{ fontWeight: '800', color: termResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
+          <div style={{ fontWeight: '700', color: termResult.success ? 'var(--accent-emerald)' : 'var(--accent-rose)', marginBottom: '0.2rem' }}>
             {termResult.success ? `✓ ${t('payment.terminal_approved')}` : `✕ ${termResult.message}`}
           </div>
           {termResult.auth_code && (

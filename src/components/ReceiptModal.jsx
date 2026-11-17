@@ -95,7 +95,7 @@ export default function ReceiptModal({ saleData, storeConfig, onClose, onNewSale
   return (
     <div className="modal-overlay">
       <div className="modal-card" style={{ maxWidth: isA4 ? '680px' : (is58mm ? '360px' : '440px') }}>
-        <div className="modal-header" style={{ background: (saleData.isRefund || saleData.is_refund) ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'var(--bg-input)' }}>
+        <div className="modal-header" style={{ background: (saleData.isRefund || saleData.is_refund) ? '#dc2626' : 'var(--bg-input)' }}>
           <div className="modal-title">
             <CheckCircle size={20} style={{ color: (saleData.isRefund || saleData.is_refund) ? '#fff' : 'var(--accent-emerald)' }} />
             <span>

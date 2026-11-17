@@ -59,10 +59,10 @@ export default function QrPaymentPanel({
           ) : (
             <div style={{ padding: '1rem', textAlign: 'center' }}>
               <AlertTriangle size={36} style={{ color: 'var(--accent-amber)', margin: '0 auto 0.5rem', display: 'block' }} />
-              <div style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--accent-rose)' }}>
+              <div style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--accent-rose)' }}>
                 Účet (IBAN) nenastaven
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.35rem', lineHeight: '1.3' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.35rem', lineHeight: '1.3' }}>
                 Pro vygenerování platebního QR kódu zadejte IBAN v Nastavení prodejny.
               </div>
             </div>
@@ -80,12 +80,12 @@ export default function QrPaymentPanel({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 4px 16px rgba(124, 58, 237, 0.15)'
+            boxShadow: '0 4px 16px rgba(71, 85, 105, 0.15)'
           }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
               {t('payment.total_due')}
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', fontWeight: '900', color: 'var(--accent-purple)', lineHeight: 1.1 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', fontWeight: '700', color: 'var(--text-secondary)', lineHeight: 1.1 }}>
               {totalAmount.toLocaleString('cs-CZ')} Kč
             </span>
           </div>
@@ -98,10 +98,10 @@ export default function QrPaymentPanel({
               borderRadius: 'var(--radius-md)',
               padding: '0.6rem 0.85rem'
             }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                 {t('payment.var_symbol')}
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
                 {varSymbol}
               </div>
             </div>
@@ -112,10 +112,10 @@ export default function QrPaymentPanel({
               borderRadius: 'var(--radius-md)',
               padding: '0.6rem 0.85rem'
             }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                 {t('payment.bank_account_iban')}
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '0.2rem', wordBreak: 'break-all' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem', wordBreak: 'break-all' }}>
                 {formattedIban}
               </div>
             </div>
@@ -131,10 +131,10 @@ export default function QrPaymentPanel({
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
               {t('payment.payment_message')}:
             </span>
-            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
               Platba VoltFlow POS
             </span>
           </div>

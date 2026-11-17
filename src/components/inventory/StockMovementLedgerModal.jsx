@@ -116,7 +116,6 @@ export default function StockMovementLedgerModal({
         position: 'fixed',
         inset: 0,
         background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -156,8 +155,8 @@ export default function StockMovementLedgerModal({
                 width: '38px',
                 height: '38px',
                 borderRadius: 'var(--radius-md)',
-                background: 'rgba(139, 92, 246, 0.15)',
-                color: 'var(--accent-purple, #8b5cf6)',
+                background: 'rgba(71, 85, 105, 0.15)',
+                color: 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -166,10 +165,10 @@ export default function StockMovementLedgerModal({
               <History size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {t('stock_movements.title') || 'Kniha pohybů zásob (§ 7b ZDP)'}
               </h3>
-              <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 Auditorský záznam všech naskladnění, prodejů, vratek a úprav skladu
               </p>
             </div>
@@ -280,12 +279,12 @@ export default function StockMovementLedgerModal({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px', gap: '0.5rem', color: 'var(--text-muted)' }}>
               <History size={40} style={{ opacity: 0.3 }} />
               <span style={{ fontSize: '0.92rem', fontWeight: '700' }}>{t('stock_movements.empty') || 'Nebyly nalezeny žádné skladové pohyby.'}</span>
-              <span style={{ fontSize: '0.78rem' }}>Pohyby se automaticky zaznamenávají při prodeji, vratkách a naskladnění příjemkami.</span>
+              <span style={{ fontSize: '0.8rem' }}>Pohyby se automaticky zaznamenávají při prodeji, vratkách a naskladnění příjemkami.</span>
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--bg-input)' }}>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
                   <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_movements.col_timestamp') || 'Datum a čas'}</th>
                   <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_movements.col_type') || 'Typ pohybu'}</th>
                   <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_movements.col_product') || 'Položka'}</th>
@@ -320,8 +319,8 @@ export default function StockMovementLedgerModal({
                             background: badge.bg,
                             color: badge.color,
                             border: badge.border,
-                            fontSize: '0.76rem',
-                            fontWeight: '800'
+                            fontSize: '0.8rem',
+                            fontWeight: '700'
                           }}
                         >
                           {badge.icon}
@@ -339,7 +338,7 @@ export default function StockMovementLedgerModal({
                         style={{
                           padding: '0.6rem 0.85rem',
                           textAlign: 'right',
-                          fontWeight: '800',
+                          fontWeight: '700',
                           fontSize: '0.92rem',
                           color: isPositive ? 'var(--accent-emerald)' : 'var(--accent-rose)'
                         }}
@@ -363,7 +362,7 @@ export default function StockMovementLedgerModal({
                           <span>
                             <strong>{mov.supplier_name}</strong>
                             {mov.supplier_ico && <span style={{ opacity: 0.75 }}> (IČO: {mov.supplier_ico})</span>}
-                            {mov.note && <span style={{ display: 'block', fontSize: '0.74rem', color: 'var(--text-muted)' }}>{mov.note}</span>}
+                            {mov.note && <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{mov.note}</span>}
                           </span>
                         ) : (
                           mov.note || '—'

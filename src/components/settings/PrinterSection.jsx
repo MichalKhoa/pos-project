@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Printer, RefreshCw, Receipt, DollarSign, CheckCircle } from 'lucide-react';
+import { RefreshCw, DollarSign, CheckCircle } from 'lucide-react';
 import { openCashDrawerBackend } from '../../api/posApi.js';
 import { soundFx } from '../../utils/audio.js';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
@@ -51,7 +51,6 @@ export default function PrinterSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Printer size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.printer_title') || 'Pokladní tiskárna účtenek (ESC/POS)'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -96,7 +95,7 @@ export default function PrinterSection({
             ))}
           </select>
           {currentDev && (
-            <span style={{ fontSize: '0.78rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.8rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
               {currentDev.status === 'CONNECTED' ? (t('settings.printer_status_connected') || 'Připojeno a připraveno k tisku') : (t('settings.printer_status_virtual') || 'Virtuální / offline náhled')}
             </span>
           )}
@@ -111,7 +110,6 @@ export default function PrinterSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.tab_receipt') || 'Kotouček & Vzhled Účtenky'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -152,7 +150,7 @@ export default function PrinterSection({
             <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-blue)', marginBottom: '0.2rem' }}>
               {t('settings.printer_customization_notice_title') || 'Kompletní přizpůsobení účtenky'}
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               {t('settings.printer_customization_notice_desc') || 'Pro nastavení oddělovačů, loga, písma, kontaktů a živého náhledu přepněte v levém menu do záložky Účtenka & Vzhled.'}
             </div>
           </div>
@@ -163,7 +161,6 @@ export default function PrinterSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <DollarSign size={19} style={{ color: 'var(--accent-emerald)' }} />
               <span>{t('settings.drawer_title') || 'Pokladní zásuvka na peníze'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -189,7 +186,7 @@ export default function PrinterSection({
               height: '42px',
               padding: '0 1.25rem',
               fontSize: '0.85rem',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(99, 102, 241, 0.25) 100%)',
+              background: 'rgba(99, 102, 241, 0.25)',
               color: 'var(--accent-indigo, #4f46e5)',
               border: '1px solid var(--accent-indigo, #4f46e5)'
             }}

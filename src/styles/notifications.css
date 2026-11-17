@@ -66,25 +66,28 @@
 
 .banner-close-btn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(127, 127, 127, 0.18);
 }
 
 .sync-notification-banner.banner-success {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: #ffffff;
-  border: 1px solid #10b981;
+  background: color-mix(in srgb, #047857 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #047857 35%, var(--border-color));
+  border-left: 5px solid #047857;
 }
 
 .sync-notification-banner.banner-error {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  color: #ffffff;
-  border: 1px solid #ef4444;
+  background: color-mix(in srgb, #b91c1c 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #b91c1c 35%, var(--border-color));
+  border-left: 5px solid #b91c1c;
 }
 
 .sync-notification-banner.banner-info {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  border: 1px solid #3b82f6;
+  background: color-mix(in srgb, #1d4ed8 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #1d4ed8 35%, var(--border-color));
+  border-left: 5px solid #1d4ed8;
 }
 
 /* 2. Checkout Flash Banner (CheckoutFlashBanner.jsx) */
@@ -95,7 +98,6 @@
   transform: translateX(-50%);
   z-index: 9999;
   pointer-events: auto;
-  animation: flashPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes flashPop {
@@ -122,27 +124,31 @@
 }
 
 .flash-banner-card.flash-success {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: #ffffff;
-  border: 1.5px solid #34d399;
+  background: color-mix(in srgb, #047857 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #047857 35%, var(--border-color));
+  border-left: 5px solid #047857;
 }
 
 .flash-banner-card.flash-error {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  color: #ffffff;
-  border: 1.5px solid #f87171;
+  background: color-mix(in srgb, #b91c1c 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #b91c1c 35%, var(--border-color));
+  border-left: 5px solid #b91c1c;
 }
 
 .flash-banner-card.flash-warning {
-  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-  color: #ffffff;
-  border: 1.5px solid #fbbf24;
+  background: color-mix(in srgb, #b45309 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #b45309 35%, var(--border-color));
+  border-left: 5px solid #b45309;
 }
 
 .flash-banner-card.flash-info {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  border: 1.5px solid #60a5fa;
+  background: color-mix(in srgb, #1d4ed8 12%, var(--bg-card));
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, #1d4ed8 35%, var(--border-color));
+  border-left: 5px solid #1d4ed8;
 }
 
 .flash-icon {
@@ -161,15 +167,15 @@
 
 .flash-main-text {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .flash-amount-badge {
   font-family: var(--font-mono);
   font-size: 1.1rem;
-  font-weight: 900;
-  background: rgba(255, 255, 255, 0.2);
+  font-weight: 700;
+  background: rgba(127, 127, 127, 0.15);
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-sm);
 }
@@ -177,7 +183,7 @@
 .flash-close-btn {
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: inherit;
   opacity: 0.8;
   cursor: pointer;
   display: flex;
@@ -189,7 +195,7 @@
 
 .flash-close-btn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(127, 127, 127, 0.18);
 }
 
 /* 3. Undo Toast Card (ToastUndo.jsx) */
@@ -261,7 +267,7 @@
 
 .toast-item-name {
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -277,7 +283,7 @@
   color: #000000;
   border: none;
   border-radius: var(--radius-sm);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -285,7 +291,6 @@
 }
 
 .toast-undo-btn:hover {
-  transform: scale(1.04);
 }
 
 .toast-dismiss-btn {

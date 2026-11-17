@@ -92,7 +92,6 @@ export default function BarcodeLabelModal({
         position: 'fixed',
         inset: 0,
         background: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -142,12 +141,12 @@ export default function BarcodeLabelModal({
               <Printer size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {isBatch
                   ? (t('inventory.batch_shelf_tags_title') || 'Hromadný tisk regálových cenovek')
                   : (t('inventory.label_modal_title') || 'Tisk regálové cenovky')}
               </h3>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {isBatch
                   ? `${itemsToPrint.length} ${t('inventory.items_in_batch') || 'položek v dávce'}`
                   : currentPreset.name}
@@ -275,20 +274,20 @@ export default function BarcodeLabelModal({
               userSelect: 'none'
             }}
           >
-            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748b', letterSpacing: '0.05em' }}>
               {storeName}
             </div>
-            <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#0f172a', margin: '0.35rem 0 0.25rem 0', lineHeight: 1.2 }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a', margin: '0.35rem 0 0.25rem 0', lineHeight: 1.2 }}>
               {currentPreset.name}
             </div>
 
             {/* Selling Price with Unit and VAT */}
-            <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#047857', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: '700', color: '#047857', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline', justifyContent: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
               <span>{(currentPreset.price || 0).toFixed(2)} Kč</span>
               <span data-testid="label-unit" style={{ fontSize: '0.88rem', fontWeight: '700', color: '#475569' }}>
                 / {unit}
               </span>
-              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#64748b' }}>
                 s DPH
               </span>
             </div>
@@ -299,7 +298,7 @@ export default function BarcodeLabelModal({
                 data-testid="label-weighted-price"
                 style={{
                   fontSize: '0.88rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   color: '#047857',
                   background: '#ecfdf5',
                   border: '1px solid #a7f3d0',
@@ -316,7 +315,7 @@ export default function BarcodeLabelModal({
             <div
               data-testid="label-validity-date"
               style={{
-                fontSize: '0.74rem',
+                fontSize: '0.8rem',
                 fontWeight: '700',
                 color: '#64748b',
                 marginBottom: '0.45rem'
@@ -357,7 +356,7 @@ export default function BarcodeLabelModal({
               </div>
             )}
 
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
               {currentPreset.category} • DPH {currentPreset.vat !== undefined ? currentPreset.vat : 21}%
             </div>
           </div>
@@ -366,7 +365,7 @@ export default function BarcodeLabelModal({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', alignItems: 'end' }}>
             {/* Validity Date Input */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
                 {t('inventory.label_validity_date') || 'Platnost ceny od:'}
               </label>
               <input
@@ -392,7 +391,7 @@ export default function BarcodeLabelModal({
 
             {/* Copies Control */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
                 {t('inventory.label_copies') || 'Kopií na položku'}:
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -426,7 +425,7 @@ export default function BarcodeLabelModal({
                     height: '42px',
                     textAlign: 'center',
                     fontSize: '1.05rem',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-input)',
@@ -506,7 +505,7 @@ export default function BarcodeLabelModal({
               background: 'var(--accent-emerald)',
               color: '#ffffff',
               fontSize: '0.88rem',
-              fontWeight: '800',
+              fontWeight: '700',
               cursor: isPrinting ? 'default' : 'pointer',
               display: 'inline-flex',
               alignItems: 'center',

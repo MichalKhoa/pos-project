@@ -66,7 +66,7 @@ export default function PriceCheckModal({
         <div
           className="modal-header"
           style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%)',
+            background: 'rgba(37, 99, 235, 0.05)',
             padding: '1rem 1.25rem',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
@@ -79,7 +79,7 @@ export default function PriceCheckModal({
               style={{
                 width: '36px',
                 height: '36px',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 background: 'var(--accent-blue, #3b82f6)',
                 color: '#ffffff',
                 display: 'flex',
@@ -90,10 +90,10 @@ export default function PriceCheckModal({
               <Search size={20} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary, #ffffff)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary, #ffffff)' }}>
                 {t('price_check.modal_title')}
               </h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a3b8)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
                 {t('price_check.toggle_short')} • VoltFlow POS
               </span>
             </div>
@@ -107,7 +107,7 @@ export default function PriceCheckModal({
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               color: 'var(--text-secondary, #94a3b8)',
               width: '36px',
               height: '36px',
@@ -132,9 +132,8 @@ export default function PriceCheckModal({
                   {categoryName && (
                     <span
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.8rem',
                         fontWeight: '700',
-                        textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         background: 'rgba(59, 130, 246, 0.15)',
                         color: 'var(--accent-blue, #60a5fa)',
@@ -152,7 +151,7 @@ export default function PriceCheckModal({
                   {barcode && (
                     <span
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.8rem',
                         fontFamily: 'var(--font-mono, monospace)',
                         color: 'var(--text-secondary, #94a3b8)',
                         background: 'rgba(255, 255, 255, 0.05)',
@@ -173,7 +172,7 @@ export default function PriceCheckModal({
                   className="price-check-item-name"
                   style={{
                     fontSize: '1.45rem',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     color: 'var(--text-primary, #ffffff)',
                     lineHeight: '1.25',
                     wordBreak: 'break-word'
@@ -187,7 +186,7 @@ export default function PriceCheckModal({
               <div
                 className="price-check-hero-card"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%)',
+                  background: 'rgba(5, 150, 105, 0.04)',
                   border: '2px solid var(--accent-emerald, #10b981)',
                   borderRadius: '12px',
                   padding: '1.25rem 1.5rem',
@@ -202,14 +201,13 @@ export default function PriceCheckModal({
                     style={{
                       fontSize: '0.82rem',
                       fontWeight: '700',
-                      textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       color: 'var(--accent-emerald, #34d399)'
                     }}
                   >
                     {t('price_check.price_label')}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #94a3b8)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
                     Včetně DPH ({vatRate}%)
                   </div>
                 </div>
@@ -218,7 +216,7 @@ export default function PriceCheckModal({
                   className="price-check-bold-price"
                   style={{
                     fontSize: '2.5rem',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     color: 'var(--accent-emerald, #10b981)',
                     fontFamily: 'var(--font-mono, monospace)',
                     letterSpacing: '-0.5px'
@@ -236,15 +234,15 @@ export default function PriceCheckModal({
                   gap: '0.75rem',
                   background: 'rgba(255, 255, 255, 0.03)',
                   padding: '0.85rem 1rem',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
                 {/* VAT Rate */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Percent size={16} style={{ color: 'var(--accent-purple, #a855f7)' }} />
+                  <Percent size={16} style={{ color: 'var(--text-secondary)' }} />
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #94a3b8)' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
                       {t('price_check.vat_label')}
                     </div>
                     <div style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary, #ffffff)' }}>
@@ -264,7 +262,7 @@ export default function PriceCheckModal({
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #94a3b8)' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
                       {t('price_check.stock_label')}
                     </div>
                     <div
@@ -303,7 +301,7 @@ export default function PriceCheckModal({
                 <AlertCircle size={32} />
               </div>
 
-              <h4 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary, #ffffff)' }}>
+              <h4 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary, #ffffff)' }}>
                 {t('price_check.unknown_title')}
               </h4>
 
@@ -350,7 +348,7 @@ export default function PriceCheckModal({
               padding: '0 1.25rem',
               fontSize: '0.92rem',
               fontWeight: '700',
-              borderRadius: '8px',
+              borderRadius: '6px',
               touchAction: 'manipulation',
               flex: '1'
             }}
@@ -371,11 +369,11 @@ export default function PriceCheckModal({
                 minHeight: '46px',
                 padding: '0 1.5rem',
                 fontSize: '0.95rem',
-                fontWeight: '800',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                fontWeight: '700',
+                background: '#059669',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -401,11 +399,11 @@ export default function PriceCheckModal({
                   minHeight: '46px',
                   padding: '0 1.5rem',
                   fontSize: '0.95rem',
-                  fontWeight: '800',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  fontWeight: '700',
+                  background: '#2563eb',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

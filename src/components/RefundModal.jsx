@@ -149,7 +149,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
         }}
       >
         {/* Modal Header */}
-        <div className="modal-header header-warning" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', flexShrink: 0 }}>
+        <div className="modal-header header-warning" style={{ background: '#dc2626', flexShrink: 0 }}>
           <div className="modal-header-title">
             <RotateCcw size={22} />
             <span>{t('refund.title')}</span>
@@ -173,13 +173,13 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t('refund.orig_doc')}:</div>
-                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                   {t('refund.orig_receipt')} #{sale.receiptNumber || sale.receipt_number}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t('refund.orig_total')}:</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-blue)' }}>
                   {(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)).toFixed(0)} Kč
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
               display: 'flex',
               flexWrap: 'wrap',
               gap: '0.5rem',
-              fontSize: '0.78rem',
+              fontSize: '0.8rem',
               color: 'var(--text-secondary)',
               borderTop: '1px solid var(--border-color)',
               paddingTop: '0.5rem'
@@ -241,7 +241,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 style={{
                   height: '44px',
                   fontWeight: '700',
-                  background: refundMode === 'full' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'transparent',
+                  background: refundMode === 'full' ? '#dc2626' : 'transparent',
                   borderColor: refundMode === 'full' ? '#ef4444' : 'var(--border-color)'
                 }}
                 onClick={() => handleModeChange('full')}
@@ -304,7 +304,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                       }}>
                         <td style={{ padding: '0.6rem 0.8rem' }}>
                           <div style={{ fontWeight: '600' }}>{item.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                             {unitPrice.toFixed(0)} Kč / ks {disc > 0 ? `(-${disc}%)` : ''} • DPH {item.vat}%
                             {refundedQty > 0 && (
                               <span style={{ marginLeft: '0.4rem', color: '#ef4444', fontWeight: '600' }}>
@@ -316,7 +316,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                         <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center', fontWeight: '700' }}>
                           <div>{item.quantity} ks</div>
                           <div style={{
-                            fontSize: '0.74rem',
+                            fontSize: '0.8rem',
                             color: maxQty > 0 ? 'var(--accent-blue)' : 'var(--text-muted)',
                             fontWeight: '600',
                             marginTop: '2px'
@@ -334,7 +334,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                                 minWidth: '40px',
                                 height: '40px',
                                 padding: '0 0.35rem',
-                                fontSize: '0.72rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '700',
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -350,7 +350,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                               <Minus size={13} /> 1 ks
                             </button>
 
-                            <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: '800', fontSize: '0.95rem', color: isSelected ? '#ef4444' : 'var(--text-primary)' }}>
+                            <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: '700', fontSize: '0.95rem', color: isSelected ? '#ef4444' : 'var(--text-primary)' }}>
                               {qty}
                             </span>
 
@@ -362,7 +362,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                                 minWidth: '40px',
                                 height: '40px',
                                 padding: '0 0.35rem',
-                                fontSize: '0.72rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '700',
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -385,7 +385,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                               style={{
                                 height: '40px',
                                 padding: '0 0.5rem',
-                                fontSize: '0.72rem',
+                                fontSize: '0.8rem',
                                 fontWeight: '700',
                                 whiteSpace: 'nowrap',
                                 flexShrink: 0,
@@ -504,7 +504,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 {t('refund.total_refund')}:
               </div>
             </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#dc2626' }}>
+            <div style={{ fontSize: '1.6rem', fontWeight: '700', color: '#dc2626' }}>
               -{totalRefundAmount.toFixed(0)} Kč
             </div>
           </div>
@@ -526,8 +526,8 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 height: '44px',
                 minWidth: '40px',
                 padding: '0 1.5rem',
-                fontWeight: '800',
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                fontWeight: '700',
+                background: '#dc2626',
                 borderColor: '#ef4444',
                 gap: '0.5rem'
               }}

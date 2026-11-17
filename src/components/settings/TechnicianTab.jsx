@@ -1,23 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Database,
-  Cpu,
-  ShieldCheck,
-  FileText,
-  Download,
-  Upload,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Archive,
-  Terminal,
-  Search,
-  Filter,
-  Layers,
-  Copy,
-  Check
-} from 'lucide-react';
+import { Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Search, Filter, Layers, Copy, Check } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useConfirm } from '../../context/useConfirm.js';
 import { useStoreConfig } from '../../context/StoreConfigContext.jsx';
@@ -367,10 +349,10 @@ export default function TechnicianTab() {
             <Layers size={20} />
           </div>
           <div>
-            <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800' }}>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700' }}>
               {t('settings.diag_subtab_technician') || 'Servisní diagnostika technika'}
             </h4>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               {diagnostics?.timestamp ? `Aktualizováno: ${new Date(diagnostics.timestamp).toLocaleTimeString('cs-CZ')}` : 'Načítání telemetrie...'}
             </span>
           </div>
@@ -405,7 +387,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Database size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.tech_db_health_title') || 'Stav a integrita databáze'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -422,10 +403,10 @@ export default function TechnicianTab() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  fontSize: '0.75rem',
+                  fontSize: '0.8rem',
                   background: db?.integrity === 'ok' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                   color: db?.integrity === 'ok' ? 'var(--accent-emerald)' : 'var(--accent-red)'
                 }}
@@ -438,14 +419,14 @@ export default function TechnicianTab() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_db_size') || 'Velikost DB'}</span>
-              <span style={{ fontWeight: '800' }} data-testid="db-size-val">
+              <span style={{ fontWeight: '700' }} data-testid="db-size-val">
                 {db ? formatBytes(db.size_bytes) : '—'}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_wal_size') || 'Velikost WAL žurnálu'}</span>
-              <span style={{ fontWeight: '800' }}>
+              <span style={{ fontWeight: '700' }}>
                 {db ? formatBytes(db.wal_size_bytes) : '—'}
               </span>
             </div>
@@ -457,7 +438,7 @@ export default function TechnicianTab() {
               </span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden' }}>
               <span style={{ flexShrink: 0, marginRight: '0.5rem' }}>{t('settings.tech_db_path') || 'Cesta'}:</span>
               <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', direction: 'rtl', textAlign: 'left' }} title={db?.path || ''}>
                 {db?.path || '—'}
@@ -484,7 +465,7 @@ export default function TechnicianTab() {
                 style={{
                   padding: '0.5rem 0.75rem',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   fontWeight: '700',
                   background: vacuumResult.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                   color: vacuumResult.type === 'success' ? 'var(--accent-emerald)' : 'var(--accent-red)',
@@ -503,7 +484,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Cpu size={19} style={{ color: 'var(--accent-purple)' }} />
                 <span>{t('settings.tech_system_health_title') || 'Systémové prostředky a proces'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -515,21 +495,21 @@ export default function TechnicianTab() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_uptime') || 'Doba běhu backendu'}</span>
-              <span style={{ fontWeight: '800', color: 'var(--accent-emerald)' }} data-testid="uptime-val">
+              <span style={{ fontWeight: '700', color: 'var(--accent-emerald)' }} data-testid="uptime-val">
                 {sys ? formatUptime(sys.uptime_seconds) : '—'}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_cpu_usage') || 'Využití procesoru (CPU)'}</span>
-              <span style={{ fontWeight: '800' }}>
+              <span style={{ fontWeight: '700' }}>
                 {sys && sys.cpu_percent != null ? `${sys.cpu_percent}%` : '—'}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_ram_usage') || 'Operační paměť (RAM)'}</span>
-              <span style={{ fontWeight: '800' }}>
+              <span style={{ fontWeight: '700' }}>
                 {sys && sys.ram_used_mb != null && sys.ram_total_mb != null
                   ? `${sys.ram_used_mb} MB / ${sys.ram_total_mb} MB`
                   : '—'}
@@ -538,7 +518,7 @@ export default function TechnicianTab() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_disk_usage') || 'Volné místo na disku'}</span>
-              <span style={{ fontWeight: '800' }}>
+              <span style={{ fontWeight: '700' }}>
                 {sys && sys.disk_free_gb != null && sys.disk_total_gb != null
                   ? `${sys.disk_free_gb} GB / ${sys.disk_total_gb} GB`
                   : '—'}
@@ -585,7 +565,7 @@ export default function TechnicianTab() {
                 style={{
                   padding: '0.5rem 0.75rem',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   fontWeight: '700',
                   background:
                     restartResult.type === 'success'
@@ -626,7 +606,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <ShieldCheck size={19} style={{ color: 'var(--accent-emerald)' }} />
                 <span>{t('settings.tech_eet_health_title') || 'Fiskální certifikát EET 2.0'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -643,10 +622,10 @@ export default function TechnicianTab() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  fontSize: '0.75rem',
+                  fontSize: '0.8rem',
                   background: eet?.loaded
                     ? (eet.is_expired ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)')
                     : 'rgba(156, 163, 175, 0.15)',
@@ -670,7 +649,7 @@ export default function TechnicianTab() {
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.82rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>{t('settings.tech_eet_days_remaining') || 'Zbývající platnost'}</span>
-                  <span style={{ fontWeight: '800', color: (eet.days_remaining != null && eet.days_remaining < 30) ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
+                  <span style={{ fontWeight: '700', color: (eet.days_remaining != null && eet.days_remaining < 30) ? 'var(--accent-amber)' : 'var(--text-primary)' }}>
                     {eet.days_remaining != null ? `${eet.days_remaining} ${t('settings.tech_eet_days_unit') || 'dní'}` : '—'}
                   </span>
 
@@ -683,13 +662,13 @@ export default function TechnicianTab() {
                   </span>
                 </div>
 
-                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', overflow: 'hidden' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden' }}>
                   <span>{t('settings.tech_eet_cert_subject') || 'Subjekt'}: </span>
                   <span style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{eet.subject || '—'}</span>
                 </div>
               </>
             ) : (
-              <div style={{ padding: '0.5rem 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <div style={{ padding: '0.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {eet?.error || 'Certifikát EET není nainstalován nebo chybí heslo v konfiguraci.'}
               </div>
             )}
@@ -698,8 +677,8 @@ export default function TechnicianTab() {
             <div style={{ marginTop: '0.35rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Replikace Litestream</span>
               <span style={{
-                fontWeight: '800',
-                fontSize: '0.75rem',
+                fontWeight: '700',
+                fontSize: '0.8rem',
                 color: litestream?.running ? 'var(--accent-emerald)' : 'var(--text-muted)'
               }}>
                 {litestream?.running ? '🟢 AKTIVNÍ' : '⚪ POUZE LOKÁLNÍ'}
@@ -714,7 +693,6 @@ export default function TechnicianTab() {
         <div className="settings-section-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
             <h3 className="settings-section-title">
-              <Terminal size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.tech_logs_title') || 'Živý prohlížeč systémového logu'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -738,7 +716,7 @@ export default function TechnicianTab() {
             <button
               type="button"
               className="settings-action-btn secondary"
-              style={{ minHeight: '38px', padding: '0 0.65rem', gap: '0.35rem', fontSize: '0.78rem' }}
+              style={{ minHeight: '38px', padding: '0 0.65rem', gap: '0.35rem', fontSize: '0.8rem' }}
               onClick={handleCopyLogs}
               title="Kopírovat zobrazené logy"
             >
@@ -750,7 +728,7 @@ export default function TechnicianTab() {
             <button
               type="button"
               className="settings-action-btn secondary"
-              style={{ minHeight: '38px', padding: '0 0.75rem', gap: '0.35rem', fontSize: '0.78rem' }}
+              style={{ minHeight: '38px', padding: '0 0.75rem', gap: '0.35rem', fontSize: '0.8rem' }}
               onClick={loadLogs}
               disabled={logsLoading}
               data-testid="refresh-logs-btn"
@@ -775,8 +753,8 @@ export default function TechnicianTab() {
                   style={{
                     minHeight: '34px',
                     padding: '0 0.65rem',
-                    fontSize: '0.76rem',
-                    fontWeight: '800',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid',
                     borderColor: isActive ? 'var(--accent-blue)' : 'var(--border-color)',
@@ -816,7 +794,7 @@ export default function TechnicianTab() {
           </div>
 
           {/* Lines count selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             <Filter size={14} />
             <select
               value={logLinesCount}
@@ -824,7 +802,7 @@ export default function TechnicianTab() {
               style={{
                 height: '34px',
                 padding: '0 0.5rem',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-color)',
                 background: 'var(--bg-main)',
@@ -849,7 +827,7 @@ export default function TechnicianTab() {
             background: '#090d16',
             color: '#e2e8f0',
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-            fontSize: '0.76rem',
+            fontSize: '0.8rem',
             lineHeight: '1.45',
             padding: '0.75rem',
             borderRadius: 'var(--radius-md)',
@@ -894,7 +872,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Archive size={19} style={{ color: 'var(--accent-emerald)' }} />
                 <span>{t('settings.tech_backup_snapshot_title') || 'Záloha & Obnova SQLite databáze'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -964,7 +941,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <FileText size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.tech_export_bundle_title') || 'Export diagnostického balíčku'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -1016,7 +992,6 @@ export default function TechnicianTab() {
             position: 'fixed',
             inset: 0,
             background: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1043,7 +1018,7 @@ export default function TechnicianTab() {
               <div style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
                 <AlertTriangle size={24} />
               </div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>
                 {t('settings.tech_restore_confirm_title') || 'Potvrzení obnovení databáze'}
               </h3>
             </div>
@@ -1060,7 +1035,7 @@ export default function TechnicianTab() {
               <button
                 type="button"
                 className="settings-action-btn primary"
-                style={{ flex: 1, minHeight: '44px', background: 'var(--accent-amber)', color: '#000', fontWeight: '800' }}
+                style={{ flex: 1, minHeight: '44px', background: 'var(--accent-amber)', color: '#000', fontWeight: '700' }}
                 onClick={handleConfirmRestore}
                 data-testid="confirm-restore-action-btn"
               >

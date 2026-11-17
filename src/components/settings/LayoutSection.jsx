@@ -1,5 +1,6 @@
-import React from 'react';
-import { Layout, Tag, ArrowRight, Tv, Sliders, Palette, Check, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { soundFx } from '../../utils/audio';
+import { Tag, ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
 
@@ -11,6 +12,18 @@ export default function LayoutSection({
   onNavigateToPresets,
   onSaveStoreConfig
 }) {
+  const [darkMode, setDarkMode] = useState(() => (localStorage.getItem('pos_theme') || 'light') === 'dark');
+  const [soundOn, setSoundOn] = useState(() => soundFx.isSoundEnabled());
+  const toggleDark = checked => {
+    const next = checked ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('pos_theme', next);
+    setDarkMode(checked);
+  };
+  const toggleSound = checked => {
+    soundFx.setSoundEnabled(checked);
+    setSoundOn(checked);
+  };
   const { t } = useTranslation();
   const { openCustomerDisplay } = useTauri();
 
@@ -49,7 +62,6 @@ export default function LayoutSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Sliders size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.preset_layout_title') || 'Tlačítka a Dlaždice Sortimentu'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -177,9 +189,33 @@ export default function LayoutSection({
           <label className="settings-switch-toggle">
             <input
               type="checkbox"
-              checked={config.showPresetVat !== false}
+              checked={config.showPresetVat === true}
               onChange={e => handleUpdate({ showPresetVat: e.target.checked })}
             />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">{t('settings.dark_mode_label') || 'Tmavý režim'}</span>
+            <span className="settings-toggle-subtitle">{t('settings.dark_mode_desc') || 'Tmavé pozadí obrazovky pokladny.'}</span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input type="checkbox" checked={darkMode} onChange={e => toggleDark(e.target.checked)} />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">{t('settings.sound_label') || 'Zvuky'}</span>
+            <span className="settings-toggle-subtitle">{t('settings.sound_desc') || 'Zvukové potvrzení stisku tlačítek a plateb.'}</span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input type="checkbox" checked={soundOn} onChange={e => toggleSound(e.target.checked)} />
             <span className="settings-switch-slider" />
           </label>
         </div>
@@ -190,7 +226,6 @@ export default function LayoutSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Palette size={19} style={{ color: 'var(--accent-highlight, #6366f1)' }} />
               <span>{t('settings.navbar_style_title') || 'Styl a rozvržení horní lišty (Navbar)'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -244,7 +279,7 @@ export default function LayoutSection({
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {ACCENT_COLORS.map(col => {
-              const isSelected = (config.highlightColor || 'indigo') === col.id;
+              const isSelected = (config.highlightColor || 'charcoal') === col.id;
               return (
                 <button
                   key={col.id}
@@ -301,9 +336,9 @@ export default function LayoutSection({
       </div>
 
       {/* 🏷️ Card 3: Preset Catalog Shortcut Banner */}
-      <div className="settings-action-banner" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+      <div className="settings-action-banner" style={{ background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
         <div>
-          <div style={{ fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
             <Tag size={19} style={{ color: 'var(--accent-blue)' }} />
             <span>{t('settings.preset_catalog_banner_title') || 'Katalog produktů & Tlačítek sortimentu'}</span>
           </div>
@@ -331,7 +366,6 @@ export default function LayoutSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Layout size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.register_layout_title') || 'Ergonomie a Rozvržení Pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -599,7 +633,6 @@ export default function LayoutSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Tv size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.customer_display_title') || 'Zákaznický LCD Displej'}</span>
             </h3>
             <p className="settings-section-desc">

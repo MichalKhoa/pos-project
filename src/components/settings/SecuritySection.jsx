@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Unlock, KeyRound } from 'lucide-react';
+import { Lock, Unlock, KeyRound } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function SecuritySection({
@@ -45,7 +45,7 @@ export default function SecuritySection({
             background: isAdminMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.05)',
             color: isAdminMode ? 'var(--accent-amber)' : 'var(--text-muted)',
             borderColor: isAdminMode ? 'rgba(245, 158, 11, 0.3)' : 'var(--border-color)',
-            fontWeight: '800',
+            fontWeight: '700',
             fontSize: '0.8rem'
           }}>
             {isAdminMode ? (t('settings.security_admin_active') || 'Správce Aktivní') : (t('settings.security_locked') || 'Uzamčeno')}
@@ -66,7 +66,7 @@ export default function SecuritySection({
               height: '44px',
               padding: '0 1.25rem',
               fontSize: '0.88rem',
-              fontWeight: '800',
+              fontWeight: '700',
               background: isAdminMode ? 'var(--accent-amber)' : 'var(--bg-card)',
               color: isAdminMode ? '#ffffff' : 'var(--text-primary)',
               border: isAdminMode ? 'none' : '1px solid var(--border-color)'
@@ -84,7 +84,6 @@ export default function SecuritySection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <KeyRound size={19} style={{ color: 'var(--accent-amber)' }} />
               <span>{t('settings.security_pin_title') || 'Správa kódu Admin PIN'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -104,7 +103,7 @@ export default function SecuritySection({
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ maxWidth: '520px' }}>
-            <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary)' }}>
               {security?.adminPinEnabled ? t('settings.security_admin_pin_on') : t('settings.security_admin_pin_off')}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
@@ -116,7 +115,7 @@ export default function SecuritySection({
             <button
               type="button"
               className="clear-cart-btn"
-              style={{ height: '44px', padding: '0 1.25rem', fontSize: '0.88rem', fontWeight: '800' }}
+              style={{ height: '44px', padding: '0 1.25rem', fontSize: '0.88rem', fontWeight: '700' }}
               title={t('settings.recovery_code_card_desc')}
               onClick={onNewRecoveryCode}
             >
@@ -133,7 +132,7 @@ export default function SecuritySection({
                 height: '44px',
                 padding: '0 1.25rem',
                 fontSize: '0.88rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 borderColor: 'var(--accent-amber)',
                 color: 'var(--accent-amber)',
                 background: 'rgba(245, 158, 11, 0.1)'
@@ -155,7 +154,6 @@ export default function SecuritySection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Shield size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.security_lock_title') || 'Zabezpečení a Uzamčení Pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -184,7 +182,7 @@ export default function SecuritySection({
               <button
                 type="button"
                 className="clear-cart-btn"
-                style={{ height: '44px', padding: '0 1.25rem', marginTop: '0.6rem', fontSize: '0.88rem', fontWeight: '800' }}
+                style={{ height: '44px', padding: '0 1.25rem', marginTop: '0.6rem', fontSize: '0.88rem', fontWeight: '700' }}
                 onClick={() => onSetPin('cashier')}
               >
                 <KeyRound size={16} />

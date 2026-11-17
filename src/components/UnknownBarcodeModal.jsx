@@ -79,7 +79,6 @@ export default function UnknownBarcodeModal({
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -92,7 +91,7 @@ export default function UnknownBarcodeModal({
         style={{
           backgroundColor: 'var(--surface-color, #1e293b)',
           color: 'var(--text-color, #f8fafc)',
-          borderRadius: '1rem',
+          borderRadius: '12px',
           border: '1px solid var(--border-color, #334155)',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           width: '100%',
@@ -121,7 +120,7 @@ export default function UnknownBarcodeModal({
               style={{
                 width: '40px',
                 height: '40px',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 backgroundColor: 'rgba(2, 132, 199, 0.2)',
                 color: '#38bdf8',
                 display: 'flex',
@@ -171,7 +170,7 @@ export default function UnknownBarcodeModal({
               justifyContent: 'space-between',
               backgroundColor: 'rgba(15, 23, 42, 0.6)',
               padding: '0.75rem 1rem',
-              borderRadius: '0.5rem',
+              borderRadius: '6px',
               border: '1px dashed var(--border-color, #475569)'
             }}
           >
@@ -201,7 +200,7 @@ export default function UnknownBarcodeModal({
                 border: '1px solid rgba(239, 68, 68, 0.4)',
                 color: '#f87171',
                 padding: '0.6rem 0.8rem',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 fontSize: '0.85rem',
                 fontWeight: '600'
               }}
@@ -224,7 +223,7 @@ export default function UnknownBarcodeModal({
               onChange={(e) => setName(e.target.value)}
               style={{
                 padding: '0.75rem 1rem',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 border: '1px solid var(--border-color, #334155)',
                 backgroundColor: 'var(--bg-color, #0f172a)',
                 color: 'var(--text-color, #f8fafc)',
@@ -249,7 +248,7 @@ export default function UnknownBarcodeModal({
               onChange={(e) => setPrice(e.target.value)}
               style={{
                 padding: '0.75rem 1rem',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 border: '1px solid var(--border-color, #334155)',
                 backgroundColor: 'var(--bg-color, #0f172a)',
                 color: 'var(--text-color, #f8fafc)',
@@ -274,7 +273,7 @@ export default function UnknownBarcodeModal({
                   onClick={() => setVat(rate)}
                   style={{
                     padding: '0.6rem',
-                    borderRadius: '0.5rem',
+                    borderRadius: '6px',
                     border: vat === rate ? '2px solid #0284c7' : '1px solid var(--border-color, #334155)',
                     backgroundColor: vat === rate ? 'rgba(2, 132, 199, 0.2)' : 'rgba(15, 23, 42, 0.5)',
                     color: vat === rate ? '#38bdf8' : 'var(--text-color, #f8fafc)',
@@ -302,7 +301,7 @@ export default function UnknownBarcodeModal({
                 onChange={(e) => setCategory(e.target.value)}
                 style={{
                   padding: '0.75rem 1rem',
-                  borderRadius: '0.5rem',
+                  borderRadius: '6px',
                   border: '1px solid var(--border-color, #334155)',
                   backgroundColor: 'var(--bg-color, #0f172a)',
                   color: 'var(--text-color, #f8fafc)',
@@ -336,7 +335,7 @@ export default function UnknownBarcodeModal({
               style={{
                 flex: 1,
                 padding: '0.75rem',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 border: '1px solid var(--border-color, #475569)',
                 backgroundColor: 'transparent',
                 color: 'var(--text-color, #f8fafc)',
@@ -353,7 +352,7 @@ export default function UnknownBarcodeModal({
               style={{
                 flex: 2,
                 padding: '0.75rem',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 border: 'none',
                 backgroundColor: '#0284c7',
                 color: '#ffffff',

@@ -189,7 +189,6 @@ export default function StockIntakeModal({
         position: 'fixed',
         inset: 0,
         background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -239,10 +238,10 @@ export default function StockIntakeModal({
               <PackagePlus size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {t('stock_intake.title') || 'Příjemka zboží (Příjem na sklad)'}
               </h3>
-              <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 § 7b ZDP • Evidence naskladnění zásob a aktualizace nákupních cen
               </p>
             </div>
@@ -283,7 +282,7 @@ export default function StockIntakeModal({
               gap: '0.75rem'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
               <Building2 size={16} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('stock_intake.supplier_section') || 'Dodavatel & Doklad'}</span>
             </div>
@@ -291,7 +290,7 @@ export default function StockIntakeModal({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
               {/* IČO Input with ARES Button */}
               <div style={{ minWidth: 0 }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   {t('stock_intake.ico_label') || 'IČO Dodavatele:'}
                 </label>
                 <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
@@ -330,7 +329,7 @@ export default function StockIntakeModal({
                       background: 'var(--accent-blue)',
                       color: '#fff',
                       fontSize: '0.82rem',
-                      fontWeight: '800',
+                      fontWeight: '700',
                       cursor: supplierIco.trim().length === 8 ? 'pointer' : 'not-allowed',
                       opacity: supplierIco.trim().length === 8 ? 1 : 0.6,
                       display: 'inline-flex',
@@ -350,7 +349,7 @@ export default function StockIntakeModal({
 
               {/* Supplier Name */}
               <div style={{ minWidth: 0 }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   {t('stock_intake.supplier_name_label') || 'Název dodavatele:'}
                 </label>
                 <input
@@ -375,7 +374,7 @@ export default function StockIntakeModal({
 
               {/* Invoice / Document Reference */}
               <div style={{ minWidth: 0 }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   {t('stock_intake.document_ref_label') || 'Číslo dokladu / Faktury:'}
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -402,7 +401,7 @@ export default function StockIntakeModal({
 
               {/* Optional Note */}
               <div style={{ minWidth: 0 }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                   {t('stock_intake.note_label') || 'Poznámka:'}
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -447,7 +446,7 @@ export default function StockIntakeModal({
                 {aresStatus.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
                 <span style={{ flex: 1 }}>{aresStatus.text}</span>
                 {aresStatus.type === 'success' && supplierAddress && (
-                  <span style={{ fontSize: '0.74rem', opacity: 0.85, fontWeight: '600' }}>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.85, fontWeight: '600' }}>
                     ({supplierAddress}{supplierDic ? `, DIČ: ${supplierDic}` : ''})
                   </span>
                 )}
@@ -458,7 +457,7 @@ export default function StockIntakeModal({
           {/* Items Section */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.88rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 <FileText size={16} style={{ color: 'var(--accent-emerald)' }} />
                 <span>{t('stock_intake.items_section') || 'Položky na příjemce'}</span>
               </div>
@@ -496,7 +495,7 @@ export default function StockIntakeModal({
             >
               <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
                     <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_intake.col_product') || 'Produkt / Položka'}</th>
                     <th style={{ padding: '0.65rem 0.85rem', width: '110px' }}>{t('stock_intake.col_quantity') || 'Množství'}</th>
                     <th style={{ padding: '0.65rem 0.85rem', width: '140px' }}>{t('stock_intake.col_cost') || 'Nákupní cena bez DPH'}</th>
@@ -560,7 +559,7 @@ export default function StockIntakeModal({
                                     border: '1px solid rgba(59, 130, 246, 0.3)',
                                     background: 'rgba(59, 130, 246, 0.1)',
                                     color: 'var(--accent-blue)',
-                                    fontSize: '0.78rem',
+                                    fontSize: '0.8rem',
                                     fontWeight: '700',
                                     cursor: 'pointer',
                                     display: 'inline-flex',
@@ -622,14 +621,14 @@ export default function StockIntakeModal({
                                   textAlign: 'right'
                                 }}
                               />
-                              <span style={{ position: 'absolute', right: '0.65rem', fontSize: '0.78rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>
+                              <span style={{ position: 'absolute', right: '0.65rem', fontSize: '0.8rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>
                                 Kč
                               </span>
                             </div>
                           </td>
 
                           {/* Line Total */}
-                          <td style={{ padding: '0.5rem 0.85rem', textAlign: 'right', fontWeight: '800', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '0.5rem 0.85rem', textAlign: 'right', fontWeight: '700', color: 'var(--text-primary)' }}>
                             {Math.round(lineTotal).toLocaleString('cs-CZ')} Kč
                           </td>
 
@@ -658,7 +657,7 @@ export default function StockIntakeModal({
                                 }}
                                 title={selectedPreset ? `Aktuální cena: ${selectedPreset.price} Kč s DPH` : ''}
                               />
-                              <span style={{ position: 'absolute', right: '0.55rem', fontSize: '0.72rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>
+                              <span style={{ position: 'absolute', right: '0.55rem', fontSize: '0.8rem', color: 'var(--text-muted)', pointerEvents: 'none' }}>
                                 s DPH
                               </span>
                             </div>
@@ -727,8 +726,8 @@ export default function StockIntakeModal({
                                     border: '1px solid var(--accent-amber)',
                                     background: 'var(--accent-amber)',
                                     color: '#000000',
-                                    fontSize: '0.78rem',
-                                    fontWeight: '800',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '700',
                                     cursor: 'pointer',
                                     display: 'inline-flex',
                                     alignItems: 'center',
@@ -786,7 +785,7 @@ export default function StockIntakeModal({
               gap: '1rem'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-emerald)', fontWeight: '800', fontSize: '1.05rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-emerald)', fontWeight: '700', fontSize: '1.05rem' }}>
               <Check size={22} />
               <span>{t('stock_intake.intake_completed_title') || 'Příjemka byla úspěšně naskladněna!'}</span>
             </div>
@@ -806,7 +805,7 @@ export default function StockIntakeModal({
                   background: 'var(--accent-blue)',
                   color: '#ffffff',
                   fontSize: '0.9rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -856,7 +855,7 @@ export default function StockIntakeModal({
             {/* Summary values */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
               <div>
-                <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'block' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block' }}>
                   {t('stock_intake.summary_items_count') || 'Položek celkem:'}
                 </span>
                 <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
@@ -864,11 +863,11 @@ export default function StockIntakeModal({
                 </strong>
               </div>
               <div>
-                <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'block' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block' }}>
                   {t('stock_intake.summary_total_value') || 'Celková nákupní hodnota:'}
                 </span>
                 <strong style={{ fontSize: '1.15rem', color: 'var(--accent-emerald)' }}>
-                  {Math.round(totalPurchaseValue).toLocaleString('cs-CZ')} Kč <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>bez DPH</span>
+                  {Math.round(totalPurchaseValue).toLocaleString('cs-CZ')} Kč <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>bez DPH</span>
                 </strong>
               </div>
             </div>
@@ -906,7 +905,7 @@ export default function StockIntakeModal({
                   background: 'var(--accent-emerald)',
                   color: '#fff',
                   fontSize: '0.92rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   cursor: totalItemsCount > 0 && !isSubmitting ? 'pointer' : 'not-allowed',
                   opacity: totalItemsCount > 0 && !isSubmitting ? 1 : 0.6,
                   display: 'inline-flex',

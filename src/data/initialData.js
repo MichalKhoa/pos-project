@@ -3,34 +3,16 @@ export const DEFAULT_CATEGORIES = [
 ];
 
 export const COLOR_OPTIONS = [
-  '#2563eb', // Royal Blue
-  '#1d4ed8', // Ocean Blue
-  '#0284c7', // Vibrant Sky Blue
-  '#0369a1', // Sky Navy
-  '#0891b2', // Deep Cyan
-  '#0f766e', // Dark Teal
-  '#059669', // Teal Mint
-  '#047857', // Emerald Green
-  '#15803d', // Forest Green
-  '#4d7c0f', // Warm Olive
-  '#65a30d', // Vibrant Lime
-  '#b45309', // Amber Ochre
-  '#d97706', // Rich Amber
-  '#c2410c', // Rust Orange
-  '#ea580c', // Dark Orange
-  '#dc2626', // Crimson Red
-  '#b91c1c', // Deep Red
-  '#be123c', // Ruby Rose
-  '#9f1239', // Deep Wine
-  '#db2777', // Deep Fuchsia
-  '#a21caf', // Plum Magenta
-  '#7c3aed', // Royal Violet
-  '#6d28d9', // Deep Purple
-  '#4f46e5', // Indigo
-  '#475569', // Slate Gray
-  '#334155', // Dark Slate
-  '#78350f', // Espresso Brown
-  '#1e293b'  // Graphite Black
+  '#475569', // Slate
+  '#1e293b', // Graphite
+  '#1d4ed8', // Blue
+  '#0f766e', // Teal
+  '#15803d', // Green
+  '#4d7c0f', // Olive
+  '#b45309', // Ochre
+  '#c2410c', // Rust
+  '#9f1239', // Wine
+  '#78350f'  // Brown
 ];
 
 export const DEFAULT_PRESETS = [
@@ -267,7 +249,7 @@ export const DEFAULT_STORE_CONFIG = {
   presetDensity: 'standard', // 'compact', 'standard', 'large'
   presetButtonStyle: 'left-stripe', // 'left-stripe', 'color-fill', 'modern-card', 'modern-glass'
   cartItemStyle: 'elevated-card', // 'elevated-card', 'divided-row', 'rounded-tile'
-  showPresetVat: true, // Show VAT percentage badge on preset buttons
+  showPresetVat: false, // Show VAT percentage badge on preset buttons
   enableB2bInvoicing: false, // Hide B2B corporate invoice toggle in payment modal by default
   eetEnabled: false, // EET Ready mode indicator (disabled by default for local counter testing)
   defaultLanguage: 'cs',

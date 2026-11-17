@@ -30,7 +30,7 @@ export default function SalesLedgerTable({
   return (
     <div className="table-card" style={{ display: 'flex', flexDirection: 'column', gap: '0', height: '100%' }}>
       <div style={{ padding: '0.45rem 0.75rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div style={{ fontSize: '0.95rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <Receipt size={17} style={{ color: 'var(--accent-blue)' }} />
           <span>Seznam Vystavených Účtenek ({totalItems})</span>
         </div>
@@ -40,21 +40,21 @@ export default function SalesLedgerTable({
           <div style={{ display: 'flex', gap: '0.2rem', background: 'var(--bg-input)', padding: '0.15rem', borderRadius: 'var(--radius-sm)' }}>
             <button type="button"
               className={`nav-tab ${docTypeFilter === 'all' ? 'active' : ''}`}
-              style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.8rem' }}
               onClick={() => setDocTypeFilter('all')}
             >
               {t('history.all_docs')}
             </button>
             <button type="button"
               className={`nav-tab ${docTypeFilter === 'sales' ? 'active' : ''}`}
-              style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.8rem' }}
               onClick={() => setDocTypeFilter('sales')}
             >
               {t('history.sales_only')}
             </button>
             <button type="button"
               className={`nav-tab ${docTypeFilter === 'refunds' ? 'active' : ''}`}
-              style={{ padding: '0.2rem 0.55rem', fontSize: '0.78rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
+              style={{ padding: '0.2rem 0.55rem', fontSize: '0.8rem', color: docTypeFilter === 'refunds' ? '#ef4444' : 'var(--text-secondary)' }}
               onClick={() => setDocTypeFilter('refunds')}
             >
               {t('history.refunds_only')}
@@ -142,7 +142,7 @@ export default function SalesLedgerTable({
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', whiteSpace: 'nowrap' }}>
                         <div>#{sale.receiptNumber}</div>
                         {isRefund && sale.originalReceiptNumber && (
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
                             K účtence: #{sale.originalReceiptNumber}
                           </div>
                         )}
@@ -157,7 +157,7 @@ export default function SalesLedgerTable({
                           {sale.items.map(i => `${i.name} (${i.quantity}x)`).join(', ')}
                         </span>
                         {isRefund && sale.refundReason && (
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '2px' }}>
                             Důvod: {sale.refundReason}
                           </div>
                         )}
@@ -198,7 +198,7 @@ export default function SalesLedgerTable({
                           )}
                         </div>
                       </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', textAlign: 'right', color: isRefund ? '#ef4444' : 'var(--accent-emerald)', whiteSpace: 'nowrap' }}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', textAlign: 'right', color: isRefund ? '#ef4444' : 'var(--accent-emerald)', whiteSpace: 'nowrap' }}>
                         {sale.totalAmount.toFixed(0)} Kč
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -208,7 +208,7 @@ export default function SalesLedgerTable({
                               className="nav-tab"
                               style={{
                                 padding: '0.22rem 0.5rem',
-                                fontSize: '0.76rem',
+                                fontSize: '0.8rem',
                                 background: 'rgba(239, 68, 68, 0.1)',
                                 color: '#ef4444',
                                 borderColor: 'rgba(239, 68, 68, 0.3)',
@@ -231,7 +231,7 @@ export default function SalesLedgerTable({
                             className="nav-tab"
                             style={{
                               padding: '0.22rem 0.5rem',
-                              fontSize: '0.76rem',
+                              fontSize: '0.8rem',
                               whiteSpace: 'nowrap',
                               fontWeight: '700'
                             }}

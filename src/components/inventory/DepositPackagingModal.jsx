@@ -91,7 +91,6 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1050,
         display: 'flex',
         alignItems: 'center',
@@ -130,10 +129,10 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <Wine size={22} style={{ color: 'var(--accent-amber)' }} />
             <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
                 {t('inventory.deposit_ledger_title') || 'Kniha zálohovaných vratných obalů (Lahve & Přepravky)'}
               </h2>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                 {t('inventory.deposit_ledger_subtitle') || 'Evidence stavu vratných lahví (3 Kč) a bas (100 Kč), závozů a vratek pivovarům'}
               </div>
             </div>
@@ -195,22 +194,22 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1rem' }}>{bal.container_name || bal.name || bal.container_type}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Záloha: {bal.deposit_value || bal.deposit_amount || 0} Kč / ks</div>
+                    <div style={{ fontWeight: 700, fontSize: '1rem' }}>{bal.container_name || bal.name || bal.container_type}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Záloha: {bal.deposit_value || bal.deposit_amount || 0} Kč / ks</div>
                   </div>
-                  <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
+                  <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
                     {bal.container_type}
                   </span>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.25rem' }}>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{bal.current_quantity || 0} <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ks</span></div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 700 }}>{bal.current_quantity || 0} <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ks</span></div>
                   <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent-amber)' }}>
                     {((bal.total_deposit_value !== undefined ? bal.total_deposit_value : ((bal.current_quantity || 0) * (bal.deposit_value || bal.deposit_amount || 0))) || 0).toFixed(2)} Kč
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
                   <span>Příjem: +{bal.intake_quantity || 0}</span>
                   <span>Výkup: +{bal.customer_returned_quantity || 0}</span>
                   <span>Odvoz: -{bal.supplier_dispatched_quantity || 0}</span>
@@ -235,7 +234,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
           >
             <div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Celková vázaná hodnota záloh na prodejně</div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--accent-amber)' }}>
                 {((summary?.total_deposit_locked_value !== undefined ? summary.total_deposit_locked_value : summary?.total_locked_deposit_value) || 0).toFixed(2)} Kč
               </div>
             </div>
@@ -342,7 +341,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Obal</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Obal</label>
                   <select
                     value={selectedContainer}
                     onChange={(e) => setSelectedContainer(e.target.value)}
@@ -354,7 +353,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Počet kusů</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Počet kusů</label>
                   <input
                     type="number"
                     min="1"
@@ -367,7 +366,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Číslo dokladu / dodacího listu</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Číslo dokladu / dodacího listu</label>
                   <input
                     type="text"
                     value={docRef}
@@ -378,7 +377,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Poznámka</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Poznámka</label>
                   <input
                     type="text"
                     value={note}
@@ -390,7 +389,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
 
                 {(actionType === 'SUPPLIER_INTAKE' || actionType === 'SUPPLIER_DISPATCH') && (
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>IČO dodavatele / pivovaru</label>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>IČO dodavatele / pivovaru</label>
                     <input
                       type="text"
                       value={supplierIco}
@@ -456,7 +455,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                           <td style={{ padding: '0.5rem 0.75rem', fontWeight: 600 }}>{m.container_name}</td>
                           <td style={{ padding: '0.5rem 0.75rem' }}>
                             <span style={{
-                              fontSize: '0.75rem',
+                              fontSize: '0.8rem',
                               padding: '0.15rem 0.4rem',
                               borderRadius: 'var(--radius-sm)',
                               background: m.quantity_delta > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
@@ -477,7 +476,7 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
                           <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontWeight: 700 }}>
                             {m.total_value > 0 ? `+${m.total_value.toFixed(2)}` : m.total_value.toFixed(2)} Kč
                           </td>
-                          <td style={{ padding: '0.5rem 0.75rem', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                          <td style={{ padding: '0.5rem 0.75rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
                             {m.document_ref || '-'}
                           </td>
                         </tr>

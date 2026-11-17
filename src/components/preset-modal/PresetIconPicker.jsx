@@ -40,7 +40,7 @@ export default function PresetIconPicker({
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
           <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Sparkles size={16} style={{ color: 'var(--accent-purple)' }} />
+            <Sparkles size={16} style={{ color: 'var(--text-secondary)' }} />
             <span>Ikona položky (Vektorový symbol)</span>
           </label>
           {icon && (
@@ -51,7 +51,7 @@ export default function PresetIconPicker({
                 background: 'none',
                 border: 'none',
                 color: 'var(--accent-rose)',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 fontWeight: '700',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -115,8 +115,8 @@ export default function PresetIconPicker({
                 onClick={() => setActiveCategory(cat.id)}
                 style={{
                   padding: '0.3rem 0.7rem',
-                  borderRadius: '14px',
-                  fontSize: '0.78rem',
+                  borderRadius: '12px',
+                  fontSize: '0.8rem',
                   fontWeight: '700',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,

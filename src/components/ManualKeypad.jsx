@@ -185,7 +185,7 @@ export default function ManualKeypad({
             alignItems: 'stretch',
             padding: '0.45rem 0.75rem',
             flexShrink: 0,
-            borderRadius: '10px',
+            borderRadius: '6px',
             border: isReturn
               ? '2px solid var(--accent-rose)'
               : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)'),
@@ -202,8 +202,7 @@ export default function ManualKeypad({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{
               fontSize: '0.80rem',
-              fontWeight: '800',
-              textTransform: 'uppercase',
+              fontWeight: '700',
               letterSpacing: '0.06em',
               color: isReturn
                 ? 'var(--accent-rose)'
@@ -215,7 +214,7 @@ export default function ManualKeypad({
             {itemMultiplier !== 1 && (
               <span style={{
                 fontSize: '0.80rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 color: 'var(--accent-amber)',
                 background: 'rgba(245,158,11,0.12)',
                 padding: '1px 5px',
@@ -236,7 +235,7 @@ export default function ManualKeypad({
           }}>
             <div style={{
               fontSize: itemMultiplier !== 1 ? '1.45rem' : '1.75rem',
-              fontWeight: '900',
+              fontWeight: '700',
               fontFamily: 'var(--font-mono)',
               color: isReturn
                 ? 'var(--accent-rose)'
@@ -293,7 +292,7 @@ export default function ManualKeypad({
           {itemMultiplier !== 1 && hasValidAmount && (
             <div style={{
               fontSize: '0.95rem',
-              fontWeight: '800',
+              fontWeight: '700',
               fontFamily: 'var(--font-mono)',
               color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
               textAlign: 'right',
@@ -363,7 +362,7 @@ export default function ManualKeypad({
               border: '1px solid color-mix(in srgb, var(--accent-emerald) 35%, transparent)',
               background: 'color-mix(in srgb, var(--accent-emerald) 10%, transparent)',
               color: 'var(--accent-emerald)',
-              fontWeight: '800',
+              fontWeight: '700',
               fontSize: '0.90rem',
               cursor: 'pointer',
               transition: 'all 0.15s ease',

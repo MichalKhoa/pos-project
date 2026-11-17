@@ -107,7 +107,7 @@ export default function KeypadNumberGrid({
         onClick={() => onKeyPress('±')}
         style={{
           color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
-          fontWeight: '900',
+          fontWeight: '700',
           fontSize: '1.45rem',
           background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
           borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
@@ -138,9 +138,9 @@ export default function KeypadNumberGrid({
         }}
         style={{
           color: itemMultiplier > 1 ? '#fff' : 'var(--accent-amber)',
-          fontWeight: '900',
+          fontWeight: '700',
           fontSize: '1.45rem',
-          background: itemMultiplier > 1 ? 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)' : undefined
+          background: itemMultiplier > 1 ? '#d97706' : undefined
         }}
         title="Násobit"
       >
@@ -157,7 +157,7 @@ export default function KeypadNumberGrid({
           height: '62px',
           aspectRatio: 'auto',
           background: isReturn && hasValidAmount
-            ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+            ? '#dc2626'
             : undefined,
           borderColor: isReturn && hasValidAmount
             ? '#ef4444'

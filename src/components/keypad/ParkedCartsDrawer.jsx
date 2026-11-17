@@ -104,7 +104,7 @@ export default function ParkedCartsDrawer({
               display: 'flex',
               flexDirection: 'column',
               padding: '1.25rem',
-              borderRadius: '16px',
+              borderRadius: '12px',
               overflow: 'hidden'
             }}
             onClick={e => e.stopPropagation()}
@@ -121,7 +121,7 @@ export default function ParkedCartsDrawer({
               <h3 style={{
                 margin: 0,
                 fontSize: '1.25rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.6rem',
@@ -177,7 +177,7 @@ export default function ParkedCartsDrawer({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span style={{
                             fontSize: '0.9rem',
-                            fontWeight: '800',
+                            fontWeight: '700',
                             color: 'var(--accent-amber)',
                             display: 'flex',
                             alignItems: 'center',
@@ -202,11 +202,11 @@ export default function ParkedCartsDrawer({
                               height: '36px',
                               padding: '0 0.85rem',
                               fontSize: '0.85rem',
-                              fontWeight: '800',
+                              fontWeight: '700',
                               background: 'var(--accent-blue)',
                               color: '#fff',
                               border: 'none',
-                              borderRadius: '8px',
+                              borderRadius: '6px',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.35rem',
@@ -227,11 +227,11 @@ export default function ParkedCartsDrawer({
                               height: '36px',
                               padding: isConfirmingDelete ? '0 0.65rem' : '0 0.5rem',
                               fontSize: '0.8rem',
-                              fontWeight: '800',
+                              fontWeight: '700',
                               background: isConfirmingDelete ? 'var(--accent-rose)' : 'transparent',
                               color: isConfirmingDelete ? '#fff' : 'var(--text-muted)',
                               border: isConfirmingDelete ? 'none' : '1px solid var(--border-color)',
-                              borderRadius: '8px',
+                              borderRadius: '6px',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.3rem',
@@ -259,7 +259,7 @@ export default function ParkedCartsDrawer({
 
                         <span style={{
                           fontSize: '1.15rem',
-                          fontWeight: '900',
+                          fontWeight: '700',
                           fontFamily: 'var(--font-mono)',
                           color: 'var(--text-primary)'
                         }}>
@@ -366,7 +366,7 @@ export default function ParkedCartsDrawer({
                               background: 'transparent',
                               border: 'none',
                               color: 'var(--text-muted)',
-                              fontSize: '0.75rem',
+                              fontSize: '0.8rem',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.3rem',
@@ -401,8 +401,7 @@ export default function ParkedCartsDrawer({
       >
         <div style={{
           fontSize: '0.82rem',
-          fontWeight: '800',
-          textTransform: 'uppercase',
+          fontWeight: '700',
           letterSpacing: '0.06em',
           color: 'var(--text-muted)',
           display: 'flex',
@@ -423,7 +422,7 @@ export default function ParkedCartsDrawer({
             style={{
               height: '42px',
               fontSize: '0.94rem',
-              fontWeight: '800',
+              fontWeight: '700',
               background: hasCartItems
                 ? 'color-mix(in srgb, var(--accent-amber) 16%, transparent)'
                 : 'transparent',
@@ -456,7 +455,7 @@ export default function ParkedCartsDrawer({
             style={{
               height: '42px',
               fontSize: '0.94rem',
-              fontWeight: '800',
+              fontWeight: '700',
               background: parkedCarts.length > 0
                 ? 'var(--accent-blue)'
                 : 'transparent',
@@ -519,7 +518,7 @@ export default function ParkedCartsDrawer({
               display: 'flex',
               flexDirection: 'column',
               padding: '1.25rem',
-              borderRadius: '16px',
+              borderRadius: '12px',
               overflow: 'hidden'
             }}
             onClick={e => e.stopPropagation()}
@@ -536,7 +535,7 @@ export default function ParkedCartsDrawer({
               <h3 style={{
                 margin: 0,
                 fontSize: '1.25rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.6rem',
@@ -594,7 +593,7 @@ export default function ParkedCartsDrawer({
                       }}>
                         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                               {t('parked_carts.cart_prefix')}{index + 1} — <span style={{ color: 'var(--accent-blue)' }}>{holdItem.timeStr}</span>
                             </span>
                             {holdItem.note && !isEditingNote && (
@@ -606,7 +605,7 @@ export default function ParkedCartsDrawer({
                                   border: '1px solid rgba(245,158,11,0.3)',
                                   borderRadius: '6px',
                                   padding: '0.15rem 0.45rem',
-                                  fontSize: '0.75rem',
+                                  fontSize: '0.8rem',
                                   fontWeight: '700',
                                   display: 'inline-flex',
                                   alignItems: 'center',
@@ -643,7 +642,7 @@ export default function ParkedCartsDrawer({
                           <div style={{ textAlign: 'right' }}>
                             <div style={{
                               fontSize: '1.12rem',
-                              fontWeight: '900',
+                              fontWeight: '700',
                               color: 'var(--accent-emerald)',
                               fontFamily: 'var(--font-mono)',
                               whiteSpace: 'nowrap'
@@ -661,11 +660,11 @@ export default function ParkedCartsDrawer({
                                 height: '42px',
                                 padding: '0 1.15rem',
                                 fontSize: '0.88rem',
-                                fontWeight: '800',
-                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                fontWeight: '700',
+                                background: '#059669',
                                 color: '#ffffff',
                                 border: 'none',
-                                borderRadius: '10px',
+                                borderRadius: '6px',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -695,7 +694,7 @@ export default function ParkedCartsDrawer({
                                 background: isConfirmingDelete ? 'var(--accent-rose, #ef4444)' : 'rgba(239,68,68,0.1)',
                                 color: isConfirmingDelete ? '#fff' : 'var(--accent-rose)',
                                 border: isConfirmingDelete ? '1px solid var(--accent-rose)' : '1px solid rgba(239,68,68,0.3)',
-                                borderRadius: '10px',
+                                borderRadius: '6px',
                                 fontSize: isConfirmingDelete ? '0.8rem' : 'inherit',
                                 fontWeight: isConfirmingDelete ? '800' : 'normal',
                                 whiteSpace: 'nowrap',
@@ -787,7 +786,7 @@ export default function ParkedCartsDrawer({
                               background: 'transparent',
                               border: 'none',
                               color: 'var(--text-muted)',
-                              fontSize: '0.75rem',
+                              fontSize: '0.8rem',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.3rem',

@@ -194,7 +194,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
   }, [enteredPin, isVerifying, waitingForServer, showRecoveryInput]);
 
   return (
-    <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.96)', backdropFilter: 'blur(16px)', zIndex: 99999 }}>
+    <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.96)', zIndex: 99999 }}>
       <div
         className="modal-card"
         style={{
@@ -211,7 +211,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
         {/* Header Icon & Title */}
         <div style={{ marginBottom: '1.25rem' }}>
           <img src={voltflowLogo} alt="VoltFlow POS" style={{ width: '48px', height: '48px', margin: '0 auto 0.75rem auto', display: 'block' }} />
-          <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             {storeConfig?.storeName || 'VoltFlow POS'}
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
@@ -226,7 +226,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
               <div style={{
                 background: 'rgba(239, 68, 68, 0.15)',
                 border: '1px solid rgba(239, 68, 68, 0.4)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 padding: '0.75rem',
                 margin: '0.75rem 0',
                 color: '#ef4444',
@@ -282,7 +282,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
                   key={num}
                   type="button"
                   className="key-btn"
-                  style={{ height: '66px', fontSize: '1.5rem', fontWeight: '900' }}
+                  style={{ height: '66px', fontSize: '1.5rem', fontWeight: '700' }}
                   onClick={() => handleNumClick(num)}
                 >
                   {num}
@@ -291,7 +291,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
               <button
                 type="button"
                 className="key-btn key-action"
-                style={{ height: '66px', fontSize: '1.15rem', fontWeight: '800' }}
+                style={{ height: '66px', fontSize: '1.15rem', fontWeight: '700' }}
                 onClick={handleClear}
               >
                 C
@@ -299,7 +299,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
               <button
                 type="button"
                 className="key-btn"
-                style={{ height: '66px', fontSize: '1.5rem', fontWeight: '900' }}
+                style={{ height: '66px', fontSize: '1.5rem', fontWeight: '700' }}
                 onClick={() => handleNumClick('0')}
               >
                 0
@@ -307,7 +307,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
               <button
                 type="button"
                 className="key-btn key-action"
-                style={{ height: '66px', fontSize: '1.3rem', fontWeight: '800' }}
+                style={{ height: '66px', fontSize: '1.3rem', fontWeight: '700' }}
                 onClick={handleBackspace}
               >
                 ⌫
@@ -323,7 +323,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
                 width: '100%',
                 padding: '0.75rem',
                 fontSize: '1rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 marginBottom: '0.75rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -335,7 +335,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
               <span>Odemknout ↵</span>
             </button>
 
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
               <KeyRound size={13} />
               <span>{t('lock_screen.pin_hint')}</span>
             </div>
@@ -351,7 +351,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
                 background: 'none',
                 border: 'none',
                 color: 'var(--text-muted)',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -369,7 +369,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
             <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
               {t('lock_screen.recovery_title')}
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: '1.4' }}>
               {t('lock_screen.recovery_hint')}
             </div>
 
@@ -384,12 +384,11 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
                 fontSize: '0.95rem',
                 fontFamily: 'monospace',
                 textAlign: 'center',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 border: '1px solid var(--border-color)',
                 background: 'var(--bg-input)',
                 color: 'var(--text-primary)',
                 marginBottom: '0.75rem',
-                textTransform: 'uppercase'
               }}
             />
 

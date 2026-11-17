@@ -26,7 +26,7 @@ export default function ShutdownModal({ pendingCount, onClose }) {
       <div className="modal-overlay">
         <div className="modal-card" style={{ maxWidth: '480px', textAlign: 'center', padding: '2.5rem' }}>
           <CheckCircle size={64} style={{ color: 'var(--accent-emerald)', margin: '0 auto 1rem auto' }} />
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '0.5rem', color: '#fff' }}>
             Směna byla úspěšně ukončena!
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5', margin: 0 }}>

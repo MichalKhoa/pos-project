@@ -43,7 +43,7 @@ export default function SalesAnalyticsCharts({
           <div className="metric-value" style={{ color: 'var(--accent-emerald)', fontSize: '1.4rem' }}>
             {totalRevenue.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {t('analytics.netto_base') || 'Základ'}: <strong style={{ color: 'var(--text-primary)' }}>{totalNetto.toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} Kč</strong>
           </div>
         </div>
@@ -56,10 +56,10 @@ export default function SalesAnalyticsCharts({
               <BarChart3 size={18} />
             </div>
           </div>
-          <div className="metric-value" style={{ color: 'var(--accent-purple)', fontSize: '1.4rem' }}>
+          <div className="metric-value" style={{ color: 'var(--text-secondary)', fontSize: '1.4rem' }}>
             {totalVat.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {periodLabel}
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function SalesAnalyticsCharts({
           <div className="metric-value" style={{ fontSize: '1.4rem' }}>
             {transactionCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>{pluralWord(t, language, 'shift_stats.receipts', transactionCount)}</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {t('history.avg_receipt') || 'Průměr'}: <strong style={{ color: 'var(--accent-emerald)' }}>{avgOrderValue.toFixed(0)} Kč</strong>
           </div>
         </div>
@@ -89,15 +89,15 @@ export default function SalesAnalyticsCharts({
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.15rem' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <Banknote size={15} style={{ color: 'var(--accent-emerald)' }} /> {cashRevenue.toFixed(0)} Kč
             </span>
-            <span style={{ fontSize: '0.95rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <CreditCard size={15} style={{ color: 'var(--accent-blue)' }} /> {cardRevenue.toFixed(0)} Kč
             </span>
           </div>
           {refundMetrics.count > 0 && (
-            <div style={{ fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '0.8rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
               <RotateCcw size={12} />
               <span>{refundMetrics.count} {t('history.refunds_only') || 'vratek'} (-{refundMetrics.amount.toFixed(0)} Kč)</span>
             </div>
@@ -110,7 +110,7 @@ export default function SalesAnalyticsCharts({
         {/* Hourly Rush Hour Heatmap */}
         <div className="table-card" style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.4rem' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <Clock size={17} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('analytics.hourly_rush') || 'Špičky a tržby po hodinách'}</span>
             </h3>
@@ -121,8 +121,8 @@ export default function SalesAnalyticsCharts({
                 border: '1px solid rgba(245, 158, 11, 0.4)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '0.2rem 0.5rem',
-                fontSize: '0.75rem',
-                fontWeight: '800',
+                fontSize: '0.8rem',
+                fontWeight: '700',
                 color: 'var(--accent-amber)',
                 display: 'flex',
                 alignItems: 'center',
@@ -165,7 +165,7 @@ export default function SalesAnalyticsCharts({
                           width: '100%',
                           maxWidth: '22px',
                           height: `${heightPercent}%`,
-                          background: isPeak ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)' : h.revenue > 0 ? 'linear-gradient(180deg, var(--accent-blue) 0%, #2563eb 100%)' : 'var(--bg-input)',
+                          background: isPeak ? '#d97706' : h.revenue > 0 ? '#2563eb' : 'var(--bg-input)',
                           borderRadius: '3px 3px 0 0',
                           transition: 'height 0.3s ease',
                           boxShadow: isPeak ? '0 0 8px rgba(245, 158, 11, 0.5)' : 'none'
@@ -177,7 +177,7 @@ export default function SalesAnalyticsCharts({
               </div>
 
               {/* Hour X-Axis Labels */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 <span>07:00</span>
                 <span>10:00</span>
                 <span>13:00</span>
@@ -191,7 +191,7 @@ export default function SalesAnalyticsCharts({
 
         {/* Top Best-Selling Products */}
         <div className="table-card" style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: '800', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <Trophy size={17} style={{ color: 'var(--accent-amber)' }} />
             <span>{t('analytics.top_products') || 'Nejprodávanější položky'}</span>
           </h3>
@@ -215,9 +215,9 @@ export default function SalesAnalyticsCharts({
                 <tbody>
                   {topProducts.map(p => {
                     const rankBadgeBg =
-                      p.rank === 1 ? 'linear-gradient(135deg, #f59e0b, #d97706)' :
-                      p.rank === 2 ? 'linear-gradient(135deg, #94a3b8, #64748b)' :
-                      p.rank === 3 ? 'linear-gradient(135deg, #b45309, #78350f)' :
+                      p.rank === 1 ? '#d97706' :
+                      p.rank === 2 ? '#64748b' :
+                      p.rank === 3 ? '#78350f' :
                       'var(--bg-input)';
                     const rankTextColor = p.rank <= 3 ? '#ffffff' : 'var(--text-muted)';
 
@@ -233,8 +233,8 @@ export default function SalesAnalyticsCharts({
                             borderRadius: 'var(--radius-full)',
                             background: rankBadgeBg,
                             color: rankTextColor,
-                            fontSize: '0.72rem',
-                            fontWeight: '900'
+                            fontSize: '0.8rem',
+                            fontWeight: '700'
                           }}>
                             {p.rank}
                           </span>
@@ -244,14 +244,14 @@ export default function SalesAnalyticsCharts({
                           <div style={{ width: `${p.relativeBar}%`, height: '3px', background: 'var(--accent-emerald)', borderRadius: '2px', marginTop: '2px', opacity: 0.8 }} />
                         </td>
                         <td style={{ textAlign: 'right', padding: '0.35rem 0.5rem', whiteSpace: 'nowrap' }}>
-                          <span style={{ background: 'var(--bg-input)', padding: '0.15rem 0.45rem', borderRadius: 'var(--radius-sm)', fontWeight: '700', fontSize: '0.75rem' }}>
+                          <span style={{ background: 'var(--bg-input)', padding: '0.15rem 0.45rem', borderRadius: 'var(--radius-sm)', fontWeight: '700', fontSize: '0.8rem' }}>
                             {p.quantity} ks
                           </span>
                         </td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', color: 'var(--accent-emerald)', textAlign: 'right', padding: '0.35rem 0.5rem', whiteSpace: 'nowrap' }}>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right', padding: '0.35rem 0.5rem', whiteSpace: 'nowrap' }}>
                           {p.totalRevenue.toFixed(0)} Kč
                         </td>
-                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'right', padding: '0.35rem 0.5rem' }}>
+                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'right', padding: '0.35rem 0.5rem' }}>
                           {p.sharePercent}%
                         </td>
                       </tr>
@@ -269,7 +269,7 @@ export default function SalesAnalyticsCharts({
         {/* Payment Methods & Category Shares Panel */}
         <div className="table-card" style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', height: '100%', gap: '0.75rem' }}>
           <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: '800', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <CreditCard size={17} style={{ color: 'var(--accent-emerald)' }} />
               <span>{t('analytics.payment_split') || 'Rozdělení plateb'}</span>
             </h3>
@@ -282,7 +282,7 @@ export default function SalesAnalyticsCharts({
             </div>
 
             {/* Payment Method Legend */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.78rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.8rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <span style={{ width: '9px', height: '9px', borderRadius: 'var(--radius-full)', background: 'var(--accent-emerald)' }} />
                 <span>{t('payment.cash')}: <strong>{cashRevenue.toFixed(0)} Kč</strong> ({cashPercent}%)</span>
@@ -305,18 +305,18 @@ export default function SalesAnalyticsCharts({
           {/* Category Sales Shares */}
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.65rem' }}>
             <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <PieChart size={15} style={{ color: 'var(--accent-purple)' }} />
+              <PieChart size={15} style={{ color: 'var(--text-secondary)' }} />
               <span>{t('history.category_sales') || 'Tržby podle kategorií'}</span>
             </h4>
 
             {sortedCategories.length === 0 ? (
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Žádné kategorie v období.</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Žádné kategorie v období.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 {sortedCategories.slice(0, 5).map(cat => {
                   const share = totalRevenue > 0 ? ((cat.total / totalRevenue) * 100).toFixed(1) : '0.0';
                   return (
-                    <div key={cat.category} style={{ fontSize: '0.78rem' }}>
+                    <div key={cat.category} style={{ fontSize: '0.8rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                         <span style={{ fontWeight: '700', textTransform: 'capitalize' }}>{cat.category}</span>
                         <span>{cat.total.toFixed(0)} Kč <span style={{ color: 'var(--text-muted)' }}>({share}%)</span></span>
@@ -334,7 +334,7 @@ export default function SalesAnalyticsCharts({
 
         {/* VAT Tax Summary Table */}
         <div className="table-card" style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: '800', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <BarChart3 size={17} style={{ color: 'var(--accent-blue)' }} />
             <span>{t('analytics.vat_breakdown') || 'Rozpis DPH'} ({periodLabel})</span>
           </h3>
@@ -354,18 +354,18 @@ export default function SalesAnalyticsCharts({
                   <tr key={tItem.rate}>
                     <td style={{ fontWeight: '700', textAlign: 'left' }}>{tItem.rate}%</td>
                     <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(tItem.net || 0).toFixed(2)} Kč</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', fontWeight: '700', textAlign: 'right' }}>
+                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', fontWeight: '700', textAlign: 'right' }}>
                       {(tItem.tax || 0).toFixed(2)} Kč
                     </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '800', color: 'var(--accent-emerald)', textAlign: 'right' }}>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right' }}>
                       {(tItem.gross || 0).toFixed(2)} Kč
                     </td>
                   </tr>
                 ))}
-                <tr style={{ borderTop: '2px solid var(--border-color)', fontWeight: '800' }}>
+                <tr style={{ borderTop: '2px solid var(--border-color)', fontWeight: '700' }}>
                   <td style={{ textAlign: 'left' }}>CELKEM</td>
                   <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(totalNetto || 0).toFixed(2)} Kč</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', textAlign: 'right' }}>{(totalVat || 0).toFixed(2)} Kč</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', textAlign: 'right' }}>{(totalVat || 0).toFixed(2)} Kč</td>
                   <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', textAlign: 'right' }}>{(totalRevenue || 0).toFixed(2)} Kč</td>
                 </tr>
               </tbody>

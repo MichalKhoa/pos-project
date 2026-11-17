@@ -196,7 +196,6 @@ export default function PhysicalInventoryModal({
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1050,
         display: 'flex',
         alignItems: 'center',
@@ -235,10 +234,10 @@ export default function PhysicalInventoryModal({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <ClipboardCheck size={22} style={{ color: 'var(--accent-blue)' }} />
             <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
                 {t('inventory.physical_audit_title') || 'Fyzická inventura skladu (§ 29, 30 ZoÚ)'}
               </h2>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                 {t('inventory.physical_audit_subtitle') || 'Skenování regálů čtečkou, vyčíslení mank/přebytků a narovnání skladu'}
               </div>
             </div>
@@ -273,7 +272,7 @@ export default function PhysicalInventoryModal({
                 <CheckCircle2 size={36} />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0 0 0.5rem 0' }}>
                   Inventura úspěšně zaúčtována!
                 </h3>
                 <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
@@ -283,16 +282,16 @@ export default function PhysicalInventoryModal({
 
               <div style={{ display: 'flex', gap: '1.5rem', background: 'var(--bg-input)', padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Zkontrolováno položek</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>{completedProtocol.total_items_counted}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Zkontrolováno položek</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{completedProtocol.total_items_counted}</div>
                 </div>
                 <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '1.5rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Přebytek (+)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>+{completedProtocol.total_surplus_value.toFixed(2)} Kč</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Přebytek (+)</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent-emerald)' }}>+{completedProtocol.total_surplus_value.toFixed(2)} Kč</div>
                 </div>
                 <div style={{ borderLeft: '1px solid var(--border-color)', paddingLeft: '1.5rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Manko (-)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-rose)' }}>-{completedProtocol.total_shortage_value.toFixed(2)} Kč</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Manko (-)</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent-rose)' }}>-{completedProtocol.total_shortage_value.toFixed(2)} Kč</div>
                 </div>
               </div>
 
@@ -403,7 +402,7 @@ export default function PhysicalInventoryModal({
                         >
                           <div>
                             <strong>{p.name}</strong>
-                            {p.barcode && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>EAN: {p.barcode}</span>}
+                            {p.barcode && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>EAN: {p.barcode}</span>}
                           </div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                             Evidováno: {p.stockQuantity || 0} {p.unit || 'ks'}
@@ -483,7 +482,7 @@ export default function PhysicalInventoryModal({
                           <tr key={row.presetId} style={{ borderBottom: '1px solid var(--border-color)' }}>
                             <td style={{ padding: '0.65rem 0.85rem' }}>
                               <div style={{ fontWeight: 700 }}>{row.preset.name}</div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                 Nákupní cena: {row.unitCost.toFixed(2)} Kč
                               </div>
                             </td>
@@ -503,7 +502,7 @@ export default function PhysicalInventoryModal({
                                     color: 'var(--text-primary)',
                                     borderRadius: 'var(--radius-sm)',
                                     cursor: 'pointer',
-                                    fontWeight: 800
+                                    fontWeight: 700
                                   }}
                                 >
                                   -
@@ -535,7 +534,7 @@ export default function PhysicalInventoryModal({
                                     color: 'var(--text-primary)',
                                     borderRadius: 'var(--radius-sm)',
                                     cursor: 'pointer',
-                                    fontWeight: 800
+                                    fontWeight: 700
                                   }}
                                 >
                                   +
@@ -580,19 +579,19 @@ export default function PhysicalInventoryModal({
               >
                 <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Naskenováno:</span>{' '}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Naskenováno:</span>{' '}
                     <strong>{totals.count} položek</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Přebytky (+):</span>{' '}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Přebytky (+):</span>{' '}
                     <strong style={{ color: 'var(--accent-emerald)' }}>+{totals.surplus.toFixed(2)} Kč</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Manka (-):</span>{' '}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Manka (-):</span>{' '}
                     <strong style={{ color: 'var(--accent-rose)' }}>-{totals.shortage.toFixed(2)} Kč</strong>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Bilance:</span>{' '}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Bilance:</span>{' '}
                     <strong style={{ fontSize: '1.05rem', color: totals.net >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
                       {totals.net >= 0 ? `+${totals.net.toFixed(2)}` : totals.net.toFixed(2)} Kč
                     </strong>
@@ -652,7 +651,7 @@ export default function PhysicalInventoryModal({
                     }}
                   >
                     <AlertCircle size={40} style={{ color: 'var(--accent-amber)', margin: '0 auto' }} />
-                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>
                       Potvrdit zúčtování inventury?
                     </h3>
                     <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>

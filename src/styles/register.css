@@ -8,7 +8,7 @@
 
 .section-title {
   font-size: 1.12rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -65,7 +65,7 @@
   background: transparent;
   color: var(--text-primary);
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   outline: none;
   padding: 0 0.25rem;
 }
@@ -108,7 +108,6 @@
 .preset-search-clear:hover {
   background: var(--accent-rose);
   color: #ffffff;
-  transform: scale(1.08);
 }
 
 /* Categories Filter Bar */
@@ -204,7 +203,7 @@
   border: 1.5px dashed rgba(168, 85, 247, 0.5);
   border-radius: 999px;
   color: #c084fc;
-  font-weight: 800;
+  font-weight: 700;
 }
 .category-chip-manage:hover {
   background: rgba(168, 85, 247, 0.18);
@@ -216,8 +215,6 @@
   border-color: var(--accent-blue) !important;
   border-style: solid !important;
   background: rgba(59, 130, 246, 0.18) !important;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.35) !important;
-  transform: scale(1.04);
 }
 
 /* Light separator between Category Bar and Presets Grid */
@@ -271,7 +268,7 @@
 /* Preset Grid & Cards */
 .preset-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 0.6rem;
   margin-bottom: 0.85rem;
 }
@@ -296,7 +293,7 @@
   font-size: 1.05rem;
 }
 .preset-grid.density-compact .preset-vat-text {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .preset-grid.density-standard {
@@ -367,16 +364,14 @@
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-left-stripe:hover,
   .preset-card:not([class*="style-"]):hover {
-    background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 7%, var(--bg-card));
-    border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 40%, var(--border-color));
+    background: var(--bg-card-hover);
+    border-color: var(--border-subtle);
     border-left-color: var(--card-accent, var(--accent-blue));
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   }
 }
 
 .preset-card.style-left-stripe:active,
 .preset-card:not([class*="style-"]):active {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, var(--bg-card));
   filter: brightness(0.92);
 }
 
@@ -388,7 +383,7 @@
 }
 .preset-card.style-color-fill .preset-name {
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .preset-card.style-color-fill .preset-corner-icon {
@@ -397,7 +392,7 @@
 }
 .preset-card.style-color-fill .preset-price {
   color: #ffffff;
-  font-weight: 900;
+  font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .preset-card.style-color-fill .preset-vat-text {
@@ -419,7 +414,7 @@
 
 /* Style 3: Modern Card (Elevated Soft-Glow & Top Accent Rim) */
 .preset-card.style-modern-card {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--card-accent, var(--accent-blue)) 14%, var(--bg-card)) 0%, var(--bg-card) 100%);
+  background: var(--bg-card);
   border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 32%, var(--border-color));
   border-top: 3.5px solid var(--card-accent, var(--accent-blue));
   border-radius: var(--radius-lg);
@@ -432,7 +427,7 @@
   line-height: 1.22;
 }
 .preset-card.style-modern-card .preset-corner-icon {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 18%, transparent);
+  background: var(--bg-input);
   border-radius: var(--radius-sm);
   padding: 3px 5px;
   display: flex;
@@ -441,7 +436,7 @@
   color: var(--card-accent, var(--accent-blue));
 }
 .preset-card.style-modern-card .preset-price {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -449,67 +444,58 @@
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 12%, transparent);
+  background: var(--bg-input);
   padding: 1px 5px;
   border-radius: 4px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-modern-card:hover {
-    background: linear-gradient(165deg, color-mix(in srgb, var(--card-accent, var(--accent-blue)) 22%, var(--bg-card)) 0%, var(--bg-card) 100%);
-    border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 55%, var(--border-color));
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
     border-top-color: var(--card-accent, var(--accent-blue));
-    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.28), 0 0 14px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 25%, transparent);
   }
 }
 
 .preset-card.style-modern-card:active {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 28%, var(--bg-card));
   filter: brightness(0.92);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Style 4: Modern Glass (Translucent Frosted Surface with Glowing Accent) */
 .preset-card.style-modern-glass {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 10%, rgba(255, 255, 255, 0.04));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1.5px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 38%, rgba(255, 255, 255, 0.12));
+  background: var(--bg-card);
+  border: 1.5px solid var(--card-accent, var(--accent-blue));
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   padding: 0.65rem 0.75rem 0.55rem 0.75rem;
 }
 .preset-card.style-modern-glass .preset-corner-icon {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 20%, transparent);
+  background: var(--bg-input);
   border-radius: var(--radius-sm);
   padding: 3px 5px;
   color: var(--card-accent, var(--accent-blue));
 }
 .preset-card.style-modern-glass .preset-price {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
 }
 .preset-card.style-modern-glass .preset-vat-text {
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 15%, transparent);
+  background: var(--bg-input);
   padding: 1px 5px;
   border-radius: 4px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-modern-glass:hover {
-    background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 18%, rgba(255, 255, 255, 0.08));
-    border-color: var(--card-accent, var(--accent-blue));
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 0 16px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 35%, transparent);
+    background: var(--bg-card-hover);
   }
 }
 
 .preset-card.style-modern-glass:active {
-  background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 26%, rgba(255, 255, 255, 0.08));
   filter: brightness(0.92);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .preset-multiplier-badge {
@@ -519,7 +505,7 @@
   background: #d97706;
   color: #ffffff;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 2px 6px;
   border-radius: 5px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
@@ -534,8 +520,8 @@
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
   line-height: 1.1;
   padding: 2px 6px;
   border-radius: 4px;
@@ -560,7 +546,7 @@
 }
 
 .preset-grid.density-compact .preset-stock-badge {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   padding: 1px 4px;
   margin-top: 1px;
   margin-bottom: 1px;
@@ -629,7 +615,7 @@
   gap: 0.45rem;
   font-size: 0.92rem;
   font-weight: 700;
-  color: var(--accent-amber);
+  color: var(--text-warning);
   white-space: nowrap;
 }
 
@@ -664,12 +650,9 @@
   border-color: var(--accent-rose);
   background: rgba(244, 63, 94, 0.14);
   color: #ffffff;
-  box-shadow: 0 0 12px rgba(244, 63, 94, 0.25);
-  animation: pulse-trash 1.5s infinite ease-in-out;
 }
 
 .preset-trash-dropzone.drag-active .trash-icon {
-  transform: scale(1.15);
 }
 
 /* When card is hovering directly over the trash dropzone */
@@ -678,22 +661,17 @@
   border-style: solid;
   background: #e11d48;
   color: #ffffff;
-  box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
-  transform: scale(1.03);
 }
 
 .preset-trash-dropzone.over-trash .trash-icon {
-  transform: scale(1.3) rotate(-8deg);
   color: #ffffff;
 }
 
 @keyframes pulse-trash {
   0%, 100% {
-    box-shadow: 0 0 6px rgba(244, 63, 94, 0.2);
     border-color: rgba(244, 63, 94, 0.6);
   }
   50% {
-    box-shadow: 0 0 16px rgba(244, 63, 94, 0.45);
     border-color: rgba(244, 63, 94, 1);
   }
 }
@@ -710,7 +688,7 @@
   border: 1px solid rgba(168, 85, 247, 0.4);
   border-radius: var(--radius-sm);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -721,7 +699,6 @@
   background: rgba(168, 85, 247, 0.25);
   border-color: #c084fc;
   color: #ffffff;
-  transform: translateY(-1px);
 }
 
 /* Done Editing Button */
@@ -736,7 +713,7 @@
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -745,7 +722,6 @@
 
 .preset-edit-done-btn:hover {
   background: #d97706;
-  transform: translateY(-1px);
 }
 
 .preset-price-tag {
@@ -761,8 +737,8 @@
 .preset-price {
   font-family: var(--font-mono);
   font-size: 1.16rem;
-  font-weight: 800;
-  color: var(--accent-emerald);
+  font-weight: 700;
+  color: var(--text-success);
   line-height: 1.15;
 }
 
@@ -852,8 +828,8 @@ select.input-field:focus {
 .keypad-amount-display {
   font-family: var(--font-mono);
   font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--accent-emerald);
+  font-weight: 700;
+  color: var(--text-success);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -934,12 +910,12 @@ select.input-field:focus {
 
 .quick-amount-chip {
   background: var(--bg-input);
-  color: var(--accent-emerald);
+  color: var(--text-success);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.5rem;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -948,7 +924,6 @@ select.input-field:focus {
 .quick-amount-chip:hover {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--accent-emerald);
-  transform: translateY(-1px);
 }
 
 /* VAT Selector Bar */
@@ -968,7 +943,7 @@ select.input-field:focus {
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.05s ease, border-color 0.05s ease;
   user-select: none;
@@ -998,7 +973,7 @@ select.input-field:focus {
   color: #ffffff;
   border-color: var(--accent-blue);
   box-shadow: 0 1px 4px rgba(59, 130, 246, 0.35);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .keypad-stepper-bar {
@@ -1031,7 +1006,7 @@ select.input-field:focus {
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 1.18rem;
-  font-weight: 900;
+  font-weight: 700;
   user-select: none;
   cursor: default;
   box-sizing: border-box;
@@ -1040,7 +1015,7 @@ select.input-field:focus {
 .multiplier-badge.has-multiplier {
   background: rgba(245, 158, 11, 0.12);
   border-color: rgba(245, 158, 11, 0.4);
-  color: var(--accent-amber);
+  color: var(--text-warning);
 }
 
 .multiplier-badge.has-return {
@@ -1063,7 +1038,7 @@ select.input-field:focus {
   min-height: 58px;
   height: 100%;
   font-size: 1.75rem;
-  font-weight: 900;
+  font-weight: 700;
   font-family: var(--font-mono);
   background: var(--bg-card);
   color: var(--text-primary);
@@ -1144,7 +1119,7 @@ select.input-field:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: 1.22rem;
-  font-weight: 800;
+  font-weight: 700;
   gap: 0.6rem;
   cursor: not-allowed;
   opacity: 0.65;
@@ -1153,7 +1128,7 @@ select.input-field:focus {
 }
 
 .key-btn.key-enter.key-enter-active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #059669;
   color: #ffffff;
   border-color: #047857;
   opacity: 1;
@@ -1163,7 +1138,7 @@ select.input-field:focus {
 
 @media (hover: hover) and (pointer: fine) {
   .key-btn.key-enter.key-enter-active:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    background: #047857;
     box-shadow: 0 3px 0 #065f46, 0 6px 18px rgba(16, 185, 129, 0.45);
   }
 }
@@ -1173,8 +1148,7 @@ select.input-field:focus {
 }
 
 [data-button-animation="animated"] .key-btn.key-enter.key-enter-active:active {
-  transform: translateY(2px) !important;
-  box-shadow: 0 1px 0 #065f46, 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+  transform: translateY(1px) !important;
 }
 
 .key-btn.active-return {
@@ -1185,7 +1159,7 @@ select.input-field:focus {
 }
 
 .key-btn.active-multiplier {
-  color: var(--accent-amber) !important;
+  color: var(--text-warning) !important;
   background: rgba(245, 158, 11, 0.12) !important;
   border-color: var(--accent-amber) !important;
   box-shadow: 0 3px 0 rgba(245, 158, 11, 0.4), 0 2px 6px rgba(245, 158, 11, 0.2) !important;
@@ -1201,7 +1175,7 @@ select.input-field:focus {
 
 .cart-title {
   font-size: 1.22rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1210,7 +1184,7 @@ select.input-field:focus {
 
 .clear-cart-btn {
   font-size: 0.94rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-secondary);
   background: color-mix(in srgb, var(--text-primary) 3%, transparent);
   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
@@ -1331,7 +1305,7 @@ select.input-field:focus {
 }
 
 .last-receipt-chip-btn.is-past-day .last-receipt-chip-icon {
-  color: var(--accent-amber);
+  color: var(--text-warning);
 }
 
 .last-receipt-chip-icon {
@@ -1352,7 +1326,7 @@ select.input-field:focus {
 }
 
 .last-receipt-chip-count-badge {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-secondary);
@@ -1425,7 +1399,7 @@ select.input-field:focus {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -1435,10 +1409,10 @@ select.input-field:focus {
 }
 
 .last-receipt-popover-badge {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-family: var(--font-mono);
   color: var(--accent-blue);
-  font-weight: 800;
+  font-weight: 700;
   background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent);
   padding: 2px 7px;
@@ -1474,19 +1448,19 @@ select.input-field:focus {
 
 .last-receipt-value.amount {
   font-family: var(--font-mono);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.9rem;
   color: var(--text-primary);
 }
 
 .last-receipt-value.time {
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .last-receipt-value.payment {
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -1505,17 +1479,16 @@ select.input-field:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-secondary);
-  text-transform: uppercase;
   letter-spacing: 0.03em;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
 .last-receipt-items-count-tag {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
 }
@@ -1539,9 +1512,9 @@ select.input-field:focus {
 
 .last-receipt-item-qty {
   font-family: var(--font-mono);
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent-blue);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   flex-shrink: 0;
   min-width: 18px;
 }
@@ -1549,7 +1522,7 @@ select.input-field:focus {
 .last-receipt-item-name {
   flex: 1;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1577,7 +1550,7 @@ select.input-field:focus {
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1656,7 +1629,7 @@ select.input-field:focus {
   color: #ffffff;
   border-radius: 999px;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 0.15rem 0.55rem;
   display: inline-flex;
   align-items: center;
@@ -1696,7 +1669,6 @@ select.input-field:focus {
 .cart-item-card:hover {
   background: var(--bg-card);
   border-color: var(--border-focus);
-  transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -1718,7 +1690,6 @@ select.input-field:focus {
 .cart-item-card.style-elevated-card:hover {
   background: color-mix(in srgb, var(--text-primary) 5.5%, var(--bg-card));
   border-color: var(--accent-blue);
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -1762,7 +1733,7 @@ select.input-field:focus {
 
 /* ── Style 3: Soft Rounded Tile (Pill-like & Recessed Stepper) ── */
 .cart-item-card.style-rounded-tile {
-  border-radius: 14px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--text-primary) 2%, var(--bg-card));
   border: 1.5px solid color-mix(in srgb, var(--border-color) 75%, transparent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -1771,18 +1742,17 @@ select.input-field:focus {
 .cart-item-card.style-rounded-tile:hover {
   background: color-mix(in srgb, var(--text-primary) 4.5%, var(--bg-card));
   border-color: var(--border-color);
-  transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
 .cart-item-card.style-rounded-tile .cart-stepper-box {
   background: var(--bg-main);
   border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .cart-item-card.style-rounded-tile .cart-del-btn {
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .cart-item-card.style-rounded-tile.is-active {
@@ -1808,7 +1778,7 @@ select.input-field:focus {
 
 .cart-item-name-text {
   font-size: 1.06rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -1883,7 +1853,7 @@ select.input-field:focus {
 .cart-stepper-num {
   font-family: var(--font-mono);
   font-size: 1.14rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   padding: 0 0.65rem;
   min-width: 28px;
@@ -1948,19 +1918,19 @@ select.input-field:focus {
   align-items: center;
   gap: 2px;
   background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
+  color: var(--text-warning);
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .cart-item-line-total-price {
   font-family: var(--font-mono);
   font-size: 1.18rem;
-  font-weight: 800;
-  color: var(--accent-emerald);
+  font-weight: 700;
+  color: var(--text-success);
   text-align: right;
 }
 
@@ -1989,7 +1959,7 @@ select.input-field:focus {
 }
 
 .cleared-banner-icon {
-  color: var(--accent-amber);
+  color: var(--text-warning);
   flex-shrink: 0;
 }
 
@@ -2003,14 +1973,13 @@ select.input-field:focus {
   border-radius: var(--radius-sm);
   padding: 0.3rem 0.6rem;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .restore-cart-btn:hover {
-  transform: scale(1.04);
 }
 
 .cleared-banner-progress-bg {
@@ -2058,21 +2027,19 @@ select.input-field:focus {
 
 /* Total Hero Card */
 .total-hero-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%);
-  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 0.65rem 0.95rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.1);
   margin-top: 0.25rem;
 }
 
 .total-hero-card.is-refund {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(225, 29, 72, 0.04) 100%);
-  border-color: rgba(239, 68, 68, 0.4);
-  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15);
+  background: color-mix(in srgb, var(--accent-rose) 8%, var(--bg-card));
+  border-color: var(--accent-rose);
 }
 
 .total-hero-label {
@@ -2083,10 +2050,8 @@ select.input-field:focus {
 
 .total-hero-title {
   font-size: 0.88rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent-emerald);
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
 .total-hero-card.is-refund .total-hero-title {
@@ -2102,8 +2067,8 @@ select.input-field:focus {
 .total-hero-amount {
   font-family: var(--font-mono);
   font-size: 1.9rem;
-  font-weight: 900;
-  color: var(--accent-emerald);
+  font-weight: 700;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -2129,7 +2094,7 @@ select.input-field:focus {
   justify-content: center;
   gap: 0.5rem;
   font-size: 1.14rem;
-  font-weight: 900;
+  font-weight: 700;
   border-radius: var(--radius-md);
   border: none;
   color: #ffffff;
@@ -2142,13 +2107,12 @@ select.input-field:focus {
 }
 
 .pay-btn-cash {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 3px 0 #047857, 0 4px 14px rgba(16, 185, 129, 0.35);
+  background: var(--accent-highlight);
+  color: var(--accent-highlight-text);
 }
 
 .pay-btn-cash:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 3px 0 #065f46, 0 6px 18px rgba(16, 185, 129, 0.45);
+  background: var(--accent-highlight-hover);
 }
 
 .pay-btn-cash:active:not(:disabled) {
@@ -2161,13 +2125,12 @@ select.input-field:focus {
 }
 
 .pay-btn-card {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 3px 0 #1d4ed8, 0 4px 14px rgba(37, 99, 235, 0.35);
+  background: var(--accent-highlight);
+  color: var(--accent-highlight-text);
 }
 
 .pay-btn-card:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 3px 0 #1e40af, 0 6px 18px rgba(37, 99, 235, 0.45);
+  background: var(--accent-highlight-hover);
 }
 
 .pay-btn-card:active:not(:disabled) {
@@ -2175,8 +2138,7 @@ select.input-field:focus {
 }
 
 [data-button-animation="animated"] .pay-btn-card:active:not(:disabled) {
-  transform: translateY(2px) !important;
-  box-shadow: 0 1px 0 #1e40af, 0 2px 6px rgba(37, 99, 235, 0.3) !important;
+  transform: translateY(1px) !important;
 }
 
 .pay-btn:disabled {
@@ -2272,7 +2234,7 @@ select.input-field:focus {
 
 .inspector-title {
   font-size: 1.08rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -2321,9 +2283,7 @@ select.input-field:focus {
 
 .inspector-section-label {
   font-size: 0.84rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 700;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -2343,7 +2303,7 @@ select.input-field:focus {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2367,7 +2327,7 @@ select.input-field:focus {
   background: var(--accent-amber);
   color: #000000;
   border-color: var(--accent-amber);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .inspector-footer {
@@ -2460,7 +2420,7 @@ select.input-field:focus {
   }
 
   .preset-vat-text {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
   }
 
   /* Manual Keypad Ergonomics */
@@ -2609,7 +2569,7 @@ select.input-field:focus {
   }
 
   .total-hero-title {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
   }
 
   .total-hero-amount {

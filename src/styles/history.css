@@ -67,12 +67,12 @@
 
 .stock-badge-low {
   background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
+  color: var(--text-warning);
   border: 1px solid rgba(245, 158, 11, 0.3);
   font-weight: 700;
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .stock-badge-out {
@@ -82,17 +82,17 @@
   font-weight: 700;
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .stock-badge-ok {
   background: rgba(16, 185, 129, 0.15);
-  color: var(--accent-emerald);
+  color: var(--text-success);
   border: 1px solid rgba(16, 185, 129, 0.3);
   font-weight: 700;
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 /* History Analytics Cards Grid */
@@ -132,7 +132,6 @@
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -169,7 +168,7 @@
 .metric-value {
   font-family: var(--font-mono);
   font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -197,8 +196,6 @@
   background: var(--bg-input);
   font-size: 0.8rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--text-secondary);
 }
 
@@ -260,7 +257,7 @@
 
 .multi-period-title {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -268,7 +265,7 @@
 }
 
 .multi-period-badge {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
   background: var(--bg-input);
@@ -310,7 +307,7 @@
 
 .period-card-title-group h4 {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   margin: 0;
   color: var(--text-primary);
 }
@@ -325,13 +322,13 @@
 
 .period-card-total strong {
   font-size: 1.25rem;
-  font-weight: 900;
+  font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-primary);
 }
 
 .period-avg-tag {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -361,7 +358,6 @@
 .period-stat-row:hover {
   background: var(--bg-card-hover);
   border-color: var(--border-color);
-  transform: translateY(-1px);
 }
 
 .period-stat-row.is-current {
@@ -387,7 +383,7 @@
 }
 
 .period-row-label.highlight {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -400,13 +396,13 @@
 
 .period-row-amount {
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-primary);
 }
 
 .period-row-count-badge {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
   background: var(--bg-input);
@@ -432,15 +428,15 @@
 }
 
 .bar-emerald {
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: #059669;
 }
 
 .bar-blue {
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  background: #2563eb;
 }
 
 .bar-indigo {
-  background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+  background: #4f46e5;
 }
 
 @media (max-width: 960px) {

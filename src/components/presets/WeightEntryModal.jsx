@@ -289,8 +289,7 @@ export default function WeightEntryModal({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '0.75rem',
-        background: 'rgba(0, 0, 0, 0.72)',
-        backdropFilter: 'blur(3px)'
+        background: 'rgba(0, 0, 0, 0.72)'
       }}
     >
       <div
@@ -328,7 +327,7 @@ export default function WeightEntryModal({
               <div
                 style={{
                   fontSize: '1.05rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   color: 'var(--text-primary)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -337,7 +336,7 @@ export default function WeightEntryModal({
               >
                 {preset.name}
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {preset.category ? `${preset.category} • ` : ''}
                 <span style={{ fontWeight: '700', color: 'var(--accent-blue)' }}>
                   {isOpenPrice
@@ -394,7 +393,7 @@ export default function WeightEntryModal({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '0.65rem 0.85rem',
-                borderRadius: '10px',
+                borderRadius: '6px',
                 background: activeField === 'unit_price' ? 'color-mix(in srgb, var(--accent-blue) 12%, var(--bg-input))' : 'var(--bg-input)',
                 border: activeField === 'unit_price' ? '2px solid var(--accent-blue)' : '1px solid var(--border-color)',
                 cursor: 'pointer',
@@ -402,10 +401,10 @@ export default function WeightEntryModal({
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
                   {t('weight_modal.unit_price_title') || `Cena za 1 ${itemUnit}`}
                 </span>
-                <span style={{ fontSize: '0.72rem', color: activeField === 'unit_price' ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
+                <span style={{ fontSize: '0.8rem', color: activeField === 'unit_price' ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
                   {activeField === 'unit_price' ? (t('weight_modal.active_typing') || '⌨️ Zadáváte cenu...') : (t('weight_modal.tap_to_edit') || 'Klepněte pro změnu ceny')}
                 </span>
               </div>
@@ -414,13 +413,13 @@ export default function WeightEntryModal({
                   style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: '1.45rem',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     color: unitPriceStr ? 'var(--text-primary)' : 'var(--text-muted)'
                   }}
                 >
                   {unitPriceStr || '0.00'}
                 </span>
-                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
                   Kč / {itemUnit}
                 </span>
                 {activeField === 'unit_price' && (
@@ -461,7 +460,7 @@ export default function WeightEntryModal({
               display: 'flex',
               flexDirection: 'column',
               padding: '0.65rem 0.85rem',
-              borderRadius: '10px',
+              borderRadius: '6px',
               background: activeField === 'weight'
                 ? (isValidNet ? 'color-mix(in srgb, var(--accent-blue) 8%, var(--bg-input))' : 'color-mix(in srgb, var(--accent-blue) 4%, var(--bg-input))')
                 : 'var(--bg-input)',
@@ -474,11 +473,11 @@ export default function WeightEntryModal({
             {/* Weight Input Row */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
                   {tareGrams > 0 ? (t('weight_modal.gross_weight') || 'Hrubá hmotnost') : (t('weight_modal.net_weight') || 'Hmotnost')}
                 </span>
                 {isOpenPrice && (
-                  <span style={{ fontSize: '0.72rem', color: activeField === 'weight' ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '0.8rem', color: activeField === 'weight' ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
                     {activeField === 'weight' ? (t('weight_modal.active_typing') || '⌨️ Zadáváte váhu...') : (t('weight_modal.tap_to_edit') || 'Klepněte pro změnu')}
                   </span>
                 )}
@@ -488,7 +487,7 @@ export default function WeightEntryModal({
                   style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: '1.65rem',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     color: weightStr ? 'var(--text-primary)' : 'var(--text-muted)',
                     letterSpacing: '0.02em'
                   }}
@@ -510,7 +509,7 @@ export default function WeightEntryModal({
                           border: '1px solid var(--accent-blue)',
                           background: entryUnit === u ? 'var(--accent-blue)' : 'transparent',
                           color: entryUnit === u ? '#fff' : 'var(--accent-blue)',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           cursor: 'pointer'
                         }}
                       >
@@ -519,7 +518,7 @@ export default function WeightEntryModal({
                     ))}
                   </div>
                 ) : (
-                  <span style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
                     {shownUnit}
                   </span>
                 )}
@@ -560,7 +559,7 @@ export default function WeightEntryModal({
             {isOverLimit && (
               <div
                 role="status"
-                style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-amber)' }}
+                style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-amber)' }}
               >
                 {t('weight_modal.over_limit', { max: MAX_WEIGHT_KG })}
               </div>
@@ -607,7 +606,7 @@ export default function WeightEntryModal({
               <span
                 style={{
                   fontSize: '1.25rem',
-                  fontWeight: '900',
+                  fontWeight: '700',
                   color: isValidNet ? 'var(--accent-emerald)' : 'var(--text-muted)',
                   fontFamily: 'var(--font-mono)'
                 }}
@@ -619,7 +618,7 @@ export default function WeightEntryModal({
 
           {/* Tare Deduction Shortcuts Row */}
           <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.76rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.2rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginRight: '0.2rem' }}>
               {t('weight_modal.tare') || 'Tára'}:
             </span>
             <button
@@ -631,7 +630,7 @@ export default function WeightEntryModal({
                 minHeight: '44px',
                 height: '44px',
                 fontSize: '0.85rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 justifyContent: 'center',
                 background: tareGrams === 5 ? 'var(--accent-blue)' : 'var(--bg-input)',
                 color: tareGrams === 5 ? '#fff' : 'var(--text-primary)',
@@ -651,7 +650,7 @@ export default function WeightEntryModal({
                 minHeight: '44px',
                 height: '44px',
                 fontSize: '0.85rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 justifyContent: 'center',
                 background: tareGrams === 15 ? 'var(--accent-blue)' : 'var(--bg-input)',
                 color: tareGrams === 15 ? '#fff' : 'var(--text-primary)',
@@ -702,7 +701,7 @@ export default function WeightEntryModal({
                 type="button"
                 className="key-btn"
                 onClick={() => handleDigit(n)}
-                style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '800' }}
+                style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '700' }}
               >
                 {n}
               </button>
@@ -724,7 +723,7 @@ export default function WeightEntryModal({
                 type="button"
                 className="key-btn"
                 onClick={() => handleDigit(n)}
-                style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '800' }}
+                style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '700' }}
               >
                 {n}
               </button>
@@ -733,7 +732,7 @@ export default function WeightEntryModal({
               type="button"
               className="key-btn key-action"
               onClick={handleClear}
-              style={{ minHeight: '48px', height: '48px', fontSize: '1.15rem', fontWeight: '900' }}
+              style={{ minHeight: '48px', height: '48px', fontSize: '1.15rem', fontWeight: '700' }}
               title="Clear"
             >
               C
@@ -746,7 +745,7 @@ export default function WeightEntryModal({
                 type="button"
                 className="key-btn"
                 onClick={() => handleDigit(n)}
-                style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '800' }}
+                style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '700' }}
               >
                 {n}
               </button>
@@ -756,7 +755,7 @@ export default function WeightEntryModal({
               className="key-btn"
               onClick={handleComma}
               disabled={isGrams && activeField === 'weight'}
-              style={{ minHeight: '48px', height: '48px', fontSize: '1.5rem', fontWeight: '900', color: 'var(--accent-blue)', opacity: isGrams && activeField === 'weight' ? 0.3 : 1 }}
+              style={{ minHeight: '48px', height: '48px', fontSize: '1.5rem', fontWeight: '700', color: 'var(--accent-blue)', opacity: isGrams && activeField === 'weight' ? 0.3 : 1 }}
               title="Čárka"
             >
               ,
@@ -767,7 +766,7 @@ export default function WeightEntryModal({
               type="button"
               className="key-btn"
               onClick={() => handleDigit('0')}
-              style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '800', gridColumn: 'span 2' }}
+              style={{ minHeight: '48px', height: '48px', fontSize: '1.25rem', fontWeight: '700', gridColumn: 'span 2' }}
             >
               0
             </button>
@@ -775,7 +774,7 @@ export default function WeightEntryModal({
               type="button"
               className="key-btn"
               onClick={handleDoubleZero}
-              style={{ minHeight: '48px', height: '48px', fontSize: '1.15rem', fontWeight: '800', gridColumn: 'span 2' }}
+              style={{ minHeight: '48px', height: '48px', fontSize: '1.15rem', fontWeight: '700', gridColumn: 'span 2' }}
             >
               00
             </button>
@@ -809,7 +808,7 @@ export default function WeightEntryModal({
                 height: '48px',
                 aspectRatio: 'auto',
                 fontSize: '1rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 gap: '0.45rem',
                 borderRadius: 'var(--radius-md, 8px)',
                 cursor: (activeField === 'unit_price' ? effectiveUnitPrice > 0 : isValidSubmission) ? 'pointer' : 'not-allowed',

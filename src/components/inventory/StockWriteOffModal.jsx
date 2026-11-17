@@ -183,7 +183,6 @@ export default function StockWriteOffModal({
         position: 'fixed',
         inset: 0,
         background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -233,10 +232,10 @@ export default function StockWriteOffModal({
               <Trash2 size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {t('stock_write_off.title') || 'Skladový Odpis a Likvidační Protokol'}
               </h3>
-              <p style={{ margin: 0, fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {t('stock_write_off.subtitle') || 'Formální vyřazení zásob (§ 25 ZoÚ) a posouzení DPH'}
               </p>
             </div>
@@ -283,7 +282,7 @@ export default function StockWriteOffModal({
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                   {t('stock_write_off.success_title') || 'Odpis byl úspěšně zaevidován'}
                 </h3>
                 <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
@@ -314,12 +313,12 @@ export default function StockWriteOffModal({
                   <ShieldAlert size={20} style={{ color: 'var(--accent-rose)', flexShrink: 0, marginTop: '2px' }} />
                 )}
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '800', color: successProtocol.is_tax_deductible ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '700', color: successProtocol.is_tax_deductible ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
                     {successProtocol.is_tax_deductible
                       ? (t('stock_write_off.tax_deductible_title') || 'Daňově uznatelný náklad (§ 25 odst. 2 ZoÚ)')
                       : (t('stock_write_off.tax_non_deductible_title') || 'Nedaňový výdaj / Zaviněné manko')}
                   </h4>
-                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     {successProtocol.is_tax_deductible
                       ? (t('stock_write_off.tax_deductible_desc') || 'Přirozený úbytek v rámci normy. Nevyžaduje dodanění DPH.')
                       : (t('stock_write_off.tax_non_deductible_desc') || 'Vyžaduje korekci odpočtu DPH dle § 77/78 ZDPH!')}
@@ -410,7 +409,7 @@ export default function StockWriteOffModal({
               {/* Protocol Parameters Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', background: 'var(--bg-input)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                     {t('stock_write_off.reason_label') || 'Důvod odpisu / likvidace'} *
                   </label>
                   <select
@@ -439,7 +438,7 @@ export default function StockWriteOffModal({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                     {t('stock_write_off.person_label') || 'Odpovědná osoba / Pokladní'}
                   </label>
                   <input
@@ -453,7 +452,7 @@ export default function StockWriteOffModal({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
                     {t('stock_write_off.note_label') || 'Doplňující poznámka'}
                   </label>
                   <input
@@ -471,7 +470,7 @@ export default function StockWriteOffModal({
               <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                   <thead>
-                    <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.72rem' }}>
+                    <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left' }}>{t('stock_write_off.col_product') || 'Produkt'}</th>
                       <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right', width: '90px' }}>{t('stock_write_off.col_stock') || 'Sklad'}</th>
                       <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right', width: '100px' }}>{t('stock_write_off.col_quantity') || 'Odpis mn.'}</th>
@@ -539,7 +538,7 @@ export default function StockWriteOffModal({
                           </td>
 
                           {/* Total Cost */}
-                          <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '800', color: 'var(--accent-rose)' }}>
+                          <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '700', color: 'var(--accent-rose)' }}>
                             {row.lineCost > 0 ? `${row.lineCost.toFixed(2)} Kč` : '0.00 Kč'}
                           </td>
 
@@ -550,8 +549,8 @@ export default function StockWriteOffModal({
                                 display: 'inline-block',
                                 padding: '0.15rem 0.45rem',
                                 borderRadius: 'var(--radius-sm)',
-                                fontSize: '0.7rem',
-                                fontWeight: '800',
+                                fontSize: '0.8rem',
+                                fontWeight: '700',
                                 background: row.isNorm ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
                                 color: row.isNorm ? 'var(--accent-emerald)' : 'var(--accent-rose)',
                                 border: `1px solid ${row.isNorm ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
@@ -628,12 +627,12 @@ export default function StockWriteOffModal({
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     {t('stock_write_off.summary_items_count') || 'Položek k likvidaci:'} <strong>{rowsEvaluated.filter(r => r.preset_id).length}</strong>
                   </div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
                     {t('stock_write_off.summary_cost_total') || 'Nákup celkem:'} <span style={{ color: 'var(--accent-rose)' }}>{totalCostSum.toFixed(2)} Kč</span>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
                       (prodej: {totalRetailSum.toFixed(2)} Kč s DPH)
                     </span>
                   </div>
@@ -656,7 +655,7 @@ export default function StockWriteOffModal({
                     ) : (
                       <ShieldAlert size={16} style={{ color: 'var(--accent-rose)' }} />
                     )}
-                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: isAllWithinNorm ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: isAllWithinNorm ? 'var(--accent-emerald)' : 'var(--accent-rose)' }}>
                       {isAllWithinNorm
                         ? 'Režim: Daňově uznatelný (§ 25)'
                         : 'Režim: Nedaňové manko (nutná korekce DPH)'}
@@ -696,7 +695,7 @@ export default function StockWriteOffModal({
                     background: 'var(--accent-rose)',
                     color: '#ffffff',
                     border: 'none',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     fontSize: '0.88rem',
                     cursor: 'pointer',
                     display: 'inline-flex',

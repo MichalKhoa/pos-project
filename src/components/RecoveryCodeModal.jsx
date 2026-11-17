@@ -9,7 +9,7 @@ export default function RecoveryCodeModal({ code, onClose }) {
     <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.94)', zIndex: 99999 }} role="dialog" aria-modal="true">
       <div className="modal-card" style={{ maxWidth: '440px', width: '92%', padding: '1.75rem 1.5rem', textAlign: 'center' }}>
         <KeyRound size={28} style={{ color: 'var(--accent-amber)', margin: '0 auto 0.5rem auto' }} />
-        <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+        <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
           {t('settings.recovery_code_title')}
         </div>
         <div
@@ -17,11 +17,11 @@ export default function RecoveryCodeModal({ code, onClose }) {
           style={{
             fontFamily: 'monospace',
             fontSize: '1.6rem',
-            fontWeight: '900',
+            fontWeight: '700',
             letterSpacing: '0.12em',
             margin: '1.25rem 0',
             padding: '0.9rem',
-            borderRadius: '8px',
+            borderRadius: '6px',
             border: '1px dashed var(--accent-amber)',
             background: 'var(--bg-input)',
             userSelect: 'all'
@@ -36,7 +36,7 @@ export default function RecoveryCodeModal({ code, onClose }) {
           type="button"
           className="btn-primary"
           onClick={onClose}
-          style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
+          style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '700' }}
         >
           {t('settings.recovery_code_done')}
         </button>
