@@ -1015,15 +1015,14 @@ export async function verifyAdminPinBackend(pin) {
 }
 
 /**
- * Verify Master Recovery Code (PUK) to reset PIN to 1234
+ * Verify the one-time recovery code. On success the server clears both PINs and switches both locks off.
  */
-export async function verifyPukBackend(puk) {
+export async function verifyRecoveryCodeBackend(code) {
   try {
-    // The PUK is now the one-time recovery code (Batch G); renamed in the UI in Phase 3.
     const res = await fetch(`${API_BASE_URL}/config/verify-recovery`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: puk })
+      body: JSON.stringify({ code })
     });
     if (res.status === 401) return { valid: false };
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
@@ -1655,4 +1654,24 @@ export async function printWriteOffProtocol(protocolData, storeConfig = {}) {
     throw new Error(err.detail || `Print write-off error ${res.status}`);
   }
   return await res.json();
+}
+
+/**
+ * Issue a new recovery code (the old one stops working). Needs the Admin PIN.
+ * @returns {Promise<{status: string, recoveryCode?: string, message?: string}>}
+ */
+export async function createRecoveryCodeBackend(pin) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config/recovery-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { status: 'ERROR', message: data.detail || `HTTP error ${res.status}` };
+    invalidateApiCache('config');
+    return data;
+  } catch (err) {
+    return { status: 'ERROR', message: err.message };
+  }
 }

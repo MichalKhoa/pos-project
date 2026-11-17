@@ -779,6 +779,13 @@ export const translations = {
       security_lock_off_note: "Pokladna se nezamyká. Zapněte zamykání a nastavte vlastní PIN.",
       security_cashier_pin_change: "Změnit PIN obsluhy",
       security_save_failed: "Nastavení zabezpečení se nepodařilo uložit.",
+      recovery_code_title: "Záchranný kód",
+      recovery_code_warning: "Zapište si tento kód a uložte ho mimo pokladnu. Znovu se nezobrazí. Pomůže, když zapomenete PIN.",
+      recovery_code_done: "Zapsal(a) jsem si ho",
+      recovery_code_card_title: "Záchranný kód",
+      recovery_code_card_desc: "Vydá nový kód a starý přestane platit. Vyžaduje Admin PIN.",
+      recovery_code_new_btn: "Vydat nový záchranný kód",
+      recovery_code_failed: "Nový záchranný kód se nepodařilo vydat.",
 
       store_profile_desc: "Údaje tištěné v záhlaví účtenky pro zákazníky a finanční kontrolu.",
       store_address_title: "Adresa provozovny",
@@ -1231,7 +1238,16 @@ export const translations = {
     },
     lock_screen: {
       server_starting: "Server se spouští, zkouším znovu…",
-      server_unavailable: "Server není dostupný. PIN nelze ověřit, zkuste to za chvíli znovu."
+      server_unavailable: "Server není dostupný. PIN nelze ověřit, zkuste to za chvíli znovu.",
+      recovery_link: "Zapomněli jste PIN? Obnovit pomocí záchranného kódu",
+      recovery_title: "Obnova PIN záchranným kódem",
+      recovery_hint: "Zadejte záchranný kód, který jste dostali při nastavení prvního PINu. Po obnově se PIN i zamykání vypnou a nastavíte je znovu.",
+      recovery_submit: "Obnovit",
+      recovery_back: "Zpět",
+      recovery_invalid: "Neplatný záchranný kód.",
+      recovery_error: "Záchranný kód se nepodařilo ověřit.",
+      recovery_ok: "Hotovo. PIN i zamykání jsou vypnuté, nastavte je znovu v Nastavení.",
+      pin_hint: "Zadejte PIN kód (4 číslice) pro odemčení"
     },
     refund_guard: {
       not_stored: "Prodej ještě není uložen na serveru. Počkejte na odeslání a zkuste storno znovu.",
@@ -2180,6 +2196,13 @@ export const translations = {
       security_lock_off_note: "Máy tính tiền không bị khóa. Hãy bật khóa và đặt mã PIN riêng.",
       security_cashier_pin_change: "Đổi PIN thu ngân",
       security_save_failed: "Không thể lưu cài đặt bảo mật.",
+      recovery_code_title: "Mã cứu hộ",
+      recovery_code_warning: "Hãy ghi lại mã này và cất ngoài máy tính tiền. Mã sẽ không hiện lại. Mã giúp bạn khi quên PIN.",
+      recovery_code_done: "Tôi đã ghi lại",
+      recovery_code_card_title: "Mã cứu hộ",
+      recovery_code_card_desc: "Tạo mã mới và mã cũ hết hiệu lực. Cần PIN Admin.",
+      recovery_code_new_btn: "Tạo mã cứu hộ mới",
+      recovery_code_failed: "Không thể tạo mã cứu hộ mới.",
 
       store_profile_desc: "Thông tin in trên đầu hóa đơn cho khách hàng và cơ quan thuế.",
       store_address_title: "Địa chỉ điểm bán",
@@ -2632,7 +2655,16 @@ export const translations = {
     },
     lock_screen: {
       server_starting: "Máy chủ đang khởi động, đang thử lại…",
-      server_unavailable: "Máy chủ không khả dụng. Không thể xác minh PIN, hãy thử lại sau ít phút."
+      server_unavailable: "Máy chủ không khả dụng. Không thể xác minh PIN, hãy thử lại sau ít phút.",
+      recovery_link: "Quên PIN? Khôi phục bằng mã cứu hộ",
+      recovery_title: "Khôi phục PIN bằng mã cứu hộ",
+      recovery_hint: "Nhập mã cứu hộ bạn nhận được khi đặt PIN đầu tiên. Sau khi khôi phục, PIN và khóa màn hình sẽ tắt và bạn đặt lại.",
+      recovery_submit: "Khôi phục",
+      recovery_back: "Quay lại",
+      recovery_invalid: "Mã cứu hộ không hợp lệ.",
+      recovery_error: "Không thể kiểm tra mã cứu hộ.",
+      recovery_ok: "Xong. PIN và khóa màn hình đã tắt, hãy đặt lại trong Cài đặt.",
+      pin_hint: "Nhập mã PIN (4 chữ số) để mở khóa"
     },
     refund_guard: {
       not_stored: "Giao dịch chưa được lưu trên máy chủ. Hãy đợi gửi xong rồi thử hoàn tiền lại.",
@@ -3581,6 +3613,13 @@ export const translations = {
       security_lock_off_note: "The register does not lock. Switch the lock on and set your own PIN.",
       security_cashier_pin_change: "Change cashier PIN",
       security_save_failed: "Could not save the security settings.",
+      recovery_code_title: "Recovery code",
+      recovery_code_warning: "Write this code down and keep it away from the register. It is not shown again. It helps if you forget the PIN.",
+      recovery_code_done: "I have written it down",
+      recovery_code_card_title: "Recovery code",
+      recovery_code_card_desc: "Issues a new code and the old one stops working. Needs the Admin PIN.",
+      recovery_code_new_btn: "Issue a new recovery code",
+      recovery_code_failed: "Could not issue a new recovery code.",
 
       store_profile_desc: "Details printed in receipt header for customers and tax authorities.",
       store_address_title: "Store address",
@@ -4033,7 +4072,16 @@ export const translations = {
     },
     lock_screen: {
       server_starting: "The server is starting, trying again…",
-      server_unavailable: "The server is unavailable. The PIN cannot be checked, try again in a moment."
+      server_unavailable: "The server is unavailable. The PIN cannot be checked, try again in a moment.",
+      recovery_link: "Forgot the PIN? Recover with the recovery code",
+      recovery_title: "Recover with the recovery code",
+      recovery_hint: "Enter the recovery code you received when you set the first PIN. Afterwards the PINs and both locks are switched off and you set them again.",
+      recovery_submit: "Recover",
+      recovery_back: "Back",
+      recovery_invalid: "Invalid recovery code.",
+      recovery_error: "Could not check the recovery code.",
+      recovery_ok: "Done. The PINs and locks are off; set them again in Settings.",
+      pin_hint: "Enter the PIN (4 digits) to unlock"
     },
     refund_guard: {
       not_stored: "This sale is not stored on the server yet. Wait until it is sent, then refund again.",

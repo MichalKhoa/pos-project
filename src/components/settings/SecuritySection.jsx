@@ -10,7 +10,8 @@ export default function SecuritySection({
   isAdminMode,
   onToggleAdminMode,
   onToggleLock,
-  onSetPin
+  onSetPin,
+  onNewRecoveryCode
 }) {
   const { t } = useTranslation();
 
@@ -110,6 +111,19 @@ export default function SecuritySection({
               {security?.adminPinEnabled ? t('settings.security_admin_pin_on_note') : t('settings.security_admin_pin_off_note')}
             </div>
           </div>
+
+          {security?.hasAdminPin && (
+            <button
+              type="button"
+              className="clear-cart-btn"
+              style={{ height: '44px', padding: '0 1.25rem', fontSize: '0.88rem', fontWeight: '800' }}
+              title={t('settings.recovery_code_card_desc')}
+              onClick={onNewRecoveryCode}
+            >
+              <KeyRound size={16} />
+              <span>{t('settings.recovery_code_new_btn')}</span>
+            </button>
+          )}
 
           {security?.hasAdminPin && (
             <button

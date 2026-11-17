@@ -18,6 +18,7 @@ vi.mock('../api/posApi', async (importOriginal) => {
     fetchStoreConfigBackend: vi.fn().mockResolvedValue({}),
     saveStoreConfigBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
     saveSecuritySettingsBackend: vi.fn().mockResolvedValue({ status: 'SUCCESS' }),
+    createRecoveryCodeBackend: vi.fn(),
     fetchPrinterDevices: vi.fn().mockResolvedValue([]),
     fetchTerminalConfig: vi.fn().mockResolvedValue({ enabled: false }),
     fetchLitestreamStatus: vi.fn().mockResolvedValue(null),
@@ -108,6 +109,18 @@ describe('AdminPinModal', () => {
     expect(await screen.findByText(/Nesprávný Admin PIN/i)).toBeInTheDocument();
   });
 
+  it('wants exactly 4 digits for a new PIN', () => {
+    render(
+      <LanguageProvider>
+        <AdminPinModal mode="SET_PIN" onClose={() => {}} onSuccess={() => {}} />
+      </LanguageProvider>
+    );
+    typePin('2468');
+    expect(screen.getByRole('button', { name: /Pokračovat/i })).toBeEnabled();
+    typePin('1');
+    expect(screen.getByRole('button', { name: /Pokračovat/i })).toBeDisabled();
+  });
+
   it('refuses 1234 as a new PIN', () => {
     render(
       <LanguageProvider>
@@ -165,6 +178,35 @@ describe('Security tab switches', () => {
     renderSettings({ adminPinEnabled: false, hasPin: true, lockScreenEnabled: true }, true);
     openSecurityTab();
     expect(document.querySelector('input[type="password"]')).toBeNull();
+  });
+});
+
+describe('Recovery code', () => {
+  const openSecurityTab = () => fireEvent.click(screen.getByText('Bezpečnost & PIN'));
+
+  it('shows the code returned with the first PIN, once, and drops it on close', async () => {
+    posApi.saveSecuritySettingsBackend.mockResolvedValue({ status: 'SUCCESS', recoveryCode: 'ABCD-EFGH-JKLM-NPQR' });
+    renderSettings({ adminPinEnabled: false, hasPin: false, lockScreenEnabled: false }, true);
+    openSecurityTab();
+    fireEvent.click(screen.getByLabelText(/Zamykání obrazovky/i, { selector: 'input' }));
+    typePin('2468');
+    fireEvent.click(screen.getByRole('button', { name: /Pokračovat/i }));
+    typePin('2468');
+    expect(await screen.findByTestId('recovery-code', {}, { timeout: 3000 })).toHaveTextContent('ABCD-EFGH-JKLM-NPQR');
+    fireEvent.click(screen.getByRole('button', { name: /Zapsal/i }));
+    expect(screen.queryByTestId('recovery-code')).not.toBeInTheDocument();
+  });
+
+  it('issues a new code only after the Admin PIN is checked', async () => {
+    posApi.verifyAdminPinBackend.mockResolvedValue({ valid: true });
+    posApi.createRecoveryCodeBackend.mockResolvedValue({ status: 'SUCCESS', recoveryCode: 'WXYZ-2345-6789-ABCD' });
+    renderSettings({ adminPinEnabled: true, hasAdminPin: true, hasPin: true }, true);
+    openSecurityTab();
+    fireEvent.click(screen.getByRole('button', { name: /Vydat nový záchranný kód/i }));
+    expect(posApi.createRecoveryCodeBackend).not.toHaveBeenCalled();
+    typePin('2580');
+    await waitFor(() => expect(posApi.createRecoveryCodeBackend).toHaveBeenCalledWith('2580'));
+    expect(await screen.findByTestId('recovery-code')).toHaveTextContent('WXYZ-2345-6789-ABCD');
   });
 });
 

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import {
   fetchBackendRoot,
+  createRecoveryCodeBackend,
   fetchEetStatus,
   fetchUpdateStatus,
   applySystemUpdate,
@@ -29,6 +30,7 @@ import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useConfirm } from '../context/useConfirm.js';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
 import AdminPinModal from './AdminPinModal.jsx';
+import RecoveryCodeModal from './RecoveryCodeModal.jsx';
 import StoreProfileSection from './settings/StoreProfileSection.jsx';
 import LayoutSection from './settings/LayoutSection.jsx';
 import PrinterSection from './settings/PrinterSection.jsx';
@@ -109,6 +111,7 @@ export default function SettingsView({
 
   // PIN verification modal state
   const [pinModalState, setPinModalState] = useState(null);
+  const [recoveryCode, setRecoveryCode] = useState(null);
 
   const loadBackendInfo = async () => {
     setBackendLoading(true);
@@ -225,7 +228,22 @@ export default function SettingsView({
   const saveSecurity = async (updates) => {
     const res = await saveSecuritySettings(updates);
     if (res?.status === 'ERROR') notify(res.message || t('settings.security_save_failed'));
+    // The first PIN also issues the recovery code; it is shown once and never stored in plain text.
+    if (res?.recoveryCode) setRecoveryCode(res.recoveryCode);
     return res;
+  };
+
+  // Needs the Admin PIN; the old code stops working.
+  const handleNewRecoveryCode = () => {
+    setPinModalState({
+      mode: 'VERIFY',
+      onAuthenticated: async (verifiedPin) => {
+        setPinModalState(null);
+        const res = await createRecoveryCodeBackend(verifiedPin);
+        if (res?.recoveryCode) setRecoveryCode(res.recoveryCode);
+        else notify(res?.message || t('settings.recovery_code_failed'));
+      }
+    });
   };
 
   // kind: 'cashier' (lock screen) or 'admin'. enable: also switch the lock on once the PIN is saved.
@@ -544,6 +562,7 @@ export default function SettingsView({
                 security={storeConfig}
                 onToggleLock={handleToggleLock}
                 onSetPin={handleSetPin}
+                onNewRecoveryCode={handleNewRecoveryCode}
               />
             )}
 
@@ -691,6 +710,8 @@ export default function SettingsView({
           </div>
         </div>
       )}
+
+      {recoveryCode && <RecoveryCodeModal code={recoveryCode} onClose={() => setRecoveryCode(null)} />}
 
       {/* Admin PIN Verification & Change Modal */}
       {pinModalState && (

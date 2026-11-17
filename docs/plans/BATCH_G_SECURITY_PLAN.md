@@ -1,6 +1,6 @@
 # Batch G plan: PIN locks that can be switched on and off, and no built-in default or master keys
 
-Status: Phase 1 done and committed (section 9). Phase 2 done, not committed (section 10). Phases 1 and 2 must land together: Phase 1 alone leaves Admin mode unreachable after the migration.
+Status: Phase 1 done and committed (section 9). Phase 2 done and committed (section 10). Phase 3 done, not committed (section 11). Phases 1 and 2 must land together: Phase 1 alone leaves Admin mode unreachable after the migration.
 Branch: `fix/batch-g-security`, cut from `origin/master` (PRs 11, 12 and 13 are merged).
 
 ## 1. Goal
@@ -120,3 +120,16 @@ Frontend toggles and gating, tests first (`src/__tests__/security_toggles.test.j
 Gates: 412 frontend tests, lint clean, build ok. Review at high found two issues, both fixed (failed save kept a success message; the Admin session kept a stale PIN).
 
 Open for Phase 3: the PIN dialogs and the lock screen submit automatically after 4 digits, so a 5 to 8 digit PIN is checked too early and counts toward the rate limit. This predates Batch G because the server never returns the PIN length. Fix with an explicit confirm button or by storing the length. The first recovery code from `POST /config` is still not shown anywhere (Phase 3).
+
+## 11. Phase 3 result
+
+Recovery code UI and texts, tests first (`lock_screen.test.jsx`, `security_toggles.test.jsx`).
+
+- New `RecoveryCodeModal` shows a code once. It opens when a save returns `recoveryCode` (the first PIN) and after "Issue a new recovery code" in the Security tab. The new-code button needs the Admin PIN and calls `POST /config/recovery-code`; it appears only when an Admin PIN is set.
+- The lock screen form is now a recovery code form: no PUK or IČO text, placeholder `XXXX-XXXX-XXXX-XXXX`, success text without "1234". All of its text and the new Settings text exist in Czech, Vietnamese and English. `verifyPukBackend` is renamed `verifyRecoveryCodeBackend`.
+- A successful recovery calls `onRecovered`, and `App` switches both locks and all status flags off in its state, so the lock screen does not come back with no PIN to open it.
+- New PINs set in the UI must have exactly 4 digits, because the dialogs and the lock screen submit after 4 digits (the server never returns the PIN length). The server still accepts 4 to 8, so a 5 to 8 digit PIN set earlier still fails on the early submit; changing this needs the PIN length stored or an explicit confirm button.
+- Decision: the support master key is not typed on any keypad. It works for the technician and sale endpoints as a header value and in the standalone settings app, which is what support needs.
+- Open: a shop with only a cashier PIN cannot issue a new recovery code from the UI (the button needs an Admin PIN).
+
+Gates: 418 frontend tests, 25 security backend tests, lint clean, build ok.

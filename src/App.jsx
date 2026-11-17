@@ -967,6 +967,17 @@ export default function App() {
   const handleLockApp = useCallback(() => {
     if (storeConfig?.lockScreenEnabled) setIsAppLocked(true);
   }, [setIsAppLocked, storeConfig?.lockScreenEnabled]);
+  // A recovery code clears both PINs and switches both locks off on the server; follow that here.
+  const handlePinsRecovered = useCallback(() => {
+    setStoreConfig(prev => ({
+      ...prev,
+      lockScreenEnabled: false,
+      adminPinEnabled: false,
+      hasPin: false,
+      hasAdminPin: false,
+      hasRecoveryCode: false
+    }));
+  }, [setStoreConfig]);
   const handleOpenParkedModal = useCallback(() => setIsParkedModalOpen(true), []);
   const handleClearKeypadAmount = useCallback(() => setKeypadAmount(''), []);
 
@@ -1181,6 +1192,7 @@ export default function App() {
 
       {/* Centralized Modals Coordinator */}
       <AppModals
+        onPinsRecovered={handlePinsRecovered}
         isDiscountModalOpen={isDiscountModalOpen}
         setIsDiscountModalOpen={setIsDiscountModalOpen}
         cartItems={cartItems}

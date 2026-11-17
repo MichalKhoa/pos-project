@@ -124,8 +124,8 @@ export default function AdminPinModal({
 
   const handleNextStep = useCallback(() => {
     if (step === 'NEW_PIN') {
-      if (newPin.length < 4 || newPin.length > 8) {
-        setErrorMsg('PIN musí mít 4 až 8 číslic.');
+      if (newPin.length !== 4) {
+        setErrorMsg('PIN musí mít 4 číslice.');
         triggerShake();
         return;
       }
@@ -164,7 +164,7 @@ export default function AdminPinModal({
   const getStepTitle = () => {
     if (step === 'VERIFY_PIN') return 'Ověření Admin PIN';
     if (step === 'CURRENT_PIN') return 'Zadejte současný Admin PIN';
-    if (step === 'NEW_PIN') return `Zadejte nový ${pinName} (4–8 číslic)`;
+    if (step === 'NEW_PIN') return `Zadejte nový ${pinName} (4 číslice)`;
     if (step === 'CONFIRM_PIN') return `Potvrďte nový ${pinName}`;
     return 'Admin PIN';
   };
@@ -282,7 +282,7 @@ export default function AdminPinModal({
           <button
             type="button"
             className="btn-primary"
-            disabled={newPin.length < 4}
+            disabled={newPin.length !== 4}
             onClick={handleNextStep}
             style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
           >
