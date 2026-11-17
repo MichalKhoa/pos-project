@@ -3,6 +3,7 @@ import { Scissors } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { generateBarcodeSVG } from '../../utils/barcodeGenerator.js';
 import { formatReceiptMoney, receiptTotals } from '../../utils/receiptAmounts.js';
+import { parseSaleTimestamp } from '../../utils/dateUtils.js';
 
 export default function ReceiptPreviewPaper({
   saleData,
@@ -227,11 +228,11 @@ export default function ReceiptPreviewPaper({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Datum vystavení:</span>
-              <span>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</span>
+              <span>{parseSaleTimestamp(saleData.timestamp).toLocaleString('cs-CZ')}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Datum zdanit. plnění (DUZP):</span>
-              <strong>{new Date(saleData.timestamp).toLocaleDateString('cs-CZ')}</strong>
+              <strong>{parseSaleTimestamp(saleData.timestamp).toLocaleDateString('cs-CZ')}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Forma úhrady:</span>
@@ -391,7 +392,7 @@ export default function ReceiptPreviewPaper({
               </div>
             )}
             <div style={{ fontSize: is58mm ? '10.88px' : '12px', marginTop: '2px', color: '#555' }}>
-              Datum & čas: <b>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b>
+              Datum & čas: <b>{parseSaleTimestamp(saleData.timestamp).toLocaleString('cs-CZ')}</b>
             </div>
             {showCashier && (
               <div style={{ fontSize: is58mm ? '10.4px' : '11.52px', color: '#555' }}>
@@ -521,7 +522,8 @@ export default function ReceiptPreviewPaper({
           </div>
         )}
 
-        {saleData.paymentMethod === 'cash' && (
+        {/* Same rule as the printer: a refund has no tendered cash, a reprint may have none stored. */}
+        {saleData.paymentMethod === 'cash' && !isRefund && Number(saleData.tenderedAmount) > 0 && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Přijatá hotovost:</span>
