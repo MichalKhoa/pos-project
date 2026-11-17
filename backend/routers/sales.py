@@ -1,6 +1,4 @@
-import os
 import uuid
-import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session, selectinload, noload
 from sqlalchemy import func, case, text
@@ -1149,8 +1147,8 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
 
 
 def _verify_admin_sales_override(request: Request, db: Session):
-    """Enforce loopback caller restriction (anti-LAN attack) and valid cashier PIN verification."""
-    import hashlib
+    """Loopback callers only (anti-LAN attack); Admin PIN required when the Admin PIN switch is on."""
+    from services.pin_auth import require_admin_pin
     client_host = request.client.host if request.client else ""
     is_loopback = client_host in ("127.0.0.1", "::1", "localhost", "testclient")
     if not is_loopback:
@@ -1161,46 +1159,14 @@ def _verify_admin_sales_override(request: Request, db: Session):
 
     pin = request.headers.get("X-Admin-PIN") or request.headers.get("x-admin-pin")
     override_hdr = request.headers.get("X-Admin-Override", "")
+    # In unit tests (testclient), allow X-Admin-Override: true as fallback
+    if client_host == "testclient" and override_hdr.lower() == "true":
+        return
     if not pin and override_hdr and override_hdr.lower() != "true":
         pin = override_hdr
 
-    master_key = os.getenv("POS_MASTER_ADMIN_KEY", "VOLTFLOW-ADMIN-MASTER-RECOVERY")
-    if pin and pin.strip() == master_key:
-        return
-
     config = db.query(StoreConfigModel).first()
-    stored_pins = []
-    if config:
-        if getattr(config, 'admin_pin', None):
-            stored_pins.append(config.admin_pin)
-        if getattr(config, 'cashier_pin', None):
-            stored_pins.append(config.cashier_pin)
-    if not stored_pins:
-        stored_pins = ["1234"]
-
-    valid = False
-    if pin:
-        pin_hash = hashlib.sha256(pin.encode("utf-8")).hexdigest()
-        for candidate in stored_pins:
-            is_stored_hash = len(candidate) == 64 and all(c in "0123456789abcdefABCDEF" for c in candidate)
-            if not is_stored_hash:
-                if pin == candidate:
-                    valid = True
-                    break
-            else:
-                if pin_hash == candidate or pin == candidate:
-                    valid = True
-                    break
-
-    # In unit tests (testclient), allow X-Admin-Override: true as fallback
-    if not valid and client_host == "testclient" and override_hdr.lower() == "true":
-        valid = True
-
-    if not valid:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Vyžadováno platné administrátorské oprávnění (správný PIN kód v X-Admin-PIN)."
-        )
+    require_admin_pin(request, config, pin, "Vyžadováno platné administrátorské oprávnění (správný PIN kód v X-Admin-PIN).")
 
 
 @router.delete("/purge-all")

@@ -402,16 +402,18 @@ function Navbar({
             </button>
           )}
 
-          {/* Quick Lock Icon Button */}
-          <button
-            type="button"
-            className="nav-tool-btn"
-            onClick={onLockApp}
-            title="Zamknout pokladnu (Quick Lock)"
-            aria-label="Zamknout pokladnu (Quick Lock)"
-          >
-            <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
-          </button>
+          {/* Quick Lock Icon Button: only when the owner has switched the lock screen on */}
+          {storeConfig?.lockScreenEnabled && (
+            <button
+              type="button"
+              className="nav-tool-btn"
+              onClick={onLockApp}
+              title="Zamknout pokladnu (Quick Lock)"
+              aria-label="Zamknout pokladnu (Quick Lock)"
+            >
+              <Lock size={15} style={{ color: 'var(--accent-amber)' }} />
+            </button>
+          )}
 
           <div className="nav-tool-divider" />
 

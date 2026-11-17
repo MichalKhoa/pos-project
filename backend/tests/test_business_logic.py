@@ -10,7 +10,7 @@ if backend_dir not in sys.path:
 from services.security_utils import round_currency, encrypt_secret, decrypt_secret, parse_iso_timestamp
 from services.eet_crypto import EETCryptoManager
 from services.qr_bank_service import CzechBankQRPaymentService
-from routers.config import _hash_pin, _is_hashed
+from services.pin_auth import hash_secret as _hash_pin, is_hashed as _is_hashed
 
 
 class TestCurrencyRoundingEdgeCases(unittest.TestCase):
@@ -139,7 +139,7 @@ class TestCzechQRBankPaymentEdgeCases(unittest.TestCase):
 
 
 class TestPinAndPukSecurityLogic(unittest.TestCase):
-    """Tests cashier PIN hashing, verification, and master PUK recovery rules."""
+    """Tests PIN hashing (recovery rules live in test_security_locks.py)."""
 
     def test_pin_hashing_and_verification(self):
         raw_pin = "1234"
@@ -148,18 +148,6 @@ class TestPinAndPukSecurityLogic(unittest.TestCase):
         self.assertTrue(_is_hashed(hashed))
         self.assertEqual(_hash_pin("1234"), hashed)
         self.assertNotEqual(_hash_pin("9999"), hashed)
-
-    def test_master_puk_format(self):
-        ico = "12345678"
-        puk_master_voltflow = f"VOLTFLOW-{ico}-MASTER"
-        puk_universal_voltflow = "VOLTFLOW-RECOVERY-99"
-        puk_master_himmel = f"HIMMEL-{ico}-MASTER"
-        puk_universal_himmel = "HIMMEL-RECOVERY-99"
-        
-        self.assertEqual(puk_master_voltflow, "VOLTFLOW-12345678-MASTER")
-        self.assertEqual(puk_universal_voltflow, "VOLTFLOW-RECOVERY-99")
-        self.assertEqual(puk_master_himmel, "HIMMEL-12345678-MASTER")
-        self.assertEqual(puk_universal_himmel, "HIMMEL-RECOVERY-99")
 
 
 class TestDefaultLanguageConfig(unittest.TestCase):

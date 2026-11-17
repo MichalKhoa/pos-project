@@ -28,7 +28,6 @@ class TestCloudBackupAPI(unittest.TestCase):
             self.db.refresh(config)
 
         # Reset configuration to predictable baseline
-        config.admin_pin = "1234"
         config.cloud_backup_enabled = False
         config.cloud_backup_endpoint = "https://example.r2.cloudflarestorage.com"
         config.cloud_backup_bucket = "pos-backups"
@@ -41,7 +40,9 @@ class TestCloudBackupAPI(unittest.TestCase):
         config.cloud_backup_last_error = ""
         self.db.commit()
 
-        self.auth_headers = {"X-Admin-PIN": "1234"}
+        from tests.pin_fixture import use_admin_pin
+        self.admin_pin = use_admin_pin(self)
+        self.auth_headers = {"X-Admin-PIN": self.admin_pin}
 
     def tearDown(self):
         self.db.close()
@@ -71,7 +72,7 @@ class TestCloudBackupAPI(unittest.TestCase):
     def test_origin_restriction(self):
         """Test that untrusted Origin header is rejected with 403 Forbidden."""
         bad_headers = {
-            "X-Admin-PIN": "1234",
+            "X-Admin-PIN": self.admin_pin,
             "Origin": "https://malicious-site.com"
         }
         res = self.client.get("/api/v1/system/cloud-backup/status", headers=bad_headers)
@@ -79,7 +80,7 @@ class TestCloudBackupAPI(unittest.TestCase):
         self.assertIn("externího webového původu", res.json().get("detail", ""))
 
         good_headers = {
-            "X-Admin-PIN": "1234",
+            "X-Admin-PIN": self.admin_pin,
             "Origin": "http://localhost:5173"
         }
         res_ok = self.client.get("/api/v1/system/cloud-backup/status", headers=good_headers)
@@ -98,11 +99,12 @@ class TestCloudBackupAPI(unittest.TestCase):
         )
         self.assertEqual(res_bad_pin.status_code, 401)
 
-        # 3. Master Recovery Key succeeds
-        res_master = self.client.get(
-            "/api/v1/system/cloud-backup/status",
-            headers={"X-Admin-PIN": "VOLTFLOW-ADMIN-MASTER-RECOVERY"}
-        )
+        # 3. The master key from this machine's environment succeeds
+        with patch.dict(os.environ, {"POS_MASTER_ADMIN_KEY": "support-key-0123456789"}):
+            res_master = self.client.get(
+                "/api/v1/system/cloud-backup/status",
+                headers={"X-Admin-PIN": "support-key-0123456789"}
+            )
         self.assertEqual(res_master.status_code, 200)
 
     def test_get_cloud_backup_status(self):

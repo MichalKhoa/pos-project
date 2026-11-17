@@ -31,6 +31,7 @@ Status per finding: VERIFIED (reproduced live), CODE (seen in code only, not rep
 | Batch A fixes (branch `fix/batch-a-sale-integrity`) | DONE | F-001, F-012, F-014, F-015, F-026, F-027, F-028 fixed with tests; see the Batch A plan for the results and what stays open |
 | Batch B fixes (same branch) | DONE | F-002, F-003, F-004, F-005, F-008, F-021, F-022 fixed with tests; see the Batch B plan |
 | Batch C fixes (branch `fix/batch-c-receipt-text`) | DONE | F-016, F-019, F-011 fixed with tests; see the Batch C plan |
+| Batch G security (branch `fix/batch-g-security`) | DONE | No default PIN, two toggleable locks, recovery code instead of PUK, master key only from the environment; audit item C1 stays open; see the Batch G plan |
 | Batch D fixes (same branch) | PARTIAL | F-017, F-029, F-030 fixed with tests (Batch D and D2 plans); F-031 and F-032 are layout findings left for Batch E |
 | Batch F fixes (same branch) | PARTIAL | F-010, F-013 (navbar), F-024 (button types, dialog guard), F-025 fixed with tests; F-009 and F-023 only for the dialog screens; see the Batch F plan |
 | Batch E fixes (same branch) | DONE | F-007, F-018, F-020, F-031, F-032 fixed with tests; touch PC only, see the Batch E plan |
@@ -211,5 +212,5 @@ Checkout flow as implemented (W2):
 - "Poslední účtenka" chip with reprint and quick storno; undo toast "ZPĚT" after cart changes; price check mode; shift widget collapsed by default.
 - Settings: grouped by task, admin-locked sections marked with a lock icon, descriptive subtitles.
 - Translation completeness: 1 251 keys in each of CZ, VI and EN with zero gaps.
-- Lock screen: failed-attempt lockout and PUK recovery exist.
+- Lock screen: failed-attempt lockout exists; recovery was by PUK at the time of the audit and is now a one-time recovery code (Batch G).
 - Test suites: 216 frontend and 186 backend tests pass, lint is clean.

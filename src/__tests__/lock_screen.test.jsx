@@ -9,11 +9,11 @@ import * as posApi from '../api/posApi';
 vi.mock('../api/posApi', () => ({
   verifyPinBackend: vi.fn(),
   verifyAdminPinBackend: vi.fn(),
-  verifyPukBackend: vi.fn()
+  verifyRecoveryCodeBackend: vi.fn()
 }));
 
 const renderLock = onUnlock =>
-  render(<LanguageProvider><LockScreenModal storeConfig={{ cashierPin: '9999' }} onUnlock={onUnlock} /></LanguageProvider>);
+  render(<LanguageProvider><LockScreenModal storeConfig={{ hasPin: true, cashierPinLength: 4 }} onUnlock={onUnlock} /></LanguageProvider>);
 
 const typePin = pin => pin.split('').forEach(d => fireEvent.click(screen.getByRole('button', { name: d })));
 const flush = async (ms = 0) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
@@ -106,10 +106,87 @@ describe('lock screen never falls back to a default PIN (audit F-012)', () => {
     expect(posApi.verifyPinBackend.mock.calls.length).toBe(calls);
   });
 
-  it('opens the PUK recovery form without crashing', async () => {
+  it('opens the recovery code form with no PUK or IČO text', async () => {
     renderLock(vi.fn());
     fireEvent.click(screen.getByText(/Zapomněli jste PIN/i));
-    expect(screen.getByPlaceholderText('VOLTFLOW-12345678-MASTER')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('XXXX-XXXX-XXXX-XXXX')).toBeInTheDocument();
+    expect(screen.queryByText(/PUK|IČO/)).not.toBeInTheDocument();
+  });
+
+  it('a valid recovery code tells the app the locks are off and never mentions 1234', async () => {
+    posApi.verifyRecoveryCodeBackend.mockResolvedValue({ valid: true });
+    const onUnlock = vi.fn();
+    const onRecovered = vi.fn();
+    render(<LanguageProvider><LockScreenModal storeConfig={{}} onUnlock={onUnlock} onRecovered={onRecovered} /></LanguageProvider>);
+    fireEvent.click(screen.getByText(/Zapomněli jste PIN/i));
+    fireEvent.change(screen.getByPlaceholderText('XXXX-XXXX-XXXX-XXXX'), { target: { value: 'ABCD-EFGH-JKLM-NPQR' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Obnovit' }));
+    await flush();
+    expect(posApi.verifyRecoveryCodeBackend).toHaveBeenCalledWith('ABCD-EFGH-JKLM-NPQR');
+    expect(onRecovered).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/1234/)).not.toBeInTheDocument();
+    await flush(1500);
+    expect(onUnlock).toHaveBeenCalledTimes(1);
+  });
+
+  it('a wrong recovery code shows an error and keeps the lock', async () => {
+    posApi.verifyRecoveryCodeBackend.mockResolvedValue({ valid: false });
+    const onRecovered = vi.fn();
+    render(<LanguageProvider><LockScreenModal storeConfig={{}} onUnlock={vi.fn()} onRecovered={onRecovered} /></LanguageProvider>);
+    fireEvent.click(screen.getByText(/Zapomněli jste PIN/i));
+    fireEvent.change(screen.getByPlaceholderText('XXXX-XXXX-XXXX-XXXX'), { target: { value: 'WRONG' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Obnovit' }));
+    await flush();
+    expect(screen.getByText('Neplatný záchranný kód.')).toBeInTheDocument();
+    expect(onRecovered).not.toHaveBeenCalled();
+  });
+});
+
+describe('auto-submit follows the stored PIN length', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const lockWith = (storeConfig) =>
+    render(<LanguageProvider><LockScreenModal storeConfig={storeConfig} onUnlock={vi.fn()} /></LanguageProvider>);
+
+  it('a 6 digit PIN is checked only after the 6th digit', async () => {
+    posApi.verifyPinBackend.mockResolvedValue({ valid: true });
+    lockWith({ hasPin: true, cashierPinLength: 6 });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).not.toHaveBeenCalled();
+    typePin('25');
+    await flush();
+    expect(posApi.verifyPinBackend).toHaveBeenCalledWith('147025');
+  });
+
+  it('an old PIN of unknown length is not checked automatically; the unlock button checks it', async () => {
+    posApi.verifyPinBackend.mockResolvedValue({ valid: true });
+    lockWith({ hasPin: true, cashierPinLength: null });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Odemknout/ }));
+    await flush();
+    expect(posApi.verifyPinBackend).toHaveBeenCalledWith('1470');
+  });
+
+  it('two PINs of different lengths are not auto-checked (either one may be typed)', async () => {
+    lockWith({ hasPin: true, cashierPinLength: 4, hasAdminPin: true, adminPinLength: 6 });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).not.toHaveBeenCalled();
+  });
+
+  it('two PINs of the same length are auto-checked at that length', async () => {
+    posApi.verifyPinBackend.mockResolvedValue({ valid: false });
+    lockWith({ hasPin: true, cashierPinLength: 4, hasAdminPin: true, adminPinLength: 4 });
+    typePin('1470');
+    await flush();
+    expect(posApi.verifyPinBackend).toHaveBeenCalledWith('1470');
   });
 });
 
@@ -126,7 +203,7 @@ describe('admin PIN dialog has no default PIN either', () => {
     const onSuccess = vi.fn();
     render(
       <LanguageProvider>
-        <AdminPinModal mode="VERIFY" storeConfig={{}} onClose={() => {}} onSuccess={onSuccess} />
+        <AdminPinModal mode="VERIFY" storeConfig={{ adminPinLength: 4 }} onClose={() => {}} onSuccess={onSuccess} />
       </LanguageProvider>
     );
     typePin('1234');

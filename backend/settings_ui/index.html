@@ -692,8 +692,21 @@
           </div>
 
           <div class="form-group">
-            <label>Change Cashier PIN</label>
-            <input type="password" id="cfg-newPin" maxlength="8" placeholder="Enter new PIN code">
+            <label><input type="checkbox" id="cfg-lockScreenEnabled"> Lock screen with a PIN</label>
+            <input type="password" id="cfg-cashierPin" maxlength="8" inputmode="numeric" placeholder="Cashier PIN (4-8 digits)">
+          </div>
+
+          <div class="form-group">
+            <label><input type="checkbox" id="cfg-adminPinEnabled"> Protect Admin mode with an Admin PIN</label>
+            <input type="password" id="cfg-adminPin" maxlength="8" inputmode="numeric" placeholder="Admin PIN (4-8 digits)">
+          </div>
+
+          <div class="form-group full-width">
+            <div id="pin-state" style="font-size: 0.85rem; opacity: 0.8;"></div>
+            <div id="recovery-box" style="display: none; margin-top: 8px; padding: 12px; border: 1px dashed #f59e0b; border-radius: 8px;">
+              <strong>Recovery code</strong> (shown once, write it down and keep it away from the register):
+              <div id="recovery-code" style="font-family: monospace; font-size: 1.3rem; margin-top: 6px; user-select: all;"></div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -1039,6 +1052,9 @@
 
         // Populate Config
         const cfg = currentSettings.config || {};
+        document.getElementById('pin-state').textContent =
+          'Cashier PIN: ' + (cfg.hasPin ? 'set' : 'not set') + ' | Admin PIN: ' + (cfg.hasAdminPin ? 'set' : 'not set') +
+          '. Leave a PIN field empty to keep the current PIN.';
         for (const [k, v] of Object.entries(cfg)) {
           const field = document.getElementById('cfg-' + k);
           if (field) {
@@ -1082,7 +1098,10 @@
         city: document.getElementById('cfg-city')?.value,
         bankAccountIban: document.getElementById('cfg-bankAccountIban')?.value,
         receiptFooter: document.getElementById('cfg-receiptFooter')?.value,
-        newPin: document.getElementById('cfg-newPin')?.value,
+        cashierPin: document.getElementById('cfg-cashierPin')?.value,
+        adminPin: document.getElementById('cfg-adminPin')?.value,
+        lockScreenEnabled: document.getElementById('cfg-lockScreenEnabled')?.checked,
+        adminPinEnabled: document.getElementById('cfg-adminPinEnabled')?.checked,
         autoLockMinutes: document.getElementById('cfg-autoLockMinutes')?.value,
         directHardwarePrint: document.getElementById('cfg-directHardwarePrint')?.checked,
         printerInterface: document.getElementById('cfg-printerInterface')?.value,
@@ -1103,7 +1122,12 @@
         const res = await window.pywebview.api.save_settings({ env: envData, config: configData });
         if (res.success) {
           showToast("✅ Settings saved successfully!");
-          document.getElementById('cfg-newPin').value = '';
+          document.getElementById('cfg-cashierPin').value = '';
+          document.getElementById('cfg-adminPin').value = '';
+          if (res.recoveryCode) {
+            document.getElementById('recovery-code').textContent = res.recoveryCode;
+            document.getElementById('recovery-box').style.display = 'block';
+          }
           loadSettings();
         } else {
           showToast("❌ Error: " + res.message);

@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Lock, KeyRound, HelpCircle, RefreshCw } from 'lucide-react';
-import { verifyPinBackend, verifyPukBackend } from '../api/posApi';
+import { verifyPinBackend, verifyRecoveryCodeBackend } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
 const RETRY_BASE_MS = 1000;
 const RETRY_MAX_MS = 5000;
 
-export default function LockScreenModal({ storeConfig, onUnlock }) {
+export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) {
   const { t } = useTranslation();
   const [enteredPin, setEnteredPin] = useState('');
-  const [pukValue, setPukValue] = useState('');
+  const [codeValue, setCodeValue] = useState('');
   // The server cannot say yes or no (starting up or down): wait and ask again, never guess (F-012)
   const [waitingForServer, setWaitingForServer] = useState(false);
   const retryTimerRef = useRef(null);
@@ -20,7 +20,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [showPukInput, setShowPukInput] = useState(false);
+  const [showRecoveryInput, setShowRecoveryInput] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
 
@@ -47,14 +47,21 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
     return () => clearInterval(timer);
   }, [lockoutSeconds]);
 
+  // Auto-submit only when every set PIN has the same known length (cashier PIN and Admin PIN both unlock).
+  // An old PIN of unknown length, or two different lengths, needs the unlock button or Enter.
+  const setLengths = [];
+  if (storeConfig?.hasPin) setLengths.push(storeConfig.cashierPinLength);
+  if (storeConfig?.hasAdminPin) setLengths.push(storeConfig.adminPinLength);
+  const autoSubmitLength =
+    setLengths.length > 0 && setLengths.every((l) => l && l === setLengths[0]) ? setLengths[0] : null;
+
   const handleNumClick = async (num) => {
-    if (enteredPin.length >= 8 || isVerifying || waitingForServer || showPukInput || lockoutSeconds > 0) return;
+    if (enteredPin.length >= 8 || isVerifying || waitingForServer || showRecoveryInput || lockoutSeconds > 0) return;
     const newPin = enteredPin + num;
     setEnteredPin(newPin);
     setErrorMsg('');
 
-    const targetLength = storeConfig?.cashierPin?.length || 4;
-    if (newPin.length === targetLength) {
+    if (autoSubmitLength && newPin.length === autoSubmitLength) {
       const unlocked = await verifyPin(newPin, false);
       if (unlocked === false) {
         setIsShaking(true);
@@ -67,18 +74,18 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
   };
 
   const handleUnlockSubmit = () => {
-    if (enteredPin.length < 4 || isVerifying || waitingForServer || showPukInput || lockoutSeconds > 0) return;
+    if (enteredPin.length < 4 || isVerifying || waitingForServer || showRecoveryInput || lockoutSeconds > 0) return;
     verifyPin(enteredPin, false);
   };
 
   const handleBackspace = () => {
-    if (isVerifying || waitingForServer || showPukInput || lockoutSeconds > 0) return;
+    if (isVerifying || waitingForServer || showRecoveryInput || lockoutSeconds > 0) return;
     setEnteredPin(prev => prev.slice(0, -1));
     setErrorMsg('');
   };
 
   const handleClear = () => {
-    if (isVerifying || showPukInput || lockoutSeconds > 0) return;
+    if (isVerifying || showRecoveryInput || lockoutSeconds > 0) return;
     cancelWaiting();
     setEnteredPin('');
     setErrorMsg('');
@@ -134,26 +141,29 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
 
   verifyPinRef.current = verifyPin;
 
-  const handleVerifyPuk = async (e) => {
+  const handleVerifyRecovery = async (e) => {
     e.preventDefault();
-    if (!pukValue.trim() || isVerifying) return;
+    if (!codeValue.trim() || isVerifying) return;
     setIsVerifying(true);
     setErrorMsg('');
 
     try {
-      const res = await verifyPukBackend(pukValue.trim());
+      const res = await verifyRecoveryCodeBackend(codeValue.trim());
       if (res.valid) {
-        setSuccessMsg('PIN byl úspěšně vyresetován na 1234!');
+        setSuccessMsg(t('lock_screen.recovery_ok'));
+        // The recovery code cleared both PINs and switched the locks off.
+        if (onRecovered) onRecovered();
         setTimeout(() => {
-          setShowPukInput(false);
+          setShowRecoveryInput(false);
           setSuccessMsg('');
           setEnteredPin('');
+          onUnlock();
         }, 1500);
       } else {
-        setErrorMsg('Neplatný záchranný klíč (PUK)!');
+        setErrorMsg(t('lock_screen.recovery_invalid'));
       }
     } catch {
-      setErrorMsg('Chyba při ověřování záchranného klíče.');
+      setErrorMsg(t('lock_screen.recovery_error'));
     } finally {
       setIsVerifying(false);
     }
@@ -161,7 +171,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (showPukInput) return;
+      if (showRecoveryInput) return;
       e.stopImmediatePropagation();
 
       if (/^[0-9]$/.test(e.key)) {
@@ -181,7 +191,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enteredPin, isVerifying, waitingForServer, showPukInput]);
+  }, [enteredPin, isVerifying, waitingForServer, showRecoveryInput]);
 
   return (
     <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.96)', backdropFilter: 'blur(16px)', zIndex: 99999 }}>
@@ -210,7 +220,7 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
           </div>
         </div>
 
-        {!showPukInput ? (
+        {!showRecoveryInput ? (
           <>
             {lockoutSeconds > 0 && (
               <div style={{
@@ -327,14 +337,14 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
 
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', marginBottom: '0.75rem' }}>
               <KeyRound size={13} />
-              <span>Zadejte PIN kód (4–8 číslic) pro odemčení</span>
+              <span>{t('lock_screen.pin_hint')}</span>
             </div>
 
-            {/* PUK Recovery Option Toggle */}
+            {/* Recovery code option */}
             <button
               type="button"
               onClick={() => {
-                setShowPukInput(true);
+                setShowRecoveryInput(true);
                 setErrorMsg('');
               }}
               style={{
@@ -350,24 +360,24 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
               }}
             >
               <HelpCircle size={13} />
-              <span>Zapomněli jste PIN? Obnovit pomocí PUK klíče</span>
+              <span>{t('lock_screen.recovery_link')}</span>
             </button>
           </>
         ) : (
-          /* PUK Recovery Form */
-          <form onSubmit={handleVerifyPuk} style={{ padding: '0.5rem 0' }}>
+          /* Recovery code form */
+          <form onSubmit={handleVerifyRecovery} style={{ padding: '0.5rem 0' }}>
             <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-              Obnova PIN pomocí PUK klíče
+              {t('lock_screen.recovery_title')}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: '1.4' }}>
-              Zadejte záchranný klíč (PUK) dodaný s pokladním systémem nebo vygenerovaný z IČO:
+              {t('lock_screen.recovery_hint')}
             </div>
 
             <input
               type="text"
-              placeholder="VOLTFLOW-12345678-MASTER"
-              value={pukValue}
-              onChange={e => setPukValue(e.target.value)}
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              value={codeValue}
+              onChange={e => setCodeValue(e.target.value)}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -401,21 +411,21 @@ export default function LockScreenModal({ storeConfig, onUnlock }) {
                 type="button"
                 className="btn-secondary"
                 onClick={() => {
-                  setShowPukInput(false);
-                  setPukValue('');
+                  setShowRecoveryInput(false);
+                  setCodeValue('');
                   setErrorMsg('');
                 }}
                 style={{ flex: 1, padding: '0.65rem' }}
               >
-                Zpět
+                {t('lock_screen.recovery_back')}
               </button>
               <button
                 type="submit"
                 className="btn-primary"
-                disabled={!pukValue.trim() || isVerifying}
+                disabled={!codeValue.trim() || isVerifying}
                 style={{ flex: 1, padding: '0.65rem' }}
               >
-                Resetovat PIN
+                {t('lock_screen.recovery_submit')}
               </button>
             </div>
           </form>

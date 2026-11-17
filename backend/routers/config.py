@@ -1,23 +1,18 @@
 import os
-import hashlib
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from database import get_db
 from models import StoreConfigModel
+from services.pin_auth import (
+    admin_pin_enabled, apply_security_settings, client_ip, lock_screen_enabled, master_key_matches,
+    new_recovery_code, pin_is_set, recovery_code_hash, recovery_code_matches,
+    require_admin_pin, verify_pin_column,
+)
+from services.rate_limiter import pin_rate_limiter
 
 router = APIRouter(prefix="/api/v1/config", tags=["config"])
-
-
-def _hash_pin(pin: str) -> str:
-    """SHA-256 hash a PIN string."""
-    return hashlib.sha256(pin.encode("utf-8")).hexdigest()
-
-
-def _is_hashed(value: str) -> bool:
-    """Check if value looks like a SHA-256 hex digest (64 hex chars)."""
-    return len(value) == 64 and all(c in '0123456789abcdef' for c in value)
 
 
 class StoreConfigSchema(BaseModel):
@@ -43,6 +38,8 @@ class StoreConfigSchema(BaseModel):
     csobTerminalId: Optional[str] = None
     cashierPin: Optional[str] = None
     adminPin: Optional[str] = None
+    lockScreenEnabled: Optional[bool] = None
+    adminPinEnabled: Optional[bool] = None
     autoLockMinutes: Optional[int] = None
     directHardwarePrint: Optional[bool] = None
     defaultLanguage: Optional[str] = None
@@ -124,8 +121,13 @@ def get_store_config(db: Session = Depends(get_db)):
         "csobTerminalIp": config.csob_terminal_ip or "",
         "csobTerminalPort": config.csob_terminal_port or 8888,
         "csobTerminalId": config.csob_terminal_id or "",
-        "hasPin": bool(config.cashier_pin and config.cashier_pin != _hash_pin("1234")),
-        "hasAdminPin": bool(getattr(config, 'admin_pin', None) and config.admin_pin != _hash_pin("1234")),
+        "hasPin": pin_is_set(config.cashier_pin),
+        "hasAdminPin": pin_is_set(config.admin_pin),
+        "lockScreenEnabled": lock_screen_enabled(config),
+        "adminPinEnabled": admin_pin_enabled(config),
+        "cashierPinLength": config.cashier_pin_length if pin_is_set(config.cashier_pin) else None,
+        "adminPinLength": config.admin_pin_length if pin_is_set(config.admin_pin) else None,
+        "hasRecoveryCode": bool(config.recovery_code_hash),
         "autoLockMinutes": config.auto_lock_minutes if config.auto_lock_minutes is not None else 15,
         "directHardwarePrint": config.direct_hardware_print if config.direct_hardware_print is not None else True,
         "autoPrintReceipt": getattr(config, 'auto_print_receipt', False) if getattr(config, 'auto_print_receipt', None) is not None else False,
@@ -177,11 +179,17 @@ def get_store_config(db: Session = Depends(get_db)):
 
 
 @router.post("")
-def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
+def update_store_config(request: Request, data: StoreConfigSchema, db: Session = Depends(get_db)):
     config = db.query(StoreConfigModel).first()
     if not config:
         config = StoreConfigModel()
         db.add(config)
+
+    # Changing a PIN or a lock switch needs the Admin PIN while the Admin PIN switch is on.
+    # Other settings stay open (audit item C1 remains open for the rest of the API).
+    if any(v is not None for v in (data.cashierPin, data.adminPin, data.lockScreenEnabled, data.adminPinEnabled)):
+        require_admin_pin(request, config, request.headers.get("X-Admin-PIN"),
+                          "Změna PIN kódu nebo zamykání vyžaduje Admin PIN.")
 
     if data.storeName is not None: config.store_name = data.storeName
     if data.street is not None: config.street = data.street
@@ -206,14 +214,12 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     if data.csobTerminalIp is not None: config.csob_terminal_ip = data.csobTerminalIp
     if data.csobTerminalPort is not None: config.csob_terminal_port = data.csobTerminalPort
     if data.csobTerminalId is not None: config.csob_terminal_id = data.csobTerminalId
-    if data.cashierPin is not None:
-        if len(data.cashierPin) < 4 or len(data.cashierPin) > 8 or not data.cashierPin.isdigit():
-            raise HTTPException(status_code=400, detail="PIN kód musí mít 4 až 8 číslic.")
-        config.cashier_pin = _hash_pin(data.cashierPin)
-    if data.adminPin is not None:
-        if len(data.adminPin) < 4 or len(data.adminPin) > 8 or not data.adminPin.isdigit():
-            raise HTTPException(status_code=400, detail="Admin PIN kód musí mít 4 až 8 číslic.")
-        config.admin_pin = _hash_pin(data.adminPin)
+    try:
+        recovery_code = apply_security_settings(
+            config, data.cashierPin, data.adminPin, data.lockScreenEnabled, data.adminPinEnabled
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if data.autoLockMinutes is not None: config.auto_lock_minutes = data.autoLockMinutes
     if data.directHardwarePrint is not None: config.direct_hardware_print = data.directHardwarePrint
     if data.autoPrintReceipt is not None: config.auto_print_receipt = data.autoPrintReceipt
@@ -262,72 +268,43 @@ def update_store_config(data: StoreConfigSchema, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(config)
 
-    return {"status": "SUCCESS", "message": "Config stored in SQLite database successfully"}
+    result = {"status": "SUCCESS", "message": "Config stored in SQLite database successfully"}
+    if recovery_code:
+        result["recoveryCode"] = recovery_code
+    return result
 
 
 class PinVerifyRequest(BaseModel):
     pin: str
 
 
+def _verify_or_count_failure(request: Request, ok: bool, detail: str):
+    """Rate-limited PIN check shared by the verify endpoints."""
+    if ok:
+        return
+    pin_rate_limiter.record_failed_attempt(client_ip(request))
+    raise HTTPException(status_code=401, detail=detail)
+
+
 @router.post("/verify-pin")
 def verify_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(get_db)):
-    """Verify cashier PIN against hashed value in database with rate limiting."""
-    from services.rate_limiter import pin_rate_limiter
-    client_ip = request.client.host if request.client else "127.0.0.1"
-    pin_rate_limiter.check_rate_limit(client_ip)
-
+    """Lock screen: the cashier PIN or the Admin PIN unlocks. No PIN set means nothing matches."""
+    pin_rate_limiter.check_rate_limit(client_ip(request))
     config = db.query(StoreConfigModel).first()
-    stored = config.cashier_pin if config else "1234"
-
-    # Backward compat: if stored PIN is plaintext (not a hash), compare directly
-    # and auto-upgrade to hash on success
-    if not _is_hashed(stored):
-        if data.pin == stored:
-            # Auto-upgrade: hash the plaintext PIN in-place
-            if config:
-                config.cashier_pin = _hash_pin(stored)
-                db.commit()
-            return {"status": "SUCCESS", "valid": True}
-        pin_rate_limiter.record_failed_attempt(client_ip)
-        raise HTTPException(status_code=401, detail="Nesprávný PIN kód")
-
-    if _hash_pin(data.pin) == stored:
-        return {"status": "SUCCESS", "valid": True}
-
-    pin_rate_limiter.record_failed_attempt(client_ip)
-    raise HTTPException(status_code=401, detail="Nesprávný PIN kód")
+    ok = bool(config) and (verify_pin_column(data.pin, config, "cashier_pin") or verify_pin_column(data.pin, config, "admin_pin"))
+    _verify_or_count_failure(request, ok, "Nesprávný PIN kód")
+    return {"status": "SUCCESS", "valid": True}
 
 
 @router.post("/verify-admin-pin")
 def verify_admin_pin(request: Request, data: PinVerifyRequest, db: Session = Depends(get_db)):
-    """Verify technician/admin PIN against hashed value in database or master recovery key."""
-    from services.rate_limiter import pin_rate_limiter
-    client_ip = request.client.host if request.client else "127.0.0.1"
-    pin_rate_limiter.check_rate_limit(client_ip)
-
-    # 1. Master Recovery Key check
-    master_key = os.getenv("POS_MASTER_ADMIN_KEY", "VOLTFLOW-ADMIN-MASTER-RECOVERY")
-    if data.pin.strip() == master_key:
+    """Admin mode: the Admin PIN, or the support master key if this machine's environment sets one."""
+    pin_rate_limiter.check_rate_limit(client_ip(request))
+    if master_key_matches(data.pin):
         return {"status": "SUCCESS", "valid": True, "is_master": True}
-
     config = db.query(StoreConfigModel).first()
-    stored = (getattr(config, 'admin_pin', None) or getattr(config, 'cashier_pin', None) or "1234") if config else "1234"
-
-    # Backward compat / plaintext check
-    if not _is_hashed(stored):
-        if data.pin == stored:
-            if config:
-                config.admin_pin = _hash_pin(stored)
-                db.commit()
-            return {"status": "SUCCESS", "valid": True}
-        pin_rate_limiter.record_failed_attempt(client_ip)
-        raise HTTPException(status_code=401, detail="Nesprávný Admin PIN kód")
-
-    if _hash_pin(data.pin) == stored:
-        return {"status": "SUCCESS", "valid": True}
-
-    pin_rate_limiter.record_failed_attempt(client_ip)
-    raise HTTPException(status_code=401, detail="Nesprávný Admin PIN kód")
+    _verify_or_count_failure(request, bool(config) and verify_pin_column(data.pin, config, "admin_pin"), "Nesprávný Admin PIN kód")
+    return {"status": "SUCCESS", "valid": True}
 
 
 @router.get("/system/health")
@@ -371,33 +348,41 @@ def get_system_health():
     }
 
 
-class PukVerifyRequest(BaseModel):
-    puk: str
+class RecoveryCodeRequest(BaseModel):
+    code: str
 
 
-@router.post("/verify-puk")
-def verify_puk(data: PukVerifyRequest, db: Session = Depends(get_db)):
-    """Verify Master Recovery Code (PUK) to reset PIN to default '1234'."""
+@router.post("/recovery-code")
+def issue_recovery_code(request: Request, data: PinVerifyRequest, db: Session = Depends(get_db)):
+    """Replace the recovery code. Needs the Admin PIN (or the cashier PIN when no Admin PIN is set)."""
+    pin_rate_limiter.check_rate_limit(client_ip(request))
     config = db.query(StoreConfigModel).first()
-    # Fixed Master PUK / Recovery Key derived from ICO or default
-    puk_clean = data.puk.strip().upper()
+    if not config or not (pin_is_set(config.admin_pin) or pin_is_set(config.cashier_pin)):
+        raise HTTPException(status_code=400, detail="Není nastaven žádný PIN.")
+    guard = "admin_pin" if pin_is_set(config.admin_pin) else "cashier_pin"
+    _verify_or_count_failure(request, master_key_matches(data.pin) or verify_pin_column(data.pin, config, guard), "Nesprávný PIN kód")
+    code = new_recovery_code()
+    config.recovery_code_hash = recovery_code_hash(code)
+    db.commit()
+    return {"status": "SUCCESS", "recoveryCode": code}
 
-    # PUK Format: VOLTFLOW-<ICO>-MASTER or fallback VOLTFLOW-RECOVERY-99 (with legacy HIMMEL-* support)
-    ico_val = config.ico if config and config.ico else '12345678'
-    valid_puks = {
-        f"VOLTFLOW-{ico_val}-MASTER",
-        "VOLTFLOW-RECOVERY-99",
-        f"HIMMEL-{ico_val}-MASTER",
-        "HIMMEL-RECOVERY-99"
-    }
 
-    if puk_clean in valid_puks:
-        if config:
-            config.cashier_pin = _hash_pin("1234")
-            db.commit()
-        return {"status": "SUCCESS", "valid": True, "message": "PIN byl úspěšně vyresetován na 1234"}
-
-    raise HTTPException(status_code=401, detail="Neplatný záchranný klíč (PUK)!")
+@router.post("/verify-recovery")
+def verify_recovery(request: Request, data: RecoveryCodeRequest, db: Session = Depends(get_db)):
+    """A correct recovery code clears both PINs and switches both locks off. The code is used up."""
+    pin_rate_limiter.check_rate_limit(client_ip(request))
+    config = db.query(StoreConfigModel).first()
+    ok = bool(config) and recovery_code_matches(data.code, config.recovery_code_hash)
+    _verify_or_count_failure(request, ok, "Neplatný záchranný kód.")
+    config.cashier_pin = None
+    config.admin_pin = None
+    config.cashier_pin_length = None
+    config.admin_pin_length = None
+    config.lock_screen_enabled = False
+    config.admin_pin_enabled = False
+    config.recovery_code_hash = None
+    db.commit()
+    return {"status": "SUCCESS", "valid": True}
 
 
 @router.get("/backup-status")

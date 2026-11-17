@@ -921,12 +921,22 @@ export async function fetchStoreConfigBackend() {
 /**
  * Save store configuration settings to SQLite database backend
  */
+// PINs, the two lock switches and the status flags change only through
+// saveSecuritySettingsBackend. A whole-config save must never send them back:
+// it could restore a PIN that a recovery code has just cleared.
+const SECURITY_CONFIG_KEYS = [
+  'cashierPin', 'adminPin', 'lockScreenEnabled', 'adminPinEnabled',
+  'hasPin', 'hasAdminPin', 'hasRecoveryCode', 'recoveryCode', 'cashierPinLength', 'adminPinLength'
+];
+
 export async function saveStoreConfigBackend(storeConfig) {
   try {
+    const body = { ...storeConfig };
+    SECURITY_CONFIG_KEYS.forEach((key) => delete body[key]);
     const res = await fetch(`${API_BASE_URL}/config`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(storeConfig)
+      body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
@@ -934,6 +944,34 @@ export async function saveStoreConfigBackend(storeConfig) {
     return data;
   } catch (err) {
     console.warn('Failed to save store config to backend DB:', err);
+    return { status: 'ERROR', message: err.message };
+  }
+}
+
+/**
+ * Save only the security settings: cashierPin, adminPin, lockScreenEnabled, adminPinEnabled.
+ * The first PIN also returns a one-time recoveryCode. While the Admin PIN switch is on the
+ * server wants the Admin PIN, sent as adminPin (header X-Admin-PIN).
+ * @returns {Promise<{status: string, message?: string, recoveryCode?: string}>}
+ */
+export async function saveSecuritySettingsBackend(updates, adminPin = null) {
+  const body = {};
+  ['cashierPin', 'adminPin', 'lockScreenEnabled', 'adminPinEnabled'].forEach((key) => {
+    if (updates[key] !== undefined) body[key] = updates[key];
+  });
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (adminPin) headers['X-Admin-PIN'] = adminPin;
+    const res = await fetch(`${API_BASE_URL}/config`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    invalidateApiCache('config');
+    if (!res.ok) return { status: 'ERROR', message: data.detail || `HTTP error ${res.status}` };
+    return data;
+  } catch (err) {
     return { status: 'ERROR', message: err.message };
   }
 }
@@ -980,17 +1018,19 @@ export async function verifyAdminPinBackend(pin) {
 }
 
 /**
- * Verify Master Recovery Code (PUK) to reset PIN to 1234
+ * Verify the one-time recovery code. On success the server clears both PINs and switches both locks off.
  */
-export async function verifyPukBackend(puk) {
+export async function verifyRecoveryCodeBackend(code) {
   try {
-    const res = await fetch(`${API_BASE_URL}/config/verify-puk`, {
+    const res = await fetch(`${API_BASE_URL}/config/verify-recovery`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ puk })
+      body: JSON.stringify({ code })
     });
     if (res.status === 401) return { valid: false };
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    // The PINs and switches changed on the server: drop the cached config read.
+    invalidateApiCache('config');
     return await res.json();
   } catch (err) {
     return { valid: false, error: err.message };
@@ -1619,4 +1659,24 @@ export async function printWriteOffProtocol(protocolData, storeConfig = {}) {
     throw new Error(err.detail || `Print write-off error ${res.status}`);
   }
   return await res.json();
+}
+
+/**
+ * Issue a new recovery code (the old one stops working). Needs the Admin PIN.
+ * @returns {Promise<{status: string, recoveryCode?: string, message?: string}>}
+ */
+export async function createRecoveryCodeBackend(pin) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/config/recovery-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { status: 'ERROR', message: data.detail || `HTTP error ${res.status}` };
+    invalidateApiCache('config');
+    return data;
+  } catch (err) {
+    return { status: 'ERROR', message: err.message };
+  }
 }

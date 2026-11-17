@@ -155,7 +155,7 @@ export default function App() {
     isAppLocked,
     setIsAppLocked,
     unlockApp
-  } = useAutoLock(storeConfig?.autoLockMinutes);
+  } = useAutoLock(storeConfig?.lockScreenEnabled ? storeConfig?.autoLockMinutes : 0);
 
   const {
     cartItems,
@@ -576,7 +576,17 @@ export default function App() {
   }, [fetchShiftData]);
 
   const handleSaveStoreConfig = async (newConfig) => {
-    setStoreConfig(newConfig);
+    // The settings form holds an older copy of the lock switches; the live ones win.
+    setStoreConfig(prev => ({
+      ...newConfig,
+      lockScreenEnabled: prev.lockScreenEnabled,
+      adminPinEnabled: prev.adminPinEnabled,
+      hasPin: prev.hasPin,
+      hasAdminPin: prev.hasAdminPin,
+      cashierPinLength: prev.cashierPinLength,
+      adminPinLength: prev.adminPinLength,
+      hasRecoveryCode: prev.hasRecoveryCode
+    }));
     await saveStoreConfigBackend(newConfig);
     await checkPendingOfflineSales();
   };
@@ -955,7 +965,23 @@ export default function App() {
   const handleOpenSyncModal = useCallback(() => setShowSyncModal(true), [setShowSyncModal]);
   const handleOpenShutdownModal = useCallback(() => setShowShutdownModal(true), []);
   const handleOpenCalendarModal = useCallback(() => setIsCalendarModalOpen(true), []);
-  const handleLockApp = useCallback(() => setIsAppLocked(true), [setIsAppLocked]);
+  // No lock without a PIN to unlock it (Batch G: the lock screen is a switch, off by default).
+  const handleLockApp = useCallback(() => {
+    if (storeConfig?.lockScreenEnabled) setIsAppLocked(true);
+  }, [setIsAppLocked, storeConfig?.lockScreenEnabled]);
+  // A recovery code clears both PINs and switches both locks off on the server; follow that here.
+  const handlePinsRecovered = useCallback(() => {
+    setStoreConfig(prev => ({
+      ...prev,
+      lockScreenEnabled: false,
+      adminPinEnabled: false,
+      hasPin: false,
+      hasAdminPin: false,
+      cashierPinLength: null,
+      adminPinLength: null,
+      hasRecoveryCode: false
+    }));
+  }, [setStoreConfig]);
   const handleOpenParkedModal = useCallback(() => setIsParkedModalOpen(true), []);
   const handleClearKeypadAmount = useCallback(() => setKeypadAmount(''), []);
 
@@ -1170,6 +1196,7 @@ export default function App() {
 
       {/* Centralized Modals Coordinator */}
       <AppModals
+        onPinsRecovered={handlePinsRecovered}
         isDiscountModalOpen={isDiscountModalOpen}
         setIsDiscountModalOpen={setIsDiscountModalOpen}
         cartItems={cartItems}

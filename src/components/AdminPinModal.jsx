@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, X, Check } from 'lucide-react';
-import { verifyPinBackend, verifyAdminPinBackend } from '../api/posApi';
+import { verifyAdminPinBackend } from '../api/posApi';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 
 export default function AdminPinModal({
-  mode = 'VERIFY', // 'VERIFY' | 'CHANGE_PIN'
-  storeConfig,
+  mode = 'VERIFY', // 'VERIFY' | 'CHANGE_PIN' | 'SET_PIN' (new PIN only, caller already authorised)
+  kind = 'admin', // 'admin' | 'cashier': which PIN is being set (titles only)
+  storeConfig, // adminPinLength tells when to auto-submit
   onSuccess,
   onClose
 }) {
   const { t } = useTranslation();
-  const [step, setStep] = useState(mode === 'CHANGE_PIN' ? 'CURRENT_PIN' : 'VERIFY_PIN');
+  const [step, setStep] = useState(mode === 'CHANGE_PIN' ? 'CURRENT_PIN' : mode === 'SET_PIN' ? 'NEW_PIN' : 'VERIFY_PIN');
   const [enteredPin, setEnteredPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
@@ -20,6 +21,8 @@ export default function AdminPinModal({
   const [isShaking, setIsShaking] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const adminPinLength = storeConfig?.adminPinLength || null;
+  const pinName = kind === 'cashier' ? 'PIN obsluhy' : 'Admin PIN';
   const activePin = step === 'CONFIRM_PIN' ? confirmPin : step === 'NEW_PIN' ? newPin : enteredPin;
 
   const triggerShake = () => {
@@ -30,29 +33,16 @@ export default function AdminPinModal({
   const verifyEnteredPin = useCallback(async (pinToTest) => {
     setIsVerifying(true);
     try {
-      let isValid = false;
-      // Try admin pin endpoint first
-      try {
-        const adminRes = await verifyAdminPinBackend(pinToTest);
-        if (adminRes?.valid === true) {
-          isValid = true;
-        }
-      } catch {
-        // continue to standard check
+      // Only the Admin PIN (or a support master key) opens Admin mode; the cashier PIN does not.
+      const res = await verifyAdminPinBackend(pinToTest);
+      if (res?.valid === null) {
+        // Server cannot answer: no local or default PIN is accepted (F-012)
+        setErrorMsg(t('lock_screen.server_unavailable'));
+        triggerShake();
+        setEnteredPin('');
+        return;
       }
-
-      if (!isValid) {
-        const res = await verifyPinBackend(pinToTest);
-        if (res?.valid === true) {
-          isValid = true;
-        } else if (res?.valid === null) {
-          // Server cannot answer: no local or default PIN is accepted (F-012)
-          setErrorMsg(t('lock_screen.server_unavailable'));
-          triggerShake();
-          setEnteredPin('');
-          return;
-        }
-      }
+      const isValid = res?.valid === true;
 
       if (isValid) {
         setErrorMsg('');
@@ -82,11 +72,11 @@ export default function AdminPinModal({
       setConfirmPin('');
       return;
     }
-    setSuccessMsg('Admin PIN kód byl úspěšně změněn!');
+    setSuccessMsg(`${pinName} byl úspěšně nastaven!`);
     setTimeout(() => {
       if (onSuccess) onSuccess(newPin);
     }, 1200);
-  }, [newPin, onSuccess]);
+  }, [newPin, onSuccess, pinName]);
 
   const handleNumClick = useCallback((num) => {
     if (activePin.length >= 8 || isVerifying) return;
@@ -95,8 +85,8 @@ export default function AdminPinModal({
     if (step === 'VERIFY_PIN' || step === 'CURRENT_PIN') {
       const next = enteredPin + num;
       setEnteredPin(next);
-      const targetLen = storeConfig?.cashierPin?.length || 4;
-      if (next.length === targetLen) {
+      // Auto-submit only at the known PIN length; an old PIN of unknown length needs the confirm button.
+      if (adminPinLength && next.length === adminPinLength) {
         verifyEnteredPin(next);
       }
     } else if (step === 'NEW_PIN') {
@@ -108,7 +98,7 @@ export default function AdminPinModal({
         finalizePinChange(next);
       }
     }
-  }, [activePin.length, isVerifying, step, enteredPin, storeConfig?.cashierPin, verifyEnteredPin, confirmPin, newPin.length, finalizePinChange]);
+  }, [activePin.length, isVerifying, step, enteredPin, adminPinLength, verifyEnteredPin, confirmPin, newPin.length, finalizePinChange]);
 
   const handleBackspace = useCallback(() => {
     if (isVerifying) return;
@@ -141,13 +131,18 @@ export default function AdminPinModal({
         triggerShake();
         return;
       }
+      if (newPin === '1234') {
+        setErrorMsg('PIN nesmí být 1234.');
+        triggerShake();
+        return;
+      }
       setStep('CONFIRM_PIN');
     } else if (step === 'CONFIRM_PIN') {
       finalizePinChange(confirmPin);
     } else {
       verifyEnteredPin(enteredPin);
     }
-  }, [step, newPin.length, finalizePinChange, confirmPin, verifyEnteredPin, enteredPin]);
+  }, [step, newPin, finalizePinChange, confirmPin, verifyEnteredPin, enteredPin]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -171,8 +166,8 @@ export default function AdminPinModal({
   const getStepTitle = () => {
     if (step === 'VERIFY_PIN') return 'Ověření Admin PIN';
     if (step === 'CURRENT_PIN') return 'Zadejte současný Admin PIN';
-    if (step === 'NEW_PIN') return 'Zadejte nový Admin PIN (4–8 číslic)';
-    if (step === 'CONFIRM_PIN') return 'Potvrďte nový Admin PIN';
+    if (step === 'NEW_PIN') return `Zadejte nový ${pinName} (4–8 číslic)`;
+    if (step === 'CONFIRM_PIN') return `Potvrďte nový ${pinName}`;
     return 'Admin PIN';
   };
 
@@ -284,6 +279,18 @@ export default function AdminPinModal({
             ⌫
           </button>
         </div>
+
+        {(step === 'VERIFY_PIN' || step === 'CURRENT_PIN') && !adminPinLength && (
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={enteredPin.length < 4 || isVerifying}
+            onClick={handleNextStep}
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
+          >
+            {t('lock_screen.confirm_pin')}
+          </button>
+        )}
 
         {step === 'NEW_PIN' && (
           <button

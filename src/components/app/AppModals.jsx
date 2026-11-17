@@ -50,6 +50,7 @@ export default function AppModals({
   paymentModalMethod,
   setPaymentModalMethod,
   storeConfig,
+  onPinsRecovered,
   onCompleteSale,
   onOpenCashDrawer,
 
@@ -245,6 +246,7 @@ export default function AppModals({
         <LockScreenModal
           storeConfig={storeConfig}
           onUnlock={onUnlockApp}
+          onRecovered={onPinsRecovered}
         />
       )}
 
