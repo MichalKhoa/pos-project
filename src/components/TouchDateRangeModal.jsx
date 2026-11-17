@@ -144,7 +144,7 @@ export default function TouchDateRangeModal({
         color: '#ffffff',
         fontWeight: '700',
         border: '2px solid var(--accent-purple)',
-        boxShadow: '0 0 12px rgba(139, 92, 246, 0.4)'
+        boxShadow: 'none'
       };
     }
     if (isInRange) {
@@ -568,7 +568,7 @@ export default function TouchDateRangeModal({
               OD: {formatIsoDisplay(startDateIso)}
             </span>
             <span style={{ color: 'var(--text-muted)' }}>➔</span>
-            <span style={{ color: 'var(--accent-purple)', background: 'rgba(168, 85, 247, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '10px', border: '1px solid var(--accent-purple)' }}>
+            <span style={{ color: 'var(--accent-purple)', background: 'rgba(71, 85, 105, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '10px', border: '1px solid var(--accent-purple)' }}>
               DO: {formatIsoDisplay(endDateIso || startDateIso)}
             </span>
           </div>

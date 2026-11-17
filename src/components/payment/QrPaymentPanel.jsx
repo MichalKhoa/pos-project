@@ -80,7 +80,7 @@ export default function QrPaymentPanel({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 4px 16px rgba(124, 58, 237, 0.15)'
+            boxShadow: '0 4px 16px rgba(71, 85, 105, 0.15)'
           }}>
             <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
               {t('payment.total_due')}

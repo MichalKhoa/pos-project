@@ -155,7 +155,7 @@ export default function StockMovementLedgerModal({
                 width: '38px',
                 height: '38px',
                 borderRadius: 'var(--radius-md)',
-                background: 'rgba(139, 92, 246, 0.15)',
+                background: 'rgba(71, 85, 105, 0.15)',
                 color: 'var(--accent-purple, #8b5cf6)',
                 display: 'flex',
                 alignItems: 'center',
