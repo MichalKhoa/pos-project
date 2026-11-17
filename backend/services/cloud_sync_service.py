@@ -374,6 +374,8 @@ class CloudSyncService:
 
             # 5. Re-run schema migrations to ensure all current columns exist
             init_db_schema()
+            from migrations import run_schema_migrations
+            run_schema_migrations(engine)
 
             logger.info(f"Successfully restored database from cloud backup {safe_filename}")
             return {

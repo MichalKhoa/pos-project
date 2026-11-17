@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { StoreConfigProvider } from '../context/StoreConfigContext';
+import { StoreConfigProvider, useStoreConfig } from '../context/StoreConfigContext';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { ConfirmProvider } from '../context/ConfirmContext';
 import Navbar from '../components/Navbar';
@@ -207,6 +207,25 @@ describe('Recovery code', () => {
     typePin('2580');
     await waitFor(() => expect(posApi.createRecoveryCodeBackend).toHaveBeenCalledWith('2580'));
     expect(await screen.findByTestId('recovery-code')).toHaveTextContent('WXYZ-2345-6789-ABCD');
+  });
+});
+
+describe('Quick saves keep the lock flags', () => {
+  it('a font size change right after a lock switch change does not revert the switch', async () => {
+    function Probe() {
+      const { storeConfig, saveSecuritySettings, updateStoreConfig } = useStoreConfig();
+      return (
+        <div>
+          <span data-testid="lock">{String(!!storeConfig.lockScreenEnabled)}</span>
+          <button onClick={async () => { await saveSecuritySettings({ lockScreenEnabled: true }); updateStoreConfig({ fontSize: 'xl' }); }}>go</button>
+        </div>
+      );
+    }
+    render(<LanguageProvider><StoreConfigProvider><Probe /></StoreConfigProvider></LanguageProvider>);
+    fireEvent.click(screen.getByText('go'));
+    await waitFor(() => expect(screen.getByTestId('lock')).toHaveTextContent('true'));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId('lock')).toHaveTextContent('true');
   });
 });
 

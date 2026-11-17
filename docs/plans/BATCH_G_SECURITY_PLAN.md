@@ -147,4 +147,12 @@ Live check in the browser pane with a throwaway data folder (`POS_DATA_DIR`), re
 - Found and fixed: after recovery the navbar lock button stayed because the cached `/config` read still had the old switches. `verifyRecoveryCodeBackend` now clears that cache.
 - Not checked live: an upgraded copy of an old database (covered by the migration tests, `TestPinSettingsMigration`), hardware, and the standalone settings app.
 
-Gates: 419 frontend and 237 backend tests, lint clean, build ok.
+Gates: 420 frontend and 238 backend tests, lint clean, build ok.
+
+## 13. Review fixes after the PR was opened
+
+- A restored backup now runs `run_schema_migrations` straight after the file is replaced (`backup_service.restore_database_from_backup`, and the cloud restore), so an old backup's PINs and locks are migrated at once. Before, they stayed inactive until the next restart.
+- `updateStoreConfig` updates state functionally, so a quick save cannot revert lock flags that changed just before.
+- The standalone settings app no longer returns the cashier PIN hash; it returns `hasPin`.
+- Still open: unauthenticated `POST /config` (C1), the standalone app still sets only the cashier PIN, old 5 to 8 digit PINs against the 4-digit auto-submit, unsalted SHA-256.
+

@@ -208,6 +208,11 @@ def restore_database_from_backup(zip_filename: str) -> dict:
                 except Exception:
                     pass
 
+        # An older backup lacks newer columns and the Batch G PIN settings; bring it up to date now,
+        # not at the next restart, or its PINs and locks would stay inactive until then.
+        from migrations import run_schema_migrations
+        run_schema_migrations(engine)
+
         logger.info(f"Database successfully restored from {safe_filename}")
         return {
             "status": "SUCCESS",

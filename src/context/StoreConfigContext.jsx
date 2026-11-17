@@ -97,16 +97,21 @@ export function StoreConfigProvider({ children }) {
     };
   }, []);
 
+  // Latest config for building the saved copy; the state update itself is functional so a quick
+  // save cannot overwrite lock flags that changed a moment earlier.
+  const storeConfigRef = useRef(storeConfig);
+  storeConfigRef.current = storeConfig;
+
   const updateStoreConfig = useCallback(async (newConfig) => {
-    const merged = { ...storeConfig, ...newConfig };
-    setStoreConfig(merged);
+    setStoreConfig((prev) => ({ ...prev, ...newConfig }));
+    const merged = { ...storeConfigRef.current, ...newConfig };
     try {
       setStorageItem('config', merged);
       await saveStoreConfigBackend(merged);
     } catch (e) {
       console.warn('Failed to save store configuration to backend:', e);
     }
-  }, [storeConfig]);
+  }, []);
 
   // Security settings (PINs, lock switches) go through their own endpoint call.
   // Returns the server result; on success the status flags in storeConfig follow it.

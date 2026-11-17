@@ -122,6 +122,7 @@ class SettingsAPI:
 
     def get_settings(self) -> dict:
         """Return merged dictionary of .env and store_config database row."""
+        from services.pin_auth import pin_is_set
         env_vars = read_env_file()
         db_config = {}
 
@@ -157,7 +158,7 @@ class SettingsAPI:
                     "csobTerminalIp": config.csob_terminal_ip or "",
                     "csobTerminalPort": config.csob_terminal_port or 8888,
                     "csobTerminalId": config.csob_terminal_id or "",
-                    "cashierPin": config.cashier_pin or "",
+                    "hasPin": pin_is_set(config.cashier_pin),
                     "autoLockMinutes": config.auto_lock_minutes or 15,
                     "directHardwarePrint": bool(config.direct_hardware_print),
                     "defaultLanguage": config.default_language or "cs",

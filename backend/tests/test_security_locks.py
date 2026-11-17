@@ -274,5 +274,51 @@ class TestSecurityApi(TempDbTestCase):
         self.assertEqual(purge({"X-Admin-PIN": ADMIN_PIN}), 200)
 
 
+class TestRestoreMigratesPins(unittest.TestCase):
+    """A restored pre-Batch-G backup must get its PIN settings migrated at once, not at the next restart."""
+
+    def test_old_backup_keeps_chosen_pin_and_lock_after_restore(self):
+        import sqlite3
+        import zipfile
+        from services import backup_service
+
+        tmp = tempfile.mkdtemp(prefix="pos_restore_test_")
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        live_db = os.path.join(tmp, "live.db")
+        backups = os.path.join(tmp, "backups")
+        os.makedirs(backups)
+
+        conn = sqlite3.connect(live_db)
+        conn.execute("CREATE TABLE placeholder (id INTEGER)")
+        conn.commit()
+        conn.close()
+
+        old_db = os.path.join(tmp, "pos_store.db")
+        conn = sqlite3.connect(old_db)
+        conn.execute("CREATE TABLE store_config (id INTEGER PRIMARY KEY, cashier_pin VARCHAR, admin_pin VARCHAR)")
+        conn.execute("INSERT INTO store_config (id, cashier_pin, admin_pin) VALUES (1, '5678', '1234')")
+        conn.commit()
+        conn.close()
+        with zipfile.ZipFile(os.path.join(backups, "old.zip"), "w") as zf:
+            zf.write(old_db, "pos_store.db")
+
+        temp_engine = create_engine(f"sqlite:///{live_db}")
+        self.addCleanup(temp_engine.dispose)
+        with patch.object(backup_service, "DB_PATH", live_db), \
+                patch.object(backup_service, "BACKUPS_DIR", backups), \
+                patch("database.engine", temp_engine):
+            res = backup_service.restore_database_from_backup("old.zip")
+        self.assertEqual(res["status"], "SUCCESS", res)
+
+        conn = sqlite3.connect(live_db)
+        cashier, admin, lock, admin_on = conn.execute(
+            "SELECT cashier_pin, admin_pin, lock_screen_enabled, admin_pin_enabled FROM store_config"
+        ).fetchone()
+        conn.close()
+        self.assertEqual(cashier, hash_secret("5678"))
+        self.assertEqual(admin, cashier)  # an unset Admin PIN takes the chosen cashier PIN
+        self.assertEqual((lock, admin_on), (1, 1))
+
+
 if __name__ == "__main__":
     unittest.main()
