@@ -66,7 +66,7 @@ export default function PriceCheckModal({
         <div
           className="modal-header"
           style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%)',
+            background: 'rgba(37, 99, 235, 0.05)',
             padding: '1rem 1.25rem',
             borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
@@ -187,7 +187,7 @@ export default function PriceCheckModal({
               <div
                 className="price-check-hero-card"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%)',
+                  background: 'rgba(5, 150, 105, 0.04)',
                   border: '2px solid var(--accent-emerald, #10b981)',
                   borderRadius: '12px',
                   padding: '1.25rem 1.5rem',
@@ -372,7 +372,7 @@ export default function PriceCheckModal({
                 padding: '0 1.5rem',
                 fontSize: '0.95rem',
                 fontWeight: '800',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                background: '#059669',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
@@ -402,7 +402,7 @@ export default function PriceCheckModal({
                   padding: '0 1.5rem',
                   fontSize: '0.95rem',
                   fontWeight: '800',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  background: '#2563eb',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',

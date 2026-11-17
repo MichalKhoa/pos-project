@@ -396,8 +396,8 @@ export default function CalendarModal({
               {selectedDateHoliday && (
                 <div style={{
                   background: selectedDateHoliday.isClosed
-                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%)'
-                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
+                    ? 'rgba(220, 38, 38, 0.1)'
+                    : 'rgba(37, 99, 235, 0.1)',
                   border: selectedDateHoliday.isClosed
                     ? '1px solid rgba(239, 68, 68, 0.4)'
                     : '1px solid rgba(59, 130, 246, 0.4)',

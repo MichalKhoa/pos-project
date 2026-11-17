@@ -239,7 +239,7 @@ export default function DiscountModal({
           <button
             type="button"
             className="pay-btn pay-btn-cash"
-            style={{ width: '100%', height: '56px', background: 'linear-gradient(135deg, var(--accent-purple), #6d28d9)', fontSize: '1.1rem', fontWeight: '800' }}
+            style={{ width: '100%', height: '56px', background: '#6d28d9', fontSize: '1.1rem', fontWeight: '800' }}
             onClick={handleApply}
           >
             <CheckCircle2 size={22} />

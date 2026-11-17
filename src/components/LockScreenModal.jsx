@@ -194,7 +194,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
   }, [enteredPin, isVerifying, waitingForServer, showRecoveryInput]);
 
   return (
-    <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.96)', backdropFilter: 'blur(16px)', zIndex: 99999 }}>
+    <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.96)', zIndex: 99999 }}>
       <div
         className="modal-card"
         style={{

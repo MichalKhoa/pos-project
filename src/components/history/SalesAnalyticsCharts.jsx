@@ -165,7 +165,7 @@ export default function SalesAnalyticsCharts({
                           width: '100%',
                           maxWidth: '22px',
                           height: `${heightPercent}%`,
-                          background: isPeak ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)' : h.revenue > 0 ? 'linear-gradient(180deg, var(--accent-blue) 0%, #2563eb 100%)' : 'var(--bg-input)',
+                          background: isPeak ? '#d97706' : h.revenue > 0 ? '#2563eb' : 'var(--bg-input)',
                           borderRadius: '3px 3px 0 0',
                           transition: 'height 0.3s ease',
                           boxShadow: isPeak ? '0 0 8px rgba(245, 158, 11, 0.5)' : 'none'
@@ -215,9 +215,9 @@ export default function SalesAnalyticsCharts({
                 <tbody>
                   {topProducts.map(p => {
                     const rankBadgeBg =
-                      p.rank === 1 ? 'linear-gradient(135deg, #f59e0b, #d97706)' :
-                      p.rank === 2 ? 'linear-gradient(135deg, #94a3b8, #64748b)' :
-                      p.rank === 3 ? 'linear-gradient(135deg, #b45309, #78350f)' :
+                      p.rank === 1 ? '#d97706' :
+                      p.rank === 2 ? '#64748b' :
+                      p.rank === 3 ? '#78350f' :
                       'var(--bg-input)';
                     const rankTextColor = p.rank <= 3 ? '#ffffff' : 'var(--text-muted)';
 

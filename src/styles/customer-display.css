@@ -226,7 +226,7 @@
 
 /* Symmetrical Eye-Level Top Total Bar */
 .cd-total-dock {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: #1e293b;
   border: 2.5px solid #059669;
   border-radius: 18px;
   padding: 1rem 1.5rem;
@@ -408,7 +408,6 @@
   height: 12px;
   background: #2563eb;
   border-radius: 50%;
-  animation: pulseDot 1.5s infinite;
 }
 
 /* Mode 3: Payment Success View */
@@ -419,7 +418,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: radial-gradient(circle at center, rgba(5, 150, 105, 0.12) 0%, transparent 70%);
+  background: none;
 }
 
 .cd-success-icon-wrap {
@@ -429,7 +428,6 @@
   padding: 1.5rem;
   color: #047857;
   margin-bottom: 1.5rem;
-  animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cd-success-title {

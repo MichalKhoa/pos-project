@@ -30,9 +30,9 @@ export function StoreConfigProvider({ children }) {
   useEffect(() => {
     const accent = storeConfig?.highlightColor || (() => {
       try {
-        return localStorage.getItem('voltflow_highlight_color') || 'indigo';
+        return localStorage.getItem('voltflow_highlight_color') || 'charcoal';
       } catch {
-        return 'indigo';
+        return 'charcoal';
       }
     })();
     document.documentElement.setAttribute('data-accent', accent);

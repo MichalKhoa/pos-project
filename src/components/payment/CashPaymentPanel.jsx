@@ -55,7 +55,7 @@ export default function CashPaymentPanel({
             className="cash-shortcut-btn"
             style={{
               height: '46px',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.22) 100%)',
+              background: 'rgba(5, 150, 105, 0.22)',
               color: 'var(--accent-emerald)',
               border: '1.5px solid var(--accent-emerald)',
               borderRadius: 'var(--radius-md)',
@@ -234,7 +234,7 @@ export default function CashPaymentPanel({
             ? 'rgba(244, 63, 94, 0.08)'
             : (tenderedVal === 0 || changeDue === 0)
               ? 'rgba(16, 185, 129, 0.08)'
-              : 'linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(5, 150, 105, 0.28) 100%)',
+              : 'rgba(5, 150, 105, 0.28)',
           border: `2.5px solid ${(tenderedVal > 0 && changeDue < 0)
             ? 'var(--accent-rose)'
             : 'var(--accent-emerald)'}`,

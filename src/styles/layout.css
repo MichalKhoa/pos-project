@@ -45,7 +45,7 @@ input, textarea, [contenteditable="true"] {
   align-items: center;
   justify-content: space-between;
   padding: 0.35rem 0.75rem;
-  background: transparent;
+  background: var(--bg-main);
   gap: 0.5rem;
   box-sizing: border-box;
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
@@ -58,8 +58,6 @@ input, textarea, [contenteditable="true"] {
   display: flex;
   align-items: center;
   background: var(--bg-card);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-color);
   border-radius: 9999px;
   box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
@@ -98,7 +96,6 @@ input, textarea, [contenteditable="true"] {
   border-radius: 50%;
   background: var(--accent-emerald);
   box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  animation: statusPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
   flex-shrink: 0;
 }
 
@@ -110,7 +107,6 @@ input, textarea, [contenteditable="true"] {
 .status-pulse-dot.connecting {
   background: var(--accent-amber, #f59e0b);
   box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-  animation: connectingPulse 1.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 @keyframes statusPulse {
@@ -132,7 +128,7 @@ input, textarea, [contenteditable="true"] {
   gap: 0.35rem;
   background: rgba(245, 158, 11, 0.14);
   border: 1px solid rgba(245, 158, 11, 0.55);
-  color: var(--accent-amber);
+  color: var(--text-warning);
   border-radius: 9999px;
   padding: 0.2rem 0.5rem 0.2rem 0.6rem;
   font-size: 0.76rem;
@@ -149,7 +145,6 @@ input, textarea, [contenteditable="true"] {
   border-radius: 50%;
   background: var(--accent-amber);
   box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-  animation: techPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
   flex-shrink: 0;
 }
 
@@ -184,14 +179,12 @@ input, textarea, [contenteditable="true"] {
 
 .technician-exit-btn:hover {
   background: rgba(245, 158, 11, 0.25);
-  transform: scale(1.08);
 }
 
 .nav-technician-badge.critical-warning {
   background: rgba(239, 68, 68, 0.18);
   border-color: var(--accent-rose);
   color: var(--accent-rose);
-  animation: techCriticalPulse 1s infinite alternate;
 }
 
 .nav-technician-badge.critical-warning .technician-pulse-dot {
@@ -245,7 +238,6 @@ input, textarea, [contenteditable="true"] {
 }
 
 .nav-embedded-logo:hover {
-  transform: scale(1.12);
 }
 
 .nav-embedded-logo img {
@@ -360,7 +352,7 @@ input, textarea, [contenteditable="true"] {
   font-weight: 800;
   line-height: 1;
   background: var(--accent-highlight, var(--accent-indigo));
-  color: #ffffff;
+  color: var(--accent-highlight-text, #ffffff);
   padding: 1px 3px;
   border-radius: 4px;
   letter-spacing: -0.02em;
@@ -388,7 +380,6 @@ input, textarea, [contenteditable="true"] {
 
 .nav-clock-chip:hover {
   background: var(--bg-main);
-  transform: scale(1.03);
 }
 
 .nav-clock-time {
@@ -419,8 +410,6 @@ input, textarea, [contenteditable="true"] {
 /* Style: Standard Bar (Full-Width connected backdrop) */
 .navbar.style-standard {
   background: var(--bg-card);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
@@ -488,7 +477,7 @@ input, textarea, [contenteditable="true"] {
 
 .brand-subtitle {
   font-size: 0.72rem;
-  color: var(--accent-emerald);
+  color: var(--text-success);
   font-weight: 700;
   white-space: nowrap;
   line-height: 1;
@@ -637,7 +626,7 @@ input, textarea, [contenteditable="true"] {
 .nav-action-btn.btn-lock {
   background: rgba(245, 158, 11, 0.1);
   border-color: rgba(245, 158, 11, 0.25);
-  color: var(--accent-amber);
+  color: var(--text-warning);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -671,7 +660,7 @@ input, textarea, [contenteditable="true"] {
   height: 40px;
   border-radius: 999px;
   background: rgba(5, 150, 105, 0.1);
-  color: var(--accent-emerald);
+  color: var(--text-success);
   border: 1px solid rgba(5, 150, 105, 0.25);
   white-space: nowrap;
   box-sizing: border-box;
@@ -748,7 +737,6 @@ input, textarea, [contenteditable="true"] {
 }
 
 .time-display-btn:hover .time-badge-icon {
-  transform: scale(1.1);
 }
 
 .time-badge-divider {
@@ -1249,7 +1237,6 @@ input, textarea, [contenteditable="true"] {
 .btn-primary:hover {
   background: #1d4ed8;
   border-color: #1d4ed8;
-  transform: translateY(-1px);
 }
 
 .btn-secondary {

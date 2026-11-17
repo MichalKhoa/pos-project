@@ -167,7 +167,7 @@
   font-size: 0.82rem;
   font-weight: 800;
   background: rgba(16, 185, 129, 0.15);
-  color: var(--accent-emerald);
+  color: var(--text-success);
   border: 1px solid rgba(16, 185, 129, 0.35);
   animation: settingsFadeIn 0.2s ease;
   white-space: nowrap;
@@ -697,13 +697,13 @@
 
 .diag-pill-success {
   background: rgba(16, 185, 129, 0.12);
-  color: var(--accent-emerald);
+  color: var(--text-success);
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .diag-pill-warning {
   background: rgba(245, 158, 11, 0.12);
-  color: var(--accent-amber);
+  color: var(--text-warning);
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 

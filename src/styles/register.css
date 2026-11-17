@@ -108,7 +108,6 @@
 .preset-search-clear:hover {
   background: var(--accent-rose);
   color: #ffffff;
-  transform: scale(1.08);
 }
 
 /* Categories Filter Bar */
@@ -217,7 +216,6 @@
   border-style: solid !important;
   background: rgba(59, 130, 246, 0.18) !important;
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.35) !important;
-  transform: scale(1.04);
 }
 
 /* Light separator between Category Bar and Presets Grid */
@@ -419,7 +417,7 @@
 
 /* Style 3: Modern Card (Elevated Soft-Glow & Top Accent Rim) */
 .preset-card.style-modern-card {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--card-accent, var(--accent-blue)) 14%, var(--bg-card)) 0%, var(--bg-card) 100%);
+  background: var(--bg-card);
   border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 32%, var(--border-color));
   border-top: 3.5px solid var(--card-accent, var(--accent-blue));
   border-radius: var(--radius-lg);
@@ -456,7 +454,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .preset-card.style-modern-card:hover {
-    background: linear-gradient(165deg, color-mix(in srgb, var(--card-accent, var(--accent-blue)) 22%, var(--bg-card)) 0%, var(--bg-card) 100%);
+    background: var(--bg-card);
     border-color: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 55%, var(--border-color));
     border-top-color: var(--card-accent, var(--accent-blue));
     box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.28), 0 0 14px color-mix(in srgb, var(--card-accent, var(--accent-blue)) 25%, transparent);
@@ -472,8 +470,6 @@
 /* Style 4: Modern Glass (Translucent Frosted Surface with Glowing Accent) */
 .preset-card.style-modern-glass {
   background: color-mix(in srgb, var(--card-accent, var(--accent-blue)) 10%, rgba(255, 255, 255, 0.04));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1.5px solid color-mix(in srgb, var(--card-accent, var(--accent-blue)) 38%, rgba(255, 255, 255, 0.12));
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -629,7 +625,7 @@
   gap: 0.45rem;
   font-size: 0.92rem;
   font-weight: 700;
-  color: var(--accent-amber);
+  color: var(--text-warning);
   white-space: nowrap;
 }
 
@@ -665,11 +661,9 @@
   background: rgba(244, 63, 94, 0.14);
   color: #ffffff;
   box-shadow: 0 0 12px rgba(244, 63, 94, 0.25);
-  animation: pulse-trash 1.5s infinite ease-in-out;
 }
 
 .preset-trash-dropzone.drag-active .trash-icon {
-  transform: scale(1.15);
 }
 
 /* When card is hovering directly over the trash dropzone */
@@ -679,11 +673,9 @@
   background: #e11d48;
   color: #ffffff;
   box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
-  transform: scale(1.03);
 }
 
 .preset-trash-dropzone.over-trash .trash-icon {
-  transform: scale(1.3) rotate(-8deg);
   color: #ffffff;
 }
 
@@ -721,7 +713,6 @@
   background: rgba(168, 85, 247, 0.25);
   border-color: #c084fc;
   color: #ffffff;
-  transform: translateY(-1px);
 }
 
 /* Done Editing Button */
@@ -745,7 +736,6 @@
 
 .preset-edit-done-btn:hover {
   background: #d97706;
-  transform: translateY(-1px);
 }
 
 .preset-price-tag {
@@ -762,7 +752,7 @@
   font-family: var(--font-mono);
   font-size: 1.16rem;
   font-weight: 800;
-  color: var(--accent-emerald);
+  color: var(--text-success);
   line-height: 1.15;
 }
 
@@ -853,7 +843,7 @@ select.input-field:focus {
   font-family: var(--font-mono);
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--accent-emerald);
+  color: var(--text-success);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -934,7 +924,7 @@ select.input-field:focus {
 
 .quick-amount-chip {
   background: var(--bg-input);
-  color: var(--accent-emerald);
+  color: var(--text-success);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.5rem;
@@ -948,7 +938,6 @@ select.input-field:focus {
 .quick-amount-chip:hover {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--accent-emerald);
-  transform: translateY(-1px);
 }
 
 /* VAT Selector Bar */
@@ -1040,7 +1029,7 @@ select.input-field:focus {
 .multiplier-badge.has-multiplier {
   background: rgba(245, 158, 11, 0.12);
   border-color: rgba(245, 158, 11, 0.4);
-  color: var(--accent-amber);
+  color: var(--text-warning);
 }
 
 .multiplier-badge.has-return {
@@ -1153,7 +1142,7 @@ select.input-field:focus {
 }
 
 .key-btn.key-enter.key-enter-active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #059669;
   color: #ffffff;
   border-color: #047857;
   opacity: 1;
@@ -1163,7 +1152,7 @@ select.input-field:focus {
 
 @media (hover: hover) and (pointer: fine) {
   .key-btn.key-enter.key-enter-active:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    background: #047857;
     box-shadow: 0 3px 0 #065f46, 0 6px 18px rgba(16, 185, 129, 0.45);
   }
 }
@@ -1185,7 +1174,7 @@ select.input-field:focus {
 }
 
 .key-btn.active-multiplier {
-  color: var(--accent-amber) !important;
+  color: var(--text-warning) !important;
   background: rgba(245, 158, 11, 0.12) !important;
   border-color: var(--accent-amber) !important;
   box-shadow: 0 3px 0 rgba(245, 158, 11, 0.4), 0 2px 6px rgba(245, 158, 11, 0.2) !important;
@@ -1331,7 +1320,7 @@ select.input-field:focus {
 }
 
 .last-receipt-chip-btn.is-past-day .last-receipt-chip-icon {
-  color: var(--accent-amber);
+  color: var(--text-warning);
 }
 
 .last-receipt-chip-icon {
@@ -1696,7 +1685,6 @@ select.input-field:focus {
 .cart-item-card:hover {
   background: var(--bg-card);
   border-color: var(--border-focus);
-  transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -1718,7 +1706,6 @@ select.input-field:focus {
 .cart-item-card.style-elevated-card:hover {
   background: color-mix(in srgb, var(--text-primary) 5.5%, var(--bg-card));
   border-color: var(--accent-blue);
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -1771,7 +1758,6 @@ select.input-field:focus {
 .cart-item-card.style-rounded-tile:hover {
   background: color-mix(in srgb, var(--text-primary) 4.5%, var(--bg-card));
   border-color: var(--border-color);
-  transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
@@ -1948,7 +1934,7 @@ select.input-field:focus {
   align-items: center;
   gap: 2px;
   background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
+  color: var(--text-warning);
   border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 4px;
   padding: 1px 5px;
@@ -1960,7 +1946,7 @@ select.input-field:focus {
   font-family: var(--font-mono);
   font-size: 1.18rem;
   font-weight: 800;
-  color: var(--accent-emerald);
+  color: var(--text-success);
   text-align: right;
 }
 
@@ -1989,7 +1975,7 @@ select.input-field:focus {
 }
 
 .cleared-banner-icon {
-  color: var(--accent-amber);
+  color: var(--text-warning);
   flex-shrink: 0;
 }
 
@@ -2010,7 +1996,6 @@ select.input-field:focus {
 }
 
 .restore-cart-btn:hover {
-  transform: scale(1.04);
 }
 
 .cleared-banner-progress-bg {
@@ -2058,7 +2043,7 @@ select.input-field:focus {
 
 /* Total Hero Card */
 .total-hero-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%);
+  background: rgba(16, 185, 129, 0.12);
   border: 1.5px solid rgba(16, 185, 129, 0.35);
   border-radius: var(--radius-md);
   padding: 0.65rem 0.95rem;
@@ -2070,7 +2055,7 @@ select.input-field:focus {
 }
 
 .total-hero-card.is-refund {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(225, 29, 72, 0.04) 100%);
+  background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.4);
   box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15);
 }
@@ -2086,7 +2071,7 @@ select.input-field:focus {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--accent-emerald);
+  color: var(--text-success);
 }
 
 .total-hero-card.is-refund .total-hero-title {
@@ -2103,7 +2088,7 @@ select.input-field:focus {
   font-family: var(--font-mono);
   font-size: 1.9rem;
   font-weight: 900;
-  color: var(--accent-emerald);
+  color: var(--text-success);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -2142,12 +2127,12 @@ select.input-field:focus {
 }
 
 .pay-btn-cash {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #059669;
   box-shadow: 0 3px 0 #047857, 0 4px 14px rgba(16, 185, 129, 0.35);
 }
 
 .pay-btn-cash:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: #047857;
   box-shadow: 0 3px 0 #065f46, 0 6px 18px rgba(16, 185, 129, 0.45);
 }
 
@@ -2161,12 +2146,12 @@ select.input-field:focus {
 }
 
 .pay-btn-card {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: #2563eb;
   box-shadow: 0 3px 0 #1d4ed8, 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
 .pay-btn-card:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: #1d4ed8;
   box-shadow: 0 3px 0 #1e40af, 0 6px 18px rgba(37, 99, 235, 0.45);
 }
 

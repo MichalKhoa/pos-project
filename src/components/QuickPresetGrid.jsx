@@ -272,7 +272,7 @@ function QuickPresetGrid({
           {itemMultiplier > 1 && (
             <div
               style={{
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                background: '#d97706',
                 color: '#ffffff',
                 height: '38px',
                 padding: '0 0.65rem',
@@ -384,7 +384,7 @@ function QuickPresetGrid({
                 minHeight: '38px',
                 padding: '0 0.75rem',
                 fontSize: '0.82rem',
-                background: isPriceCheckActive ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'rgba(255,255,255,0.06)',
+                background: isPriceCheckActive ? '#059669' : 'rgba(255,255,255,0.06)',
                 color: isPriceCheckActive ? '#ffffff' : 'var(--accent-emerald, #10b981)',
                 border: isPriceCheckActive ? '1px solid #34d399' : '1px solid rgba(16, 185, 129, 0.3)',
                 fontWeight: '800',

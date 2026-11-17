@@ -950,7 +950,7 @@ export default function ReceiptSection({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                background: 'linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%)',
+                background: '#2563eb',
                 color: '#fff',
                 borderRadius: 'var(--radius-md)',
                 boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'

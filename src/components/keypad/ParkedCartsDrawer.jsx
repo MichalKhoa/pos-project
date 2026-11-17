@@ -662,7 +662,7 @@ export default function ParkedCartsDrawer({
                                 padding: '0 1.15rem',
                                 fontSize: '0.88rem',
                                 fontWeight: '800',
-                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                background: '#059669',
                                 color: '#ffffff',
                                 border: 'none',
                                 borderRadius: '10px',

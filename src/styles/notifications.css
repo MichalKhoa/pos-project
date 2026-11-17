@@ -70,19 +70,19 @@
 }
 
 .sync-notification-banner.banner-success {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: #047857;
   color: #ffffff;
   border: 1px solid #10b981;
 }
 
 .sync-notification-banner.banner-error {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: #b91c1c;
   color: #ffffff;
   border: 1px solid #ef4444;
 }
 
 .sync-notification-banner.banner-info {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: #1d4ed8;
   color: #ffffff;
   border: 1px solid #3b82f6;
 }
@@ -95,7 +95,6 @@
   transform: translateX(-50%);
   z-index: 9999;
   pointer-events: auto;
-  animation: flashPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes flashPop {
@@ -122,25 +121,25 @@
 }
 
 .flash-banner-card.flash-success {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: #047857;
   color: #ffffff;
   border: 1.5px solid #34d399;
 }
 
 .flash-banner-card.flash-error {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: #b91c1c;
   color: #ffffff;
   border: 1.5px solid #f87171;
 }
 
 .flash-banner-card.flash-warning {
-  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  background: #b45309;
   color: #ffffff;
   border: 1.5px solid #fbbf24;
 }
 
 .flash-banner-card.flash-info {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: #1d4ed8;
   color: #ffffff;
   border: 1.5px solid #60a5fa;
 }
@@ -285,7 +284,6 @@
 }
 
 .toast-undo-btn:hover {
-  transform: scale(1.04);
 }
 
 .toast-dismiss-btn {

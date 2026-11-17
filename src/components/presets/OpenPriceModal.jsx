@@ -255,7 +255,7 @@ export default function OpenPriceModal({
                 height: '42px',
                 minHeight: '42px',
                 aspectRatio: 'auto',
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                background: '#dc2626',
                 color: '#ffffff',
                 border: 'none',
                 fontSize: '0.96rem',
@@ -299,7 +299,7 @@ export default function OpenPriceModal({
                 height: '42px',
                 minHeight: '42px',
                 aspectRatio: 'auto',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                background: '#059669',
                 color: '#ffffff',
                 border: 'none',
                 fontSize: '0.96rem',
@@ -420,7 +420,7 @@ export default function OpenPriceModal({
                 fontSize: '1.45rem',
                 fontWeight: '900',
                 color: openPriceQty > 1 ? '#fff' : 'var(--accent-amber)',
-                background: openPriceQty > 1 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : undefined
+                background: openPriceQty > 1 ? '#d97706' : undefined
               }}
               onClick={handleStepUp}
               title="Zvýšit množství (×)"
@@ -459,7 +459,7 @@ export default function OpenPriceModal({
                 fontWeight: '800',
                 gap: '0.5rem',
                 background: isReturn && hasValidAmount
-                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  ? '#dc2626'
                   : undefined,
                 borderColor: isReturn && hasValidAmount
                   ? '#ef4444'

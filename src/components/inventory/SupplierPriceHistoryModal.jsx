@@ -128,7 +128,6 @@ export default function SupplierPriceHistoryModal({
         position: 'fixed',
         inset: 0,
         background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1100,
         display: 'flex',
         alignItems: 'center',

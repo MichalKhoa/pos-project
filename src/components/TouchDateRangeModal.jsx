@@ -196,7 +196,6 @@ export default function TouchDateRangeModal({
         right: 0,
         bottom: 0,
         background: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

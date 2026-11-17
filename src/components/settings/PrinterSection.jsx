@@ -189,7 +189,7 @@ export default function PrinterSection({
               height: '42px',
               padding: '0 1.25rem',
               fontSize: '0.85rem',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(99, 102, 241, 0.25) 100%)',
+              background: 'rgba(99, 102, 241, 0.25)',
               color: 'var(--accent-indigo, #4f46e5)',
               border: '1px solid var(--accent-indigo, #4f46e5)'
             }}

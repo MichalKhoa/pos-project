@@ -595,7 +595,7 @@ function Cart({
           <button
             type="button"
             className="pay-btn pay-btn-cash"
-            style={{ background: isRefundTransaction ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined }}
+            style={{ background: isRefundTransaction ? '#dc2626' : undefined }}
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('cash')}
           >
@@ -606,7 +606,7 @@ function Cart({
           <button
             type="button"
             className="pay-btn pay-btn-card"
-            style={{ background: isRefundTransaction ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : undefined }}
+            style={{ background: isRefundTransaction ? '#7c3aed' : undefined }}
             disabled={cartItems.length === 0}
             onClick={() => onOpenPayment('card')}
           >

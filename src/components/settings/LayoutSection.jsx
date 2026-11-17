@@ -244,7 +244,7 @@ export default function LayoutSection({
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {ACCENT_COLORS.map(col => {
-              const isSelected = (config.highlightColor || 'indigo') === col.id;
+              const isSelected = (config.highlightColor || 'charcoal') === col.id;
               return (
                 <button
                   key={col.id}
@@ -301,7 +301,7 @@ export default function LayoutSection({
       </div>
 
       {/* 🏷️ Card 3: Preset Catalog Shortcut Banner */}
-      <div className="settings-action-banner" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+      <div className="settings-action-banner" style={{ background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
         <div>
           <div style={{ fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
             <Tag size={19} style={{ color: 'var(--accent-blue)' }} />

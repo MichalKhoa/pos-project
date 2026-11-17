@@ -149,7 +149,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
         }}
       >
         {/* Modal Header */}
-        <div className="modal-header header-warning" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', flexShrink: 0 }}>
+        <div className="modal-header header-warning" style={{ background: '#dc2626', flexShrink: 0 }}>
           <div className="modal-header-title">
             <RotateCcw size={22} />
             <span>{t('refund.title')}</span>
@@ -241,7 +241,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 style={{
                   height: '44px',
                   fontWeight: '700',
-                  background: refundMode === 'full' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'transparent',
+                  background: refundMode === 'full' ? '#dc2626' : 'transparent',
                   borderColor: refundMode === 'full' ? '#ef4444' : 'var(--border-color)'
                 }}
                 onClick={() => handleModeChange('full')}
@@ -527,7 +527,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
                 minWidth: '40px',
                 padding: '0 1.5rem',
                 fontWeight: '800',
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                background: '#dc2626',
                 borderColor: '#ef4444',
                 gap: '0.5rem'
               }}

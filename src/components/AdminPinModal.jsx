@@ -172,7 +172,7 @@ export default function AdminPinModal({
   };
 
   return (
-    <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.94)', backdropFilter: 'blur(12px)', zIndex: 99999 }}>
+    <div className="modal-overlay" style={{ background: 'rgba(9, 13, 25, 0.94)', zIndex: 99999 }}>
       <div
         className="modal-card"
         style={{

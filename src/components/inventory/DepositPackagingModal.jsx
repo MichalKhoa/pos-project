@@ -91,7 +91,6 @@ export default function DepositPackagingModal({ isOpen, onClose }) {
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(4px)',
         zIndex: 1050,
         display: 'flex',
         alignItems: 'center',
