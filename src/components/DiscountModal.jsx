@@ -146,7 +146,7 @@ export default function DiscountModal({
             flexDirection: 'column',
             gap: '0.3rem'
           }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.04em' }}>
               {discountType === 'percent' ? t('discount.entered_percent') : t('discount.entered_amount')}
             </div>
             <div style={{

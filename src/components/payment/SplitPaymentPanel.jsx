@@ -27,7 +27,7 @@ export default function SplitPaymentPanel({
         {/* COLUMN 1: Cash Portion Inputs, Calculation & Shortcuts */}
         <div className="cash-col-left" style={{ gap: '0.85rem' }}>
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.25rem', letterSpacing: '0.04em' }}>
               {t('payment.split_cash_portion')}
             </div>
             <div style={{
@@ -186,7 +186,7 @@ export default function SplitPaymentPanel({
           alignItems: 'center',
           boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)'
         }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
             {t('payment.split_card_remaining')}
           </span>
           <span style={{

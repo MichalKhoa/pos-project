@@ -82,7 +82,7 @@ export default function QrPaymentPanel({
             justifyContent: 'space-between',
             boxShadow: '0 4px 16px rgba(124, 58, 237, 0.15)'
           }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
               {t('payment.total_due')}
             </span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', fontWeight: '700', color: 'var(--accent-purple)', lineHeight: 1.1 }}>
@@ -98,7 +98,7 @@ export default function QrPaymentPanel({
               borderRadius: 'var(--radius-md)',
               padding: '0.6rem 0.85rem'
             }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                 {t('payment.var_symbol')}
               </div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.15rem' }}>
@@ -112,7 +112,7 @@ export default function QrPaymentPanel({
               borderRadius: 'var(--radius-md)',
               padding: '0.6rem 0.85rem'
             }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                 {t('payment.bank_account_iban')}
               </div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem', wordBreak: 'break-all' }}>
@@ -131,7 +131,7 @@ export default function QrPaymentPanel({
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
               {t('payment.payment_message')}:
             </span>
             <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>

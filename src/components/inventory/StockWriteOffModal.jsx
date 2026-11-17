@@ -470,7 +470,7 @@ export default function StockWriteOffModal({
               <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                   <thead>
-                    <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+                    <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left' }}>{t('stock_write_off.col_product') || 'Produkt'}</th>
                       <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right', width: '90px' }}>{t('stock_write_off.col_stock') || 'Sklad'}</th>
                       <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right', width: '100px' }}>{t('stock_write_off.col_quantity') || 'Odpis mn.'}</th>

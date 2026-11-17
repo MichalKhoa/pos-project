@@ -53,7 +53,7 @@ export default function StockKeypadModal({
             border: '2px solid var(--accent-blue)',
             boxShadow: '0 0 12px rgba(59, 130, 246, 0.2)'
           }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
               Počet kusů na skladě
             </div>
             <div style={{ fontSize: '2.2rem', fontWeight: '700', fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)' }}>

@@ -152,7 +152,6 @@ export default function OpenPriceModal({
               <span style={{
                 fontSize: '0.8rem',
                 fontWeight: '700',
-                textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)'
               }}>

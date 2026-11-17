@@ -110,7 +110,7 @@ export default function CashPaymentPanel({
 
         {/* 💵 Authentic Color-Coded Czech Banknotes */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Banknote size={14} style={{ color: 'var(--accent-emerald)' }} />
             <span>{t('payment.banknotes') || 'České Bankovky'}</span>
           </div>
@@ -137,7 +137,7 @@ export default function CashPaymentPanel({
 
         {/* 🪙 Streamlined Quick Coins Bar (4 Coins) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Coins size={13} style={{ color: 'var(--accent-amber)' }} />
             <span>{t('payment.coins') || 'Mince'}</span>
           </div>
@@ -152,7 +152,6 @@ export default function CashPaymentPanel({
                   onCashAdd(coin);
                 }}
               >
-                <span className={`coin-disc coin-disc-${coin}`} aria-hidden="true">{coin}</span>
                 <span>+{coin} Kč</span>
               </button>
             ))}
@@ -165,7 +164,7 @@ export default function CashPaymentPanel({
         {/* Tendered Input Display */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', letterSpacing: '0.04em' }}>
               {t('payment.received_from_customer') || 'Přijato od zákazníka'}
             </span>
             <button
@@ -194,7 +193,7 @@ export default function CashPaymentPanel({
             {tenderedVal === 0 ? (
               <span data-testid="tendered-exact" style={{ color: 'var(--text-muted)' }}>
                 {effectiveCashTotal.toFixed(0)} Kč
-                <small style={{ marginLeft: '0.5rem', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                <small style={{ marginLeft: '0.5rem', fontSize: '0.8rem', fontWeight: 700, }}>
                   {t('payment.exact') || 'Přesně'}
                 </small>
               </span>

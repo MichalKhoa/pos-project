@@ -297,7 +297,7 @@ export default function CustomerDisplayView({ storeConfig }) {
                       />
                     ) : (
                       <div style={{ textAlign: 'center', padding: '1rem', color: '#64748b' }}>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#dc2626', marginBottom: '6px' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#dc2626', marginBottom: '6px' }}>
                           QR platba nedostupná
                         </div>
                         <div style={{ fontSize: '0.85rem' }}>

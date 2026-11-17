@@ -402,7 +402,6 @@ export default function ParkedCartsDrawer({
         <div style={{
           fontSize: '0.82rem',
           fontWeight: '700',
-          textTransform: 'uppercase',
           letterSpacing: '0.06em',
           color: 'var(--text-muted)',
           display: 'flex',

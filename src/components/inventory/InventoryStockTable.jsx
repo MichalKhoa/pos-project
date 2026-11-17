@@ -194,7 +194,7 @@ export default function InventoryStockTable({
       <div className="table-wrapper" style={{ flex: 1, maxHeight: 'calc(100dvh - 165px)', overflowY: 'auto', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', position: 'relative' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-card)' }}>
-            <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', textTransform: 'uppercase', fontSize: '0.8rem', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+            <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', fontSize: '0.8rem', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
               <th
                 style={{ padding: '0.65rem 0.85rem', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
                 onClick={() => handleSort('name')}

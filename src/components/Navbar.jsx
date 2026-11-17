@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { ShoppingBag, History, Settings, Clock, Tag, Package, Lock, AlertTriangle, Power, Sun, Moon, Volume2, VolumeX, BarChart3, Printer, Type, Wrench } from 'lucide-react';
+import { ShoppingBag, History, Settings, Clock, Tag, Package, Lock, AlertTriangle, Power, BarChart3, Printer, Type, Wrench } from 'lucide-react';
 import voltflowLogo from '../assets/voltflow_logo_icon_nobg.png';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useStoreConfig } from '../context/StoreConfigContext.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
 import CashDrawerIcon from './CashDrawerIcon';
-import { soundFx } from '../utils/audio';
 import { getApiHost } from '../api/posApi';
 
 const FONT_SIZE_LABELS = {
@@ -53,25 +52,14 @@ function Navbar({
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('pos_theme') || 'light';
-  });
-  const [soundEnabled, setSoundEnabled] = useState(() => soundFx.isSoundEnabled());
   const [latency, setLatency] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
 
-  const handleToggleSound = () => {
-    const next = !soundEnabled;
-    soundFx.setSoundEnabled(next);
-    setSoundEnabled(next);
-  };
-
-  // Apply theme attribute to html root element
+  // Apply saved theme to html root element (switch lives in Settings > Layout)
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('pos_theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('pos_theme') || 'light');
+  }, []);
 
   // Periodically check backend latency
   useEffect(() => {
@@ -351,17 +339,6 @@ function Navbar({
             <CashDrawerIcon size={16} color="var(--text-secondary)" />
           </button>
 
-          {/* Theme Mode Switcher Icon Button */}
-          <button
-            type="button"
-            className="nav-tool-btn"
-            onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
-            title={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
-            aria-label={theme === 'light' ? 'Přepnout do tmavého režimu (Dark Mode)' : 'Přepnout do světlého režimu (Light Mode)'}
-          >
-            {theme === 'light' ? <Moon size={15} style={{ color: 'var(--accent-purple)' }} /> : <Sun size={15} style={{ color: 'var(--accent-amber)' }} />}
-          </button>
-
           {/* Font Size Quick Cycle Button */}
           <button
             type="button"
@@ -372,21 +349,6 @@ function Navbar({
           >
             <Type size={15} style={{ color: 'var(--accent-indigo)' }} />
             <span className="nav-font-size-badge">{FONT_SIZE_LABELS[fontSize] || 'M'}</span>
-          </button>
-
-          {/* Sound Effects Volume Mute Toggle */}
-          <button
-            type="button"
-            className="nav-tool-btn"
-            onClick={handleToggleSound}
-            title={soundEnabled ? 'Zvuky jsou zapnuty (Klikněte pro ztišení)' : 'Zvuky jsou vypnuty (Klikněte pro zapnutí)'}
-            aria-label={soundEnabled ? 'Zvuky jsou zapnuty (Klikněte pro ztišení)' : 'Zvuky jsou vypnuty (Klikněte pro zapnutí)'}
-          >
-            {soundEnabled ? (
-              <Volume2 size={15} style={{ color: 'var(--accent-blue)' }} />
-            ) : (
-              <VolumeX size={15} style={{ color: 'var(--text-muted)' }} />
-            )}
           </button>
 
           {/* Print Daily Summary Slip Button */}

@@ -57,7 +57,7 @@ export default function CardPaymentPanel({
           alignItems: 'center',
           boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)'
         }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '0.2rem' }}>
             {t('payment.total_due')}
           </span>
           <span style={{

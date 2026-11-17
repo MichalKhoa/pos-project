@@ -401,7 +401,7 @@ export default function WeightEntryModal({
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
                   {t('weight_modal.unit_price_title') || `Cena za 1 ${itemUnit}`}
                 </span>
                 <span style={{ fontSize: '0.8rem', color: activeField === 'unit_price' ? 'var(--accent-blue)' : 'var(--text-secondary)' }}>
@@ -473,7 +473,7 @@ export default function WeightEntryModal({
             {/* Weight Input Row */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
                   {tareGrams > 0 ? (t('weight_modal.gross_weight') || 'Hrubá hmotnost') : (t('weight_modal.net_weight') || 'Hmotnost')}
                 </span>
                 {isOpenPrice && (
@@ -618,7 +618,7 @@ export default function WeightEntryModal({
 
           {/* Tare Deduction Shortcuts Row */}
           <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '0.2rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginRight: '0.2rem' }}>
               {t('weight_modal.tare') || 'Tára'}:
             </span>
             <button

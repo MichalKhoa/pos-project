@@ -26,7 +26,6 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
             fontFamily: 'var(--font-mono)',
             fontSize: '0.8rem',
             color: 'var(--text-muted)',
-            textTransform: 'uppercase',
             fontWeight: '700',
             letterSpacing: '0.04em'
           }}>

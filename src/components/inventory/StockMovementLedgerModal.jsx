@@ -284,7 +284,7 @@ export default function StockMovementLedgerModal({
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--bg-input)' }}>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
                   <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_movements.col_timestamp') || 'Datum a čas'}</th>
                   <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_movements.col_type') || 'Typ pohybu'}</th>
                   <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_movements.col_product') || 'Položka'}</th>

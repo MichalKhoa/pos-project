@@ -389,16 +389,14 @@ export default function SettingsView({
                 key={tab.id}
                 type="button"
                 className={`settings-sidebar-btn ${isActive ? 'active' : ''} ${isTabGated ? 'locked-subtab' : ''}`}
+                title={tab.subtitle}
                 onClick={() => handleSelectSubTab(tab)}
               >
                 <div className="settings-sidebar-icon">
                   <IconComponent size={20} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
-                  <span style={{ fontSize: '0.92rem', whiteSpace: 'nowrap' }}>{tab.title}</span>
-                  <span style={{ fontSize: '0.8rem', color: isActive ? 'var(--accent-blue)' : 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                    {tab.subtitle}
-                  </span>
+                  <span style={{ fontSize: '0.92rem', whiteSpace: 'normal', lineHeight: 1.25 }}>{tab.title}</span>
                 </div>
                 {isTabGated && (
                   <div className="subtab-lock-indicator" title={t('settings.tab_locked_badge') || 'Zamčeno'}>

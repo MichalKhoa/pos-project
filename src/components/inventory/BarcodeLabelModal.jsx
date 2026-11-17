@@ -274,7 +274,7 @@ export default function BarcodeLabelModal({
               userSelect: 'none'
             }}
           >
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748b', letterSpacing: '0.05em' }}>
               {storeName}
             </div>
             <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a', margin: '0.35rem 0 0.25rem 0', lineHeight: 1.2 }}>

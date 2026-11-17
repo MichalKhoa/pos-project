@@ -203,7 +203,6 @@ export default function ManualKeypad({
             <span style={{
               fontSize: '0.80rem',
               fontWeight: '700',
-              textTransform: 'uppercase',
               letterSpacing: '0.06em',
               color: isReturn
                 ? 'var(--accent-rose)'

@@ -134,7 +134,6 @@ export default function PriceCheckModal({
                       style={{
                         fontSize: '0.8rem',
                         fontWeight: '700',
-                        textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         background: 'rgba(59, 130, 246, 0.15)',
                         color: 'var(--accent-blue, #60a5fa)',
@@ -202,7 +201,6 @@ export default function PriceCheckModal({
                     style={{
                       fontSize: '0.82rem',
                       fontWeight: '700',
-                      textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       color: 'var(--accent-emerald, #34d399)'
                     }}

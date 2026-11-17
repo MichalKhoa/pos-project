@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { soundFx } from '../../utils/audio';
 import { Layout, Tag, ArrowRight, Tv, Sliders, Palette, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
@@ -11,6 +12,18 @@ export default function LayoutSection({
   onNavigateToPresets,
   onSaveStoreConfig
 }) {
+  const [darkMode, setDarkMode] = useState(() => (localStorage.getItem('pos_theme') || 'light') === 'dark');
+  const [soundOn, setSoundOn] = useState(() => soundFx.isSoundEnabled());
+  const toggleDark = checked => {
+    const next = checked ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('pos_theme', next);
+    setDarkMode(checked);
+  };
+  const toggleSound = checked => {
+    soundFx.setSoundEnabled(checked);
+    setSoundOn(checked);
+  };
   const { t } = useTranslation();
   const { openCustomerDisplay } = useTauri();
 
@@ -177,9 +190,33 @@ export default function LayoutSection({
           <label className="settings-switch-toggle">
             <input
               type="checkbox"
-              checked={config.showPresetVat !== false}
+              checked={config.showPresetVat === true}
               onChange={e => handleUpdate({ showPresetVat: e.target.checked })}
             />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">{t('settings.dark_mode_label') || 'Tmavý režim'}</span>
+            <span className="settings-toggle-subtitle">{t('settings.dark_mode_desc') || 'Tmavé pozadí obrazovky pokladny.'}</span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input type="checkbox" checked={darkMode} onChange={e => toggleDark(e.target.checked)} />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">{t('settings.sound_label') || 'Zvuky'}</span>
+            <span className="settings-toggle-subtitle">{t('settings.sound_desc') || 'Zvukové potvrzení stisku tlačítek a plateb.'}</span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input type="checkbox" checked={soundOn} onChange={e => toggleSound(e.target.checked)} />
             <span className="settings-switch-slider" />
           </label>
         </div>

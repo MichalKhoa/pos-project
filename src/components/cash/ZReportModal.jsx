@@ -315,7 +315,6 @@ export default function ZReportModal({
                   fontSize: '0.8rem',
                   fontWeight: '700',
                   color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   marginBottom: '0.45rem'
                 }}>
@@ -369,7 +368,6 @@ export default function ZReportModal({
                     fontSize: '0.8rem',
                     fontWeight: '700',
                     color: 'var(--text-muted)',
-                    textTransform: 'uppercase',
                     letterSpacing: '0.04em',
                     marginBottom: '0.35rem',
                     display: 'block'

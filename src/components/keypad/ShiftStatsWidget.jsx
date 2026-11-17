@@ -129,7 +129,7 @@ function ShiftStatsWidget({
           {/* Right Group: Revenue Preview & Cash/Card Split & Chevron */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', }}>
                 {t('shift_stats.revenue_short') || 'Tržba:'}
               </span>
               <span style={{
@@ -219,7 +219,7 @@ function ShiftStatsWidget({
                 borderRadius: 'var(--radius-md)',
                 padding: '0.55rem 0.75rem'
               }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   {t('shift_stats.today_revenue') || 'Dnešní tržba'}
                 </div>
                 <div style={{
@@ -384,7 +384,6 @@ function ShiftStatsWidget({
         <div style={{
           fontSize: '0.82rem',
           fontWeight: '700',
-          textTransform: 'uppercase',
           letterSpacing: '0.06em',
           color: 'var(--text-muted)',
           display: 'flex',
@@ -445,7 +444,7 @@ function ShiftStatsWidget({
               padding: '0.55rem 0.75rem',
               gridColumn: 'span 2'
             }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                 {t('shift_stats.today_revenue') || 'Dnešní tržba celkem'}
               </div>
               <div style={{

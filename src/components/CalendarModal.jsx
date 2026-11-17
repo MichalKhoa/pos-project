@@ -449,7 +449,7 @@ export default function CalendarModal({
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)'
               }}>
-                <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
                   {t('calendar.day_summary_title')}
                 </div>
                 <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>

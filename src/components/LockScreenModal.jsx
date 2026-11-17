@@ -389,7 +389,6 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
                 background: 'var(--bg-input)',
                 color: 'var(--text-primary)',
                 marginBottom: '0.75rem',
-                textTransform: 'uppercase'
               }}
             />
 

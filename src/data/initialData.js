@@ -249,7 +249,7 @@ export const DEFAULT_STORE_CONFIG = {
   presetDensity: 'standard', // 'compact', 'standard', 'large'
   presetButtonStyle: 'left-stripe', // 'left-stripe', 'color-fill', 'modern-card', 'modern-glass'
   cartItemStyle: 'elevated-card', // 'elevated-card', 'divided-row', 'rounded-tile'
-  showPresetVat: true, // Show VAT percentage badge on preset buttons
+  showPresetVat: false, // Show VAT percentage badge on preset buttons
   enableB2bInvoicing: false, // Hide B2B corporate invoice toggle in payment modal by default
   eetEnabled: false, // EET Ready mode indicator (disabled by default for local counter testing)
   defaultLanguage: 'cs',

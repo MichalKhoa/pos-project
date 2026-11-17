@@ -311,7 +311,7 @@ export default function PresetModal({
 
               {/* Basic Info Card */}
               <div style={sectionCardStyle}>
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   Základní údaje
                 </div>
 
@@ -369,7 +369,7 @@ export default function PresetModal({
 
               {/* Price & VAT Card */}
               <div style={sectionCardStyle}>
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   Cena a Sazba DPH
                 </div>
 
@@ -604,7 +604,7 @@ export default function PresetModal({
 
               {/* Behavior, Stock & Barcode Card */}
               <div style={sectionCardStyle}>
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
                   Sklad a Čárový kód
                 </div>
 
@@ -712,7 +712,6 @@ export default function PresetModal({
                       fontSize: '0.8rem',
                       fontWeight: '700',
                       color: 'var(--text-muted)',
-                      textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                       alignSelf: 'flex-start',
                       display: 'flex',

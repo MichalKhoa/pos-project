@@ -294,7 +294,7 @@ export default function PresetsCatalogView({
                   <span className="preset-price">
                     {preset.isOpenPrice ? '' : preset.price > 0 ? `${preset.price} Kč` : ''}
                   </span>
-                  {storeConfig?.showPresetVat !== false && preset.vat !== undefined && (
+                  {storeConfig?.showPresetVat === true && preset.vat !== undefined && (
                     <span className="preset-vat-text">{preset.vat}%</span>
                   )}
                 </div>

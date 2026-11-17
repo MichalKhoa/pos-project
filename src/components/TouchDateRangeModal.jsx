@@ -253,7 +253,7 @@ export default function TouchDateRangeModal({
           padding: '0.6rem 0.85rem',
           borderRadius: '16px'
         }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.05em', marginRight: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <Sparkles size={13} style={{ color: 'var(--accent-blue)' }} />
             Rychlé volby:
           </span>

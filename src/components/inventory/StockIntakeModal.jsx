@@ -495,7 +495,7 @@ export default function StockIntakeModal({
             >
               <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
                 <thead>
-                  <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
                     <th style={{ padding: '0.65rem 0.85rem' }}>{t('stock_intake.col_product') || 'Produkt / Položka'}</th>
                     <th style={{ padding: '0.65rem 0.85rem', width: '110px' }}>{t('stock_intake.col_quantity') || 'Množství'}</th>
                     <th style={{ padding: '0.65rem 0.85rem', width: '140px' }}>{t('stock_intake.col_cost') || 'Nákupní cena bez DPH'}</th>
