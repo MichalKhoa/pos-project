@@ -251,7 +251,7 @@ export default function TouchDateRangeModal({
           background: 'var(--bg-input)',
           border: '1px solid var(--border-color)',
           padding: '0.6rem 0.85rem',
-          borderRadius: '16px'
+          borderRadius: '12px'
         }}>
           <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.05em', marginRight: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <Sparkles size={13} style={{ color: 'var(--accent-blue)' }} />
@@ -274,7 +274,7 @@ export default function TouchDateRangeModal({
                 padding: '0.35rem 0.7rem',
                 fontSize: '0.82rem',
                 fontWeight: '700',
-                borderRadius: '8px'
+                borderRadius: '6px'
               }}
             >
               {p.label}
@@ -288,7 +288,7 @@ export default function TouchDateRangeModal({
           <div style={{
             background: 'var(--bg-input)',
             padding: '1rem',
-            borderRadius: '16px',
+            borderRadius: '12px',
             border: '1px solid var(--border-color)'
           }}>
             {/* Header Stepper Bar */}
@@ -334,7 +334,7 @@ export default function TouchDateRangeModal({
                     padding: '0.3rem 0.65rem',
                     fontWeight: '700',
                     fontSize: '0.95rem',
-                    color: 'var(--accent-purple)',
+                    color: 'var(--text-secondary)',
                     borderColor: 'var(--accent-purple)'
                   }}
                 >
@@ -359,7 +359,7 @@ export default function TouchDateRangeModal({
                       background: idx === viewMonth ? 'var(--accent-blue)' : 'var(--bg-card)',
                       color: idx === viewMonth ? '#ffffff' : 'var(--text-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '8px'
+                      borderRadius: '6px'
                     }}
                   >
                     {m}
@@ -382,7 +382,7 @@ export default function TouchDateRangeModal({
                       background: yr === viewYear ? 'var(--accent-purple)' : 'var(--bg-card)',
                       color: yr === viewYear ? '#ffffff' : 'var(--text-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '8px'
+                      borderRadius: '6px'
                     }}
                   >
                     {yr}
@@ -404,7 +404,7 @@ export default function TouchDateRangeModal({
                       onClick={() => handleDayClick(cell.iso)}
                       style={{
                         height: '42px',
-                        borderRadius: '8px',
+                        borderRadius: '6px',
                         fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
@@ -426,7 +426,7 @@ export default function TouchDateRangeModal({
           <div style={{
             background: 'var(--bg-input)',
             padding: '1rem',
-            borderRadius: '16px',
+            borderRadius: '12px',
             border: '1px solid var(--border-color)'
           }}>
             {/* Header Stepper Bar */}
@@ -465,7 +465,7 @@ export default function TouchDateRangeModal({
                     padding: '0.3rem 0.65rem',
                     fontWeight: '700',
                     fontSize: '0.95rem',
-                    color: 'var(--accent-purple)',
+                    color: 'var(--text-secondary)',
                     borderColor: 'var(--accent-purple)'
                   }}
                 >
@@ -497,7 +497,7 @@ export default function TouchDateRangeModal({
                       background: idx === rightMonth ? 'var(--accent-blue)' : 'var(--bg-card)',
                       color: idx === rightMonth ? '#ffffff' : 'var(--text-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '8px'
+                      borderRadius: '6px'
                     }}
                   >
                     {m}
@@ -520,7 +520,7 @@ export default function TouchDateRangeModal({
                       background: yr === rightYear ? 'var(--accent-purple)' : 'var(--bg-card)',
                       color: yr === rightYear ? '#ffffff' : 'var(--text-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '8px'
+                      borderRadius: '6px'
                     }}
                   >
                     {yr}
@@ -542,7 +542,7 @@ export default function TouchDateRangeModal({
                       onClick={() => handleDayClick(cell.iso)}
                       style={{
                         height: '42px',
-                        borderRadius: '8px',
+                        borderRadius: '6px',
                         fontSize: '0.92rem',
                         display: 'flex',
                         alignItems: 'center',
@@ -564,11 +564,11 @@ export default function TouchDateRangeModal({
         {/* Bottom Actions & Selected Range Display */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', fontWeight: '700' }}>
-            <span style={{ color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '10px', border: '1px solid var(--accent-emerald)' }}>
+            <span style={{ color: 'var(--accent-emerald)', background: 'rgba(16, 185, 129, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid var(--accent-emerald)' }}>
               OD: {formatIsoDisplay(startDateIso)}
             </span>
             <span style={{ color: 'var(--text-muted)' }}>➔</span>
-            <span style={{ color: 'var(--accent-purple)', background: 'rgba(71, 85, 105, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '10px', border: '1px solid var(--accent-purple)' }}>
+            <span style={{ color: 'var(--text-secondary)', background: 'rgba(71, 85, 105, 0.12)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid var(--accent-purple)' }}>
               DO: {formatIsoDisplay(endDateIso || startDateIso)}
             </span>
           </div>

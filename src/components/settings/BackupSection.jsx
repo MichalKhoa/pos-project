@@ -1,23 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  HardDrive,
-  Download,
-  Upload,
-  Trash2,
-  Shield,
-  RefreshCw,
-  CheckCircle,
-  Database,
-  ArrowDownCircle,
-  AlertCircle,
-  Cloud,
-  CloudUpload,
-  CloudDownload,
-  Check,
-  Lock,
-  Eye,
-  EyeOff
-} from 'lucide-react';
+import { Download, Upload, Trash2, RefreshCw, CheckCircle, Database, ArrowDownCircle, AlertCircle, CloudUpload, CloudDownload, Check, Lock, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import {
   fetchDatabaseBackupStatus,
@@ -350,7 +332,6 @@ export default function BackupSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <HardDrive size={19} style={{ color: 'var(--accent-emerald)' }} />
               <span>{t('settings.backup_title') || 'Zálohování & Obnova Dat'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -443,7 +424,6 @@ export default function BackupSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Cloud size={20} style={{ color: cloudEnabled ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
               <span>{t('settings.cloud_backup_title') || 'Cloudové zálohování (S3 / Cloudflare R2)'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -752,7 +732,6 @@ export default function BackupSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <RefreshCw size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.updates_title') || 'Aktualizace pokladny'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -942,7 +921,6 @@ export default function BackupSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Shield size={19} style={{ color: config.eetEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
               <span>{t('settings.eet_toggle_label') || 'Elektronická evidence tržeb (EET 2.0)'}</span>
             </h3>
             <p className="settings-section-desc">

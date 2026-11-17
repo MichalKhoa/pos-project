@@ -1,16 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Printer,
-  CheckCircle2,
-  Clock,
-  HardDrive,
-  CreditCard,
-  Tv,
-  ShieldCheck,
-  RefreshCw,
-  Coins,
-  Receipt
-} from 'lucide-react';
+import { Printer, HardDrive, CreditCard, Tv, ShieldCheck, RefreshCw, Coins } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { soundFx } from '../../utils/audio.js';
 import {
@@ -179,7 +168,6 @@ export default function DiagnosticsSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.diag_preview_title') || 'Živý náhled účtenky'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -343,7 +331,6 @@ export default function DiagnosticsSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <CheckCircle2 size={19} style={{ color: 'var(--accent-emerald)' }} />
                 <span>{t('settings.diag_peripherals_title') || 'Stav periferií & Diagnostika'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -437,7 +424,7 @@ export default function DiagnosticsSection({
             <div className="diag-item">
               <div className="diag-item-left">
                 <div className="diag-item-icon">
-                  <CreditCard size={18} style={{ color: 'var(--accent-purple)' }} />
+                  <CreditCard size={18} style={{ color: 'var(--text-secondary)' }} />
                 </div>
                 <div className="diag-item-text">
                   <span className="diag-item-label">{t('settings.diag_terminal_label') || 'Platební terminál'}</span>
@@ -496,7 +483,6 @@ export default function DiagnosticsSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Clock size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.diag_shift_title') || 'Denní přehled směny'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -530,7 +516,7 @@ export default function DiagnosticsSection({
 
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_card_qr') || 'Karta / QR'}</span>
-                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-purple)', marginTop: '2px' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-secondary)', marginTop: '2px' }}>
                   {shiftData ? `${((shiftData.cardTotal || 0) + (shiftData.qrTotal || 0)).toFixed(0)} Kč` : '0 Kč'}
                 </div>
               </div>

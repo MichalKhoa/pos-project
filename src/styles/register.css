@@ -1733,7 +1733,7 @@ select.input-field:focus {
 
 /* ── Style 3: Soft Rounded Tile (Pill-like & Recessed Stepper) ── */
 .cart-item-card.style-rounded-tile {
-  border-radius: 14px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--text-primary) 2%, var(--bg-card));
   border: 1.5px solid color-mix(in srgb, var(--border-color) 75%, transparent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -1748,11 +1748,11 @@ select.input-field:focus {
 .cart-item-card.style-rounded-tile .cart-stepper-box {
   background: var(--bg-main);
   border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .cart-item-card.style-rounded-tile .cart-del-btn {
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .cart-item-card.style-rounded-tile.is-active {

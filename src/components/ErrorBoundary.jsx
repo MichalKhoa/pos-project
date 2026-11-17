@@ -41,7 +41,7 @@ export default class ErrorBoundary extends React.Component {
           <div style={{
             backgroundColor: '#1e293b',
             padding: '2.5rem',
-            borderRadius: '1rem',
+            borderRadius: '12px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
             maxWidth: '500px',
             width: '100%'
@@ -63,7 +63,7 @@ export default class ErrorBoundary extends React.Component {
                 padding: '0.75rem 1.5rem',
                 fontSize: '1rem',
                 fontWeight: '600',
-                borderRadius: '0.5rem',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 transition: 'background-color 0.2s'
               }}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { soundFx } from '../../utils/audio';
-import { Layout, Tag, ArrowRight, Tv, Sliders, Palette, Check, ExternalLink } from 'lucide-react';
+import { Tag, ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
 
@@ -62,7 +62,6 @@ export default function LayoutSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Sliders size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.preset_layout_title') || 'Tlačítka a Dlaždice Sortimentu'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -227,7 +226,6 @@ export default function LayoutSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Palette size={19} style={{ color: 'var(--accent-highlight, #6366f1)' }} />
               <span>{t('settings.navbar_style_title') || 'Styl a rozvržení horní lišty (Navbar)'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -368,7 +366,6 @@ export default function LayoutSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Layout size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.register_layout_title') || 'Ergonomie a Rozvržení Pokladny'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -636,7 +633,6 @@ export default function LayoutSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Tv size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.customer_display_title') || 'Zákaznický LCD Displej'}</span>
             </h3>
             <p className="settings-section-desc">

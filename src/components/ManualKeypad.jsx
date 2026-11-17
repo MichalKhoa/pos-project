@@ -185,7 +185,7 @@ export default function ManualKeypad({
             alignItems: 'stretch',
             padding: '0.45rem 0.75rem',
             flexShrink: 0,
-            borderRadius: '10px',
+            borderRadius: '6px',
             border: isReturn
               ? '2px solid var(--accent-rose)'
               : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)'),

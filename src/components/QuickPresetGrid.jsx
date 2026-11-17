@@ -412,7 +412,7 @@ function QuickPresetGrid({
                 padding: '0 0.75rem',
                 fontSize: '0.82rem',
                 background: 'rgba(255,255,255,0.06)',
-                color: 'var(--accent-purple)',
+                color: 'var(--text-secondary)',
                 fontWeight: '700',
                 gap: '0.35rem',
                 whiteSpace: 'nowrap',

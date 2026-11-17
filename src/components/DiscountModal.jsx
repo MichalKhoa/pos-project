@@ -83,7 +83,7 @@ export default function DiscountModal({
       >
         <div className="modal-header">
           <div className="modal-title">
-            <Percent size={22} style={{ color: 'var(--accent-purple)' }} />
+            <Percent size={22} style={{ color: 'var(--text-secondary)' }} />
             <span>{t('discount.title')}</span>
           </div>
           <button type="button" className="close-modal-btn" onClick={onClose}>✕</button>
@@ -153,7 +153,7 @@ export default function DiscountModal({
               fontFamily: 'var(--font-mono)',
               fontSize: '2.3rem',
               fontWeight: '700',
-              color: 'var(--accent-purple)'
+              color: 'var(--text-secondary)'
             }}>
               {valStr} {discountType === 'percent' ? '%' : 'Kč'}
             </div>

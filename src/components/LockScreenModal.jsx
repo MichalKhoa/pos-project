@@ -226,7 +226,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
               <div style={{
                 background: 'rgba(239, 68, 68, 0.15)',
                 border: '1px solid rgba(239, 68, 68, 0.4)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 padding: '0.75rem',
                 margin: '0.75rem 0',
                 color: '#ef4444',
@@ -384,7 +384,7 @@ export default function LockScreenModal({ storeConfig, onUnlock, onRecovered }) 
                 fontSize: '0.95rem',
                 fontFamily: 'monospace',
                 textAlign: 'center',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 border: '1px solid var(--border-color)',
                 background: 'var(--bg-input)',
                 color: 'var(--text-primary)',

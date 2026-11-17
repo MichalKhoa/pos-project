@@ -90,7 +90,7 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
             style={{
               height: '32px',
               padding: '0 0.65rem',
-              borderRadius: '16px',
+              borderRadius: '12px',
               background: !isPresetColor ? selectedColor : 'var(--bg-card)',
               color: !isPresetColor ? '#ffffff' : 'var(--text-primary)',
               border: !isPresetColor ? '2px solid #ffffff' : '1px dashed var(--border-color)',

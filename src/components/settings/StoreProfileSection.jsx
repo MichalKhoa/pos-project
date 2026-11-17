@@ -1,5 +1,5 @@
 import React from 'react';
-import { Store, MapPin, Receipt, Globe } from 'lucide-react';
+
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import LanguageSelector from '../LanguageSelector.jsx';
 
@@ -31,7 +31,6 @@ export default function StoreProfileSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Store size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.store_info') || 'Identifikační údaje prodejny'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -90,7 +89,6 @@ export default function StoreProfileSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <MapPin size={19} style={{ color: 'var(--accent-emerald)' }} />
               <span>{t('settings.store_address_title') || 'Adresa provozovny'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -138,7 +136,6 @@ export default function StoreProfileSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Receipt size={19} style={{ color: 'var(--accent-amber)' }} />
               <span>{t('settings.store_finance_title') || 'Finance & Výchozí DPH'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -219,7 +216,6 @@ export default function StoreProfileSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Globe size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.default_language') || 'Jazyk pokladny'}</span>
             </h3>
             <p className="settings-section-desc">

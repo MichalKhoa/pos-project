@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Save, RefreshCw, CheckCircle, XCircle, Wifi, Smartphone } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle, XCircle, Wifi, Smartphone } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function TerminalSection({
@@ -31,7 +31,6 @@ export default function TerminalSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <CreditCard size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.csob_title') || 'Platební terminál pro karty'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -129,7 +128,6 @@ export default function TerminalSection({
             <div className="settings-section-header">
               <div>
                 <h3 className="settings-section-title">
-                  <Wifi size={19} style={{ color: 'var(--accent-emerald)' }} />
                   <span>{t('settings.terminal_network_title') || 'Síťové nastavení terminálu ČSOB'}</span>
                 </h3>
                 <p className="settings-section-desc">
@@ -249,7 +247,6 @@ export default function TerminalSection({
             <div className="settings-section-header">
               <div>
                 <h3 className="settings-section-title">
-                  <Smartphone size={19} style={{ color: 'var(--accent-blue)' }} />
                   <span>{t('settings.terminal_manual_guide_title') || 'Jak funguje ruční režim'}</span>
                 </h3>
                 <p className="settings-section-desc">

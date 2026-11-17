@@ -85,7 +85,7 @@ export default function QrPaymentPanel({
             <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
               {t('payment.total_due')}
             </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', fontWeight: '700', color: 'var(--accent-purple)', lineHeight: 1.1 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', fontWeight: '700', color: 'var(--text-secondary)', lineHeight: 1.1 }}>
               {totalAmount.toLocaleString('cs-CZ')} Kč
             </span>
           </div>

@@ -666,7 +666,7 @@ export default function PresetModal({
                         color: 'var(--accent-emerald)',
                         background: 'rgba(16, 185, 129, 0.15)',
                         padding: '2px 8px',
-                        borderRadius: '10px',
+                        borderRadius: '6px',
                         border: '1px solid var(--accent-emerald)',
                         animation: 'fadeIn 0.2s ease'
                       }}>

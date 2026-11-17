@@ -393,7 +393,7 @@ export default function WeightEntryModal({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '0.65rem 0.85rem',
-                borderRadius: '10px',
+                borderRadius: '6px',
                 background: activeField === 'unit_price' ? 'color-mix(in srgb, var(--accent-blue) 12%, var(--bg-input))' : 'var(--bg-input)',
                 border: activeField === 'unit_price' ? '2px solid var(--accent-blue)' : '1px solid var(--border-color)',
                 cursor: 'pointer',
@@ -460,7 +460,7 @@ export default function WeightEntryModal({
               display: 'flex',
               flexDirection: 'column',
               padding: '0.65rem 0.85rem',
-              borderRadius: '10px',
+              borderRadius: '6px',
               background: activeField === 'weight'
                 ? (isValidNet ? 'color-mix(in srgb, var(--accent-blue) 8%, var(--bg-input))' : 'color-mix(in srgb, var(--accent-blue) 4%, var(--bg-input))')
                 : 'var(--bg-input)',

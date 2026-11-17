@@ -56,7 +56,7 @@ export default function SalesAnalyticsCharts({
               <BarChart3 size={18} />
             </div>
           </div>
-          <div className="metric-value" style={{ color: 'var(--accent-purple)', fontSize: '1.4rem' }}>
+          <div className="metric-value" style={{ color: 'var(--text-secondary)', fontSize: '1.4rem' }}>
             {totalVat.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -305,7 +305,7 @@ export default function SalesAnalyticsCharts({
           {/* Category Sales Shares */}
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.65rem' }}>
             <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <PieChart size={15} style={{ color: 'var(--accent-purple)' }} />
+              <PieChart size={15} style={{ color: 'var(--text-secondary)' }} />
               <span>{t('history.category_sales') || 'Tržby podle kategorií'}</span>
             </h4>
 
@@ -354,7 +354,7 @@ export default function SalesAnalyticsCharts({
                   <tr key={tItem.rate}>
                     <td style={{ fontWeight: '700', textAlign: 'left' }}>{tItem.rate}%</td>
                     <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(tItem.net || 0).toFixed(2)} Kč</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', fontWeight: '700', textAlign: 'right' }}>
+                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', fontWeight: '700', textAlign: 'right' }}>
                       {(tItem.tax || 0).toFixed(2)} Kč
                     </td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--accent-emerald)', textAlign: 'right' }}>
@@ -365,7 +365,7 @@ export default function SalesAnalyticsCharts({
                 <tr style={{ borderTop: '2px solid var(--border-color)', fontWeight: '700' }}>
                   <td style={{ textAlign: 'left' }}>CELKEM</td>
                   <td style={{ fontFamily: 'var(--font-mono)', textAlign: 'right' }}>{(totalNetto || 0).toFixed(2)} Kč</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-purple)', textAlign: 'right' }}>{(totalVat || 0).toFixed(2)} Kč</td>
+                  <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', textAlign: 'right' }}>{(totalVat || 0).toFixed(2)} Kč</td>
                   <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', textAlign: 'right' }}>{(totalRevenue || 0).toFixed(2)} Kč</td>
                 </tr>
               </tbody>

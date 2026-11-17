@@ -327,7 +327,7 @@ export default function CustomItemModal({
               display: 'flex',
               flexDirection: 'column',
               padding: '0.45rem 0.75rem',
-              borderRadius: '10px',
+              borderRadius: '6px',
               border: isReturn
                 ? '2px solid var(--accent-rose)'
                 : (hasValidAmount ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)'),

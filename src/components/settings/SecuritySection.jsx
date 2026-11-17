@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Unlock, KeyRound } from 'lucide-react';
+import { Lock, Unlock, KeyRound } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function SecuritySection({
@@ -84,7 +84,6 @@ export default function SecuritySection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <KeyRound size={19} style={{ color: 'var(--accent-amber)' }} />
               <span>{t('settings.security_pin_title') || 'Správa kódu Admin PIN'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -155,7 +154,6 @@ export default function SecuritySection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Shield size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.security_lock_title') || 'Zabezpečení a Uzamčení Pokladny'}</span>
             </h3>
             <p className="settings-section-desc">

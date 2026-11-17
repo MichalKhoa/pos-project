@@ -21,7 +21,7 @@ export default function RecoveryCodeModal({ code, onClose }) {
             letterSpacing: '0.12em',
             margin: '1.25rem 0',
             padding: '0.9rem',
-            borderRadius: '8px',
+            borderRadius: '6px',
             border: '1px dashed var(--accent-amber)',
             background: 'var(--bg-input)',
             userSelect: 'all'

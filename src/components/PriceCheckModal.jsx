@@ -79,7 +79,7 @@ export default function PriceCheckModal({
               style={{
                 width: '36px',
                 height: '36px',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 background: 'var(--accent-blue, #3b82f6)',
                 color: '#ffffff',
                 display: 'flex',
@@ -107,7 +107,7 @@ export default function PriceCheckModal({
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               color: 'var(--text-secondary, #94a3b8)',
               width: '36px',
               height: '36px',
@@ -234,13 +234,13 @@ export default function PriceCheckModal({
                   gap: '0.75rem',
                   background: 'rgba(255, 255, 255, 0.03)',
                   padding: '0.85rem 1rem',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
                 {/* VAT Rate */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Percent size={16} style={{ color: 'var(--accent-purple, #a855f7)' }} />
+                  <Percent size={16} style={{ color: 'var(--text-secondary)' }} />
                   <div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
                       {t('price_check.vat_label')}
@@ -348,7 +348,7 @@ export default function PriceCheckModal({
               padding: '0 1.25rem',
               fontSize: '0.92rem',
               fontWeight: '700',
-              borderRadius: '8px',
+              borderRadius: '6px',
               touchAction: 'manipulation',
               flex: '1'
             }}
@@ -373,7 +373,7 @@ export default function PriceCheckModal({
                 background: '#059669',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -403,7 +403,7 @@ export default function PriceCheckModal({
                   background: '#2563eb',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

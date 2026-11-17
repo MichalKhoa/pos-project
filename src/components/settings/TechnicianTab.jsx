@@ -1,23 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Database,
-  Cpu,
-  ShieldCheck,
-  FileText,
-  Download,
-  Upload,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Archive,
-  Terminal,
-  Search,
-  Filter,
-  Layers,
-  Copy,
-  Check
-} from 'lucide-react';
+import { Download, Upload, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Search, Filter, Layers, Copy, Check } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useConfirm } from '../../context/useConfirm.js';
 import { useStoreConfig } from '../../context/StoreConfigContext.jsx';
@@ -405,7 +387,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Database size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.tech_db_health_title') || 'Stav a integrita databáze'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -503,7 +484,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Cpu size={19} style={{ color: 'var(--accent-purple)' }} />
                 <span>{t('settings.tech_system_health_title') || 'Systémové prostředky a proces'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -626,7 +606,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <ShieldCheck size={19} style={{ color: 'var(--accent-emerald)' }} />
                 <span>{t('settings.tech_eet_health_title') || 'Fiskální certifikát EET 2.0'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -714,7 +693,6 @@ export default function TechnicianTab() {
         <div className="settings-section-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
             <h3 className="settings-section-title">
-              <Terminal size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.tech_logs_title') || 'Živý prohlížeč systémového logu'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -894,7 +872,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Archive size={19} style={{ color: 'var(--accent-emerald)' }} />
                 <span>{t('settings.tech_backup_snapshot_title') || 'Záloha & Obnova SQLite databáze'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -964,7 +941,6 @@ export default function TechnicianTab() {
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <FileText size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.tech_export_bundle_title') || 'Export diagnostického balíčku'}</span>
               </h3>
               <p className="settings-section-desc">

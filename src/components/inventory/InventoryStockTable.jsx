@@ -289,7 +289,7 @@ export default function InventoryStockTable({
                           fontSize: '0.8rem',
                           fontWeight: '700',
                           padding: '1px 6px',
-                          borderRadius: '10px',
+                          borderRadius: '6px',
                           background: isOut ? 'rgba(239, 68, 68, 0.2)' : isLow ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.15)',
                           color: isOut ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : 'var(--accent-emerald)',
                           border: `1px solid ${isOut ? 'rgba(239, 68, 68, 0.4)' : isLow ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.3)'}`

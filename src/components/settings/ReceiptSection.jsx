@@ -1,16 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Receipt,
-  FileText,
-  AlignLeft,
-  QrCode,
-  Printer,
-  CheckCircle,
-  Scissors,
-  Upload,
-  Trash2,
-  Image
-} from 'lucide-react';
+import { Printer, CheckCircle, Upload, Trash2, Image } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import ReceiptPreviewPaper from '../receipt/ReceiptPreviewPaper.jsx';
 import { printReceiptBackend } from '../../api/posApi.js';
@@ -173,7 +162,6 @@ export default function ReceiptSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Scissors size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.receipt_style_title') || 'Oddělovače & Styl Písma'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -357,7 +345,6 @@ export default function ReceiptSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <AlignLeft size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.receipt_header_title') || 'Údaje v Hlavičce Účtenky'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -549,7 +536,6 @@ export default function ReceiptSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <FileText size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.receipt_items_title') || 'Položky Nákupu & Rekapitulace DPH'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -660,7 +646,6 @@ export default function ReceiptSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Printer size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.receipt_print_title') || 'Okraje Papíru & Kódování'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -785,7 +770,6 @@ export default function ReceiptSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <QrCode size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.receipt_qr_footer_title') || 'QR Kód & Text Patičky'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -908,7 +892,6 @@ export default function ReceiptSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.receipt_preview_title') || 'Živý Náhled Účtenky'}</span>
               </h3>
               <p className="settings-section-desc">

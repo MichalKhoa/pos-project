@@ -36,8 +36,8 @@
   --shadow-highlight-glow: none;
 
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
@@ -74,8 +74,8 @@
   --accent-amber-hover: #d97706;
   --accent-rose: #f43f5e;
   --accent-rose-hover: #e11d48;
-  --accent-purple: #7b8aa3;
-  --accent-purple-hover: #94a3b8;
+  --accent-purple: #64748b;
+  --accent-purple-hover: #7b8aa3;
   --accent-indigo: #6366f1;
 
   --text-success: #10b981;

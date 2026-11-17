@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Printer, RefreshCw, Receipt, DollarSign, CheckCircle } from 'lucide-react';
+import { RefreshCw, DollarSign, CheckCircle } from 'lucide-react';
 import { openCashDrawerBackend } from '../../api/posApi.js';
 import { soundFx } from '../../utils/audio.js';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
@@ -51,7 +51,6 @@ export default function PrinterSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <Printer size={19} style={{ color: 'var(--accent-blue)' }} />
               <span>{t('settings.printer_title') || 'Pokladní tiskárna účtenek (ESC/POS)'}</span>
             </h3>
             <p className="settings-section-desc">
@@ -111,7 +110,6 @@ export default function PrinterSection({
           <div className="settings-section-header">
             <div>
               <h3 className="settings-section-title">
-                <Receipt size={19} style={{ color: 'var(--accent-blue)' }} />
                 <span>{t('settings.tab_receipt') || 'Kotouček & Vzhled Účtenky'}</span>
               </h3>
               <p className="settings-section-desc">
@@ -163,7 +161,6 @@ export default function PrinterSection({
         <div className="settings-section-header">
           <div>
             <h3 className="settings-section-title">
-              <DollarSign size={19} style={{ color: 'var(--accent-emerald)' }} />
               <span>{t('settings.drawer_title') || 'Pokladní zásuvka na peníze'}</span>
             </h3>
             <p className="settings-section-desc">

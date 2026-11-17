@@ -68,7 +68,7 @@ export default function SplitPaymentPanel({
             <button
               type="button"
               className="vat-btn"
-              style={{ padding: '0.55rem', fontWeight: '700', background: 'rgba(71, 85, 105, 0.1)', color: 'var(--accent-purple)', borderColor: 'rgba(124, 58, 237, 0.3)' }}
+              style={{ padding: '0.55rem', fontWeight: '700', background: 'rgba(71, 85, 105, 0.1)', color: 'var(--text-secondary)', borderColor: 'rgba(124, 58, 237, 0.3)' }}
               onClick={() => setSplitCashStr((totalAmount / 2).toFixed(0))}
             >
               50% / 50%

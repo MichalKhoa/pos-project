@@ -146,7 +146,7 @@ export default function TouchCalendarModal({
           justify: 'space-between',
           background: 'var(--bg-input)',
           padding: '0.5rem 0.75rem',
-          borderRadius: '16px',
+          borderRadius: '12px',
           border: '1px solid var(--border-color)'
         }}>
           <button
@@ -184,7 +184,7 @@ export default function TouchCalendarModal({
                 padding: '0.35rem 0.75rem',
                 fontSize: '1rem',
                 fontWeight: '700',
-                color: 'var(--accent-purple)',
+                color: 'var(--text-secondary)',
                 borderColor: 'var(--accent-purple)'
               }}
               title="Zobrazit výběr roků"
@@ -220,7 +220,7 @@ export default function TouchCalendarModal({
                   background: idx === viewMonth ? 'var(--accent-blue)' : 'var(--bg-card)',
                   color: idx === viewMonth ? '#ffffff' : 'var(--text-primary)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: '10px',
+                  borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -249,7 +249,7 @@ export default function TouchCalendarModal({
                   background: yr === viewYear ? 'var(--accent-purple)' : 'var(--bg-card)',
                   color: yr === viewYear ? '#ffffff' : 'var(--text-primary)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: '10px',
+                  borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -267,7 +267,7 @@ export default function TouchCalendarModal({
           <div style={{
             background: 'var(--bg-input)',
             padding: '1rem',
-            borderRadius: '16px',
+            borderRadius: '12px',
             border: '1px solid var(--border-color)'
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.2rem', marginBottom: '0.5rem', textAlign: 'center' }}>
@@ -291,7 +291,7 @@ export default function TouchCalendarModal({
                     onClick={() => handleSelectDay(cell.year, cell.month, cell.day)}
                     style={{
                       height: '46px',
-                      borderRadius: '8px',
+                      borderRadius: '6px',
                       border: isSelected
                         ? '2px solid var(--accent-emerald)'
                         : isToday
