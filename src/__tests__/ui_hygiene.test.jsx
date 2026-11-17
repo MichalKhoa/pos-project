@@ -79,7 +79,7 @@ describe('B2B fields (F-025)', () => {
         <PaymentModal
           totalAmount={350}
           initialMethod="cash"
-          storeConfig={DEFAULT_STORE_CONFIG}
+          storeConfig={{ ...DEFAULT_STORE_CONFIG, enableB2bInvoicing: true }}
           onClose={vi.fn()}
           onCompleteSale={vi.fn()}
         />

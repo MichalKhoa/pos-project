@@ -120,7 +120,7 @@ describe('PaymentModal safety (F-002, F-005, F-008, F-022)', () => {
     });
 
     it('is ignored when it comes from a form field', () => {
-      const { onCompleteSale } = renderModal();
+      const { onCompleteSale } = renderModal({ storeConfig: { ...DEFAULT_STORE_CONFIG, enableB2bInvoicing: true } });
       fireEvent.click(screen.getByRole('button', { name: /Firemní faktura/i }));
       const input = screen.getByPlaceholderText('12345678');
       fireEvent.click(screen.getByRole('button', { name: /^Přesně \(/i }));

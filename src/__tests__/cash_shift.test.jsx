@@ -233,7 +233,7 @@ describe('Cash Drawer & Shift Management Tests', () => {
 
     it('warns about unsent sales and needs an extra confirmation before closing (F-015)', async () => {
       posApi.getCurrentShift.mockResolvedValue(mockShift);
-      posApi.closeShift.mockResolvedValue({ status: 'CLOSED', shift_number: 2, z_seq: 15, total_revenue: 5000, shift: { id: 'shift-10' } });
+      posApi.closeShift.mockResolvedValue({ status: 'CLOSED', shift_number: 2, z_seq: 15, total_revenue: 5000, shift: { id: 'shift-10', expected_cash: 5000, actual_cash: 5000, discrepancy: 0 } });
       posApi.printZReport.mockResolvedValue({ success: true });
 
       render(
