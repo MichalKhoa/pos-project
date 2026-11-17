@@ -328,7 +328,7 @@ export default function SalesHistoryView({
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <span>
             <span style={{ color: 'var(--text-muted)' }}>{t('history.revenue')}: </span>
-            <span style={{ color: 'var(--accent-emerald)', fontFamily: 'var(--font-mono)', fontWeight: '900', fontSize: '0.92rem' }}>
+            <span style={{ color: 'var(--accent-emerald)', fontFamily: 'var(--font-mono)', fontWeight: '700', fontSize: '0.92rem' }}>
               {totalRevenue.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč
             </span>
           </span>
@@ -346,7 +346,7 @@ export default function SalesHistoryView({
           </span>
         </div>
 
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
           <Receipt size={13} />
           <span>{totalItems} {pluralWord(t, language, 'shift_stats.receipts', totalItems)}</span>
         </div>

@@ -212,7 +212,7 @@ export default function CalendarModal({
                   <ChevronLeft size={18} />
                 </button>
 
-                <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                   {monthNamesList[month]} {year}
                 </div>
 
@@ -243,8 +243,8 @@ export default function CalendarModal({
                   <div
                     key={wd}
                     style={{
-                      fontSize: '0.75rem',
-                      fontWeight: '800',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
                       color: i >= 5 ? 'var(--accent-rose)' : 'var(--text-muted)',
                       padding: '0.25rem 0'
                     }}
@@ -364,7 +364,7 @@ export default function CalendarModal({
                 padding: '0.65rem 0.85rem',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)',
-                fontSize: '0.75rem',
+                fontSize: '0.8rem',
                 display: 'flex',
                 flexWrap: 'wrap',
                 gap: '0.75rem',
@@ -414,7 +414,7 @@ export default function CalendarModal({
                       <Info size={20} style={{ color: 'var(--accent-blue)' }} />
                     )}
                     <span style={{
-                      fontWeight: '800',
+                      fontWeight: '700',
                       fontSize: '0.95rem',
                       color: selectedDateHoliday.isClosed ? 'var(--accent-rose)' : 'var(--accent-blue)'
                     }}>
@@ -434,7 +434,7 @@ export default function CalendarModal({
                     )}
                   </div>
 
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.75rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '1.75rem' }}>
                     {selectedDateHoliday.isClosed
                       ? t('calendar.closed_desc')
                       : t('calendar.open_desc')}
@@ -449,25 +449,25 @@ export default function CalendarModal({
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)'
               }}>
-                <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700' }}>
+                <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700' }}>
                   {t('calendar.day_summary_title')}
                 </div>
-                <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>
                   {selectedDate.toLocaleDateString(language === 'cs' ? 'cs-CZ' : language === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </div>
 
                 {/* Day Summary Stats Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginTop: '1rem' }}>
                   <div style={{ background: 'var(--bg-card)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>{t('calendar.total_revenue')}</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-emerald)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>{t('calendar.total_revenue')}</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-emerald)', marginTop: '2px' }}>
                       {selectedDayStats.totalRevenue.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč
                     </div>
                   </div>
 
                   <div style={{ background: 'var(--bg-card)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700' }}>{t('calendar.receipt_count')}</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-blue)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>{t('calendar.receipt_count')}</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-blue)', marginTop: '2px' }}>
                       {selectedDayStats.count} ks
                     </div>
                   </div>
@@ -475,7 +475,7 @@ export default function CalendarModal({
                   <div style={{ background: 'var(--bg-card)', padding: '0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Banknote size={16} style={{ color: 'var(--accent-emerald)' }} />
                     <div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('calendar.cash_total')}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('calendar.cash_total')}</div>
                       <div style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                         {selectedDayStats.cashTotal.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč
                       </div>
@@ -485,7 +485,7 @@ export default function CalendarModal({
                   <div style={{ background: 'var(--bg-card)', padding: '0.65rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CreditCard size={16} style={{ color: 'var(--accent-blue)' }} />
                     <div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('calendar.card_total')}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('calendar.card_total')}</div>
                       <div style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                         {selectedDayStats.cardTotal.toLocaleString(language === 'cs' ? 'cs-CZ' : 'en-US')} Kč
                       </div>
@@ -553,7 +553,7 @@ export default function CalendarModal({
                     <button
                       type="button"
                       className="nav-tab"
-                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
                       onClick={() => setIsEditingNote(true)}
                     >
                       {t('calendar.edit_note')}

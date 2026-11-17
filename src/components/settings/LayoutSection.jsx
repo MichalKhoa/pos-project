@@ -303,7 +303,7 @@ export default function LayoutSection({
       {/* 🏷️ Card 3: Preset Catalog Shortcut Banner */}
       <div className="settings-action-banner" style={{ background: 'rgba(99, 102, 241, 0.1)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
         <div>
-          <div style={{ fontSize: '1.05rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '1.05rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
             <Tag size={19} style={{ color: 'var(--accent-blue)' }} />
             <span>{t('settings.preset_catalog_banner_title') || 'Katalog produktů & Tlačítek sortimentu'}</span>
           </div>

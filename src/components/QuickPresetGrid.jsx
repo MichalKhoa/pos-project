@@ -263,7 +263,7 @@ function QuickPresetGrid({
         <div className="section-title">
           <Layers size={18} style={{ color: 'var(--accent-blue)' }} />
           <span>{t('presets.title')}</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
             ({filteredPresets.length})
           </span>
         </div>
@@ -278,7 +278,7 @@ function QuickPresetGrid({
                 padding: '0 0.65rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.8rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
@@ -311,7 +311,7 @@ function QuickPresetGrid({
               background: 'rgba(56, 189, 248, 0.12)',
               color: 'var(--accent-blue, #38bdf8)',
               border: '1px solid rgba(56, 189, 248, 0.35)',
-              fontWeight: '800',
+              fontWeight: '700',
               gap: '0.35rem',
               whiteSpace: 'nowrap',
               flexShrink: 0,
@@ -387,7 +387,7 @@ function QuickPresetGrid({
                 background: isPriceCheckActive ? '#059669' : 'rgba(255,255,255,0.06)',
                 color: isPriceCheckActive ? '#ffffff' : 'var(--accent-emerald, #10b981)',
                 border: isPriceCheckActive ? '1px solid #34d399' : '1px solid rgba(16, 185, 129, 0.3)',
-                fontWeight: '800',
+                fontWeight: '700',
                 gap: '0.35rem',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,

@@ -41,7 +41,7 @@
 
 .settings-sidebar-title {
   font-size: 1.1rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -49,7 +49,7 @@
 }
 
 .settings-sidebar-desc {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: 0.2rem;
 }
@@ -88,7 +88,7 @@
   background: rgba(59, 130, 246, 0.12);
   color: var(--accent-blue);
   border-color: rgba(59, 130, 246, 0.4);
-  font-weight: 800;
+  font-weight: 700;
   box-shadow: 0 1px 4px rgba(59, 130, 246, 0.1);
 }
 
@@ -143,7 +143,7 @@
 
 .settings-content-title {
   font-size: 1.25rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -165,7 +165,7 @@
   padding: 0.4rem 0.85rem;
   border-radius: 999px;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   background: rgba(16, 185, 129, 0.15);
   color: var(--text-success);
   border: 1px solid rgba(16, 185, 129, 0.35);
@@ -220,7 +220,7 @@
 
 .settings-section-title {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -321,7 +321,7 @@
 .settings-segmented-btn.active {
   background: var(--accent-blue);
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
@@ -337,7 +337,7 @@
   min-height: unset;
   height: 26px;
   padding: 0 0.65rem;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   line-height: 1;
 }
 
@@ -364,9 +364,8 @@
 }
 
 .receipt-preview-label {
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 700;
   letter-spacing: 0.4px;
   color: var(--text-secondary);
 }
@@ -381,7 +380,7 @@
 .receipt-preview-chip {
   height: 26px;
   padding: 0 0.6rem;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
@@ -668,7 +667,7 @@
 
 .diag-item-label {
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -676,7 +675,7 @@
 }
 
 .diag-item-detail {
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -689,8 +688,8 @@
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -802,7 +801,7 @@
 
 .locked-title {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }

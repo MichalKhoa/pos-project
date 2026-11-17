@@ -71,10 +71,10 @@ export default function InventoryImportModal({
               <Upload size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {t('inventory.import_preview_title') || 'Import skladových položek z CSV'}
               </h3>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {t('inventory.import_preview_desc') || 'Zkontrolujte souhrn před zápisem do databáze'}
               </p>
             </div>
@@ -132,10 +132,10 @@ export default function InventoryImportModal({
             >
               <RefreshCw size={22} style={{ color: 'var(--accent-blue)' }} />
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
                   {t('inventory.import_to_update') || 'K aktualizaci'}
                 </div>
-                <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--accent-blue)' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--accent-blue)' }}>
                   {toUpdate.length} položek
                 </div>
               </div>
@@ -154,10 +154,10 @@ export default function InventoryImportModal({
             >
               <PackagePlus size={22} style={{ color: 'var(--accent-emerald)' }} />
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
                   {t('inventory.import_to_create') || 'Nových k vytvoření'}
                 </div>
-                <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--accent-emerald)' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--accent-emerald)' }}>
                   {toCreate.length} položek
                 </div>
               </div>
@@ -166,7 +166,7 @@ export default function InventoryImportModal({
 
           {/* Item sample list preview */}
           <div>
-            <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.45rem' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.45rem' }}>
               Náhled položek ({Math.min(5, totalCount)} z {totalCount}):
             </div>
             <div
@@ -190,14 +190,14 @@ export default function InventoryImportModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{p.name}</span>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{p.name}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                       {p.showInPresets ? '📌 Na pokladně' : '🏷️ Pouze sklad'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span style={{ fontWeight: '700', color: 'var(--accent-emerald)' }}>{p.price} Kč</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Skladem: <strong>{p.stockQuantity} ks</strong></span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Skladem: <strong>{p.stockQuantity} ks</strong></span>
                   </div>
                 </div>
               ))}
@@ -248,7 +248,7 @@ export default function InventoryImportModal({
               background: 'var(--accent-emerald)',
               color: '#ffffff',
               fontSize: '0.88rem',
-              fontWeight: '800',
+              fontWeight: '700',
               cursor: isImporting ? 'default' : 'pointer',
               display: 'inline-flex',
               alignItems: 'center',

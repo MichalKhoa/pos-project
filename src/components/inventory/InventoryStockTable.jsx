@@ -144,7 +144,7 @@ export default function InventoryStockTable({
             height: '38px',
             padding: '0 0.85rem',
             fontSize: '0.82rem',
-            fontWeight: '800',
+            fontWeight: '700',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.35rem',
@@ -170,7 +170,7 @@ export default function InventoryStockTable({
             height: '38px',
             padding: '0 1rem',
             fontSize: '0.85rem',
-            fontWeight: '800',
+            fontWeight: '700',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.45rem',
@@ -194,7 +194,7 @@ export default function InventoryStockTable({
       <div className="table-wrapper" style={{ flex: 1, maxHeight: 'calc(100dvh - 165px)', overflowY: 'auto', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', position: 'relative' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-card)' }}>
-            <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', textTransform: 'uppercase', fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+            <tr style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-color)', textTransform: 'uppercase', fontSize: '0.8rem', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
               <th
                 style={{ padding: '0.65rem 0.85rem', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
                 onClick={() => handleSort('name')}
@@ -282,12 +282,12 @@ export default function InventoryStockTable({
               return (
                 <tr key={preset.id} style={{ borderBottom: '1px solid var(--border-color)', background: isOut ? 'rgba(239, 68, 68, 0.05)' : isLow ? 'rgba(245, 158, 11, 0.05)' : 'transparent', transition: 'background 0.15s ease' }}>
                   <td style={{ padding: '0.45rem 0.85rem' }}>
-                    <div style={{ fontWeight: '800', color: 'var(--text-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       <span>{preset.name}</span>
                       {currentTrack && (
                         <span style={{
-                          fontSize: '0.65rem',
-                          fontWeight: '900',
+                          fontSize: '0.8rem',
+                          fontWeight: '700',
                           padding: '1px 6px',
                           borderRadius: '10px',
                           background: isOut ? 'rgba(239, 68, 68, 0.2)' : isLow ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.15)',
@@ -298,7 +298,7 @@ export default function InventoryStockTable({
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
                       <span>{categoryMap[preset.category] || preset.category} • <span style={{ fontWeight: '700', color: 'var(--accent-emerald)' }}>{preset.price} Kč</span> s DPH</span>
                       {cost > 0 && (
                         <span>
@@ -316,8 +316,8 @@ export default function InventoryStockTable({
                           color: 'var(--accent-blue)',
                           cursor: 'pointer',
                           padding: '1px 5px',
-                          fontSize: '0.72rem',
-                          fontWeight: '800',
+                          fontSize: '0.8rem',
+                          fontWeight: '700',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '0.2rem'
@@ -337,8 +337,8 @@ export default function InventoryStockTable({
                       style={{
                         height: '34px',
                         padding: '0 0.65rem',
-                        fontSize: '0.78rem',
-                        fontWeight: '800',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
                         borderRadius: 'var(--radius-sm)',
                         border: isPinned ? '1px solid rgba(59, 130, 246, 0.45)' : '1px solid var(--border-color)',
                         background: isPinned ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-input)',
@@ -378,7 +378,7 @@ export default function InventoryStockTable({
                           const rounded = isNaN(val) ? 0 : Math.round(val * 1000) / 1000;
                           handleStockChange(preset.id, 'stockQuantity', rounded);
                         }}
-                        style={{ width: '70px', height: '38px', textAlign: 'center', fontWeight: '900', fontSize: '1rem', color: isOut ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : 'inherit' }}
+                        style={{ width: '70px', height: '38px', textAlign: 'center', fontWeight: '700', fontSize: '1rem', color: isOut ? 'var(--accent-rose)' : isLow ? 'var(--accent-amber)' : 'inherit' }}
                       />
                       <button
                         type="button"
@@ -399,7 +399,7 @@ export default function InventoryStockTable({
                           key={amt}
                           type="button"
                           className="key-btn"
-                          style={{ height: '32px', padding: '0 0.5rem', fontSize: '0.78rem', fontWeight: '800', aspectRatio: 'auto' }}
+                          style={{ height: '32px', padding: '0 0.5rem', fontSize: '0.8rem', fontWeight: '700', aspectRatio: 'auto' }}
                           onClick={() => handleQuickAddStock(preset, amt)}
                         >
                           +{amt}

@@ -216,7 +216,7 @@ export default function CashDrawerMovementModal({
               <Banknote size={22} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.18rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+              <h2 style={{ fontSize: '1.18rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
                 {t('cash.drawer_movement') || 'Pohyby hotovosti (Vklad / Výběr)'}
               </h2>
               {currentShift && (
@@ -294,7 +294,7 @@ export default function CashDrawerMovementModal({
 
         {/* Preset Reasons Chips */}
         <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
             {t('cash.reason') || 'Důvod / Účel'}:
           </div>
           <div style={{
@@ -369,7 +369,7 @@ export default function CashDrawerMovementModal({
           </span>
           <div style={{
             fontSize: '1.65rem',
-            fontWeight: '900',
+            fontWeight: '700',
             fontFamily: 'var(--font-mono)',
             color: isValid ? activeCfg.color : 'var(--text-muted)'
           }}>
@@ -425,7 +425,7 @@ export default function CashDrawerMovementModal({
                 border: '1px solid var(--border-color)',
                 color: k === 'C' ? 'var(--accent-rose, #ef4444)' : 'var(--text-primary)',
                 fontSize: k === 'BACK' ? '0.88rem' : '1.12rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 display: 'flex',
                 alignItems: 'center',
@@ -502,7 +502,7 @@ export default function CashDrawerMovementModal({
               background: isValid && !isSubmitting ? activeCfg.color : 'rgba(255,255,255,0.1)',
               border: 'none',
               color: '#fff',
-              fontWeight: '800',
+              fontWeight: '700',
               fontSize: '1rem',
               cursor: isValid && !isSubmitting ? 'pointer' : 'not-allowed',
               opacity: isValid && !isSubmitting ? 1 : 0.6,

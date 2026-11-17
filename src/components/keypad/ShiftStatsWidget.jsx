@@ -36,7 +36,7 @@ function ShiftStatsWidget({
       role="status"
       style={{
         fontSize: '0.82rem',
-        fontWeight: '800',
+        fontWeight: '700',
         color: 'var(--accent-amber)',
         background: 'color-mix(in srgb, var(--accent-amber) 12%, transparent)',
         border: '1px solid color-mix(in srgb, var(--accent-amber) 35%, transparent)',
@@ -105,7 +105,7 @@ function ShiftStatsWidget({
 
             <span style={{
               fontSize: '0.86rem',
-              fontWeight: '800',
+              fontWeight: '700',
               color: 'var(--text-primary)',
               letterSpacing: '0.01em'
             }}>
@@ -113,8 +113,8 @@ function ShiftStatsWidget({
             </span>
 
             <span style={{
-              fontSize: '0.78rem',
-              fontWeight: '800',
+              fontSize: '0.8rem',
+              fontWeight: '700',
               color: 'var(--accent-blue)',
               background: 'color-mix(in srgb, var(--accent-blue) 10%, transparent)',
               border: '1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent)',
@@ -129,12 +129,12 @@ function ShiftStatsWidget({
           {/* Right Group: Revenue Preview & Cash/Card Split & Chevron */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-              <span style={{ fontSize: '0.76rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 {t('shift_stats.revenue_short') || 'Tržba:'}
               </span>
               <span style={{
                 fontSize: '1.08rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--accent-emerald)'
               }}>
@@ -219,12 +219,12 @@ function ShiftStatsWidget({
                 borderRadius: 'var(--radius-md)',
                 padding: '0.55rem 0.75rem'
               }}>
-                <div style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {t('shift_stats.today_revenue') || 'Dnešní tržba'}
                 </div>
                 <div style={{
                   fontSize: '1.24rem',
-                  fontWeight: '900',
+                  fontWeight: '700',
                   fontFamily: 'var(--font-mono)',
                   color: 'var(--accent-emerald)',
                   marginTop: '0.15rem'
@@ -240,13 +240,13 @@ function ShiftStatsWidget({
                 borderRadius: 'var(--radius-md)',
                 padding: '0.55rem 0.75rem'
               }}>
-                <div style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Banknote size={13} />
                   <span>{t('shift_stats.cash') || 'Hotovost'}</span>
                 </div>
                 <div style={{
                   fontSize: '1.10rem',
-                  fontWeight: '900',
+                  fontWeight: '700',
                   fontFamily: 'var(--font-mono)',
                   color: 'var(--text-primary)',
                   marginTop: '0.15rem'
@@ -262,13 +262,13 @@ function ShiftStatsWidget({
                 borderRadius: 'var(--radius-md)',
                 padding: '0.55rem 0.75rem'
               }}>
-                <div style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CreditCard size={13} />
                   <span>{t('shift_stats.card') || 'Kartou'}</span>
                 </div>
                 <div style={{
                   fontSize: '1.10rem',
-                  fontWeight: '900',
+                  fontWeight: '700',
                   fontFamily: 'var(--font-mono)',
                   color: 'var(--text-primary)',
                   marginTop: '0.15rem'
@@ -299,7 +299,7 @@ function ShiftStatsWidget({
                       border: '1px solid color-mix(in srgb, var(--accent-emerald) 35%, transparent)',
                       color: 'var(--accent-emerald)',
                       fontSize: '0.88rem',
-                      fontWeight: '800',
+                      fontWeight: '700',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -328,7 +328,7 @@ function ShiftStatsWidget({
                       border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
                       color: 'var(--accent-blue)',
                       fontSize: '0.88rem',
-                      fontWeight: '800',
+                      fontWeight: '700',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -383,7 +383,7 @@ function ShiftStatsWidget({
       >
         <div style={{
           fontSize: '0.82rem',
-          fontWeight: '800',
+          fontWeight: '700',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
           color: 'var(--text-muted)',
@@ -399,7 +399,7 @@ function ShiftStatsWidget({
           {!isExpanded && (
             <span style={{
               fontSize: '0.92rem',
-              fontWeight: '900',
+              fontWeight: '700',
               fontFamily: 'var(--font-mono)',
               color: 'var(--accent-emerald)',
               marginRight: '2px'
@@ -409,8 +409,8 @@ function ShiftStatsWidget({
           )}
 
           <span style={{
-            fontSize: '0.78rem',
-            fontWeight: '800',
+            fontSize: '0.8rem',
+            fontWeight: '700',
             color: 'var(--accent-blue)',
             background: 'color-mix(in srgb, var(--accent-blue) 10%, transparent)',
             border: '1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent)',
@@ -445,12 +445,12 @@ function ShiftStatsWidget({
               padding: '0.55rem 0.75rem',
               gridColumn: 'span 2'
             }}>
-              <div style={{ fontSize: '0.74rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {t('shift_stats.today_revenue') || 'Dnešní tržba celkem'}
               </div>
               <div style={{
                 fontSize: '1.38rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--accent-emerald)',
                 marginTop: '2px'
@@ -466,13 +466,13 @@ function ShiftStatsWidget({
               borderRadius: 'var(--radius-md)',
               padding: '0.5rem 0.65rem'
             }}>
-              <div style={{ fontSize: '0.76rem', fontWeight: '800', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                 <Banknote size={12} />
                 <span>{t('shift_stats.cash') || 'Hotovost'}</span>
               </div>
               <div style={{
                 fontSize: '1.02rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--text-primary)',
                 marginTop: '2px'
@@ -488,13 +488,13 @@ function ShiftStatsWidget({
               borderRadius: 'var(--radius-md)',
               padding: '0.5rem 0.65rem'
             }}>
-              <div style={{ fontSize: '0.76rem', fontWeight: '800', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                 <CreditCard size={12} />
                 <span>{t('shift_stats.card') || 'Kartou'}</span>
               </div>
               <div style={{
                 fontSize: '1.02rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--text-primary)',
                 marginTop: '2px'
@@ -524,7 +524,7 @@ function ShiftStatsWidget({
                     border: '1px solid color-mix(in srgb, var(--accent-emerald) 35%, transparent)',
                     padding: '0.4rem 0.5rem',
                     fontSize: '0.84rem',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     color: 'var(--accent-emerald)',
                     display: 'flex',
                     alignItems: 'center',
@@ -552,7 +552,7 @@ function ShiftStatsWidget({
                     border: '1px solid color-mix(in srgb, var(--accent-blue) 35%, transparent)',
                     padding: '0.4rem 0.5rem',
                     fontSize: '0.84rem',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     color: 'var(--accent-blue)',
                     display: 'flex',
                     alignItems: 'center',

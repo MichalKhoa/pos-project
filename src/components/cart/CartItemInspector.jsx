@@ -233,7 +233,7 @@ export default function CartItemInspector({
                     padding: '0 0.35rem',
                     textAlign: 'center',
                     fontSize: '0.95rem',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     fontFamily: 'var(--font-mono)'
                   }}
                   title={t('inspector.custom_discount') || 'Vlastní %'}
@@ -261,7 +261,7 @@ export default function CartItemInspector({
                   flex: 1,
                   height: '38px',
                   fontFamily: 'var(--font-mono)',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   fontSize: '1.05rem'
                 }}
               />
@@ -305,7 +305,7 @@ export default function CartItemInspector({
             <span style={{
               fontFamily: 'var(--font-mono)',
               fontSize: '1.25rem',
-              fontWeight: '900',
+              fontWeight: '700',
               color: 'var(--accent-emerald)'
             }}>
               {lineTotal.toFixed(2)} Kč
@@ -323,7 +323,7 @@ export default function CartItemInspector({
               height: '42px',
               justifyContent: 'center',
               fontSize: '0.96rem',
-              fontWeight: '800',
+              fontWeight: '700',
               gap: '0.5rem'
             }}
             onClick={() => {

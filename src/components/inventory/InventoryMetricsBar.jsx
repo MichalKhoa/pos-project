@@ -92,7 +92,7 @@ export default function InventoryMetricsBar({
               {Math.round(totalValuation).toLocaleString('cs-CZ')} Kč
             </strong>
             {totalCostValuation > 0 && (
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginLeft: '0.2rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.2rem' }}>
                 (nákup: {Math.round(totalCostValuation).toLocaleString('cs-CZ')} Kč)
               </span>
             )}
@@ -114,7 +114,7 @@ export default function InventoryMetricsBar({
                 border: `1px solid ${showLowStockOnly ? 'var(--accent-amber)' : (lowStockCount > 0 ? 'rgba(245, 158, 11, 0.35)' : 'var(--border-color)')}`,
                 borderRadius: 'var(--radius-sm)',
                 fontSize: '0.84rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
@@ -139,7 +139,7 @@ export default function InventoryMetricsBar({
                 border: '1px solid rgba(239, 68, 68, 0.3)',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: '0.84rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 color: 'var(--accent-rose)'
               }}
             >
@@ -360,7 +360,7 @@ export default function InventoryMetricsBar({
             </button>
           )}
 
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', paddingLeft: '0.4rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', paddingLeft: '0.4rem' }}>
             <CheckCircle2 size={15} style={{ color: 'var(--accent-emerald)' }} />
             <span>{healthyStockCount} {t('inventory.in_stock') || 'v pořádku'}</span>
           </div>

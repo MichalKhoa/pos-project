@@ -63,8 +63,8 @@ export default function SupplierPriceHistoryModal({
             gap: '0.25rem',
             padding: '2px 8px',
             borderRadius: '999px',
-            fontSize: '0.74rem',
-            fontWeight: '800',
+            fontSize: '0.8rem',
+            fontWeight: '700',
             color: 'var(--accent-rose)',
             background: 'rgba(239, 68, 68, 0.15)',
             border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -86,8 +86,8 @@ export default function SupplierPriceHistoryModal({
             gap: '0.25rem',
             padding: '2px 8px',
             borderRadius: '999px',
-            fontSize: '0.74rem',
-            fontWeight: '800',
+            fontSize: '0.8rem',
+            fontWeight: '700',
             color: 'var(--accent-emerald)',
             background: 'rgba(16, 185, 129, 0.15)',
             border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -108,7 +108,7 @@ export default function SupplierPriceHistoryModal({
           gap: '0.25rem',
           padding: '2px 8px',
           borderRadius: '999px',
-          fontSize: '0.74rem',
+          fontSize: '0.8rem',
           fontWeight: '700',
           color: 'var(--text-muted)',
           background: 'var(--bg-input)',
@@ -177,10 +177,10 @@ export default function SupplierPriceHistoryModal({
               <TrendingUp size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 {t('stock_history.modal_title') || 'Historie nákupních cen dodavatelů'}
               </h3>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {preset.name} • {t('stock_history.stock_label') || 'Sklad'}: <strong style={{ color: 'var(--text-primary)' }}>{currentStock} {unit}</strong> • {t('stock_history.vap_cost_label') || 'VAP cena'}: <strong style={{ color: 'var(--accent-emerald)' }}>{Number(currentCost).toFixed(2)} Kč bez DPH</strong>
               </p>
             </div>
@@ -284,10 +284,10 @@ export default function SupplierPriceHistoryModal({
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
+                        <span style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
                           {Number(item.unit_cost || 0).toFixed(2)} Kč
                         </span>
-                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '0.3rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.3rem' }}>
                           / {unit} bez DPH
                         </span>
                       </div>
@@ -310,14 +310,14 @@ export default function SupplierPriceHistoryModal({
                             <span>{item.document_ref}</span>
                           </span>
                         )}
-                        <span style={{ fontWeight: '800', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.1)', padding: '1px 7px', borderRadius: '4px' }}>
+                        <span style={{ fontWeight: '700', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.1)', padding: '1px 7px', borderRadius: '4px' }}>
                           +{item.quantity_delta} {unit}
                         </span>
                       </div>
                     </div>
 
                     {item.note && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                         {item.note}
                       </div>
                     )}

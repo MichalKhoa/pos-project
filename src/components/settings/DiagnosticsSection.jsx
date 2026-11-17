@@ -204,12 +204,12 @@ export default function DiagnosticsSection({
                 <div style={{ marginTop: '3px' }}>
                   IČO: {config.ico || '12345678'} • DIČ: {config.dic || 'CZ12345678'}
                 </div>
-                <div style={{ fontSize: '0.74rem', color: '#6b7280', marginTop: '4px' }}>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '4px' }}>
                   {new Date().toLocaleDateString('cs-CZ')} {new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })} • Pokl: {config.registerNo || '01'}
                 </div>
               </div>
 
-              <div style={{ textAlign: 'center', fontWeight: '800', fontSize: '0.78rem', marginBottom: '0.4rem' }}>
+              <div style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.8rem', marginBottom: '0.4rem' }}>
                 BĚŽNÝ DAŇOVÝ DOKLAD #2026-TEST01
               </div>
 
@@ -238,11 +238,11 @@ export default function DiagnosticsSection({
                 <span>CELKEM</span>
                 <span>153,70 Kč</span>
               </div>
-              <div className="thermal-receipt-row" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+              <div className="thermal-receipt-row" style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
                 <span>Platba: HOTOVOST</span>
                 <span>Přijato: 200,00 Kč</span>
               </div>
-              <div className="thermal-receipt-row" style={{ fontSize: '0.75rem' }}>
+              <div className="thermal-receipt-row" style={{ fontSize: '0.8rem' }}>
                 <span>Vráceno:</span>
                 <span>46,30 Kč</span>
               </div>
@@ -250,7 +250,7 @@ export default function DiagnosticsSection({
               <div className="thermal-receipt-divider" />
 
               {/* VAT Breakdown */}
-              <div style={{ fontSize: '0.72rem', color: '#4b5563' }}>
+              <div style={{ fontSize: '0.8rem', color: '#4b5563' }}>
                 <div className="thermal-receipt-row">
                   <span>Sazba DPH</span>
                   <span>Základ</span>
@@ -272,13 +272,13 @@ export default function DiagnosticsSection({
               {config.bankAccountIban && (
                 <div className="thermal-receipt-qr-wrap">
                   <div className="thermal-receipt-divider" style={{ width: '100%' }} />
-                  <span style={{ fontSize: '0.72rem', fontWeight: '800' }}>QR PLATBA PRO PŘEVOD</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>QR PLATBA PRO PŘEVOD</span>
                   <img
                     src={qrDataUrl}
                     alt="QR Platba SPD"
                     style={{ width: '110px', height: '110px', display: 'block' }}
                   />
-                  <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
                     {formattedIban}
                   </span>
                 </div>
@@ -382,7 +382,7 @@ export default function DiagnosticsSection({
                   <button
                     type="button"
                     className="settings-action-btn"
-                    style={{ padding: '3px 8px', fontSize: '0.75rem', minHeight: '28px', gap: '4px', whiteSpace: 'nowrap' }}
+                    style={{ padding: '3px 8px', fontSize: '0.8rem', minHeight: '28px', gap: '4px', whiteSpace: 'nowrap' }}
                     onClick={handleRestartBackend}
                     disabled={restartingBackend}
                     title="Restartovat backend proces"
@@ -515,22 +515,22 @@ export default function DiagnosticsSection({
               }}
             >
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_gross') || 'Dnešní tržba'}</span>
-                <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-primary)', marginTop: '2px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_gross') || 'Dnešní tržba'}</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>
                   {shiftData?.totalGross !== undefined ? `${shiftData.totalGross.toFixed(0)} Kč` : '0 Kč'}
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_cash') || 'Hotovost'}</span>
-                <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--accent-emerald)', marginTop: '2px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_cash') || 'Hotovost'}</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-emerald)', marginTop: '2px' }}>
                   {shiftData?.cashTotal !== undefined ? `${shiftData.cashTotal.toFixed(0)} Kč` : '0 Kč'}
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-card)', padding: '0.85rem 0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_card_qr') || 'Karta / QR'}</span>
-                <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--accent-purple)', marginTop: '2px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('settings.diag_shift_card_qr') || 'Karta / QR'}</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--accent-purple)', marginTop: '2px' }}>
                   {shiftData ? `${((shiftData.cardTotal || 0) + (shiftData.qrTotal || 0)).toFixed(0)} Kč` : '0 Kč'}
                 </div>
               </div>

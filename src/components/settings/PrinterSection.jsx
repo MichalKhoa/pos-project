@@ -96,7 +96,7 @@ export default function PrinterSection({
             ))}
           </select>
           {currentDev && (
-            <span style={{ fontSize: '0.78rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.8rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
               {currentDev.status === 'CONNECTED' ? (t('settings.printer_status_connected') || 'Připojeno a připraveno k tisku') : (t('settings.printer_status_virtual') || 'Virtuální / offline náhled')}
             </span>
           )}
@@ -152,7 +152,7 @@ export default function PrinterSection({
             <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-blue)', marginBottom: '0.2rem' }}>
               {t('settings.printer_customization_notice_title') || 'Kompletní přizpůsobení účtenky'}
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               {t('settings.printer_customization_notice_desc') || 'Pro nastavení oddělovačů, loga, písma, kontaktů a živého náhledu přepněte v levém menu do záložky Účtenka & Vzhled.'}
             </div>
           </div>

@@ -24,7 +24,7 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <span style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.78rem',
+            fontSize: '0.8rem',
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
             fontWeight: '700',
@@ -100,7 +100,7 @@ export default function PresetColorPicker({ selectedColor, onSelectColor }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.35rem',
-              fontSize: '0.78rem',
+              fontSize: '0.8rem',
               fontWeight: '700',
               transition: 'all 0.15s ease',
               flexShrink: 0

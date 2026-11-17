@@ -51,7 +51,7 @@ export default function PresetIconPicker({
                 background: 'none',
                 border: 'none',
                 color: 'var(--accent-rose)',
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 fontWeight: '700',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -116,7 +116,7 @@ export default function PresetIconPicker({
                 style={{
                   padding: '0.3rem 0.7rem',
                   borderRadius: '14px',
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   fontWeight: '700',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,

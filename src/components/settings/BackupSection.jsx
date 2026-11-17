@@ -393,7 +393,7 @@ export default function BackupSection({
               justifyContent: 'center',
               gap: '0.5rem',
               fontSize: '0.85rem',
-              fontWeight: '800'
+              fontWeight: '700'
             }}
           >
             <Upload size={16} />
@@ -409,7 +409,7 @@ export default function BackupSection({
           <button
             type="button"
             className="clear-cart-btn"
-            style={{ height: '44px', padding: '0 1rem', fontSize: '0.85rem', fontWeight: '800' }}
+            style={{ height: '44px', padding: '0 1rem', fontSize: '0.85rem', fontWeight: '700' }}
             onClick={onResetData}
           >
             <Trash2 size={16} />
@@ -432,7 +432,7 @@ export default function BackupSection({
         )}
 
         {dbBackupStatus?.last_backup_time && (
-          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
             {t('settings.backup_last_time') || 'Poslední SQLite záloha'}: <strong>{new Date(dbBackupStatus.last_backup_time).toLocaleString('cs-CZ')}</strong> ({dbBackupStatus.last_backup_file})
           </div>
         )}
@@ -478,8 +478,8 @@ export default function BackupSection({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <span className="status-badge" style={{
               padding: '0.2rem 0.55rem',
-              fontSize: '0.74rem',
-              fontWeight: '800',
+              fontSize: '0.8rem',
+              fontWeight: '700',
               background: !cloudEnabled
                 ? 'rgba(148, 163, 184, 0.15)'
                 : cloudLastStatus === 'SUCCESS'
@@ -506,7 +506,7 @@ export default function BackupSection({
             </span>
 
             {cloudLastSync && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
                 {t('settings.cloud_backup_last_sync_label') || 'Poslední synchronizace:'}{' '}
                 <strong>{new Date(cloudLastSync).toLocaleString('cs-CZ')}</strong>
               </span>
@@ -514,7 +514,7 @@ export default function BackupSection({
           </div>
 
           {hasSecretKey && (
-            <span style={{ fontSize: '0.74rem', color: 'var(--accent-emerald)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--accent-emerald)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: '700' }}>
               <Lock size={13} />
               <span>AES-256</span>
             </span>
@@ -657,7 +657,7 @@ export default function BackupSection({
             className="nav-tab"
             disabled={cloudTesting}
             onClick={handleTestCloudConnection}
-            style={{ minHeight: '44px', padding: '0 1rem', fontSize: '0.84rem', fontWeight: '800' }}
+            style={{ minHeight: '44px', padding: '0 1rem', fontSize: '0.84rem', fontWeight: '700' }}
           >
             <RefreshCw size={15} className={cloudTesting ? 'spin-icon' : ''} />
             <span>{cloudTesting ? (t('settings.cloud_backup_testing') || 'Testuji...') : (t('settings.cloud_backup_test_btn') || 'Otestovat spojení')}</span>
@@ -668,7 +668,7 @@ export default function BackupSection({
             className="pay-btn pay-btn-card"
             disabled={cloudSaving}
             onClick={() => handleSaveCloudConfig()}
-            style={{ minHeight: '44px', padding: '0 1rem', fontSize: '0.84rem', fontWeight: '800' }}
+            style={{ minHeight: '44px', padding: '0 1rem', fontSize: '0.84rem', fontWeight: '700' }}
           >
             <Check size={16} />
             <span>{cloudSaving ? (t('settings.cloud_backup_saving') || 'Ukládám...') : (t('settings.cloud_backup_save_btn') || 'Uložit nastavení cloudu')}</span>
@@ -683,7 +683,7 @@ export default function BackupSection({
               minHeight: '44px',
               padding: '0 1.15rem',
               fontSize: '0.84rem',
-              fontWeight: '800',
+              fontWeight: '700',
               background: 'var(--accent-blue)',
               color: '#fff',
               opacity: (!cloudEnabled || cloudSyncing) ? 0.6 : 1
@@ -697,7 +697,7 @@ export default function BackupSection({
             type="button"
             className="nav-tab"
             onClick={handleOpenRestoreModal}
-            style={{ minHeight: '44px', padding: '0 1rem', fontSize: '0.84rem', fontWeight: '800', marginLeft: 'auto' }}
+            style={{ minHeight: '44px', padding: '0 1rem', fontSize: '0.84rem', fontWeight: '700', marginLeft: 'auto' }}
           >
             <CloudDownload size={16} />
             <span>{t('settings.cloud_backup_browse_restore_btn') || 'Procházet a obnovit z cloudu'}</span>
@@ -766,7 +766,7 @@ export default function BackupSection({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                  <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                     {t('settings.current_version') || 'Nainstalovaná verze'}: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>v{tauriUpdateInfo?.currentVersion || '1.0.0'}</span>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
@@ -779,7 +779,7 @@ export default function BackupSection({
                   className="nav-tab"
                   disabled={tauriChecking || tauriInstalling}
                   onClick={handleTauriCheck}
-                  style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '800' }}
+                  style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '700' }}
                 >
                   <RefreshCw size={15} className={tauriChecking ? 'spin-icon' : ''} />
                   <span>{tauriChecking ? (t('settings.checking') || 'Kontroluji...') : (t('settings.check_updates') || 'Zkontrolovat aktualizace')}</span>
@@ -838,12 +838,12 @@ export default function BackupSection({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <ArrowDownCircle size={20} style={{ color: 'var(--accent-blue)' }} />
-                      <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                         {t('settings.new_version_available') || 'K dispozici je nová verze'}: <span style={{ color: 'var(--accent-blue)' }}>v{tauriUpdateInfo.version}</span>
                       </span>
                     </div>
                     {tauriUpdateInfo.date && (
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {tauriUpdateInfo.date}
                       </span>
                     )}
@@ -884,7 +884,7 @@ export default function BackupSection({
                           transition: 'width 0.2s ease-in-out'
                         }} />
                       </div>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         {tauriInstallProgress?.total > 0 && (
                           <span>{((tauriInstallProgress.downloaded || 0) / (1024 * 1024)).toFixed(1)} MB / {((tauriInstallProgress.total || 0) / (1024 * 1024)).toFixed(1)} MB — </span>
                         )}
@@ -896,7 +896,7 @@ export default function BackupSection({
                       type="button"
                       className="pay-btn pay-btn-card"
                       onClick={handleTauriInstall}
-                      style={{ height: '44px', fontWeight: '800', fontSize: '0.88rem', justifyContent: 'center' }}
+                      style={{ height: '44px', fontWeight: '700', fontSize: '0.88rem', justifyContent: 'center' }}
                     >
                       <ArrowDownCircle size={18} />
                       <span>{t('settings.download_and_install') || 'Stáhnout a instalovat'}</span>
@@ -915,7 +915,7 @@ export default function BackupSection({
             /* --- WEB / BROWSER RUNTIME FALLBACK --- */
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                <div style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                   {t('settings.current_version') || 'Nainstalovaná verze'}: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{updateData?.current_version?.hash ? `#${updateData.current_version.hash}` : 'VoltFlow POS 1.0.0'}</span>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
@@ -928,7 +928,7 @@ export default function BackupSection({
                 className="nav-tab"
                 disabled={updateLoading}
                 onClick={onCheckUpdate}
-                style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '800' }}
+                style={{ minHeight: '44px', padding: '0 1.25rem', fontSize: '0.85rem', fontWeight: '700' }}
               >
                 <RefreshCw size={15} className={updateLoading ? 'spin-icon' : ''} />
                 <span>{updateLoading ? (t('settings.checking') || 'Kontroluji...') : (t('settings.check_updates') || 'Zkontrolovat aktualizace')}</span>
@@ -1021,14 +1021,14 @@ export default function BackupSection({
                   flexDirection: 'column',
                   gap: '0.75rem'
                 }}>
-                  <div style={{ fontWeight: '800', color: 'var(--accent-amber)', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--accent-amber)', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <AlertCircle size={18} />
                     <span>{t('settings.cloud_backup_confirm_title') || 'Opravdu obnovit databázi z cloudu?'}</span>
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-primary)' }}>
                     <strong>{selectedBackup.filename}</strong> ({formatSize(selectedBackup.size_bytes)})
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     {t('settings.cloud_backup_confirm_desc') || 'Tato operace stáhne vybranou zálohu, provede kontrolu integrity SQLite a nahradí aktuální databázi. Bude vytvořena automatická bezpečnostní záloha.'}
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
@@ -1050,7 +1050,7 @@ export default function BackupSection({
                         minHeight: '40px',
                         padding: '0 1.25rem',
                         fontSize: '0.82rem',
-                        fontWeight: '800',
+                        fontWeight: '700',
                         background: 'var(--accent-amber)',
                         color: '#000'
                       }}
@@ -1063,7 +1063,7 @@ export default function BackupSection({
 
               {/* Backups List */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                   {t('settings.cloud_backup_modal_title') || 'Dostupné zálohy'} ({remoteBackups.length})
                 </span>
                 <button
@@ -1072,7 +1072,7 @@ export default function BackupSection({
                   aria-label="refresh-remote-backups"
                   disabled={remoteLoading}
                   onClick={loadRemoteBackups}
-                  style={{ minHeight: '36px', padding: '0 0.75rem', fontSize: '0.78rem', fontWeight: '700' }}
+                  style={{ minHeight: '36px', padding: '0 0.75rem', fontSize: '0.8rem', fontWeight: '700' }}
                 >
                   <RefreshCw size={14} className={remoteLoading ? 'spin-icon' : ''} />
                   <span>{t('settings.tech_logs_refresh_btn')}</span>
@@ -1112,7 +1112,7 @@ export default function BackupSection({
                         <span style={{ fontWeight: '700', fontSize: '0.86rem', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
                           {item.filename || item.key}
                         </span>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', gap: '0.75rem' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '0.75rem' }}>
                           <span>{formatSize(item.size_bytes)}</span>
                           {item.last_modified && (
                             <span>{new Date(item.last_modified).toLocaleString('cs-CZ')}</span>
@@ -1127,7 +1127,7 @@ export default function BackupSection({
                         data-testid="restore-backup-btn"
                         disabled={restoring}
                         onClick={() => handleSelectBackupToRestore(item)}
-                        style={{ height: '38px', padding: '0 1rem', fontSize: '0.8rem', fontWeight: '800', flexShrink: 0 }}
+                        style={{ height: '38px', padding: '0 1rem', fontSize: '0.8rem', fontWeight: '700', flexShrink: 0 }}
                       >
                         <CloudDownload size={14} />
                         <span>{t('settings.cloud_backup_modal_restore_btn') || 'Obnovit'}</span>

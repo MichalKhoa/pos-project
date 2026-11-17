@@ -458,7 +458,7 @@ function Cart({
                   <div className="cart-item-name-group" style={{ flexWrap: 'wrap' }}>
                     <span className="cart-item-name-text">
                       {isItemReturn && (
-                        <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.84rem', fontWeight: '900', marginRight: '5px' }}>
+                        <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.84rem', fontWeight: '700', marginRight: '5px' }}>
                           ↩️ VRATKA
                         </span>
                       )}
@@ -522,16 +522,16 @@ function Cart({
                     {isItemWeighted ? (
                       <span>
                         {formatQty(item.quantity)} {item.unit || 'kg'} × {effectiveUnitPrice.toFixed(2)} Kč = {lineTotal.toFixed(2)} Kč
-                        <span style={{ opacity: 0.6, fontSize: '0.78rem' }}> ({t('cart.vat')} {itemVat}%)</span>
+                        <span style={{ opacity: 0.6, fontSize: '0.8rem' }}> ({t('cart.vat')} {itemVat}%)</span>
                       </span>
                     ) : (
                       <>
                         {itemDisc > 0 ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <s style={{ opacity: 0.5, fontSize: '0.72rem' }}>
+                            <s style={{ opacity: 0.5, fontSize: '0.8rem' }}>
                               {parseFloat(item.price).toFixed(2)} Kč
                             </s>
-                            <span style={{ color: isItemReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '800' }}>
+                            <span style={{ color: isItemReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '700' }}>
                               {effectiveUnitPrice.toFixed(2)} Kč
                             </span>
                           </span>
@@ -639,7 +639,7 @@ function Cart({
             style={{
               height: '42px',
               fontSize: '0.84rem',
-              fontWeight: '800',
+              fontWeight: '700',
               background: 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)',
               color: 'var(--text-secondary)',
               border: '1px solid color-mix(in srgb, var(--border-color) 75%, transparent)',

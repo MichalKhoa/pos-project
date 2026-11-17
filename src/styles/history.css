@@ -72,7 +72,7 @@
   font-weight: 700;
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .stock-badge-out {
@@ -82,7 +82,7 @@
   font-weight: 700;
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .stock-badge-ok {
@@ -92,7 +92,7 @@
   font-weight: 700;
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 /* History Analytics Cards Grid */
@@ -168,7 +168,7 @@
 .metric-value {
   font-family: var(--font-mono);
   font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -196,8 +196,6 @@
   background: var(--bg-input);
   font-size: 0.8rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--text-secondary);
 }
 
@@ -259,7 +257,7 @@
 
 .multi-period-title {
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -267,7 +265,7 @@
 }
 
 .multi-period-badge {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
   background: var(--bg-input);
@@ -309,7 +307,7 @@
 
 .period-card-title-group h4 {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   margin: 0;
   color: var(--text-primary);
 }
@@ -324,13 +322,13 @@
 
 .period-card-total strong {
   font-size: 1.25rem;
-  font-weight: 900;
+  font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-primary);
 }
 
 .period-avg-tag {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -385,7 +383,7 @@
 }
 
 .period-row-label.highlight {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -398,13 +396,13 @@
 
 .period-row-amount {
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-primary);
 }
 
 .period-row-count-badge {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
   background: var(--bg-input);

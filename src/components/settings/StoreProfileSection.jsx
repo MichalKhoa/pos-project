@@ -190,7 +190,7 @@ export default function StoreProfileSection({
             onBlur={e => handleBlurField('defaultMarginCoefficient', parseFloat(e.target.value) || 1.30)}
             style={{ fontFamily: 'var(--font-mono)' }}
           />
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {t('settings.default_margin_desc') || 'např. 1.30 pro 30% obchodní přirážku'}
           </span>
         </div>
@@ -208,7 +208,7 @@ export default function StoreProfileSection({
             onBlur={e => handleBlurField('bankAccountIban', formatIban(e.target.value))}
             style={{ fontFamily: 'var(--font-mono)' }}
           />
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {t('settings.store_iban_desc') || 'Z tohoto účtu se automaticky generují QR kódy na zákaznickém displeji pro okamžitou platbu mobilem.'}
           </span>
         </div>

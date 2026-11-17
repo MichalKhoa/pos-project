@@ -115,7 +115,7 @@ export default function OpenPriceModal({
       >
         {/* Modal Header */}
         <div className="modal-header" style={{ padding: '0.75rem 1rem' }}>
-          <div className="modal-title" style={{ fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <div className="modal-title" style={{ fontSize: '1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <Tag size={17} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {openPriceTarget.name}
@@ -150,8 +150,8 @@ export default function OpenPriceModal({
             {/* Header row: mode indicator & multiplier pill */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{
-                fontSize: '0.64rem',
-                fontWeight: '800',
+                fontSize: '0.8rem',
+                fontWeight: '700',
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)'
@@ -161,8 +161,8 @@ export default function OpenPriceModal({
 
               {openPriceQty !== 1 && (
                 <span style={{
-                  fontSize: '0.64rem',
-                  fontWeight: '800',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
                   color: isReturn ? 'var(--accent-rose)' : 'var(--accent-amber)',
                   background: isReturn ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
                   padding: '1px 5px',
@@ -183,7 +183,7 @@ export default function OpenPriceModal({
             }}>
               <div style={{
                 fontSize: '1.45rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 color: isReturn
                   ? 'var(--accent-rose)'
@@ -224,9 +224,9 @@ export default function OpenPriceModal({
             {/* Total calculation preview when qty > 1 */}
             {openPriceQty !== 1 && hasValidAmount && (
               <div style={{
-                fontSize: '0.76rem',
+                fontSize: '0.8rem',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
-                fontWeight: '800',
+                fontWeight: '700',
                 marginTop: '1px'
               }}>
                 {isReturn ? '↩️ Vratka celkem: ' : '= Celkem: '}
@@ -259,7 +259,7 @@ export default function OpenPriceModal({
                 color: '#ffffff',
                 border: 'none',
                 fontSize: '0.96rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -303,7 +303,7 @@ export default function OpenPriceModal({
                 color: '#ffffff',
                 border: 'none',
                 fontSize: '0.96rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -355,7 +355,7 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn key-action"
-              style={{ fontSize: '1.15rem', fontWeight: '900' }}
+              style={{ fontSize: '1.15rem', fontWeight: '700' }}
               onClick={handleClear}
               title="Smazat vše (Clear)"
             >
@@ -376,7 +376,7 @@ export default function OpenPriceModal({
             <button
               type="button"
               className="key-btn"
-              style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-blue)' }}
+              style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--accent-blue)' }}
               onClick={handleComma}
               title="Čárka"
             >
@@ -403,7 +403,7 @@ export default function OpenPriceModal({
               className={`key-btn ${isReturn ? 'active-return' : ''}`}
               style={{
                 fontSize: '1.45rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
                 background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
                 borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
@@ -418,7 +418,7 @@ export default function OpenPriceModal({
               className="key-btn key-action"
               style={{
                 fontSize: '1.45rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 color: openPriceQty > 1 ? '#fff' : 'var(--accent-amber)',
                 background: openPriceQty > 1 ? '#d97706' : undefined
               }}
@@ -456,7 +456,7 @@ export default function OpenPriceModal({
                 minHeight: '52px',
                 aspectRatio: 'auto',
                 fontSize: '1.05rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 gap: '0.5rem',
                 background: isReturn && hasValidAmount
                   ? '#dc2626'

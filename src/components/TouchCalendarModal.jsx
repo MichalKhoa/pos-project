@@ -118,7 +118,7 @@ export default function TouchCalendarModal({
       >
         {/* Modal Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '1.15rem', fontWeight: '700', color: 'var(--accent-blue)' }}>
             <Calendar size={22} />
             <span>{title}</span>
           </div>
@@ -167,7 +167,7 @@ export default function TouchCalendarModal({
               style={{
                 padding: '0.35rem 0.75rem',
                 fontSize: '1rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 color: 'var(--accent-blue)',
                 borderColor: 'var(--accent-blue)'
               }}
@@ -183,7 +183,7 @@ export default function TouchCalendarModal({
               style={{
                 padding: '0.35rem 0.75rem',
                 fontSize: '1rem',
-                fontWeight: '800',
+                fontWeight: '700',
                 color: 'var(--accent-purple)',
                 borderColor: 'var(--accent-purple)'
               }}
@@ -216,7 +216,7 @@ export default function TouchCalendarModal({
                 style={{
                   height: '52px',
                   fontSize: '0.95rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   background: idx === viewMonth ? 'var(--accent-blue)' : 'var(--bg-card)',
                   color: idx === viewMonth ? '#ffffff' : 'var(--text-primary)',
                   border: '1px solid var(--border-color)',
@@ -245,7 +245,7 @@ export default function TouchCalendarModal({
                 style={{
                   height: '52px',
                   fontSize: '1.05rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   background: yr === viewYear ? 'var(--accent-purple)' : 'var(--bg-card)',
                   color: yr === viewYear ? '#ffffff' : 'var(--text-primary)',
                   border: '1px solid var(--border-color)',
@@ -272,7 +272,7 @@ export default function TouchCalendarModal({
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.2rem', marginBottom: '0.5rem', textAlign: 'center' }}>
               {WEEKDAY_NAMES.map(w => (
-                <div key={w} style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)' }}>
+                <div key={w} style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>
                   {w}
                 </div>
               ))}
@@ -334,7 +334,7 @@ export default function TouchCalendarModal({
             style={{
               flex: 1,
               height: '46px',
-              fontWeight: '800',
+              fontWeight: '700',
               fontSize: '0.92rem',
               display: 'flex',
               alignItems: 'center',

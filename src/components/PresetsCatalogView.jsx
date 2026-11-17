@@ -182,17 +182,17 @@ export default function PresetsCatalogView({
                       <td style={{ fontWeight: '700', fontSize: '0.95rem' }}>
                         {preset.name}
                         {preset.isGeneralPreset && (
-                          <span style={{ fontSize: '0.68rem', fontWeight: '600', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--accent-blue)', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
                             {t('presets.general_badge') || 'Druh zboží'}
                           </span>
                         )}
                       </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', color: preset.isOpenPrice ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontWeight: '800', fontSize: '1rem' }}>
+                      <td style={{ fontFamily: 'var(--font-mono)', color: preset.isOpenPrice ? 'var(--accent-amber)' : 'var(--accent-emerald)', fontWeight: '700', fontSize: '1rem' }}>
                         {preset.isOpenPrice ? 'Otevřená' : `${preset.price} Kč`}
                       </td>
                       <td>
                         {preset.isOpenPrice ? (
-                          <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.3)', padding: '2px 8px', fontSize: '0.75rem' }}>
+                          <span className="status-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.3)', padding: '2px 8px', fontSize: '0.8rem' }}>
                             <Calculator size={12} /> Zadá se na pokladně
                           </span>
                         ) : (
@@ -276,8 +276,8 @@ export default function PresetsCatalogView({
                         color: 'var(--accent-blue)',
                         cursor: 'pointer',
                         padding: '2px 6px',
-                        fontSize: '0.72rem',
-                        fontWeight: '800',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.2rem'

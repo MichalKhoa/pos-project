@@ -110,7 +110,7 @@ export default function SalesPeriodBar({
               title="Přejít na přesné datum v kalendáři"
             >
               <Calendar size={14} style={{ color: 'var(--accent-emerald)' }} />
-              <span style={{ fontWeight: '800', fontSize: '0.82rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+              <span style={{ fontWeight: '700', fontSize: '0.82rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                 {periodBadgeLabel}
               </span>
             </div>
@@ -150,7 +150,7 @@ export default function SalesPeriodBar({
                 background: 'var(--accent-blue)',
                 color: '#ffffff',
                 borderRadius: 'var(--radius-md)',
-                fontWeight: '800',
+                fontWeight: '700',
                 fontSize: '0.9rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -177,7 +177,7 @@ export default function SalesPeriodBar({
                   color: 'var(--text-primary)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.88rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.4rem',
@@ -187,7 +187,7 @@ export default function SalesPeriodBar({
                 <span>OD: {fromDate ? fromDate.split('-').reverse().join('. ') : 'Vybrat'}</span>
               </button>
 
-              <span style={{ color: 'var(--text-muted)', fontWeight: '800' }}>➔</span>
+              <span style={{ color: 'var(--text-muted)', fontWeight: '700' }}>➔</span>
 
               <button
                 type="button"
@@ -201,7 +201,7 @@ export default function SalesPeriodBar({
                   color: 'var(--text-primary)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.88rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.4rem',
@@ -255,7 +255,7 @@ export default function SalesPeriodBar({
             </button>
           </div>
 
-          <span className="status-badge" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', fontWeight: '800', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+          <span className="status-badge" style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', fontWeight: '700', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
             {totalMatchingSales} transakcí
           </span>
         </div>

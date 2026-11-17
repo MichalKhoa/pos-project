@@ -211,7 +211,7 @@ export default function ZReportModal({
               </div>
 
               <div>
-                <h3 style={{ fontSize: '1.24rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 0.4rem 0' }}>
+                <h3 style={{ fontSize: '1.24rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 0.4rem 0' }}>
                   {t('z_report.closed_success') || 'Z-Uzávěrka byla úspěšně provedena.'}
                 </h3>
                 <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -232,22 +232,22 @@ export default function ZReportModal({
                 fontFamily: 'var(--font-mono)'
               }}>
                 <div>
-                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Očekáváno:</div>
-                  <div style={{ fontSize: '0.98rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Očekáváno:</div>
+                  <div style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                     {closedReport.shift.expected_cash.toLocaleString('cs-CZ')} Kč
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Skutečnost:</div>
-                  <div style={{ fontSize: '0.98rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Skutečnost:</div>
+                  <div style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                     {closedReport.shift.actual_cash.toLocaleString('cs-CZ')} Kč
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Rozdíl:</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rozdíl:</div>
                   <div style={{
                     fontSize: '0.98rem',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     color: closedReport.shift.discrepancy === 0
                       ? 'var(--accent-emerald)'
                       : (closedReport.shift.discrepancy > 0 ? 'var(--accent-amber)' : 'var(--accent-rose)')
@@ -292,7 +292,7 @@ export default function ZReportModal({
                   background: 'var(--accent-blue)',
                   border: 'none',
                   color: '#ffffff',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)'
                 }}
@@ -312,8 +312,8 @@ export default function ZReportModal({
                 padding: '0.75rem 0.95rem'
               }}>
                 <div style={{
-                  fontSize: '0.76rem',
-                  fontWeight: '800',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
                   color: 'var(--text-muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
@@ -353,7 +353,7 @@ export default function ZReportModal({
                     marginTop: '0.2rem',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     fontSize: '0.98rem'
                   }}>
                     <span style={{ color: 'var(--text-primary)' }}>{t('z_report.expected_cash') || 'Očekáváno v pokladně:'}</span>
@@ -366,8 +366,8 @@ export default function ZReportModal({
               <div>
                 <label
                   style={{
-                    fontSize: '0.76rem',
-                    fontWeight: '800',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
                     color: 'var(--text-muted)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
@@ -394,7 +394,7 @@ export default function ZReportModal({
                   </span>
                   <span style={{
                     fontSize: '1.65rem',
-                    fontWeight: '900',
+                    fontWeight: '700',
                     fontFamily: 'var(--font-mono)',
                     color: 'var(--text-primary)'
                   }}>
@@ -410,7 +410,7 @@ export default function ZReportModal({
                   alignItems: 'center',
                   gap: '0.5rem',
                   fontSize: '0.88rem',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   background: !isCounted
                     ? 'var(--bg-card)'
                     : isDiscrepancyZero
@@ -463,7 +463,7 @@ export default function ZReportModal({
                         ? 'var(--accent-rose)'
                         : (k === 'BACK' ? 'var(--accent-amber)' : 'var(--text-primary)'),
                       fontSize: k === 'BACK' ? '0.88rem' : '1.14rem',
-                      fontWeight: '800',
+                      fontWeight: '700',
                       fontFamily: 'var(--font-mono)',
                       display: 'flex',
                       alignItems: 'center',
@@ -581,7 +581,7 @@ export default function ZReportModal({
                   background: 'var(--accent-blue)',
                   border: 'none',
                   color: '#ffffff',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   fontSize: '0.96rem',
                   cursor: canClose ? 'pointer' : 'not-allowed',
                   opacity: canClose ? 1 : 0.6,

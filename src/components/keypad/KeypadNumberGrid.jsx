@@ -107,7 +107,7 @@ export default function KeypadNumberGrid({
         onClick={() => onKeyPress('±')}
         style={{
           color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
-          fontWeight: '900',
+          fontWeight: '700',
           fontSize: '1.45rem',
           background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
           borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
@@ -138,7 +138,7 @@ export default function KeypadNumberGrid({
         }}
         style={{
           color: itemMultiplier > 1 ? '#fff' : 'var(--accent-amber)',
-          fontWeight: '900',
+          fontWeight: '700',
           fontSize: '1.45rem',
           background: itemMultiplier > 1 ? '#d97706' : undefined
         }}

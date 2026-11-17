@@ -8,7 +8,7 @@
 
 .section-title {
   font-size: 1.12rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -65,7 +65,7 @@
   background: transparent;
   color: var(--text-primary);
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   outline: none;
   padding: 0 0.25rem;
 }
@@ -203,7 +203,7 @@
   border: 1.5px dashed rgba(168, 85, 247, 0.5);
   border-radius: 999px;
   color: #c084fc;
-  font-weight: 800;
+  font-weight: 700;
 }
 .category-chip-manage:hover {
   background: rgba(168, 85, 247, 0.18);
@@ -293,7 +293,7 @@
   font-size: 1.05rem;
 }
 .preset-grid.density-compact .preset-vat-text {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .preset-grid.density-standard {
@@ -383,7 +383,7 @@
 }
 .preset-card.style-color-fill .preset-name {
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .preset-card.style-color-fill .preset-corner-icon {
@@ -392,7 +392,7 @@
 }
 .preset-card.style-color-fill .preset-price {
   color: #ffffff;
-  font-weight: 900;
+  font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .preset-card.style-color-fill .preset-vat-text {
@@ -436,7 +436,7 @@
   color: var(--card-accent, var(--accent-blue));
 }
 .preset-card.style-modern-card .preset-price {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -476,7 +476,7 @@
   color: var(--card-accent, var(--accent-blue));
 }
 .preset-card.style-modern-glass .preset-price {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
 }
 .preset-card.style-modern-glass .preset-vat-text {
@@ -505,7 +505,7 @@
   background: #d97706;
   color: #ffffff;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 2px 6px;
   border-radius: 5px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
@@ -520,8 +520,8 @@
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
   line-height: 1.1;
   padding: 2px 6px;
   border-radius: 4px;
@@ -546,7 +546,7 @@
 }
 
 .preset-grid.density-compact .preset-stock-badge {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   padding: 1px 4px;
   margin-top: 1px;
   margin-bottom: 1px;
@@ -688,7 +688,7 @@
   border: 1px solid rgba(168, 85, 247, 0.4);
   border-radius: var(--radius-sm);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -713,7 +713,7 @@
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -737,7 +737,7 @@
 .preset-price {
   font-family: var(--font-mono);
   font-size: 1.16rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-success);
   line-height: 1.15;
 }
@@ -828,7 +828,7 @@ select.input-field:focus {
 .keypad-amount-display {
   font-family: var(--font-mono);
   font-size: 1.75rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-success);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
@@ -915,7 +915,7 @@ select.input-field:focus {
   border-radius: var(--radius-sm);
   padding: 0.25rem 0.5rem;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -943,7 +943,7 @@ select.input-field:focus {
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: background-color 0.05s ease, border-color 0.05s ease;
   user-select: none;
@@ -973,7 +973,7 @@ select.input-field:focus {
   color: #ffffff;
   border-color: var(--accent-blue);
   box-shadow: 0 1px 4px rgba(59, 130, 246, 0.35);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .keypad-stepper-bar {
@@ -1006,7 +1006,7 @@ select.input-field:focus {
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 1.18rem;
-  font-weight: 900;
+  font-weight: 700;
   user-select: none;
   cursor: default;
   box-sizing: border-box;
@@ -1038,7 +1038,7 @@ select.input-field:focus {
   min-height: 58px;
   height: 100%;
   font-size: 1.75rem;
-  font-weight: 900;
+  font-weight: 700;
   font-family: var(--font-mono);
   background: var(--bg-card);
   color: var(--text-primary);
@@ -1119,7 +1119,7 @@ select.input-field:focus {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: 1.22rem;
-  font-weight: 800;
+  font-weight: 700;
   gap: 0.6rem;
   cursor: not-allowed;
   opacity: 0.65;
@@ -1175,7 +1175,7 @@ select.input-field:focus {
 
 .cart-title {
   font-size: 1.22rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1184,7 +1184,7 @@ select.input-field:focus {
 
 .clear-cart-btn {
   font-size: 0.94rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-secondary);
   background: color-mix(in srgb, var(--text-primary) 3%, transparent);
   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
@@ -1326,7 +1326,7 @@ select.input-field:focus {
 }
 
 .last-receipt-chip-count-badge {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-secondary);
@@ -1399,7 +1399,7 @@ select.input-field:focus {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -1409,10 +1409,10 @@ select.input-field:focus {
 }
 
 .last-receipt-popover-badge {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-family: var(--font-mono);
   color: var(--accent-blue);
-  font-weight: 800;
+  font-weight: 700;
   background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-blue) 25%, transparent);
   padding: 2px 7px;
@@ -1448,19 +1448,19 @@ select.input-field:focus {
 
 .last-receipt-value.amount {
   font-family: var(--font-mono);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.9rem;
   color: var(--text-primary);
 }
 
 .last-receipt-value.time {
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .last-receipt-value.payment {
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -1479,17 +1479,16 @@ select.input-field:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-secondary);
-  text-transform: uppercase;
   letter-spacing: 0.03em;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
 .last-receipt-items-count-tag {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
 }
@@ -1513,9 +1512,9 @@ select.input-field:focus {
 
 .last-receipt-item-qty {
   font-family: var(--font-mono);
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent-blue);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   flex-shrink: 0;
   min-width: 18px;
 }
@@ -1523,7 +1522,7 @@ select.input-field:focus {
 .last-receipt-item-name {
   flex: 1;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1551,7 +1550,7 @@ select.input-field:focus {
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1630,7 +1629,7 @@ select.input-field:focus {
   color: #ffffff;
   border-radius: 999px;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 0.15rem 0.55rem;
   display: inline-flex;
   align-items: center;
@@ -1779,7 +1778,7 @@ select.input-field:focus {
 
 .cart-item-name-text {
   font-size: 1.06rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -1854,7 +1853,7 @@ select.input-field:focus {
 .cart-stepper-num {
   font-family: var(--font-mono);
   font-size: 1.14rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   padding: 0 0.65rem;
   min-width: 28px;
@@ -1924,13 +1923,13 @@ select.input-field:focus {
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 0.84rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .cart-item-line-total-price {
   font-family: var(--font-mono);
   font-size: 1.18rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-success);
   text-align: right;
 }
@@ -1974,7 +1973,7 @@ select.input-field:focus {
   border-radius: var(--radius-sm);
   padding: 0.3rem 0.6rem;
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
@@ -2051,9 +2050,7 @@ select.input-field:focus {
 
 .total-hero-title {
   font-size: 0.88rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-weight: 700;
   color: var(--text-secondary);
 }
 
@@ -2070,7 +2067,7 @@ select.input-field:focus {
 .total-hero-amount {
   font-family: var(--font-mono);
   font-size: 1.9rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -2097,7 +2094,7 @@ select.input-field:focus {
   justify-content: center;
   gap: 0.5rem;
   font-size: 1.14rem;
-  font-weight: 900;
+  font-weight: 700;
   border-radius: var(--radius-md);
   border: none;
   color: #ffffff;
@@ -2237,7 +2234,7 @@ select.input-field:focus {
 
 .inspector-title {
   font-size: 1.08rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -2286,9 +2283,7 @@ select.input-field:focus {
 
 .inspector-section-label {
   font-size: 0.84rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 700;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -2308,7 +2303,7 @@ select.input-field:focus {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2332,7 +2327,7 @@ select.input-field:focus {
   background: var(--accent-amber);
   color: #000000;
   border-color: var(--accent-amber);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .inspector-footer {
@@ -2425,7 +2420,7 @@ select.input-field:focus {
   }
 
   .preset-vat-text {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
   }
 
   /* Manual Keypad Ergonomics */
@@ -2574,7 +2569,7 @@ select.input-field:focus {
   }
 
   .total-hero-title {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
   }
 
   .total-hero-amount {

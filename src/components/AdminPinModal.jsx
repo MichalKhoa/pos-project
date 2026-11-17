@@ -198,7 +198,7 @@ export default function AdminPinModal({
 
         <div style={{ marginBottom: '1.25rem' }}>
           <img src={voltflowLogo} alt="VoltFlow POS" style={{ width: '44px', height: '44px', margin: '0 auto 0.5rem auto', display: 'block' }} />
-          <div style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             {getStepTitle()}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
@@ -235,7 +235,7 @@ export default function AdminPinModal({
         )}
 
         {successMsg && (
-          <div style={{ color: 'var(--accent-emerald)', fontSize: '0.88rem', fontWeight: '800', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+          <div style={{ color: 'var(--accent-emerald)', fontSize: '0.88rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
             <Check size={16} />
             <span>{successMsg}</span>
           </div>
@@ -248,7 +248,7 @@ export default function AdminPinModal({
               key={num}
               type="button"
               className="key-btn"
-              style={{ height: '66px', fontSize: '1.5rem', fontWeight: '900' }}
+              style={{ height: '66px', fontSize: '1.5rem', fontWeight: '700' }}
               onClick={() => handleNumClick(num)}
             >
               {num}
@@ -257,7 +257,7 @@ export default function AdminPinModal({
           <button
             type="button"
             className="key-btn key-action"
-            style={{ height: '66px', fontSize: '1.15rem', fontWeight: '800' }}
+            style={{ height: '66px', fontSize: '1.15rem', fontWeight: '700' }}
             onClick={handleClear}
           >
             C
@@ -265,7 +265,7 @@ export default function AdminPinModal({
           <button
             type="button"
             className="key-btn"
-            style={{ height: '66px', fontSize: '1.5rem', fontWeight: '900' }}
+            style={{ height: '66px', fontSize: '1.5rem', fontWeight: '700' }}
             onClick={() => handleNumClick('0')}
           >
             0
@@ -273,7 +273,7 @@ export default function AdminPinModal({
           <button
             type="button"
             className="key-btn key-action"
-            style={{ height: '66px', fontSize: '1.3rem', fontWeight: '800' }}
+            style={{ height: '66px', fontSize: '1.3rem', fontWeight: '700' }}
             onClick={handleBackspace}
           >
             ⌫
@@ -286,7 +286,7 @@ export default function AdminPinModal({
             className="btn-primary"
             disabled={enteredPin.length < 4 || isVerifying}
             onClick={handleNextStep}
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '700' }}
           >
             {t('lock_screen.confirm_pin')}
           </button>
@@ -298,7 +298,7 @@ export default function AdminPinModal({
             className="btn-primary"
             disabled={newPin.length < 4}
             onClick={handleNextStep}
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '800' }}
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '700' }}
           >
             Pokračovat na potvrdit ↵
           </button>

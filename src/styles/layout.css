@@ -131,8 +131,8 @@ input, textarea, [contenteditable="true"] {
   color: var(--text-warning);
   border-radius: 9999px;
   padding: 0.2rem 0.5rem 0.2rem 0.6rem;
-  font-size: 0.76rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
   user-select: none;
@@ -150,7 +150,7 @@ input, textarea, [contenteditable="true"] {
 
 .technician-timer {
   font-family: monospace;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   letter-spacing: 0.5px;
   background: rgba(0, 0, 0, 0.15);
   padding: 1px 4px;
@@ -348,8 +348,8 @@ input, textarea, [contenteditable="true"] {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.8rem;
+  font-weight: 700;
   line-height: 1;
   background: var(--accent-highlight, var(--accent-indigo));
   color: var(--accent-highlight-text, #ffffff);
@@ -384,21 +384,21 @@ input, textarea, [contenteditable="true"] {
 
 .nav-clock-time {
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .nav-clock-dot {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   opacity: 0.6;
   user-select: none;
 }
 
 .nav-clock-date {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: capitalize;
@@ -460,7 +460,7 @@ input, textarea, [contenteditable="true"] {
 
 .brand-name {
   font-size: 1.05rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
   white-space: nowrap;
@@ -468,7 +468,7 @@ input, textarea, [contenteditable="true"] {
 
 .brand-title {
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
   white-space: nowrap;
@@ -476,7 +476,7 @@ input, textarea, [contenteditable="true"] {
 }
 
 .brand-subtitle {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--text-success);
   font-weight: 700;
   white-space: nowrap;
@@ -654,7 +654,7 @@ input, textarea, [contenteditable="true"] {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   padding: 0 0.65rem;
   height: 40px;
@@ -671,7 +671,7 @@ input, textarea, [contenteditable="true"] {
 .nav-badge-eet {
   padding: 0 0.5rem;
   gap: 0.35rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   letter-spacing: 0.01em;
 }
 
@@ -1036,12 +1036,12 @@ input, textarea, [contenteditable="true"] {
   }
 
   .nav-status-indicator {
-    font-size: 0.76rem;
+    font-size: 0.8rem;
   }
 
   .nav-technician-badge {
     padding: 0.15rem 0.45rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .nav-island-center {
@@ -1087,11 +1087,11 @@ input, textarea, [contenteditable="true"] {
   }
 
   .nav-clock-time {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
   }
 
   .nav-clock-date {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .pos-layout {

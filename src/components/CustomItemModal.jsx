@@ -184,7 +184,7 @@ export default function CustomItemModal({
       >
         {/* Modal Header */}
         <div className="modal-header" style={{ padding: '0.75rem 1rem' }}>
-          <div className="modal-title" style={{ fontSize: '1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <div className="modal-title" style={{ fontSize: '1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <Calculator size={17} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {isReturn ? (t('keypad.sign_toggle') || '↩️ Vratka zboží') : (t('custom_item.title') || 'Vlastní / Nezařazená položka')}
@@ -299,7 +299,7 @@ export default function CustomItemModal({
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '0.2rem 0.5rem',
-                    fontSize: '0.78rem',
+                    fontSize: '0.8rem',
                     fontWeight: '700',
                     cursor: 'pointer',
                     transition: 'all 0.1s ease'
@@ -343,8 +343,8 @@ export default function CustomItemModal({
             {/* Header row: mode indicator & multiplier pill */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{
-                fontSize: '0.64rem',
-                fontWeight: '800',
+                fontSize: '0.8rem',
+                fontWeight: '700',
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)'
@@ -354,8 +354,8 @@ export default function CustomItemModal({
 
               {itemMultiplier !== 1 && (
                 <span style={{
-                  fontSize: '0.64rem',
-                  fontWeight: '800',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
                   color: isReturn ? 'var(--accent-rose)' : 'var(--accent-amber)',
                   background: isReturn ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
                   padding: '1px 5px',
@@ -376,7 +376,7 @@ export default function CustomItemModal({
             }}>
               <div style={{
                 fontSize: '1.45rem',
-                fontWeight: '900',
+                fontWeight: '700',
                 fontFamily: 'var(--font-mono)',
                 color: isReturn
                   ? 'var(--accent-rose)'
@@ -419,9 +419,9 @@ export default function CustomItemModal({
             {/* Total calculation preview when qty != 1 */}
             {itemMultiplier !== 1 && hasValidAmount && (
               <div style={{
-                fontSize: '0.76rem',
+                fontSize: '0.8rem',
                 color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
-                fontWeight: '800',
+                fontWeight: '700',
                 marginTop: '1px'
               }}>
                 {isReturn ? t('keypad.total_return_preview') : t('keypad.total_preview')}

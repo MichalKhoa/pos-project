@@ -45,7 +45,7 @@ export default function TerminalSection({
             border: 'none',
             padding: '0.35rem 0.75rem',
             fontSize: '0.8rem',
-            fontWeight: '800'
+            fontWeight: '700'
           }}>
             {termEnabled ? t('settings.terminal_mode_auto') || 'Automatický režim' : t('settings.terminal_mode_manual') || 'Ruční režim'}
           </span>
@@ -71,7 +71,7 @@ export default function TerminalSection({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Smartphone size={22} style={{ color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
-              <span style={{ fontWeight: '800', fontSize: '1rem', color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
+              <span style={{ fontWeight: '700', fontSize: '1rem', color: !termEnabled ? 'var(--accent-blue)' : 'var(--text-primary)' }}>
                 {t('settings.csob_manual_mode') || 'Ruční zadání (Doporučeno)'}
               </span>
             </div>
@@ -99,7 +99,7 @@ export default function TerminalSection({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Wifi size={22} style={{ color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
-              <span style={{ fontWeight: '800', fontSize: '1rem', color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
+              <span style={{ fontWeight: '700', fontSize: '1rem', color: termEnabled ? 'var(--accent-emerald)' : 'var(--text-primary)' }}>
                 {t('settings.csob_auto_mode') || 'Automatický ČSOB terminál'}
               </span>
             </div>
@@ -260,17 +260,17 @@ export default function TerminalSection({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
               <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>1</div>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', flexShrink: 0 }}>1</div>
                 <div>{t('settings.terminal_manual_step1') || 'Zákazník zvolí platbu kartou. Pokladna na obrazovce zobrazí přesnou částku k úhradě.'}</div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>2</div>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', flexShrink: 0 }}>2</div>
                 <div>{t('settings.terminal_manual_step2') || 'Obsluha zadá tuto částku do libovolného přenosného terminálu (ČSOB, SumUp, myPOS) a přiloží kartu.'}</div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', flexShrink: 0 }}>3</div>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', flexShrink: 0 }}>3</div>
                 <div>{t('settings.terminal_manual_step3') || 'Po úspěšném pípnutí terminálu klikne obsluha na pokladně na '}<strong>Dokončit platbu</strong>.</div>
               </div>
             </div>

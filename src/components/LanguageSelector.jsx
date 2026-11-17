@@ -120,7 +120,7 @@ export default function LanguageSelector({
           boxSizing: 'border-box',
           whiteSpace: 'nowrap',
           fontSize: '0.8rem',
-          fontWeight: '800',
+          fontWeight: '700',
           cursor: 'pointer',
           outline: 'none',
           transition: 'all 0.15s ease',
