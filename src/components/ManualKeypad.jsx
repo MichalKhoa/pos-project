@@ -9,6 +9,7 @@ import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 import { soundFx } from '../utils/audio';
 import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
 import { newCustomItemId } from '../utils/customItemId.js';
+import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -77,23 +78,22 @@ export default function ManualKeypad({
       return;
     }
     if (val === '.' || val === ',') {
-      if (amountStr.includes('.')) return;
-      setAmountStr(prev => (prev ? prev + '.' : '0.'));
-      return;
-    }
-    if (val === '.00') {
-      if (amountStr.includes('.')) return;
-      setAmountStr(prev => (prev ? prev + '.00' : '0.00'));
+      setAmountStr(prev => appendDecimal(prev));
       return;
     }
 
-    if (amountStr.includes('.')) {
-      const parts = amountStr.split('.');
-      if (parts[1] && parts[1].length >= 2) return;
-    }
+    setAmountStr(prev => appendDigit(prev, val));
+  };
 
-    if (amountStr.length >= 10) return;
-    setAmountStr(prev => prev + val);
+  const handleMultiply = () => {
+    triggerKeyAnimation('MULTIPLY');
+    const result = applyMultiply(amountStr, itemMultiplier);
+    if (!result) {
+      soundFx.playError();
+      return;
+    }
+    setAmountStr(result.amountStr);
+    if (setItemMultiplier) setItemMultiplier(result.itemMultiplier);
   };
 
   const isReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
@@ -326,10 +326,8 @@ export default function ManualKeypad({
           activeKey={activeKey}
           onKeyPress={handleKeyPress}
           itemMultiplier={itemMultiplier}
-          setItemMultiplier={setItemMultiplier}
           amountStr={amountStr}
-          setAmountStr={setAmountStr}
-          triggerKeyAnimation={triggerKeyAnimation}
+          onMultiply={handleMultiply}
           hasValidAmount={hasValidAmount}
           onAddCustomItem={handleAddCustomItem}
         />

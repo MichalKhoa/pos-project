@@ -229,5 +229,28 @@ describe('CustomItemModal Component Tests', () => {
 
     expect(nameInput).toHaveValue('');
   });
+  it('uses the shared entry rules: 00 keeps two decimals, no leading zeros, C resets the multiplier', () => {
+    const { container } = renderModal();
+    const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
+
+    ['1', ',', '5', '00'].forEach(click);
+    expect(container.ownerDocument.body.textContent).toContain('1.50');
+    click('C');
+    ['0', '0', '5'].forEach(click);
+    expect(container.ownerDocument.body.textContent).not.toContain('005');
+
+    click('C');
+    ['3', '×'].forEach(click);
+    expect(screen.getByText('3×')).toBeInTheDocument();
+    click('C');
+    expect(screen.queryByText('3×')).not.toBeInTheDocument();
+  });
+
+  it('× keeps return mode started with the stepper', () => {
+    renderModal();
+    fireEvent.click(screen.getByTitle('Snížit množství (−1 / Vratka)'));
+    ['5', '×'].forEach((name) => fireEvent.click(screen.getByRole('button', { name })));
+    expect(screen.getAllByText(/-5×/).length).toBeGreaterThan(0);
+  });
 });
 

@@ -7,10 +7,8 @@ export default function KeypadNumberGrid({
   activeKey,
   onKeyPress,
   itemMultiplier,
-  setItemMultiplier,
   amountStr,
-  setAmountStr,
-  triggerKeyAnimation,
+  onMultiply,
   hasValidAmount,
   onAddCustomItem
 }) {
@@ -121,21 +119,7 @@ export default function KeypadNumberGrid({
       <button
         type="button"
         className={`key-btn key-action ${itemMultiplier > 1 ? 'active-multiplier' : ''} ${activeKey === 'MULTIPLY' ? 'active-press' : ''}`}
-        onClick={() => {
-          triggerKeyAnimation('MULTIPLY');
-          if (itemMultiplier > 1) {
-            if (setItemMultiplier) setItemMultiplier(1);
-            if (setAmountStr) setAmountStr('');
-            return;
-          }
-          if (amountStr && !amountStr.includes('.')) {
-            const q = parseInt(amountStr, 10);
-            if (!isNaN(q) && q >= 1 && q <= 99) {
-              if (setItemMultiplier) setItemMultiplier(q);
-              if (setAmountStr) setAmountStr('');
-            }
-          }
-        }}
+        onClick={onMultiply}
         style={{
           color: itemMultiplier > 1 ? '#fff' : 'var(--accent-amber)',
           fontWeight: '700',

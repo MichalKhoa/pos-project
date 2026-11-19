@@ -8,6 +8,7 @@ import KeypadStepperBar from './keypad/KeypadStepperBar.jsx';
 import KeypadVatSelector from './keypad/KeypadVatSelector.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid.jsx';
 import { newCustomItemId } from '../utils/customItemId.js';
+import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 
 export default function CustomItemModal({
   isOpen = true,
@@ -94,6 +95,7 @@ export default function CustomItemModal({
     if (val === 'CLEAR') {
       soundFx.playDeleteTone();
       setPriceStr('');
+      setItemMultiplier(1);
       return;
     }
 
@@ -104,31 +106,22 @@ export default function CustomItemModal({
     }
 
     if (val === '.' || val === ',') {
-      if (priceStr.includes('.')) return;
-      setPriceStr(prev => (prev ? prev + '.' : '0.'));
+      setPriceStr(prev => appendDecimal(prev));
       return;
     }
 
-    if (val === '.00' || val === '00') {
-      if (priceStr.includes('.')) {
-        const parts = priceStr.split('.');
-        if (parts[1] && parts[1].length >= 1) return;
-      }
-      if (!priceStr || priceStr === '0') {
-        setPriceStr('0');
-        return;
-      }
-      setPriceStr(prev => (prev.length < 9 ? prev + '00' : prev));
+    setPriceStr(prev => appendDigit(prev, val));
+  };
+
+  const handleMultiply = () => {
+    triggerKeyAnimation('MULTIPLY');
+    const result = applyMultiply(priceStr, itemMultiplier);
+    if (!result) {
+      soundFx.playError();
       return;
     }
-
-    if (priceStr.includes('.')) {
-      const parts = priceStr.split('.');
-      if (parts[1] && parts[1].length >= 2) return;
-    }
-
-    if (priceStr.length >= 10) return;
-    setPriceStr(prev => (prev === '0' ? val : prev + val));
+    setPriceStr(result.amountStr);
+    setItemMultiplier(result.itemMultiplier);
   };
 
   const handleAddCustomItem = (e) => {
@@ -442,10 +435,8 @@ export default function CustomItemModal({
             activeKey={activeKey}
             onKeyPress={handleKeyPress}
             itemMultiplier={itemMultiplier}
-            setItemMultiplier={setItemMultiplier}
             amountStr={priceStr}
-            setAmountStr={setPriceStr}
-            triggerKeyAnimation={triggerKeyAnimation}
+            onMultiply={handleMultiply}
             hasValidAmount={hasValidAmount}
             onAddCustomItem={handleAddCustomItem}
           />

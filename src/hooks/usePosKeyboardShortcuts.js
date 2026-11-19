@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { soundFx } from '../utils/audio.js';
 import { parseScaleBarcode } from '../utils/barcodeUtils.js';
 import { newCustomItemId } from '../utils/customItemId.js';
+import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 
 export function usePosKeyboardShortcuts({
   isAppLocked,
@@ -205,13 +206,7 @@ export function usePosKeyboardShortcuts({
 
       if (/^[0-9]$/.test(key)) {
         e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev.includes('.')) {
-            const parts = prev.split('.');
-            if (parts[1] && parts[1].length >= 2) return prev;
-          }
-          return prev.length < 8 ? prev + key : prev;
-        });
+        setKeypadAmount(prev => appendDigit(prev, key));
       } else if (key === '-' || key === 'Subtract') {
         e.preventDefault();
         const currentlyReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
@@ -239,10 +234,7 @@ export function usePosKeyboardShortcuts({
         });
       } else if (key === '.' || key === ',') {
         e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev.includes('.')) return prev;
-          return prev ? prev + '.' : '0.';
-        });
+        setKeypadAmount(prev => appendDecimal(prev));
       } else if (key === 'Backspace') {
         e.preventDefault();
         setKeypadAmount(prev => prev.slice(0, -1));
@@ -252,18 +244,15 @@ export function usePosKeyboardShortcuts({
         setItemMultiplier(1);
       } else if (key === '*' || key.toLowerCase() === 'x') {
         e.preventDefault();
+        // Functional update so a fast "5*" sees the 5 even before the next render.
         setKeypadAmount(prev => {
-          if (prev && !prev.includes('.')) {
-            const parsedQty = parseInt(prev, 10);
-            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -999 && parsedQty <= 999) {
-              setItemMultiplier(parsedQty);
-              return '';
-            }
+          const result = applyMultiply(prev, itemMultiplier);
+          if (!result) {
+            soundFx.playError();
+            return prev;
           }
-          if (itemMultiplier !== 1) {
-            setItemMultiplier(1);
-          }
-          return prev;
+          setItemMultiplier(result.itemMultiplier);
+          return result.amountStr;
         });
       } else if (key === 'Enter') {
         e.preventDefault();
