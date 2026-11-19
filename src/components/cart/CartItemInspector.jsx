@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Trash2, Plus, Minus, Percent, Tag, FileText, DollarSign } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { formatKc } from '../../utils/money';
 
 export default function CartItemInspector({
   item,
@@ -16,6 +17,8 @@ export default function CartItemInspector({
   const qtyFocusedRef = useRef(false);
   const noteInputRef = useRef(null);
   const inspectorRef = useRef(null);
+  // Always the latest price commit, so Escape and outside taps can save a pending price before closing
+  const commitPriceRef = useRef(() => {});
 
   // Sync state when selected item changes
   useEffect(() => {
@@ -37,6 +40,7 @@ export default function CartItemInspector({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
+        commitPriceRef.current();
         onClose();
       }
     };
@@ -49,6 +53,7 @@ export default function CartItemInspector({
       if (e.target.closest('.cart-items-container') || e.target.closest('.cart-item-card')) {
         return;
       }
+      commitPriceRef.current();
       onClose();
     };
 
@@ -124,11 +129,12 @@ export default function CartItemInspector({
   const handleCustomPriceBlur = () => {
     const parsed = parseFloat(customPrice);
     if (!isNaN(parsed) && parsed >= 0) {
-      onUpdateDetails(lineKey, { price: parsed });
+      if (parsed !== Number(item.price)) onUpdateDetails(lineKey, { price: parsed });
     } else {
       setCustomPrice(String(item.price));
     }
   };
+  commitPriceRef.current = handleCustomPriceBlur;
 
   const handleNoteChange = (text) => {
     setNoteText(text);
@@ -149,14 +155,15 @@ export default function CartItemInspector({
               {item.name}
             </div>
             <div className="inspector-subtitle">
-              {parseFloat(item.price).toFixed(2)} Kč / {item?.unit || (isWeighed ? 'kg' : 'ks')} • DPH {itemVat}%
+              {formatKc(item.price)} Kč / {item?.unit || (isWeighed ? 'kg' : 'ks')} • DPH {itemVat}%
             </div>
           </div>
           <button
             type="button"
             className="inspector-close-btn"
-            onClick={onClose}
+            onClick={() => { commitPriceRef.current(); onClose(); }}
             title={t('inspector.close') || 'Zavřít'}
+            aria-label={t('inspector.close')}
           >
             <X size={20} />
           </button>
@@ -184,6 +191,7 @@ export default function CartItemInspector({
                   onClick={() => handleQtyChange(Math.round((item.quantity - qtyStep) * 1000) / 1000)}
                   disabled={item.quantity <= (isWeighed ? 0.1 : 1)}
                   title={isWeighed ? "-0.1 kg" : "-1 ks"}
+                  aria-label={`${t('cart.decrease_qty')} (${isWeighed ? '-0.1 kg' : '-1 ks'})`}
                 >
                   <Minus size={16} />
                 </button>
@@ -201,6 +209,7 @@ export default function CartItemInspector({
                     textAlign: 'center',
                     outline: 'none'
                   }}
+                  aria-label={t('inspector.quantity')}
                   value={qtyText}
                   onFocus={(e) => { qtyFocusedRef.current = true; e.target.select(); }}
                   onChange={(e) => handleQtyTyping(e.target.value)}
@@ -213,6 +222,7 @@ export default function CartItemInspector({
                   style={{ width: '38px' }}
                   onClick={() => handleQtyChange(Math.round((item.quantity + qtyStep) * 1000) / 1000)}
                   title={isWeighed ? "+0.1 kg" : "+1 ks"}
+                  aria-label={`${t('cart.increase_qty')} (${isWeighed ? '+0.1 kg' : '+1 ks'})`}
                 >
                   <Plus size={16} />
                 </button>
@@ -276,6 +286,7 @@ export default function CartItemInspector({
                     fontFamily: 'var(--font-mono)'
                   }}
                   title={t('inspector.custom_discount') || 'Vlastní %'}
+                  aria-label={t('inspector.custom_discount')}
                 />
               </div>
             </div>
@@ -292,9 +303,11 @@ export default function CartItemInspector({
                 type="number"
                 step="any"
                 min="0"
+                aria-label={t('inspector.unit_price')}
                 value={customPrice}
                 onChange={(e) => setCustomPrice(e.target.value)}
                 onBlur={handleCustomPriceBlur}
+                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                 className="input-field"
                 style={{
                   flex: 1,
@@ -339,7 +352,7 @@ export default function CartItemInspector({
             marginTop: 'auto'
           }}>
             <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-muted)' }}>
-              Celkem za položku:
+              {t('inspector.line_total')}
             </span>
             <span style={{
               fontFamily: 'var(--font-mono)',
@@ -347,7 +360,7 @@ export default function CartItemInspector({
               fontWeight: '700',
               color: 'var(--accent-emerald)'
             }}>
-              {lineTotal.toFixed(2)} Kč
+              {formatKc(lineTotal)} Kč
             </span>
           </div>
         </div>

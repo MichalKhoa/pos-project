@@ -1181,6 +1181,12 @@ select.input-field:focus {
   }
 }
 
+.clear-cart-btn.is-icon {
+  min-width: 38px;
+  padding: 0.45rem;
+  justify-content: center;
+}
+
 .clear-cart-btn:active {
   filter: brightness(0.92);
 }

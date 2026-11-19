@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import CartItemInspector from '../components/cart/CartItemInspector';
 import CartComponent from '../components/Cart';
 import { LanguageProvider } from '../i18n/LanguageContext';
+import { setStorageItem } from '../utils/storage';
 
 function Harness({ initial }) {
   const [item, setItem] = useState(initial);
@@ -210,5 +211,83 @@ describe('Cart footer (compaction)', () => {
     const { container } = renderFooter(items, { onOpenPayment: (m) => modes.push(m), onOpenCashDrawer: () => {} });
     fireEvent.click(container.querySelector('.split-pay-btn'));
     expect(modes).toEqual(['split']);
+  });
+});
+
+describe('Cart polish (items 4, 7, 9, 10)', () => {
+  const baseProps = { onUpdateQty: () => {}, onUpdateItemDetails: () => {}, onRemoveItem: () => {}, onClearCart: () => {}, onOpenPayment: () => {} };
+
+  it('header icon buttons keep accessible names and the cart discount still shows its percent', () => {
+    render(
+      <LanguageProvider>
+        <CartComponent cartItems={[piece]} cartDiscountPercent={15} onParkCart={() => {}} onOpenCustomDiscount={() => {}} {...baseProps} />
+      </LanguageProvider>
+    );
+    const discount = screen.getByRole('button', { name: /sleva na košík/i });
+    expect(discount.textContent).toContain('-15%');
+    expect(screen.getByRole('button', { name: 'Odložit nákup' }).textContent).toBe('');
+    expect(screen.getByRole('button', { name: 'Vysypat' }).textContent).toBe('');
+    expect(screen.getAllByRole('button', { name: /Přidat množství/ }).length).toBeGreaterThan(0);
+  });
+
+  it('an English refund cart shows no Czech refund text', () => {
+    setStorageItem('lang', 'en');
+    try {
+      const refundLine = { id: 'r1', lineId: 'R1', name: 'Shirt', price: -100, quantity: 1, vat: 21 };
+      const { container } = render(
+        <LanguageProvider>
+          <CartComponent cartItems={[refundLine]} {...baseProps} />
+        </LanguageProvider>
+      );
+      const text = container.textContent;
+      expect(text).toContain('RETURN');
+      expect(text).toContain('REFUND DUE');
+      expect(text).toContain('Refund Cash');
+      expect(text).not.toMatch(/VRATKA|K VRÁCENÍ|Vrátit/);
+    } finally {
+      setStorageItem('lang', 'cs');
+    }
+  });
+
+  it('Escape saves a typed unit price before closing', () => {
+    const calls = [];
+    let closed = 0;
+    render(
+      <LanguageProvider>
+        <CartItemInspector
+          item={piece}
+          onClose={() => { closed += 1; }}
+          onRemoveItem={() => {}}
+          onUpdateDetails={(id, u) => calls.push(u)}
+        />
+      </LanguageProvider>
+    );
+    const price = document.querySelector('input[step="any"]');
+    fireEvent.change(price, { target: { value: '7.5' } });
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(calls).toContainEqual({ price: 7.5 });
+    expect(closed).toBe(1);
+  });
+
+  it('Escape discards an invalid price without updating the line', () => {
+    const calls = [];
+    render(
+      <LanguageProvider>
+        <CartItemInspector item={piece} onClose={() => {}} onRemoveItem={() => {}} onUpdateDetails={(id, u) => calls.push(u)} />
+      </LanguageProvider>
+    );
+    const price = document.querySelector('input[step="any"]');
+    fireEvent.change(price, { target: { value: '-3' } });
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(calls.filter((u) => 'price' in u)).toEqual([]);
+  });
+
+  it('shows large amounts grouped', () => {
+    const { container } = render(
+      <LanguageProvider>
+        <CartComponent cartItems={[{ id: 'b1', lineId: 'B1', name: 'TV', price: 12345.5, quantity: 1, vat: 21 }]} {...baseProps} />
+      </LanguageProvider>
+    );
+    expect(container.querySelector('.total-hero-amount').textContent).toBe('12 345.50 Kč');
   });
 });

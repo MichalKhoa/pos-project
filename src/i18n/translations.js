@@ -43,7 +43,15 @@ export const translations = {
       refund_title: "↩️ Vratka / Vrácení Zboží",
       refund_customer: "↩️ K VRÁCENÍ ZÁKAZNÍKOVI:",
       refund_cash: "Vrátit Hotovost",
-      refund_card: "Vrátit na Kartu"
+      refund_card: "Vrátit na Kartu",
+      return_badge: "↩️ VRATKA",
+      refund_total: "↩️ K VRÁCENÍ",
+      edit_hint: "Kliknutím upravíte množství, slevu nebo poznámku",
+      cleared_title: "Košík byl vysypán",
+      cleared_sub: "{count} položek v paměti (8 s)",
+      restore_cart: "Obnovit košík",
+      decrease_qty: "Ubrat množství",
+      increase_qty: "Přidat množství"
     },
     parked_carts: {
       card_title: "Odložené Nákupy (Zákazníci)",
@@ -73,7 +81,8 @@ export const translations = {
       note_placeholder: "např. Bez ledu, S sebou...",
       delete_item: "Odstranit položku",
       no_discount: "Bez slevy",
-      close: "Zavřít"
+      close: "Zavřít",
+      line_total: "Celkem za položku:"
     },
     shift_stats: {
       title: "Dnešní směna (Přehled)",
@@ -1467,7 +1476,15 @@ export const translations = {
       refund_title: "↩️ Trả Hàng / Hoàn Tiền",
       refund_customer: "↩️ HOÀN TIỀN CHO KHÁCH:",
       refund_cash: "Hoàn Tiền Mặt",
-      refund_card: "Hoàn Vào Thẻ"
+      refund_card: "Hoàn Vào Thẻ",
+      return_badge: "↩️ TRẢ HÀNG",
+      refund_total: "↩️ HOÀN TIỀN",
+      edit_hint: "Chạm để sửa số lượng, giảm giá hoặc ghi chú",
+      cleared_title: "Giỏ hàng đã bị xóa",
+      cleared_sub: "{count} sản phẩm trong bộ nhớ (8 giây)",
+      restore_cart: "Khôi phục giỏ hàng",
+      decrease_qty: "Giảm số lượng",
+      increase_qty: "Tăng số lượng"
     },
     parked_carts: {
       card_title: "Đơn hàng tạm giữ (Khách hàng)",
@@ -1497,7 +1514,8 @@ export const translations = {
       note_placeholder: "vd: Không đá, Mang về...",
       delete_item: "Xóa món",
       no_discount: "Không giảm",
-      close: "Đóng"
+      close: "Đóng",
+      line_total: "Tổng món:"
     },
     shift_stats: {
       title: "Ca hôm nay (Tổng quan)",
@@ -2891,7 +2909,15 @@ export const translations = {
       refund_title: "↩️ Item Return / Refund",
       refund_customer: "↩️ REFUND TO CUSTOMER:",
       refund_cash: "Refund Cash",
-      refund_card: "Refund to Card"
+      refund_card: "Refund to Card",
+      return_badge: "↩️ RETURN",
+      refund_total: "↩️ REFUND DUE",
+      edit_hint: "Tap to edit quantity, discount or note",
+      cleared_title: "Cart cleared",
+      cleared_sub: "{count} items in memory (8 s)",
+      restore_cart: "Restore cart",
+      decrease_qty: "Decrease quantity",
+      increase_qty: "Increase quantity"
     },
     parked_carts: {
       card_title: "Parked Carts (Customers)",
@@ -2921,7 +2947,8 @@ export const translations = {
       note_placeholder: "e.g. No ice, Takeaway...",
       delete_item: "Remove item",
       no_discount: "No disc.",
-      close: "Close"
+      close: "Close",
+      line_total: "Item total:"
     },
     shift_stats: {
       title: "Today's Shift (Summary)",
