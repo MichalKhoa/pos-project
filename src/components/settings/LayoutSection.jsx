@@ -3,6 +3,7 @@ import { soundFx } from '../../utils/audio';
 import { Tag, ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
+import { useStoreConfig } from '../../context/StoreConfigContext.jsx';
 import { normalizePresetStyle } from '../../utils/presetTileStyle.js';
 
 export default function LayoutSection({
@@ -27,6 +28,7 @@ export default function LayoutSection({
   };
   const { t } = useTranslation();
   const { openCustomerDisplay } = useTauri();
+  const { fontSize, setFontSize } = useStoreConfig();
 
   const ACCENT_COLORS = [
     { id: 'indigo', name: t('settings.accent_indigo') || 'Indigo', hex: '#6366f1' },
@@ -475,16 +477,8 @@ export default function LayoutSection({
               <button
                 key={sz.id}
                 type="button"
-                className={`settings-segmented-btn ${(config.fontSize || 'lg') === sz.id ? 'active' : ''}`}
-                onClick={() => {
-                  handleUpdate({ fontSize: sz.id });
-                  try {
-                    localStorage.setItem('voltflow_font_size', sz.id);
-                  } catch (e) {
-                    console.warn(e);
-                  }
-                  document.documentElement.setAttribute('data-font-size', sz.id);
-                }}
+                className={`settings-segmented-btn ${fontSize === sz.id ? 'active' : ''}`}
+                onClick={() => setFontSize(sz.id)}
               >
                 {sz.label}
               </button>

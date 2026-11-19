@@ -26,7 +26,7 @@
 - 4x4 keypad, category presets, and barcode scanner auto-focus.
 
 ### 4. Quality Gates & Testing
-- Frontend unit tests: `npm run test` (Vitest, 471 tests passing).
+- Frontend unit tests: `npm run test` (Vitest, 474 tests passing).
 - Frontend linter: `npm run lint` (Oxlint, 0 errors, 0 warnings).
 - Frontend production build: `npm run build` (Vite to `dist/`).
 - Backend unit tests: `python -m unittest discover -s backend/tests -p "test_*.py"` (300 tests passing).

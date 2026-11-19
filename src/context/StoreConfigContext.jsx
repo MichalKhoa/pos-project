@@ -4,6 +4,7 @@ import { DEFAULT_STORE_CONFIG } from '../data/initialData';
 import { fetchStoreConfigBackend, saveStoreConfigBackend, saveSecuritySettingsBackend } from '../api/posApi';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 
+export const FONT_SIZES = ['sm', 'md', 'lg', 'xl'];
 const TECHNICIAN_SESSION_TIMEOUT_SECONDS = 10 * 60; // 10 minutes = 600s
 
 const StoreConfigContext = createContext(null);
@@ -17,7 +18,7 @@ export function StoreConfigProvider({ children }) {
     } catch {
       // ignore storage error
     }
-    const fontSize = ['sm', 'md', 'lg', 'xl'].includes(savedFontSize) ? { fontSize: savedFontSize } : {};
+    const fontSize = FONT_SIZES.includes(savedFontSize) ? { fontSize: savedFontSize } : {};
     try {
       const saved = getStorageItem('config');
       if (saved) return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved), ...fontSize };
@@ -214,8 +215,7 @@ export function StoreConfigProvider({ children }) {
   }, [isAdminMode]);
 
   const setFontSize = useCallback((size) => {
-    const validSizes = ['sm', 'md', 'lg', 'xl'];
-    if (validSizes.includes(size)) {
+    if (FONT_SIZES.includes(size)) {
       document.documentElement.setAttribute('data-font-size', size);
       try {
         localStorage.setItem('voltflow_font_size', size);
@@ -227,10 +227,8 @@ export function StoreConfigProvider({ children }) {
   }, [updateStoreConfig]);
 
   const cycleFontSize = useCallback(() => {
-    const validSizes = ['sm', 'md', 'lg', 'xl'];
-    const currentIndex = validSizes.indexOf(currentFontSize);
-    const nextIndex = (currentIndex + 1) % validSizes.length;
-    setFontSize(validSizes[nextIndex]);
+    const nextIndex = (FONT_SIZES.indexOf(currentFontSize) + 1) % FONT_SIZES.length;
+    setFontSize(FONT_SIZES[nextIndex]);
   }, [currentFontSize, setFontSize]);
 
   const value = {
