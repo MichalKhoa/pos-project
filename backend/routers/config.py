@@ -54,6 +54,7 @@ class StoreConfigSchema(BaseModel):
     presetButtonStyle: Optional[str] = None
     showPresetVat: Optional[bool] = None
     enableB2bInvoicing: Optional[bool] = None
+    inventoryEnabled: Optional[bool] = None
     defaultMarginCoefficient: Optional[float] = None
 
     # Receipt Customization
@@ -142,6 +143,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "customerDisplayStandbyDelay": getattr(config, 'customer_display_standby_delay', 10) or 10,
         "showPresetVat": getattr(config, 'show_preset_vat', True) if getattr(config, 'show_preset_vat', None) is not None else True,
         "enableB2bInvoicing": getattr(config, 'enable_b2b_invoicing', False) if getattr(config, 'enable_b2b_invoicing', None) is not None else False,
+        "inventoryEnabled": bool(getattr(config, 'inventory_enabled', False)),
         "defaultMarginCoefficient": getattr(config, 'default_margin_coefficient', 1.30) if getattr(config, 'default_margin_coefficient', None) is not None else 1.30,
         # Receipt Overhaul Fields
         "receiptTopMargin": getattr(config, 'receipt_top_margin', 1) if getattr(config, 'receipt_top_margin', None) is not None else 1,
@@ -232,6 +234,7 @@ def update_store_config(request: Request, data: StoreConfigSchema, db: Session =
     if data.cartPosition is not None: config.cart_position = data.cartPosition
     if data.showPresetVat is not None: config.show_preset_vat = data.showPresetVat
     if data.enableB2bInvoicing is not None: config.enable_b2b_invoicing = data.enableB2bInvoicing
+    if data.inventoryEnabled is not None: config.inventory_enabled = data.inventoryEnabled
     if data.defaultMarginCoefficient is not None: config.default_margin_coefficient = data.defaultMarginCoefficient
     # Receipt Overhaul Fields
     if data.receiptTopMargin is not None: config.receipt_top_margin = data.receiptTopMargin

@@ -11,9 +11,10 @@ const REASON_PRESETS = [
   'Jiné (vlastní popis)'
 ];
 
-export default function RefundModal({ sale, onClose, onConfirmRefund }) {
+export default function RefundModal({ sale, storeConfig = null, onClose, onConfirmRefund }) {
   const { t } = useTranslation();
   const { notify } = useConfirm();
+  const isInventoryEnabled = Boolean(storeConfig?.inventoryEnabled);
   const originalItems = sale?.items || [];
 
   const getMaxRefundableQty = (item) => {
@@ -116,7 +117,7 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
       refundTaxSummary,
       refundReason: finalReason,
       paymentMethod: refundPaymentMethod,
-      restock: !isDamagedWaste,
+      restock: isInventoryEnabled && !isDamagedWaste,
       isFullRefund: returnedItems.length === originalItems.length && returnedItems.every((item, idx) => item.quantityToReturn === getMaxRefundableQty(originalItems[idx]))
     });
   };
@@ -467,27 +468,29 @@ export default function RefundModal({ sale, onClose, onConfirmRefund }) {
             </div>
           </div>
 
-          {/* Damaged / Scrap restock checkbox */}
-          <div style={{
-            background: 'var(--bg-input)',
-            padding: '0.6rem 0.9rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.6rem'
-          }}>
-            <input
-              type="checkbox"
-              id="damagedWasteCheck"
-              checked={isDamagedWaste}
-              onChange={e => setIsDamagedWaste(e.target.checked)}
-              style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#ef4444' }}
-            />
-            <label htmlFor="damagedWasteCheck" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
-              Poškozeno / Likvidace (Nenaskladňovat položky zpět do skladu)
-            </label>
-          </div>
+          {/* Damaged / Scrap restock checkbox (only when inventory module is enabled) */}
+          {isInventoryEnabled && (
+            <div style={{
+              background: 'var(--bg-input)',
+              padding: '0.6rem 0.9rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem'
+            }}>
+              <input
+                type="checkbox"
+                id="damagedWasteCheck"
+                checked={isDamagedWaste}
+                onChange={e => setIsDamagedWaste(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#ef4444' }}
+              />
+              <label htmlFor="damagedWasteCheck" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                Poškozeno / Likvidace (Nenaskladňovat položky zpět do skladu)
+              </label>
+            </div>
+          )}
 
           {/* Refund Total Summary Callout */}
           <div style={{

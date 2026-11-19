@@ -138,6 +138,7 @@ export default function AppModals({
           item={priceCheckItem}
           unknownBarcode={unknownPriceCheckBarcode}
           categories={categories}
+          storeConfig={storeConfig}
           onAddToCart={onAddToCartFromPriceCheck}
           onCreateProduct={onCreateProductFromPriceCheck}
           onClose={() => {
@@ -176,6 +177,7 @@ export default function AppModals({
       {refundTargetSale && (
         <RefundModal
           sale={refundTargetSale}
+          storeConfig={storeConfig}
           onClose={() => setRefundTargetSale(null)}
           onConfirmRefund={onProcessRefund}
         />

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from fastapi.testclient import TestClient
 from main import app
 from database import SessionLocal
-from models import PresetModel, SaleModel, SaleItemModel
+from models import PresetModel, SaleModel, SaleItemModel, StoreConfigModel
 from migrations import run_schema_migrations
 
 class TestDecimalQuantity(unittest.TestCase):
@@ -18,6 +18,15 @@ class TestDecimalQuantity(unittest.TestCase):
         self.client = TestClient(app)
         self.db = SessionLocal()
         self.test_ids = []
+        cfg = self.db.query(StoreConfigModel).first()
+        if not cfg:
+            cfg = StoreConfigModel(inventory_enabled=True)
+            self.db.add(cfg)
+            self._prev_inventory_enabled = False
+        else:
+            self._prev_inventory_enabled = cfg.inventory_enabled
+            cfg.inventory_enabled = True
+        self.db.commit()
 
     def tearDown(self):
         for sid in self.test_ids:
@@ -25,6 +34,10 @@ class TestDecimalQuantity(unittest.TestCase):
                 self.client.delete(f"/api/v1/sales/{sid}", headers={"X-Admin-Override": "true"})
             except Exception:
                 pass
+        cfg = self.db.query(StoreConfigModel).first()
+        if cfg is not None:
+            cfg.inventory_enabled = self._prev_inventory_enabled
+            self.db.commit()
         self.db.close()
 
     def test_decimal_sale_creation_and_stock_deduction(self):

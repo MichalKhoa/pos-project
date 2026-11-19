@@ -1024,7 +1024,9 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
 
         db.add(db_sale)
 
-        # Save itemized rows & deduct inventory stock
+        # Save itemized rows & deduct inventory stock (only when inventory module is enabled)
+        store_cfg = db.query(StoreConfigModel).first()
+        inventory_enabled = bool(getattr(store_cfg, 'inventory_enabled', False)) if store_cfg else False
         from models import PresetModel
         for item in sale.items:
             db_item = SaleItemModel(
@@ -1038,8 +1040,8 @@ def create_sale(request: Request, sale: CreateSaleSchema, db: Session = Depends(
             )
             db.add(db_item)
 
-            # Deduct stock quantity if product preset has stock tracking enabled
-            if item.id:
+            # Deduct stock quantity if inventory module and product stock tracking are enabled
+            if inventory_enabled and item.id:
                 preset = db.query(PresetModel).filter(PresetModel.id == item.id).first()
                 if preset and preset.track_stock:
                     db.execute(
@@ -1106,8 +1108,10 @@ def update_sale_refund_status(sale_id: str, data: UpdateRefundStatusSchema, db: 
     sale.refund_status = data.refund_status
     sale.refunded_amount = data.refunded_amount
 
-    # Auto-restock items if restock is enabled (unless damaged/waste)
-    if data.restock:
+    # Auto-restock items if inventory module and restock are enabled (unless damaged/waste)
+    store_cfg = db.query(StoreConfigModel).first()
+    inventory_enabled = bool(getattr(store_cfg, 'inventory_enabled', False)) if store_cfg else False
+    if inventory_enabled and data.restock:
         for item in sale.items:
             if item.item_id:
                 preset = db.query(PresetModel).filter(PresetModel.id == item.item_id).first()

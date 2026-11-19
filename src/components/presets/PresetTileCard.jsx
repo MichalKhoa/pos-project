@@ -25,7 +25,8 @@ function PresetTileCard({
   const shouldShowVat = storeConfig?.showPresetVat === true && preset.vat !== undefined;
   const activeStyle = buttonStyle || storeConfig?.presetButtonStyle || 'left-stripe';
 
-  const isStockTracked = Boolean(preset.trackStock ?? preset.track_stock);
+  const isInventoryEnabled = Boolean(storeConfig?.inventoryEnabled);
+  const isStockTracked = isInventoryEnabled && Boolean(preset.trackStock ?? preset.track_stock);
   const rawStock = preset.stockQuantity ?? preset.stock_quantity;
   const stockQuantity = rawStock !== undefined && rawStock !== null ? Number(rawStock) : 0;
   const rawMinStock = preset.minStockAlert ?? preset.min_stock_alert;
@@ -137,6 +138,7 @@ export function arePresetCardPropsEqual(prevProps, nextProps) {
   if (prevProps.onClick !== nextProps.onClick) return false;
   if (prevProps.storeConfig?.presetButtonStyle !== nextProps.storeConfig?.presetButtonStyle) return false;
   if (prevProps.storeConfig?.showPresetVat !== nextProps.storeConfig?.showPresetVat) return false;
+  if (Boolean(prevProps.storeConfig?.inventoryEnabled) !== Boolean(nextProps.storeConfig?.inventoryEnabled)) return false;
 
   const p1 = prevProps.preset;
   const p2 = nextProps.preset;

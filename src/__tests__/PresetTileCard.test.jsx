@@ -67,7 +67,7 @@ describe('PresetTileCard Component', () => {
     expect(container.querySelector('.preset-stock-badge')).toBeNull();
   });
 
-  it('renders out-of-stock badge when tracked and stockQuantity <= 0', () => {
+  it('renders out-of-stock badge when tracked, inventoryEnabled, and stockQuantity <= 0', () => {
     const presetZero = {
       ...defaultPreset,
       trackStock: true,
@@ -78,6 +78,7 @@ describe('PresetTileCard Component', () => {
       <PresetTileCard
         preset={presetZero}
         index={0}
+        storeConfig={{ inventoryEnabled: true }}
         onClick={noop}
         onDragStart={noop}
         onDragOver={noop}
@@ -102,6 +103,7 @@ describe('PresetTileCard Component', () => {
       <PresetTileCard
         preset={presetNegative}
         index={0}
+        storeConfig={{ inventoryEnabled: true }}
         onClick={noop}
         onDragStart={noop}
         onDragOver={noop}
@@ -116,7 +118,31 @@ describe('PresetTileCard Component', () => {
     expect(badgeNeg.textContent).toBe('Vyprod\u00e1no');
   });
 
-  it('renders low-stock badge with count when tracked and 0 < stockQuantity <= minStockAlert', () => {
+  it('hides stock badges when inventoryEnabled is false', () => {
+    const preset = {
+      ...defaultPreset,
+      trackStock: true,
+      stockQuantity: 0,
+      minStockAlert: 5
+    };
+    const { container } = renderWithLang(
+      <PresetTileCard
+        preset={preset}
+        index={0}
+        storeConfig={{ inventoryEnabled: false }}
+        onClick={noop}
+        onDragStart={noop}
+        onDragOver={noop}
+        onDragLeave={noop}
+        onDrop={noop}
+        onDragEnd={noop}
+      />
+    );
+
+    expect(container.querySelector('.preset-stock-badge')).toBeNull();
+  });
+
+  it('renders low-stock badge with count when tracked, inventoryEnabled, and 0 < stockQuantity <= minStockAlert', () => {
     const preset = {
       ...defaultPreset,
       trackStock: true,
@@ -127,6 +153,7 @@ describe('PresetTileCard Component', () => {
       <PresetTileCard
         preset={preset}
         index={0}
+        storeConfig={{ inventoryEnabled: true }}
         onClick={noop}
         onDragStart={noop}
         onDragOver={noop}
@@ -152,6 +179,7 @@ describe('PresetTileCard Component', () => {
       <PresetTileCard
         preset={presetSnake}
         index={0}
+        storeConfig={{ inventoryEnabled: true }}
         onClick={noop}
         onDragStart={noop}
         onDragOver={noop}

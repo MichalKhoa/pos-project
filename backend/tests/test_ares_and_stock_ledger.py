@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from main import app
 from database import SessionLocal, init_db_schema
-from models import PresetModel, StockMovementModel, SaleModel, SaleItemModel
+from models import PresetModel, StockMovementModel, SaleModel, SaleItemModel, StoreConfigModel
 
 
 class TestAresAndStockLedger(unittest.TestCase):
@@ -20,6 +20,15 @@ class TestAresAndStockLedger(unittest.TestCase):
         self.db = SessionLocal()
         self.created_sale_ids = []
         self.created_preset_ids = []
+        cfg = self.db.query(StoreConfigModel).first()
+        if not cfg:
+            cfg = StoreConfigModel(inventory_enabled=True)
+            self.db.add(cfg)
+            self._prev_inventory_enabled = False
+        else:
+            self._prev_inventory_enabled = cfg.inventory_enabled
+            cfg.inventory_enabled = True
+        self.db.commit()
 
         # Create test tracked product preset
         self.test_preset_id = f"test-preset-{uuid.uuid4().hex[:8]}"
@@ -52,6 +61,11 @@ class TestAresAndStockLedger(unittest.TestCase):
                 self.db.commit()
             except Exception:
                 self.db.rollback()
+
+        cfg = self.db.query(StoreConfigModel).first()
+        if cfg is not None:
+            cfg.inventory_enabled = self._prev_inventory_enabled
+            self.db.commit()
 
         self.db.close()
 

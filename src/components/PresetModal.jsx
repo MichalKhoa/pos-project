@@ -474,61 +474,66 @@ export default function PresetModal({
                   </div>
                 </div>
 
-                {/* Cost Price (Nákupní cena bez DPH) */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
-                    {t('presets.cost_price') || 'Nákupní cena bez DPH'} ({t('common.optional')})
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={formData.costPrice}
-                      onChange={e => setFormData({ ...formData, costPrice: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.65rem 2.4rem 0.65rem 0.8rem',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-primary)',
-                        fontWeight: '700',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.95rem'
-                      }}
-                    />
-                    <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      Kč
-                    </span>
-                  </div>
-                </div>
+                {/* Cost Price & Margin Coefficient (only when inventory module is enabled) */}
+                {Boolean(storeConfig?.inventoryEnabled) && (
+                  <>
+                    {/* Cost Price (Nákupní cena bez DPH) */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
+                        {t('presets.cost_price') || 'Nákupní cena bez DPH'} ({t('common.optional')})
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={formData.costPrice}
+                          onChange={e => setFormData({ ...formData, costPrice: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '0.65rem 2.4rem 0.65rem 0.8rem',
+                            background: 'var(--bg-input)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--text-primary)',
+                            fontWeight: '700',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.95rem'
+                          }}
+                        />
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                          Kč
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Margin Coefficient (Koeficient marže k_marže) */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
-                    {t('presets.margin_coefficient') || 'Koeficient marže k_marže, např. 1.35'} ({t('common.optional')})
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="1.35"
-                    value={formData.marginCoefficient}
-                    onChange={e => setFormData({ ...formData, marginCoefficient: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.8rem',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-primary)',
-                      fontWeight: '700',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.95rem'
-                    }}
-                  />
-                </div>
+                    {/* Margin Coefficient (Koeficient marže k_marže) */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '0.3rem' }}>
+                        {t('presets.margin_coefficient') || 'Koeficient marže k_marže, např. 1.35'} ({t('common.optional')})
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="1.35"
+                        value={formData.marginCoefficient}
+                        onChange={e => setFormData({ ...formData, marginCoefficient: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.65rem 0.8rem',
+                          background: 'var(--bg-input)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--radius-md)',
+                          color: 'var(--text-primary)',
+                          fontWeight: '700',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.95rem'
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Unit of Measure Selection */}
                 <div>
@@ -627,7 +632,7 @@ export default function PresetModal({
                   </span>
                 </label>
 
-                {!formData.isGeneralPreset && (
+                {Boolean(storeConfig?.inventoryEnabled) && !formData.isGeneralPreset && (
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
@@ -641,7 +646,7 @@ export default function PresetModal({
                   </label>
                 )}
 
-                {!formData.isGeneralPreset && formData.trackStock && (
+                {Boolean(storeConfig?.inventoryEnabled) && !formData.isGeneralPreset && formData.trackStock && (
                   <PresetStockFields
                     isGeneralPreset={formData.isGeneralPreset}
                     trackStock={formData.trackStock}
@@ -793,7 +798,7 @@ export default function PresetModal({
                         {formData.isOpenPrice ? 'Volná cena' : `${parseFloat(formData.price) || 0} Kč`}
                       </strong>
                     </div>
-                    {formData.costPrice && parseFloat(formData.costPrice) > 0 && (
+                    {Boolean(storeConfig?.inventoryEnabled) && formData.costPrice && parseFloat(formData.costPrice) > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Nákupní cena:</span>
                         <strong style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
@@ -807,12 +812,14 @@ export default function PresetModal({
                         {formData.barcode || '—'}
                       </strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Skladová zásoba:</span>
-                      <strong style={{ color: formData.trackStock ? (parseInt(formData.stockQuantity, 10) > 0 ? 'var(--accent-emerald)' : 'var(--accent-red)') : 'var(--text-muted)' }}>
-                        {formData.trackStock ? `${parseInt(formData.stockQuantity, 10) || 0} ks` : 'Nesledováno'}
-                      </strong>
-                    </div>
+                    {Boolean(storeConfig?.inventoryEnabled) && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Skladová zásoba:</span>
+                        <strong style={{ color: formData.trackStock ? (parseInt(formData.stockQuantity, 10) > 0 ? 'var(--accent-emerald)' : 'var(--accent-red)') : 'var(--text-muted)' }}>
+                          {formData.trackStock ? `${parseInt(formData.stockQuantity, 10) || 0} ks` : 'Nesledováno'}
+                        </strong>
+                      </div>
+                    )}
                   </div>
 
                   <div style={{

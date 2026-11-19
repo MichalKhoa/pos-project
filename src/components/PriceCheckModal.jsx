@@ -7,6 +7,7 @@ export default function PriceCheckModal({
   item = null,
   unknownBarcode = null,
   categories = [],
+  storeConfig = null,
   onAddToCart,
   onCreateProduct,
   onClose
@@ -251,35 +252,37 @@ export default function PriceCheckModal({
                   </div>
                 </div>
 
-                {/* Stock Level */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Package
-                    size={16}
-                    style={{
-                      color: isOutOfStock
-                        ? 'var(--accent-rose, #f43f5e)'
-                        : (hasTrackStock ? 'var(--accent-emerald, #10b981)' : 'var(--text-secondary, #94a3b8)')
-                    }}
-                  />
-                  <div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
-                      {t('price_check.stock_label')}
-                    </div>
-                    <div
+                {/* Stock Level (only when inventory module is enabled) */}
+                {Boolean(storeConfig?.inventoryEnabled) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Package
+                      size={16}
                       style={{
-                        fontSize: '0.92rem',
-                        fontWeight: '700',
                         color: isOutOfStock
                           ? 'var(--accent-rose, #f43f5e)'
-                          : (hasTrackStock ? 'var(--text-primary, #ffffff)' : 'var(--text-secondary, #94a3b8)')
+                          : (hasTrackStock ? 'var(--accent-emerald, #10b981)' : 'var(--text-secondary, #94a3b8)')
                       }}
-                    >
-                      {hasTrackStock
-                        ? (stockQty !== null ? `${stockQty} ks` : t('price_check.in_stock'))
-                        : t('price_check.in_stock')}
+                    />
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #94a3b8)' }}>
+                        {t('price_check.stock_label')}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '0.92rem',
+                          fontWeight: '700',
+                          color: isOutOfStock
+                            ? 'var(--accent-rose, #f43f5e)'
+                            : (hasTrackStock ? 'var(--text-primary, #ffffff)' : 'var(--text-secondary, #94a3b8)')
+                        }}
+                      >
+                        {hasTrackStock
+                          ? (stockQty !== null ? `${stockQty} ks` : t('price_check.in_stock'))
+                          : t('price_check.in_stock')}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </>
           ) : (

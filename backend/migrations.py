@@ -67,6 +67,7 @@ MIGRATIONS = [
     ("store_config", "bank_account_iban", "VARCHAR DEFAULT 'CZ6508000000001234567890'"),
     ("store_config", "default_language", "VARCHAR DEFAULT 'cs'"),
     ("store_config", "enable_b2b_invoicing", "BOOLEAN DEFAULT 0"),
+    ("store_config", "inventory_enabled", "BOOLEAN DEFAULT 0"),
     ("store_config", "receipt_show_barcode", "BOOLEAN DEFAULT 1"),
     ("store_config", "default_margin_coefficient", "FLOAT DEFAULT 1.30"),
     # Table: cash_movements

@@ -219,6 +219,22 @@ export default function LayoutSection({
             <span className="settings-switch-slider" />
           </label>
         </div>
+
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">{t('settings.inventory_enabled_label') || 'Skladové hospodářství (Sklad)'}</span>
+            <span className="settings-toggle-subtitle">{t('settings.inventory_enabled_desc') || 'Zobrazí záložku Sklad, odpočet zásob při prodeji a skladové limity na produktech.'}</span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input
+              type="checkbox"
+              checked={Boolean(config.inventoryEnabled)}
+              onChange={e => handleUpdate({ inventoryEnabled: e.target.checked })}
+            />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
       </div>
 
       {/* 🎨 Card 2: Navbar Style & Accent Highlight Color */}

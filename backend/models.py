@@ -150,6 +150,9 @@ class StoreConfigModel(Base):
     # Enable/Disable B2B Corporate Invoice Toggle in Payment Modal (Hidden by default)
     enable_b2b_invoicing = Column(Boolean, default=False)
 
+    # Enable/Disable Inventory & Stock Tracking Module (Hidden by default)
+    inventory_enabled = Column(Boolean, default=False)
+
     # Receipt Overhaul Customization Fields
     receipt_top_margin = Column(Integer, default=1)
     receipt_bottom_margin = Column(Integer, default=3)

@@ -78,6 +78,13 @@ export default function App() {
     }
   });
 
+  // Redirect away from inventory tab when the inventory module is disabled
+  useEffect(() => {
+    if (!storeConfig?.inventoryEnabled && activeTab === 'inventory') {
+      setActiveTab('register');
+    }
+  }, [storeConfig?.inventoryEnabled, activeTab]);
+
   // Sync high-legibility density mode to DOM root attribute
   useEffect(() => {
     const isHigh = !!storeConfig?.highLegibilityMode;
@@ -1136,7 +1143,7 @@ export default function App() {
           );
         })()}
 
-        {activeTab === 'inventory' && (
+        {storeConfig?.inventoryEnabled && activeTab === 'inventory' && (
           <InventoryView
             presets={presets}
             categories={categories}

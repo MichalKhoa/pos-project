@@ -155,7 +155,7 @@ function Navbar({
         opacity: 1
       });
     }
-  }, [activeTab, navbarStyle]);
+  }, [activeTab, navbarStyle, storeConfig?.inventoryEnabled]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -272,14 +272,16 @@ function Navbar({
             <span>{t('nav.presets')}</span>
           </button>
 
-          <button type="button"
-            ref={el => { tabRefs.current['inventory'] = el; }}
-            className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''}`}
-            onClick={() => setActiveTab('inventory')}
-          >
-            <Package size={17} />
-            <span>{t('nav.inventory')}</span>
-          </button>
+          {storeConfig?.inventoryEnabled && (
+            <button type="button"
+              ref={el => { tabRefs.current['inventory'] = el; }}
+              className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''}`}
+              onClick={() => setActiveTab('inventory')}
+            >
+              <Package size={17} />
+              <span>{t('nav.inventory')}</span>
+            </button>
+          )}
 
           <button type="button"
             ref={el => { tabRefs.current['history'] = el; }}
