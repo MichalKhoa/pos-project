@@ -8,6 +8,7 @@ import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
 import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 import { soundFx } from '../utils/audio';
 import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
+import { newCustomItemId } from '../utils/customItemId.js';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -106,7 +107,7 @@ export default function ManualKeypad({
     const unitPrice = isReturn ? -Math.abs(numericAmount) : Math.abs(numericAmount);
 
     onAddToCart({
-      id: `custom-${Date.now()}`,
+      id: newCustomItemId(),
       name: label.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
       price: unitPrice,
       vat: selectedVat,

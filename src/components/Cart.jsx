@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown, PauseCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
-import { calculateCartTotals } from '../utils/tax';
+import { calculateCartTotals, roundCashTotal } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
 import { canRefund } from '../utils/saleSync';
@@ -120,7 +120,7 @@ function Cart({
   onInitiateRefund = null
 }) {
   const { t, language } = useTranslation();
-  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedLineKey, setSelectedLineKey] = useState(null);
   const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
   const lastReceiptRef = useRef(null);
   const itemsContainerRef = useRef(null);
@@ -238,6 +238,9 @@ function Cart({
 
   const isRefundTransaction = finalGrandTotal < 0;
   const totalItemCount = useMemo(() => countCartItems(cartItems), [cartItems]);
+  // Cash rounds to whole koruna; show it next to the item count so the cashier knows before opening payment
+  const cashRounded = roundCashTotal(finalGrandTotal);
+  const showCashHint = cartItems.length > 0 && Math.abs(cashRounded - finalGrandTotal) > 0.004;
   const itemCountLabel = (() => {
     const category = new Intl.PluralRules(language).select(Math.abs(totalItemCount));
     const word = t(`cart.items_${category}`);
@@ -245,8 +248,8 @@ function Cart({
   })();
 
   const activeItem = useMemo(() => {
-    return cartItems.find(i => lineKey(i) === selectedItemId) || null;
-  }, [cartItems, selectedItemId]);
+    return cartItems.find(i => lineKey(i) === selectedLineKey) || null;
+  }, [cartItems, selectedLineKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
@@ -254,11 +257,11 @@ function Cart({
       {activeItem && (
         <CartItemInspector
           item={activeItem}
-          onClose={() => setSelectedItemId(null)}
+          onClose={() => setSelectedLineKey(null)}
           onUpdateDetails={onUpdateItemDetails || onUpdateQty}
           onRemoveItem={(id) => {
             onRemoveItem(id);
-            setSelectedItemId(null);
+            setSelectedLineKey(null);
           }}
         />
       )}
@@ -321,7 +324,7 @@ function Cart({
                 type="button"
                 className="clear-cart-btn btn-danger is-icon"
                 onClick={() => {
-                  setSelectedItemId(null);
+                  setSelectedLineKey(null);
                   onClearCart();
                 }}
                 title={t('cart.clear')}
@@ -336,7 +339,7 @@ function Cart({
 
       {/* Last Receipt Quick Actions Chip & Popover */}
       {lastSale && (
-        <div ref={lastReceiptRef} className="last-receipt-quick-container">
+        <div ref={lastReceiptRef} className={`last-receipt-quick-container ${cartItems.length > 0 ? 'is-compact' : ''}`}>
           <button
             type="button"
             className={`last-receipt-chip-btn ${isLastReceiptOpen ? 'is-active' : ''} ${isOlderThanToday ? 'is-past-day' : ''}`}
@@ -479,7 +482,7 @@ function Cart({
             const effectiveUnitPrice = item.price * (1 - itemDisc / 100);
             const lineTotal = effectiveUnitPrice * item.quantity;
             const isItemReturn = item.price < 0 || lineTotal < 0;
-            const isSelected = selectedItemId === lineKey(item);
+            const isSelected = selectedLineKey === lineKey(item);
             const isItemWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted;
             const step = isItemWeighted ? 0.1 : 1;
             const isLastUnit = item.quantity <= step;
@@ -493,7 +496,7 @@ function Cart({
                   borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined,
                   background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined
                 }}
-                onClick={() => setSelectedItemId(prev => prev === lineKey(item) ? null : lineKey(item))}
+                onClick={() => setSelectedLineKey(prev => prev === lineKey(item) ? null : lineKey(item))}
                 title={t('cart.edit_hint')}
               >
                 {/* Row 1 Top: Item Name & Action Buttons (Qty Stepper, Delete) */}
@@ -521,7 +524,7 @@ function Cart({
                     <div className="cart-stepper-box">
                       <button
                         type="button"
-                        className="cart-stepper-btn cart-stepper-btn-minus"
+                        className={`cart-stepper-btn cart-stepper-btn-minus ${isLastUnit ? 'is-last' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onUpdateQty(lineKey(item), Math.round((item.quantity - step) * 1000) / 1000);
@@ -529,7 +532,7 @@ function Cart({
                         title={isLastUnit ? t('inspector.delete_item') : (isItemWeighted ? "-0.1 kg" : "-1 ks")}
                         aria-label={isLastUnit ? t('inspector.delete_item') : `${t('cart.decrease_qty')} (${isItemWeighted ? '-0.1 kg' : '-1 ks'})`}
                       >
-                        {isLastUnit ? <Trash2 size={15} strokeWidth={2.5} /> : <Minus size={15} strokeWidth={2.5} />}
+                        <Minus size={15} strokeWidth={2.5} />
                       </button>
                       <span className="cart-stepper-num">{formatQty(item.quantity)}</span>
                       <button
@@ -552,7 +555,7 @@ function Cart({
                       onClick={(e) => {
                         e.stopPropagation();
                         onRemoveItem(lineKey(item));
-                        if (selectedItemId === lineKey(item)) setSelectedItemId(null);
+                        if (selectedLineKey === lineKey(item)) setSelectedLineKey(null);
                       }}
                       title={t('inspector.delete_item')}
                       aria-label={t('inspector.delete_item')}
@@ -624,6 +627,7 @@ function Cart({
             </span>
             <span className="total-items-badge">
               {totalItemCount} {itemCountLabel}
+              {showCashHint && ` · ${t('cart.cash_short', { amount: formatKc(Math.abs(cashRounded)).replace(/\.00$/, '') })}`}
             </span>
           </div>
           <span className="total-hero-amount total-amount">

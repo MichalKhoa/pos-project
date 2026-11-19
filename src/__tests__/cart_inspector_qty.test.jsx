@@ -80,9 +80,10 @@ describe('Cart row (plan phase 2)', () => {
     expect(details).not.toContain('=');
   });
 
-  it('shows a trash icon on minus at quantity 1 and minus at quantity 2', () => {
+  it('tints the minus at quantity 1 (no second trash icon) and keeps a plain minus at quantity 2', () => {
     const { container, rerender } = renderCart([piece]);
-    expect(container.querySelector('.cart-stepper-btn-minus svg.lucide-trash-2')).not.toBeNull();
+    expect(container.querySelector('.cart-stepper-btn-minus.is-last svg.lucide-minus')).not.toBeNull();
+    expect(container.querySelector('.cart-stepper-btn-minus svg.lucide-trash-2')).toBeNull();
     rerender(<LanguageProvider><CartComponent cartItems={[{ ...piece, quantity: 2 }]} {...baseProps} /></LanguageProvider>);
     expect(container.querySelector('.cart-stepper-btn-minus svg.lucide-minus')).not.toBeNull();
   });
@@ -289,5 +290,35 @@ describe('Cart polish (items 4, 7, 9, 10)', () => {
       </LanguageProvider>
     );
     expect(container.querySelector('.total-hero-amount').textContent).toBe('12 345.50 Kč');
+  });
+});
+
+describe('Cart cash rounding hint and compact chip', () => {
+  const baseProps = { onUpdateQty: () => {}, onUpdateItemDetails: () => {}, onRemoveItem: () => {}, onClearCart: () => {}, onOpenPayment: () => {} };
+  const line = (price, qty = 1) => [{ id: 'x', lineId: 'X', name: 'X', price, quantity: qty, vat: 21 }];
+  const badge = (items, extra = {}) => {
+    const { container } = render(
+      <LanguageProvider><CartComponent cartItems={items} {...baseProps} {...extra} /></LanguageProvider>
+    );
+    return container.querySelector('.total-items-badge').textContent;
+  };
+
+  it('shows the whole-koruna cash amount only when it differs from the total', () => {
+    expect(badge(line(3.5))).toContain('hotově 4 Kč');
+    expect(badge(line(4))).not.toContain('hotově');
+    expect(badge([])).not.toContain('hotově');
+  });
+
+  it('shows the absolute cash amount for a refund', () => {
+    expect(badge(line(-3.5))).toContain('hotově 4 Kč');
+  });
+
+  it('makes the last-receipt chip compact only while the cart has items', () => {
+    const sale = { id: 's1', totalAmount: 5, timestamp: new Date().toISOString(), items: [] };
+    const full = render(<LanguageProvider><CartComponent cartItems={line(4)} lastSale={sale} {...baseProps} /></LanguageProvider>);
+    expect(full.container.querySelector('.last-receipt-quick-container').className).toContain('is-compact');
+    full.unmount();
+    const empty = render(<LanguageProvider><CartComponent cartItems={[]} lastSale={sale} {...baseProps} /></LanguageProvider>);
+    expect(empty.container.querySelector('.last-receipt-quick-container').className).not.toContain('is-compact');
   });
 });

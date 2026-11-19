@@ -51,7 +51,8 @@ export const translations = {
       cleared_sub: "{count} položek v paměti (8 s)",
       restore_cart: "Obnovit košík",
       decrease_qty: "Ubrat množství",
-      increase_qty: "Přidat množství"
+      increase_qty: "Přidat množství",
+      cash_short: "hotově {amount} Kč"
     },
     parked_carts: {
       card_title: "Odložené Nákupy (Zákazníci)",
@@ -1484,7 +1485,8 @@ export const translations = {
       cleared_sub: "{count} sản phẩm trong bộ nhớ (8 giây)",
       restore_cart: "Khôi phục giỏ hàng",
       decrease_qty: "Giảm số lượng",
-      increase_qty: "Tăng số lượng"
+      increase_qty: "Tăng số lượng",
+      cash_short: "tiền mặt {amount} Kč"
     },
     parked_carts: {
       card_title: "Đơn hàng tạm giữ (Khách hàng)",
@@ -2917,7 +2919,8 @@ export const translations = {
       cleared_sub: "{count} items in memory (8 s)",
       restore_cart: "Restore cart",
       decrease_qty: "Decrease quantity",
-      increase_qty: "Increase quantity"
+      increase_qty: "Increase quantity",
+      cash_short: "cash {amount} Kč"
     },
     parked_carts: {
       card_title: "Parked Carts (Customers)",

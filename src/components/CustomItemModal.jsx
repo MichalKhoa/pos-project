@@ -7,6 +7,7 @@ import { openSystemKeyboard } from '../api/posApi.js';
 import KeypadStepperBar from './keypad/KeypadStepperBar.jsx';
 import KeypadVatSelector from './keypad/KeypadVatSelector.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid.jsx';
+import { newCustomItemId } from '../utils/customItemId.js';
 
 export default function CustomItemModal({
   isOpen = true,
@@ -139,7 +140,7 @@ export default function CustomItemModal({
     const unitPrice = isReturn ? -Math.abs(numericAmount) : Math.abs(numericAmount);
 
     onAddToCart?.({
-      id: id || `custom-${Date.now()}`,
+      id: id || newCustomItemId(),
       name: name.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
       price: unitPrice,
       vat: selectedVat,

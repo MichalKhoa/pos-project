@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { soundFx } from '../utils/audio.js';
 import { parseScaleBarcode } from '../utils/barcodeUtils.js';
+import { newCustomItemId } from '../utils/customItemId.js';
 
 export function usePosKeyboardShortcuts({
   isAppLocked,
@@ -272,7 +273,7 @@ export function usePosKeyboardShortcuts({
           const qty = Math.max(1, Math.abs(itemMultiplier || 1));
           const unitPrice = isReturn ? -Math.abs(amtVal) : Math.abs(amtVal);
           handleAddToCart({
-            id: `custom-${Date.now()}`,
+            id: newCustomItemId(),
             name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
             price: unitPrice,
             vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,

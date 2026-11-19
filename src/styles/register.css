@@ -1212,6 +1212,20 @@ select.input-field:focus {
   flex-shrink: 0;
 }
 
+/* With items in the cart the chip shrinks so the list keeps its room */
+.last-receipt-quick-container.is-compact {
+  margin: 0.15rem 1.1rem 0.3rem 1.1rem;
+}
+
+.last-receipt-quick-container.is-compact .last-receipt-chip-btn {
+  min-height: 32px;
+  padding: 0.2rem 0.7rem;
+}
+
+.last-receipt-quick-container.is-compact .last-receipt-chip-count-badge {
+  display: none;
+}
+
 .last-receipt-chip-btn {
   display: flex;
   align-items: center;
@@ -1805,6 +1819,10 @@ select.input-field:focus {
   user-select: none;
   touch-action: manipulation;
   color: var(--text-secondary);
+}
+
+.cart-stepper-btn.cart-stepper-btn-minus.is-last {
+  color: var(--accent-rose);
 }
 
 @media (hover: hover) and (pointer: fine) {
