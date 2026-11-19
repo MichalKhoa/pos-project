@@ -10,13 +10,21 @@ const StoreConfigContext = createContext(null);
 
 export function StoreConfigProvider({ children }) {
   const [storeConfig, setStoreConfig] = useState(() => {
+    // The backend does not store fontSize, so the localStorage key is its only persisted copy.
+    let savedFontSize;
+    try {
+      savedFontSize = localStorage.getItem('voltflow_font_size') || undefined;
+    } catch {
+      // ignore storage error
+    }
+    const fontSize = ['sm', 'md', 'lg', 'xl'].includes(savedFontSize) ? { fontSize: savedFontSize } : {};
     try {
       const saved = getStorageItem('config');
-      if (saved) return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved) };
+      if (saved) return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved), ...fontSize };
     } catch {
       // ignore parse error
     }
-    return DEFAULT_STORE_CONFIG;
+    return { ...DEFAULT_STORE_CONFIG, ...fontSize };
   });
 
   const [isAdminMode, setIsAdminMode] = useState(false);

@@ -475,7 +475,7 @@ export default function LayoutSection({
               <button
                 key={sz.id}
                 type="button"
-                className={`settings-segmented-btn ${(config.fontSize || 'md') === sz.id ? 'active' : ''}`}
+                className={`settings-segmented-btn ${(config.fontSize || 'lg') === sz.id ? 'active' : ''}`}
                 onClick={() => {
                   handleUpdate({ fontSize: sz.id });
                   try {
