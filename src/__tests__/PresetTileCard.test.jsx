@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import PresetsCatalogView from '../components/PresetsCatalogView';
 import PresetTileCard, { arePresetCardPropsEqual } from '../components/presets/PresetTileCard';
 import { LanguageProvider } from '../i18n/LanguageContext';
 
@@ -194,6 +195,71 @@ describe('PresetTileCard Component', () => {
     expect(badge.textContent).toBe('Zb\u00fdv\u00e1 2 ks');
   });
 
+  const baseProps = { index: 0, onClick: noop, onDragStart: noop, onDragOver: noop, onDragLeave: noop, onDrop: noop, onDragEnd: noop };
+
+  it('renders a watermark icon, a price chip and the tinted style', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard {...baseProps} preset={{ ...defaultPreset, icon: 'Coffee' }} />
+    );
+    expect(container.querySelector('.preset-watermark svg')).toBeTruthy();
+    expect(container.querySelector('.preset-price-chip').textContent).toContain('3.5');
+    expect(container.querySelector('.preset-card.style-tinted')).toBeTruthy();
+  });
+
+  it('falls back to the first letter watermark when no icon is set', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard {...baseProps} preset={{ ...defaultPreset, icon: '' }} />
+    );
+    expect(container.querySelector('.preset-watermark').textContent).toBe('R');
+  });
+
+  it('renders a photo instead of a watermark and hides the chip for open price', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard {...baseProps} preset={{ ...defaultPreset, imageUrl: 'x.png', isOpenPrice: true }} />
+    );
+    expect(container.querySelector('.preset-photo')).toBeTruthy();
+    expect(container.querySelector('.preset-watermark')).toBeNull();
+    expect(container.querySelector('.preset-price-chip')).toBeNull();
+  });
+
+  it('applies color-fill style and the readable text colour variable', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard {...baseProps} buttonStyle="color-fill" preset={{ ...defaultPreset, color: '#facc15' }} />
+    );
+    const card = container.querySelector('.preset-card.style-color-fill');
+    expect(card).toBeTruthy();
+    expect(card.style.getPropertyValue('--card-fg')).toBe('#111827');
+  });
+
+  it('marks out-of-stock tiles and keeps the badge in the header', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard
+        {...baseProps}
+        storeConfig={{ inventoryEnabled: true }}
+        preset={{ ...defaultPreset, trackStock: true, stockQuantity: 0 }}
+      />
+    );
+    expect(container.querySelector('.preset-card.is-out-of-stock')).toBeTruthy();
+    expect(container.querySelector('.preset-card-header .preset-stock-badge.out-of-stock')).toBeTruthy();
+  });
+
+  it('catalogue grid view uses the watermark, price chip and normalised legacy style', () => {
+    localStorage.setItem('pos_preset_button_style', 'modern-glass');
+    const { container } = renderWithLang(
+      <PresetsCatalogView
+        presets={[{ ...defaultPreset, icon: 'Coffee', category: 'x' }]}
+        categories={[]}
+        storeConfig={{}}
+      />
+    );
+    fireEvent.click(container.querySelectorAll('button.nav-tab')[1]);
+    const card = container.querySelector('.preset-grid .preset-card');
+    expect(card.className).toContain('style-tinted');
+    expect(card.querySelector('.preset-watermark svg')).toBeTruthy();
+    expect(card.querySelector('.preset-price-chip')).toBeTruthy();
+    localStorage.removeItem('pos_preset_button_style');
+  });
+
   it('invokes onClick handler when preset card is tapped', () => {
     const handleClick = vi.fn();
     const preset = { ...defaultPreset, trackStock: true, stockQuantity: 0 };
@@ -238,8 +304,8 @@ describe('arePresetCardPropsEqual memo comparator', () => {
     isDraggingThis: false,
     isDragOverThis: false,
     onClick: noop,
-    buttonStyle: 'left-stripe',
-    storeConfig: { presetButtonStyle: 'left-stripe', showPresetVat: true }
+    buttonStyle: 'tinted',
+    storeConfig: { presetButtonStyle: 'tinted', showPresetVat: true }
   };
 
   it('returns true when stock quantities and properties match', () => {

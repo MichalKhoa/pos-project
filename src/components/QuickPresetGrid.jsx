@@ -77,9 +77,9 @@ function QuickPresetGrid({
 
   const buttonStyle = storeConfig?.presetButtonStyle || (() => {
     try {
-      return localStorage.getItem('pos_preset_button_style') || 'left-stripe';
+      return localStorage.getItem('pos_preset_button_style') || 'tinted';
     } catch {
-      return 'left-stripe';
+      return 'tinted';
     }
   })();
 

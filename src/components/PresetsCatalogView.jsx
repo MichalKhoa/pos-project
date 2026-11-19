@@ -7,6 +7,8 @@ import BarcodeLabelModal from './inventory/BarcodeLabelModal';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { useConfirm } from '../context/useConfirm.js';
 import { getPresetIconComponent } from '../utils/presetIcons';
+import PresetTileArt from './presets/PresetTileArt';
+import { normalizePresetStyle, readableTextOn } from '../utils/presetTileStyle';
 
 export default function PresetsCatalogView({
   presets,
@@ -240,28 +242,19 @@ export default function PresetsCatalogView({
       ) : (
         <div className="preset-grid">
           {filteredPresets.map(preset => {
-            const IconComp = getPresetIconComponent(preset.icon);
             return (
               <div
                 key={preset.id}
-                className={`preset-card style-${localStorage.getItem('pos_preset_button_style') || storeConfig?.presetButtonStyle || 'left-stripe'}`}
-                style={{ '--card-accent': preset.color || '#3b82f6', cursor: 'pointer' }}
+                className={`preset-card ${preset.imageUrl ? 'has-photo' : ''} style-${normalizePresetStyle(localStorage.getItem('pos_preset_button_style') || storeConfig?.presetButtonStyle)}`}
+                style={{ '--card-accent': preset.color || '#3b82f6', '--card-fg': readableTextOn(preset.color || '#3b82f6'), cursor: 'pointer' }}
                 onClick={() => handleOpenEditModal(preset)}
               >
+                <PresetTileArt preset={preset} />
                 <div className="preset-card-header">
                   <div className="preset-name">
                     <span>{preset.name}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    {(preset.imageUrl || IconComp) && (
-                      <div className="preset-corner-icon">
-                        {preset.imageUrl ? (
-                          <img src={preset.imageUrl} alt="" className="preset-corner-thumb" />
-                        ) : (
-                          IconComp && <IconComp size={16} />
-                        )}
-                      </div>
-                    )}
                     <button
                       type="button"
                       data-testid={`grid-print-label-btn-${preset.id}`}
@@ -291,9 +284,11 @@ export default function PresetsCatalogView({
                   </div>
                 </div>
                 <div className="preset-price-tag">
-                  <span className="preset-price">
-                    {preset.isOpenPrice ? '' : preset.price > 0 ? `${preset.price} Kč` : ''}
-                  </span>
+                  {!preset.isOpenPrice && preset.price > 0 && (
+                    <span className="preset-price-chip">
+                      <span className="preset-price">{`${preset.price} Kč`}</span>
+                    </span>
+                  )}
                   {storeConfig?.showPresetVat === true && preset.vat !== undefined && (
                     <span className="preset-vat-text">{preset.vat}%</span>
                   )}

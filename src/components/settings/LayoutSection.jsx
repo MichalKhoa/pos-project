@@ -3,6 +3,7 @@ import { soundFx } from '../../utils/audio';
 import { Tag, ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
+import { normalizePresetStyle } from '../../utils/presetTileStyle.js';
 
 export default function LayoutSection({
   config,
@@ -151,15 +152,13 @@ export default function LayoutSection({
 
           <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
             {[
-              { id: 'left-stripe', label: '▍ ' + (t('settings.preset_style_left_stripe') || 'Levý proužek') },
-              { id: 'color-fill', label: '█ ' + (t('settings.preset_style_color_fill') || 'Plná barva') },
-              { id: 'modern-card', label: '✦ ' + (t('settings.preset_style_modern_card') || 'Moderní karta') },
-              { id: 'modern-glass', label: '❖ ' + (t('settings.preset_style_modern_glass') || 'Moderní sklo') }
+              { id: 'tinted', label: t('settings.preset_style_tinted') || 'Tónovaná' },
+              { id: 'color-fill', label: '█ ' + (t('settings.preset_style_color_fill') || 'Plná barva') }
             ].map(st => (
               <button
                 key={st.id}
                 type="button"
-                className={`settings-segmented-btn ${(config.presetButtonStyle || 'left-stripe') === st.id ? 'active' : ''}`}
+                className={`settings-segmented-btn ${normalizePresetStyle(config.presetButtonStyle) === st.id ? 'active' : ''}`}
                 onClick={() => {
                   handleUpdate({ presetButtonStyle: st.id });
                   try {

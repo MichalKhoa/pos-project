@@ -141,11 +141,11 @@ class StoreConfigModel(Base):
     # Preset Tile Density / Button Size ('compact', 'standard', 'large')
     preset_density = Column(String, default="standard")
 
-    # Preset Button Aesthetic Style ('left-stripe' or 'color-fill')
-    preset_button_style = Column(String, default="left-stripe")
+    # Preset Button Aesthetic Style ('tinted' or 'color-fill')
+    preset_button_style = Column(String, default="tinted")
 
     # Show/Hide VAT Rate on Preset Tiles (Useful for non-VAT retailers)
-    show_preset_vat = Column(Boolean, default=True)
+    show_preset_vat = Column(Boolean, default=False)
 
     # Enable/Disable B2B Corporate Invoice Toggle in Payment Modal (Hidden by default)
     enable_b2b_invoicing = Column(Boolean, default=False)

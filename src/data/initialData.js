@@ -247,7 +247,7 @@ export const DEFAULT_STORE_CONFIG = {
   autoPrintReceipt: false, // Auto-print receipt on finished transaction
   presetGridColumns: 'auto', // Grid density: 'auto', '3', '4', '5', '6' columns
   presetDensity: 'standard', // 'compact', 'standard', 'large'
-  presetButtonStyle: 'left-stripe', // 'left-stripe', 'color-fill', 'modern-card', 'modern-glass'
+  presetButtonStyle: 'tinted', // 'tinted', 'color-fill'
   cartItemStyle: 'elevated-card', // 'elevated-card', 'divided-row', 'rounded-tile'
   showPresetVat: false, // Show VAT percentage badge on preset buttons
   enableB2bInvoicing: false, // Hide B2B corporate invoice toggle in payment modal by default
