@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from database import SessionLocal
 from models import EetAuditLogModel, SaleModel, StoreConfigModel
+import routers.eet as eet_router
 import services.eet_resend_daemon as eet_daemon
 from services.eet_service import CzechEETService
 from tests.temp_db import TempDbTestCase
@@ -233,7 +234,11 @@ class TestEETRouter(TempDbTestCase):
     """API tests for /api/v1/eet/* endpoints."""
 
     def setUp(self):
+        eet_router.eet_service.crypto_managers.clear()
         _reset_eet_tables()
+
+    def tearDown(self):
+        eet_router.eet_service.crypto_managers.clear()
 
     def test_get_eet_status_disabled_vs_enabled_pending_count(self):
         _seed_config(dic="CZ00000019", eet_enabled=False)
