@@ -87,3 +87,30 @@ describe('keyboard shortcuts use shared entry rules', () => {
     expect(b.state.amount).toBe('2.5');
   });
 });
+
+describe('keypad P2 feedback', () => {
+  it('Add button shows the line total with VAT, and VAT resets to default after adding', () => {
+    const onAddToCart = vi.fn();
+    render(<LanguageProvider><Harness onAddToCart={onAddToCart} /></LanguageProvider>);
+    ['3', '×', '1', '2', '5'].forEach(click);
+    click(/12\s*%/);
+    const add = document.querySelector('.key-enter');
+    expect(add.textContent).toContain('3 × 125.00 = 375.00 Kč · DPH 12%');
+    fireEvent.click(add);
+    expect(onAddToCart).toHaveBeenCalledWith(expect.objectContaining({ vat: 12, quantity: 3 }));
+    expect(screen.getByRole('button', { name: /21\s*%/ })).toHaveClass('active');
+  });
+
+  it('shows a negative total for returns', () => {
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    ['±', '4', '0'].forEach(click);
+    expect(document.querySelector('.key-enter').textContent).toContain('-40.00 Kč · DPH 21%');
+  });
+
+  it('a rejected × shakes the key and the display', () => {
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    ['2', ',', '5', '×'].forEach(click);
+    expect(screen.getByRole('button', { name: '×' })).toHaveClass('key-reject');
+    expect(document.querySelector('.keypad-amount-display')).toHaveClass('key-reject');
+  });
+});

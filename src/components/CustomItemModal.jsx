@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { Tag, Calculator, X, Keyboard, Delete } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { soundFx } from '../utils/audio.js';
@@ -26,6 +26,9 @@ export default function CustomItemModal({
   const [priceStr, setPriceStr] = useState('');
   const [name, setName] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => (defaultVat !== undefined && defaultVat !== null ? parseInt(defaultVat, 10) : 21));
+  const [rejectKey, setRejectKey] = useState(false);
+  const rejectTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(rejectTimerRef.current), []);
   const [itemMultiplier, setItemMultiplier] = useState(() => initialMultiplier || 1);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -118,6 +121,9 @@ export default function CustomItemModal({
     const result = applyMultiply(priceStr, itemMultiplier);
     if (!result) {
       soundFx.playError();
+      setRejectKey(true);
+      clearTimeout(rejectTimerRef.current);
+      rejectTimerRef.current = setTimeout(() => setRejectKey(false), 350);
       return;
     }
     setPriceStr(result.amountStr);
@@ -437,6 +443,8 @@ export default function CustomItemModal({
             itemMultiplier={itemMultiplier}
             amountStr={priceStr}
             onMultiply={handleMultiply}
+            selectedVat={selectedVat}
+            rejectKey={rejectKey}
             hasValidAmount={hasValidAmount}
             onAddCustomItem={handleAddCustomItem}
           />

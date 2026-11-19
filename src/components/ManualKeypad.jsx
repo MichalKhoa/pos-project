@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Calculator, Delete, Banknote } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
@@ -37,6 +37,9 @@ export default function ManualKeypad({
   const [label, setLabel] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => defaultVat !== undefined ? parseInt(defaultVat, 10) : 21);
   const [activeKey, setActiveKey] = useState(null);
+  const [rejectKey, setRejectKey] = useState(false);
+  const rejectTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(rejectTimerRef.current), []);
 
   useEffect(() => {
     if (defaultVat !== undefined && defaultVat !== null) {
@@ -90,6 +93,9 @@ export default function ManualKeypad({
     const result = applyMultiply(amountStr, itemMultiplier);
     if (!result) {
       soundFx.playError();
+      setRejectKey(true);
+      clearTimeout(rejectTimerRef.current);
+      rejectTimerRef.current = setTimeout(() => setRejectKey(false), 350);
       return;
     }
     setAmountStr(result.amountStr);
@@ -117,6 +123,7 @@ export default function ManualKeypad({
 
     if (setAmountStr) setAmountStr('');
     setLabel('');
+    setSelectedVat(defaultVat !== undefined && defaultVat !== null ? parseInt(defaultVat, 10) : 21);
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
     soundFx.playScanChime();
     triggerKeyAnimation('ENTER');
@@ -179,7 +186,7 @@ export default function ManualKeypad({
 
         {/* ── Amount display card with inline Backspace ── */}
         <div
-          className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
+          className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''} ${rejectKey ? 'key-reject' : ''}`}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -209,7 +216,7 @@ export default function ManualKeypad({
                 ? 'var(--accent-rose)'
                 : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
             }}>
-              {isReturn ? `${t('keypad.amount_label')} — ↩️ VRATKA` : t('keypad.amount_label')}
+              {t('keypad.amount_label')}{isReturn && <span className="keypad-return-pill">VRATKA</span>}
             </span>
 
             {itemMultiplier !== 1 && (
@@ -221,7 +228,7 @@ export default function ManualKeypad({
                 padding: '1px 5px',
                 borderRadius: '4px'
               }}>
-                ⚡ {itemMultiplier}×
+                {itemMultiplier}×
               </span>
             )}
           </div>
@@ -245,7 +252,7 @@ export default function ManualKeypad({
               flex: 1
             }}>
               {itemMultiplier !== 1
-                ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : (isReturn ? '-___ Kč' : '___ Kč')}`
+                ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'}`
                 : (amountStr ? `${amountStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč'))}
             </div>
 
@@ -328,6 +335,8 @@ export default function ManualKeypad({
           itemMultiplier={itemMultiplier}
           amountStr={amountStr}
           onMultiply={handleMultiply}
+          selectedVat={selectedVat}
+          rejectKey={rejectKey}
           hasValidAmount={hasValidAmount}
           onAddCustomItem={handleAddCustomItem}
         />

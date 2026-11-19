@@ -54,9 +54,6 @@ export default function KeypadStepperBar({
           height: '42px',
           minHeight: '42px',
           aspectRatio: 'auto',
-          background: '#dc2626',
-          color: '#ffffff',
-          border: 'none',
           fontSize: '1.08rem',
           fontWeight: '700',
           display: 'flex',
@@ -64,7 +61,6 @@ export default function KeypadStepperBar({
           justifyContent: 'center',
           gap: '0.35rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
           cursor: 'pointer'
         }}
       >
@@ -101,9 +97,6 @@ export default function KeypadStepperBar({
           height: '42px',
           minHeight: '42px',
           aspectRatio: 'auto',
-          background: '#059669',
-          color: '#ffffff',
-          border: 'none',
           fontSize: '1.08rem',
           fontWeight: '700',
           display: 'flex',
@@ -111,7 +104,6 @@ export default function KeypadStepperBar({
           justifyContent: 'center',
           gap: '0.35rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
           cursor: 'pointer'
         }}
       >

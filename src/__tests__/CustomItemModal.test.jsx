@@ -252,5 +252,14 @@ describe('CustomItemModal Component Tests', () => {
     ['5', '×'].forEach((name) => fireEvent.click(screen.getByRole('button', { name })));
     expect(screen.getAllByText(/-5×/).length).toBeGreaterThan(0);
   });
+  it('Add button shows the line total with VAT, and a rejected × shakes', () => {
+    const { container } = renderModal();
+    const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
+    ['2', ',', '5', '×'].forEach(click);
+    expect(screen.getByRole('button', { name: '×' })).toHaveClass('key-reject');
+    click('C');
+    ['4', '0'].forEach(click);
+    expect(container.ownerDocument.querySelector('.key-enter').textContent).toContain('40.00 Kč · DPH 21%');
+  });
 });
 

@@ -2662,3 +2662,37 @@ select.input-field:focus {
     min-height: 48px;
   }
 }
+
+/* Keypad: rejected press (for example × on a decimal) */
+.key-reject {
+  animation: keypadShake 0.3s ease-in-out;
+}
+
+@keyframes keypadShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key-reject {
+    animation: none;
+    outline: 2px solid var(--accent-rose);
+  }
+}
+
+.key-enter-summary {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.9;
+  font-family: var(--font-mono);
+}
+
+.keypad-return-pill {
+  margin-left: 0.4rem;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent-rose) 15%, transparent);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
