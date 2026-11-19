@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
@@ -13,7 +14,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
     globals: true,
-    testTimeout: 15000
+    testTimeout: 15000,
+    exclude: [...configDefaults.exclude, '**/.claude/**']
   },
   build: {
     chunkSizeWarningLimit: 1000,

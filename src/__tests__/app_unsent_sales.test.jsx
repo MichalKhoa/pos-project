@@ -82,8 +82,10 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
     expect(screen.getByText(/TOTAL_MISMATCH/)).toBeInTheDocument();
     expect(screen.getByText(/Zavolejte správce/i)).toBeInTheDocument();
     expect(posApi.printReceiptBackend).not.toHaveBeenCalled();
-    const stored = JSON.parse(localStorage.getItem('voltflow_pos_sales'));
-    expect(stored[0]).toMatchObject({ syncState: 'REJECTED', syncError: 'TOTAL_MISMATCH' });
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem('voltflow_pos_sales'));
+      expect(stored[0]).toMatchObject({ syncState: 'REJECTED', syncError: 'TOTAL_MISMATCH' });
+    });
   });
 
   it('says the receipt was not printed when the cashier skips printing (F-011)', async () => {
@@ -110,7 +112,9 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
 
     const badge = await screen.findByRole('button', { name: /Neuložené prodeje: 1/i });
     expect(badge).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0].syncState).toBe('PENDING');
+    await waitFor(() => {
+      expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0].syncState).toBe('PENDING');
+    });
     expect(posApi.createSaleBackend).toHaveBeenCalledTimes(1);
 
     posApi.createSaleBackend.mockResolvedValue({ status: 'SUCCESS', receipt_number: '2026-000042' });
@@ -118,7 +122,9 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
 
     await waitFor(() => expect(screen.queryByRole('button', { name: /Neuložené prodeje/i })).not.toBeInTheDocument());
     expect(posApi.createSaleBackend).toHaveBeenCalledTimes(2);
-    expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0]).toMatchObject({ syncState: 'SYNCED', receiptNumber: '2026-000042' });
+    await waitFor(() => {
+      expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0]).toMatchObject({ syncState: 'SYNCED', receiptNumber: '2026-000042' });
+    });
     expect(posApi.createSaleBackend.mock.calls[0][0].id).toBe(posApi.createSaleBackend.mock.calls[1][0].id);
   });
 
@@ -131,7 +137,9 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
     renderAppWithProviders();
 
     expect(await screen.findByRole('button', { name: /Neuložené prodeje: 1/i })).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0].syncState).toBe('STRANDED');
+    await waitFor(() => {
+      expect(JSON.parse(localStorage.getItem('voltflow_pos_sales'))[0].syncState).toBe('STRANDED');
+    });
     expect(posApi.createSaleBackend).not.toHaveBeenCalled();
   });
 
@@ -199,9 +207,11 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
 
       expect(await screen.findByText(/Server vratku odmítl/i)).toBeInTheDocument();
       expect(posApi.updateSaleRefundStatusBackend).not.toHaveBeenCalled();
-      const local = JSON.parse(localStorage.getItem('voltflow_pos_sales'));
-      expect(local.find(s => s.id === 'sale-1').refundStatus || 'NONE').toBe('NONE');
-      expect(local.find(s => s.isRefund)).toMatchObject({ syncState: 'REJECTED' });
+      await waitFor(() => {
+        const local = JSON.parse(localStorage.getItem('voltflow_pos_sales'));
+        expect(local.find(s => s.id === 'sale-1').refundStatus || 'NONE').toBe('NONE');
+        expect(local.find(s => s.isRefund)).toMatchObject({ syncState: 'REJECTED' });
+      });
       posApi.fetchSalesHistoryBackend.mockResolvedValue([]);
       posApi.createSaleBackend.mockResolvedValue({ status: 'SUCCESS', receipt_number: '2026-000001' });
     });

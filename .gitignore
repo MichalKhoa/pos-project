@@ -59,6 +59,7 @@ __pycache__/
 backend/pos_store.db
 backend/data/
 backend/backups/
+*%3Amemory%3A*
 
 # ==========================================
 # Certificates, Keys & Secrets
