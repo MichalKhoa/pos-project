@@ -12,6 +12,8 @@ export default function CartItemInspector({
   const [customDiscount, setCustomDiscount] = useState(() => item?.discountPercent ? String(item.discountPercent) : '');
   const [customPrice, setCustomPrice] = useState(() => item?.price !== undefined ? String(item.price) : '');
   const [noteText, setNoteText] = useState(() => item?.note || '');
+  const [qtyText, setQtyText] = useState(() => item?.quantity !== undefined ? String(item.quantity) : '');
+  const qtyFocusedRef = useRef(false);
   const noteInputRef = useRef(null);
   const inspectorRef = useRef(null);
 
@@ -23,6 +25,13 @@ export default function CartItemInspector({
       setNoteText(item.note || '');
     }
   }, [item]);
+
+  // Follow quantity changes from the stepper, chips and cart row, but never overwrite text being typed
+  useEffect(() => {
+    if (!qtyFocusedRef.current && item?.quantity !== undefined) {
+      setQtyText(String(item.quantity));
+    }
+  }, [item?.quantity]);
 
   // Close on Escape key or clicking outside both Inspector and Cart
   useEffect(() => {
@@ -53,6 +62,8 @@ export default function CartItemInspector({
 
   if (!item) return null;
 
+  const lineKey = item.lineId ?? item.id;
+
   const currentDisc = item.discountPercent || 0;
   const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
   const effectiveUnitPrice = (parseFloat(item.price) || 0) * (1 - currentDisc / 100);
@@ -61,34 +72,59 @@ export default function CartItemInspector({
   const isWeighed = item?.unit === 'kg' || item?.unit === 'g' || item?.isWeighted || item?.is_weighted;
   const qtyStep = isWeighed ? 0.1 : 1;
 
-  const handleQtyChange = (newQty) => {
-    const parsed = parseFloat(newQty);
-    if (isNaN(parsed)) return;
+  const minQty = isWeighed ? 0.001 : 1;
+
+  const clampQty = (value) => {
+    const parsed = parseFloat(value);
+    if (isNaN(parsed)) return null;
     const rounded = Math.round(parsed * 1000) / 1000;
-    const clamped = Math.max(isWeighed ? 0.001 : 1, Math.min(9999, rounded));
-    onUpdateDetails(item.id, { quantity: clamped });
+    return Math.max(minQty, Math.min(9999, rounded));
+  };
+
+  const handleQtyChange = (newQty) => {
+    const clamped = clampQty(newQty);
+    if (clamped === null) return;
+    onUpdateDetails(lineKey, { quantity: clamped });
+  };
+
+  // Typing: keep the raw text, update the cart only while the text is a valid quantity
+  const handleQtyTyping = (text) => {
+    setQtyText(text);
+    const parsed = parseFloat(text);
+    if (!isNaN(parsed) && parsed >= minQty) handleQtyChange(text);
+  };
+
+  const commitQtyText = () => {
+    qtyFocusedRef.current = false;
+    const clamped = clampQty(qtyText);
+    if (clamped === null) {
+      setQtyText(String(item.quantity));
+      return;
+    }
+    setQtyText(String(clamped));
+    if (clamped !== item.quantity) onUpdateDetails(lineKey, { quantity: clamped });
   };
 
   const handleApplyDiscount = (discPercent) => {
     const val = Math.max(0, Math.min(100, parseInt(discPercent, 10) || 0));
     setCustomDiscount(val > 0 ? String(val) : '');
-    onUpdateDetails(item.id, { discountPercent: val });
+    onUpdateDetails(lineKey, { discountPercent: val });
   };
 
   const handleCustomDiscountChange = (val) => {
     setCustomDiscount(val);
     const parsed = parseInt(val, 10);
     if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
-      onUpdateDetails(item.id, { discountPercent: parsed });
+      onUpdateDetails(lineKey, { discountPercent: parsed });
     } else if (val === '') {
-      onUpdateDetails(item.id, { discountPercent: 0 });
+      onUpdateDetails(lineKey, { discountPercent: 0 });
     }
   };
 
   const handleCustomPriceBlur = () => {
     const parsed = parseFloat(customPrice);
     if (!isNaN(parsed) && parsed >= 0) {
-      onUpdateDetails(item.id, { price: parsed });
+      onUpdateDetails(lineKey, { price: parsed });
     } else {
       setCustomPrice(String(item.price));
     }
@@ -96,7 +132,7 @@ export default function CartItemInspector({
 
   const handleNoteChange = (text) => {
     setNoteText(text);
-    onUpdateDetails(item.id, { note: text.trim() });
+    onUpdateDetails(lineKey, { note: text.trim() });
   };
 
   return (
@@ -165,8 +201,11 @@ export default function CartItemInspector({
                     textAlign: 'center',
                     outline: 'none'
                   }}
-                  value={item.quantity}
-                  onChange={(e) => handleQtyChange(e.target.value)}
+                  value={qtyText}
+                  onFocus={(e) => { qtyFocusedRef.current = true; e.target.select(); }}
+                  onChange={(e) => handleQtyTyping(e.target.value)}
+                  onBlur={commitQtyText}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                 />
                 <button
                   type="button"
@@ -327,7 +366,7 @@ export default function CartItemInspector({
               gap: '0.5rem'
             }}
             onClick={() => {
-              onRemoveItem(item.id);
+              onRemoveItem(lineKey);
               onClose();
             }}
             title={t('inspector.delete_item') || 'Odstranit položku'}

@@ -90,6 +90,12 @@ function formatQtyWithUnit(item) {
   return `${formatted} ${unit}`;
 }
 
+// Lines are addressed by lineId; two lines of one product (different price) share the same id
+const lineKey = (item) => item.lineId ?? item.id;
+
+// "Základ daně (Netto):" becomes "Základ daně" so base and VAT fit on one line
+const shortTaxLabel = (label) => label.replace(/\s*\([^)]*\)/, '').replace(/:\s*$/, '');
+
 function Cart({
   cartItems,
   onUpdateQty,
@@ -115,6 +121,39 @@ function Cart({
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
   const lastReceiptRef = useRef(null);
+  const itemsContainerRef = useRef(null);
+  const prevItemsRef = useRef(cartItems);
+  const flashTimerRef = useRef(null);
+
+  // Bring the line that was just added or increased into view and flash it
+  useEffect(() => {
+    const prev = prevItemsRef.current;
+    prevItemsRef.current = cartItems;
+    if (prev === cartItems) return;
+
+    let changedIndex = null;
+    if (cartItems.length === prev.length + 1) {
+      // Append lands last; undoing a removal restores the line in the middle
+      const firstDiff = cartItems.findIndex((item, i) => item !== prev[i]);
+      changedIndex = firstDiff > -1 ? firstDiff : cartItems.length - 1;
+    } else if (cartItems.length === prev.length) {
+      const idx = cartItems.findIndex((item, i) => item.id === prev[i]?.id && item.quantity > prev[i].quantity);
+      if (idx > -1) changedIndex = idx;
+    }
+    if (changedIndex === null) return;
+
+    const card = itemsContainerRef.current?.querySelector(`[data-line-index="${changedIndex}"]`);
+    if (!card) return;
+    card.scrollIntoView?.({ block: 'nearest' });
+    // Restart the CSS flash outside React state so repeat scans re-flash and a later render cannot strand it
+    itemsContainerRef.current.querySelectorAll('.is-flash').forEach((el) => el.classList.remove('is-flash'));
+    void card.offsetWidth;
+    card.classList.add('is-flash');
+    clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = setTimeout(() => card.classList.remove('is-flash'), 600);
+  }, [cartItems]);
+
+  useEffect(() => () => clearTimeout(flashTimerRef.current), []);
 
   useEffect(() => {
     if (!isLastReceiptOpen) return;
@@ -204,7 +243,7 @@ function Cart({
   })();
 
   const activeItem = useMemo(() => {
-    return cartItems.find(i => i.id === selectedItemId) || null;
+    return cartItems.find(i => lineKey(i) === selectedItemId) || null;
   }, [cartItems, selectedItemId]);
 
   return (
@@ -412,7 +451,7 @@ function Cart({
       )}
 
       {/* Cart Items List */}
-      <div className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>
+      <div ref={itemsContainerRef} className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>
         {cartItems.length === 0 ? (
           <div className="empty-cart">
             {clearedCartSnapshot ? (
@@ -433,24 +472,25 @@ function Cart({
           </div>
         ) : (
           cartItems.map((item, index) => {
-            const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
             const itemDisc = item.discountPercent || 0;
             const effectiveUnitPrice = item.price * (1 - itemDisc / 100);
             const lineTotal = effectiveUnitPrice * item.quantity;
             const isItemReturn = item.price < 0 || lineTotal < 0;
-            const isSelected = selectedItemId === item.id;
+            const isSelected = selectedItemId === lineKey(item);
             const isItemWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted;
             const step = isItemWeighted ? 0.1 : 1;
+            const isLastUnit = item.quantity <= step;
 
             return (
               <div
-                key={`${item.id}-${index}`}
+                key={lineKey(item)}
+                data-line-index={index}
                 className={`cart-item-card style-${activeCartItemStyle} ${isSelected ? 'is-active' : ''}`}
                 style={{
                   borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined,
                   background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined
                 }}
-                onClick={() => setSelectedItemId(prev => prev === item.id ? null : item.id)}
+                onClick={() => setSelectedItemId(prev => prev === lineKey(item) ? null : lineKey(item))}
                 title="Kliknutím upravíte množství, slevu nebo poznámku"
               >
                 {/* Row 1 Top: Item Name & Action Buttons (Qty Stepper, Delete) */}
@@ -481,11 +521,11 @@ function Cart({
                         className="cart-stepper-btn cart-stepper-btn-minus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onUpdateQty(item.id, Math.round((item.quantity - step) * 1000) / 1000);
+                          onUpdateQty(lineKey(item), Math.round((item.quantity - step) * 1000) / 1000);
                         }}
-                        title={isItemWeighted ? "-0.1 kg" : "-1 ks"}
+                        title={isLastUnit ? t('inspector.delete_item') : (isItemWeighted ? "-0.1 kg" : "-1 ks")}
                       >
-                        <Minus size={15} strokeWidth={2.5} />
+                        {isLastUnit ? <Trash2 size={15} strokeWidth={2.5} /> : <Minus size={15} strokeWidth={2.5} />}
                       </button>
                       <span className="cart-stepper-num">{formatQty(item.quantity)}</span>
                       <button
@@ -493,7 +533,7 @@ function Cart({
                         className="cart-stepper-btn cart-stepper-btn-plus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onUpdateQty(item.id, Math.round((item.quantity + step) * 1000) / 1000);
+                          onUpdateQty(lineKey(item), Math.round((item.quantity + step) * 1000) / 1000);
                         }}
                         title={isItemWeighted ? "+0.1 kg" : "+1 ks"}
                       >
@@ -506,8 +546,8 @@ function Cart({
                       className="cart-del-btn touch-target-lg"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRemoveItem(item.id);
-                        if (selectedItemId === item.id) setSelectedItemId(null);
+                        onRemoveItem(lineKey(item));
+                        if (selectedItemId === lineKey(item)) setSelectedItemId(null);
                       }}
                       title="Smazat položku"
                     >
@@ -521,8 +561,7 @@ function Cart({
                   <div className="cart-item-unit-details">
                     {isItemWeighted ? (
                       <span>
-                        {formatQty(item.quantity)} {item.unit || 'kg'} × {effectiveUnitPrice.toFixed(2)} Kč = {lineTotal.toFixed(2)} Kč
-                        <span style={{ opacity: 0.6, fontSize: '0.8rem' }}> ({t('cart.vat')} {itemVat}%)</span>
+                        {formatQty(item.quantity)} {item.unit || 'kg'} × {effectiveUnitPrice.toFixed(2)} Kč
                       </span>
                     ) : (
                       <>
@@ -540,7 +579,7 @@ function Cart({
                             {parseFloat(item.price).toFixed(2)} Kč
                           </span>
                         )}
-                        <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)} ({t('cart.vat')} {itemVat}%)</span>
+                        <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)}</span>
                       </>
                     )}
                   </div>
@@ -565,14 +604,9 @@ function Cart({
             </div>
           )}
 
-          <div className="summary-row">
-            <span>{t('cart.tax_base')}</span>
-            <span style={{ fontFamily: 'var(--font-mono)' }}>{totalNet.toFixed(2)} Kč</span>
-          </div>
-
-          <div className="summary-row">
-            <span>{t('cart.tax_total')}</span>
-            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{totalTax.toFixed(2)} Kč</span>
+          <div className="summary-row summary-row-tax">
+            <span>{shortTaxLabel(t('cart.tax_base'))} <span className="summary-value">{totalNet.toFixed(2)} Kč</span></span>
+            <span>{shortTaxLabel(t('cart.tax_total'))} <span className="summary-value">{totalTax.toFixed(2)} Kč</span></span>
           </div>
         </div>
 
@@ -617,56 +651,33 @@ function Cart({
           </button>
         </div>
 
-        {/* Split Payment Button */}
-        {cartItems.length > 0 && (
-          <button
-            type="button"
-            className="split-pay-btn"
-            onClick={() => onOpenPayment('split')}
-          >
-            <Split size={16} style={{ flexShrink: 0 }} />
-            <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
-          </button>
-        )}
+        {/* Secondary actions: split payment and cash drawer share one row */}
+        {(cartItems.length > 0 || onOpenCashDrawer) && (
+          <div className="cart-secondary-actions">
+            {cartItems.length > 0 && (
+              <button
+                type="button"
+                className="split-pay-btn"
+                onClick={() => onOpenPayment('split')}
+              >
+                <Split size={16} style={{ flexShrink: 0 }} />
+                <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
+              </button>
+            )}
 
-        {/* Cashier Drawer Release Button (Bottom of Cart) */}
-        {onOpenCashDrawer && (
-          <button
-            type="button"
-            className="cart-drawer-btn"
-            onClick={onOpenCashDrawer}
-            title={t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}
-            style={{
-              height: '42px',
-              fontSize: '0.84rem',
-              fontWeight: '700',
-              background: 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)',
-              color: 'var(--text-secondary)',
-              border: '1px solid color-mix(in srgb, var(--border-color) 75%, transparent)',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              width: '100%',
-              cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
-              transition: 'all 0.15s ease',
-              marginTop: '0.2rem',
-              touchAction: 'manipulation'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'color-mix(in srgb, var(--text-primary) 6%, transparent)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-          >
-            <CashDrawerIcon size={17} color="var(--accent-amber)" />
-            <span>{t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}</span>
-          </button>
+            {onOpenCashDrawer && (
+              <button
+                type="button"
+                className={`cart-drawer-btn ${cartItems.length > 0 ? 'is-compact' : ''}`}
+                onClick={onOpenCashDrawer}
+                title={t('cart.open_drawer')}
+                aria-label={t('cart.open_drawer')}
+              >
+                <CashDrawerIcon size={17} color="var(--accent-amber)" />
+                {cartItems.length === 0 && <span>{t('cart.open_drawer')}</span>}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

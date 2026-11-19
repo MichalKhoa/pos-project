@@ -737,7 +737,7 @@ export default function App() {
 
   const handleApplyCustomDiscount = ({ type, value, scope, targetItem }) => {
     if (scope === 'ITEM' && targetItem) {
-      handleUpdateItemDiscount(targetItem.id, value);
+      handleUpdateItemDiscount(targetItem.lineId ?? targetItem.id, value);
     } else if (scope === 'CART') {
       if (type === 'PERCENT') {
         handleApplyCartDiscount(value);
