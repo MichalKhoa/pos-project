@@ -209,7 +209,8 @@ function QuickPresetGrid({
     if (preset.isGeneralPreset || preset.price === 0 || preset.price === '0' || !preset.price) {
       setOpenPriceTarget(preset);
       setEnteredOpenPrice('');
-      setOpenPriceQty(Math.max(1, Math.abs(currentMultiplier || 1)));
+      const openQty = Math.max(1, Math.abs(currentMultiplier || 1));
+      setOpenPriceQty(isReturn ? -openQty : openQty);
       return;
     }
 
@@ -231,7 +232,8 @@ function QuickPresetGrid({
     const finalPrice = parseFloat(enteredOpenPrice);
     if (isNaN(finalPrice) || finalPrice === 0 || !openPriceTarget) return;
 
-    const isReturn = (openPriceQty < 0) || (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-')) || Boolean(enteredOpenPrice && enteredOpenPrice.startsWith('-'));
+    // The modal opens already in the pad's return mode, so its own state is the only source.
+    const isReturn = openPriceQty < 0;
     const effectivePrice = isReturn ? -Math.abs(finalPrice) : Math.abs(finalPrice);
 
     onAddToCart({

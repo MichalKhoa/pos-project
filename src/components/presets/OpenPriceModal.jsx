@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tag, X, ChevronUp, ChevronDown, Delete, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { soundFx } from '../../utils/audio.js';
 import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
+import { useOwnKeyboard } from '../../utils/keyboardOwner.js';
+import { MAX_AMOUNT_CHARS, MAX_MULTIPLIER } from '../../utils/keypadInput.js';
+
+const clampQty = (n) => Math.max(-MAX_MULTIPLIER, Math.min(MAX_MULTIPLIER, n));
 
 export default function OpenPriceModal({
   openPriceTarget,
@@ -14,14 +18,26 @@ export default function OpenPriceModal({
   onSubmit
 }) {
   const { t } = useTranslation();
+  useOwnKeyboard(Boolean(openPriceTarget));
+
+  useEffect(() => {
+    if (!openPriceTarget) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openPriceTarget, onClose]);
 
   const handleStepDown = () => {
     soundFx.playKeypadClick();
     setOpenPriceQty(prev => {
       const current = prev || 1;
       if (current === 1) return -1; // 1 -> -1 (activate return mode directly)
-      if (current > 1) return current - 1; // 3 -> 2 -> 1
-      return current - 1; // -1 -> -2 -> -3 (more returns)
+      return clampQty(current - 1); // 3 -> 2 -> 1, and -1 -> -2 -> -3 (more returns)
     });
   };
 
@@ -30,8 +46,7 @@ export default function OpenPriceModal({
     setOpenPriceQty(prev => {
       const current = prev || 1;
       if (current === -1) return 1; // -1 -> 1 (exit return mode)
-      if (current < -1) return current + 1; // -3 -> -2 -> -1
-      return current + 1; // 1 -> 2 -> 3
+      return clampQty(current + 1); // -3 -> -2 -> -1, and 1 -> 2 -> 3
     });
   };
 
@@ -42,7 +57,7 @@ export default function OpenPriceModal({
         const parts = prev.split('.');
         if (parts[1] && parts[1].length >= 2) return prev;
       }
-      return prev.length < 10 ? prev + d : prev;
+      return prev.length < MAX_AMOUNT_CHARS ? prev + d : prev;
     });
   };
 
@@ -54,7 +69,7 @@ export default function OpenPriceModal({
         const parts = prev.split('.');
         if (parts[1] && parts[1].length >= 1) return prev;
       }
-      return prev.length < 9 ? prev + '00' : prev;
+      return prev.length + 2 <= MAX_AMOUNT_CHARS ? prev + '00' : prev;
     });
   };
 
@@ -62,6 +77,7 @@ export default function OpenPriceModal({
     soundFx.playKeypadClick();
     setEnteredOpenPrice(prev => {
       if (prev.includes('.')) return prev;
+      if (prev.length >= MAX_AMOUNT_CHARS - 2) return prev; // dot plus a decimal must still fit
       return prev ? prev + '.' : '0.';
     });
   };

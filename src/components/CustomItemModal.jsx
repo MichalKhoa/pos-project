@@ -9,6 +9,7 @@ import KeypadVatSelector from './keypad/KeypadVatSelector.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid.jsx';
 import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
+import { useOwnKeyboard } from '../utils/keyboardOwner.js';
 
 export default function CustomItemModal({
   isOpen = true,
@@ -22,6 +23,7 @@ export default function CustomItemModal({
 }) {
   const { t } = useTranslation();
   const nameInputId = useId();
+  useOwnKeyboard(isOpen);
 
   const [priceStr, setPriceStr] = useState('');
   const [name, setName] = useState('');

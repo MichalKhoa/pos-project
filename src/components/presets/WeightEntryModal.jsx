@@ -5,6 +5,7 @@ import { roundCZK } from '../../utils/tax.js';
 import { soundFx } from '../../utils/audio.js';
 import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
 import { getStorageItem, setStorageItem } from '../../utils/storage.js';
+import { useOwnKeyboard } from '../../utils/keyboardOwner.js';
 
 // F-003: a cashier types grams for fruit, so grams are the default entry unit.
 // Anything above this needs a second tap (350 kg typed for 350 g would be 14 700 Kč).
@@ -19,6 +20,7 @@ export default function WeightEntryModal({
   initialUnitPrice = null
 }) {
   const { t } = useTranslation();
+  useOwnKeyboard(isOpen);
   const [weightStr, setWeightStr] = useState('');
   const [unitPriceStr, setUnitPriceStr] = useState('');
   const [tareGrams, setTareGrams] = useState(0);

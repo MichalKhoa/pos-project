@@ -3,6 +3,7 @@ import { soundFx } from '../utils/audio.js';
 import { parseScaleBarcode } from '../utils/barcodeUtils.js';
 import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
+import { isKeyboardOwned } from '../utils/keyboardOwner.js';
 
 export function usePosKeyboardShortcuts({
   isAppLocked,
@@ -44,6 +45,9 @@ export function usePosKeyboardShortcuts({
       // F-002: a payment modal owns the keyboard. A scan during payment must neither add an
       // item to the cart nor type into the keypad; the modal shows the warning.
       if (paymentModalMethod) return;
+
+      // A modal that owns the keyboard (open-price, custom item, weight) gets every key.
+      if (isKeyboardOwned()) return;
 
       // F2 hotkey: Toggle Price Check Mode (Cenovka)
       if (key === 'F2') {
