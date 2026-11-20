@@ -228,7 +228,7 @@ function QuickPresetGrid({
   }, [onAddToCart, onClearKeypadAmount, setItemMultiplier, onInspectPrice, isDraggingRef, onOpenWeightModal]);
 
   const handleOpenPriceSubmit = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const finalPrice = parseFloat(enteredOpenPrice);
     if (isNaN(finalPrice) || finalPrice === 0 || !openPriceTarget) return;
 

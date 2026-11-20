@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId, useRef } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Tag, Calculator, X, Keyboard, Delete } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { soundFx } from '../utils/audio.js';
@@ -10,6 +10,7 @@ import KeypadNumberGrid from './keypad/KeypadNumberGrid.jsx';
 import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 import { useOwnKeyboard } from '../utils/keyboardOwner.js';
+import { useRejectFlash } from '../hooks/useRejectFlash.js';
 
 export default function CustomItemModal({
   isOpen = true,
@@ -28,9 +29,7 @@ export default function CustomItemModal({
   const [priceStr, setPriceStr] = useState('');
   const [name, setName] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => (defaultVat !== undefined && defaultVat !== null ? parseInt(defaultVat, 10) : 21));
-  const [rejectKey, setRejectKey] = useState(false);
-  const rejectTimerRef = useRef(null);
-  useEffect(() => () => clearTimeout(rejectTimerRef.current), []);
+  const [rejectKey, flashReject] = useRejectFlash();
   const [itemMultiplier, setItemMultiplier] = useState(() => initialMultiplier || 1);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -123,9 +122,7 @@ export default function CustomItemModal({
     const result = applyMultiply(priceStr, itemMultiplier);
     if (!result) {
       soundFx.playError();
-      setRejectKey(true);
-      clearTimeout(rejectTimerRef.current);
-      rejectTimerRef.current = setTimeout(() => setRejectKey(false), 350);
+      flashReject();
       return;
     }
     setPriceStr(result.amountStr);

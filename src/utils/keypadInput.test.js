@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { appendDigit, appendDecimal, applyMultiply } from './keypadInput.js';
+import { appendDigit, appendDecimal, applyMultiply, stepQty } from './keypadInput.js';
 
 const type = (keys, start = '') => keys.reduce((s, k) => (k === ',' ? appendDecimal(s) : appendDigit(s, k)), start);
 
@@ -60,5 +60,24 @@ describe('applyMultiply', () => {
 
   it('toggles a positive multiplier off and keeps the typed amount', () => {
     expect(applyMultiply('7', 3)).toEqual({ amountStr: '7', itemMultiplier: 1 });
+  });
+});
+
+describe('stepQty', () => {
+  it('skips zero in both directions', () => {
+    expect(stepQty(1, -1)).toBe(-1);
+    expect(stepQty(-1, 1)).toBe(1);
+    expect(stepQty(0, 1)).toBe(2);
+    expect(stepQty(undefined, -1)).toBe(-1);
+  });
+  it('counts up and down normally', () => {
+    expect(stepQty(2, 1)).toBe(3);
+    expect(stepQty(3, -1)).toBe(2);
+    expect(stepQty(-2, -1)).toBe(-3);
+    expect(stepQty(-3, 1)).toBe(-2);
+  });
+  it('stops at +-99', () => {
+    expect(stepQty(99, 1)).toBe(99);
+    expect(stepQty(-99, -1)).toBe(-99);
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calculator, Banknote } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
@@ -10,6 +10,7 @@ import { soundFx } from '../utils/audio';
 import { formatKc } from '../utils/money.js';
 import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
+import { useRejectFlash } from '../hooks/useRejectFlash.js';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -37,9 +38,7 @@ export default function ManualKeypad({
   const [label, setLabel] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => defaultVat !== undefined ? parseInt(defaultVat, 10) : 21);
   const [activeKey, setActiveKey] = useState(null);
-  const [rejectKey, setRejectKey] = useState(false);
-  const rejectTimerRef = useRef(null);
-  useEffect(() => () => clearTimeout(rejectTimerRef.current), []);
+  const [rejectKey, flashReject] = useRejectFlash();
 
   useEffect(() => {
     if (defaultVat !== undefined && defaultVat !== null) {
@@ -93,9 +92,7 @@ export default function ManualKeypad({
     const result = applyMultiply(amountStr, itemMultiplier);
     if (!result) {
       soundFx.playError();
-      setRejectKey(true);
-      clearTimeout(rejectTimerRef.current);
-      rejectTimerRef.current = setTimeout(() => setRejectKey(false), 350);
+      flashReject();
       return;
     }
     setAmountStr(result.amountStr);

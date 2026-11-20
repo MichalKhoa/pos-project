@@ -32,7 +32,7 @@ function GridHarness({ onAddToCart, startMultiplier = 1, startKeypad = '' }) {
 const renderGrid = (props) => render(<LanguageProvider><GridHarness {...props} /></LanguageProvider>);
 const openModal = () => fireEvent.click(screen.getByText('Oblečení'));
 const modalKey = (name) => fireEvent.click(screen.getByRole('button', { name }));
-const submit = () => fireEvent.click(document.querySelector('.modal-card button[type="submit"]'));
+const submit = () => fireEvent.click(document.querySelector('.modal-card .key-enter'));
 
 describe('open-price modal opens in the pad mode (no silent sign flip)', () => {
   it('pad in return mode: modal shows return and adds a negative price', () => {
@@ -85,10 +85,12 @@ describe('open-price modal opens in the pad mode (no silent sign flip)', () => {
   });
 });
 
-describe('open-price modal limits and Esc', () => {
-  function Modal({ onClose = vi.fn() }) {
+describe('open-price modal uses the shared keypad rules', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  function Modal({ onClose = vi.fn(), onSubmit = vi.fn(), startQty = 1 }) {
     const [price, setPrice] = useState('');
-    const [qty, setQty] = useState(1);
+    const [qty, setQty] = useState(startQty);
     return (
       <LanguageProvider>
         <OpenPriceModal
@@ -98,46 +100,150 @@ describe('open-price modal limits and Esc', () => {
           setEnteredOpenPrice={setPrice}
           openPriceQty={qty}
           setOpenPriceQty={setQty}
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={onSubmit}
         />
       </LanguageProvider>
     );
   }
 
+  const shown = () => document.querySelector('.keypad-amount-display').textContent;
+  const addBtn = () => document.querySelector('.modal-card .key-enter');
+  const badge = () => document.querySelector('.multiplier-badge').textContent;
+
   it('quantity stops at 99 and -99', () => {
     render(<Modal />);
     const up = screen.getByTitle('Zvýšit množství (+1)');
     for (let i = 0; i < 120; i += 1) fireEvent.click(up);
-    expect(document.querySelector('.multiplier-badge').textContent).toBe('99×');
+    expect(badge()).toBe('99×');
     const down = screen.getByTitle('Snížit množství (−1 / Vratka)');
     for (let i = 0; i < 250; i += 1) fireEvent.click(down);
-    expect(document.querySelector('.multiplier-badge').textContent).toContain('-99×');
+    expect(badge()).toContain('-99×');
   });
 
-  it('price stops at 8 characters', () => {
+  it('price stops at 8 characters, 00 adds only what fits', () => {
     render(<Modal />);
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].forEach(modalKey);
-    expect(document.querySelector('.keypad-amount-display').textContent).toContain('12345678 Kč');
+    expect(shown()).toContain('12345678 Kč');
     modalKey('C');
     ['1', '2', '3', '4', '5', '6', '7'].forEach(modalKey);
     modalKey('00');
-    expect(document.querySelector('.keypad-amount-display').textContent).toContain('1234567 Kč');
+    expect(shown()).toContain('12345670 Kč');
   });
 
   it('a decimal point is refused when no decimal digit could follow it', () => {
     render(<Modal />);
     ['1', '2', '3', '4', '5', '6', ','].forEach(modalKey);
-    expect(document.querySelector('.keypad-amount-display').textContent).toContain('123456 Kč');
+    expect(shown()).toContain('123456 Kč');
     modalKey('C');
     ['1', '2', '3', '4', '5', ',', '5', '0'].forEach(modalKey);
-    expect(document.querySelector('.keypad-amount-display').textContent).toContain('12345.50 Kč');
+    expect(shown()).toContain('12345.50 Kč');
   });
 
-  it('Escape closes the modal', () => {
-    const onClose = vi.fn();
-    render(<Modal onClose={onClose} />);
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(onClose).toHaveBeenCalledTimes(1);
+  it('no leading zeros, and 00 keeps two decimals', () => {
+    render(<Modal />);
+    ['0', '0', '5'].forEach(modalKey);
+    expect(shown()).toContain('5 Kč');
+    expect(shown()).not.toContain('005');
+    modalKey('C');
+    ['1', ',', '5', '00'].forEach(modalKey);
+    expect(shown()).toContain('1.50 Kč');
+  });
+
+  it('× makes the typed number the quantity instead of adding one', () => {
+    render(<Modal />);
+    ['3', '×'].forEach(modalKey);
+    expect(badge()).toBe('3×');
+    expect(shown()).toContain('0 Kč');
+    ['1', '2', '5'].forEach(modalKey);
+    expect(addBtn().textContent).toContain('3 × 125.00 = 375.00 Kč');
+  });
+
+  it('× keeps return mode and a rejected × shakes', () => {
+    render(<Modal startQty={-1} />);
+    ['4', '×'].forEach(modalKey);
+    expect(badge()).toContain('-4×');
+    modalKey('C');
+    ['2', ',', '5', '×'].forEach(modalKey);
+    expect(screen.getByRole('button', { name: '×' })).toHaveClass('key-reject');
+    expect(document.querySelector('.keypad-amount-display')).toHaveClass('key-reject');
+  });
+
+  it('Add button shows a negative total for returns and the line total uses formatKc', () => {
+    render(<Modal startQty={-3} />);
+    ['4', '0'].forEach(modalKey);
+    expect(addBtn().textContent).toContain('3 × 40.00 = -120.00 Kč');
+    expect(document.body.textContent).not.toMatch(/Celkem|\d\s\d{3}\s\d{3}/);
+  });
+
+  it('has a single backspace button', () => {
+    render(<Modal />);
+    ['4', '2'].forEach(modalKey);
+    expect(document.querySelectorAll('.modal-card button[aria-label="Smazat poslední znak (Backspace)"]')).toHaveLength(1);
+    expect(document.querySelector('.keypad-amount-display button')).toBeNull();
+  });
+
+  it('Add calls onSubmit only with a valid amount', () => {
+    const onSubmit = vi.fn();
+    render(<Modal onSubmit={onSubmit} />);
+    expect(addBtn()).toBeDisabled();
+    modalKey('9');
+    fireEvent.click(addBtn());
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  describe('physical keyboard', () => {
+    // Keys under 70 ms apart count as a scanner; space real keypresses out.
+    function slowClock(step = 500) {
+      let clock = 1000;
+      vi.spyOn(Date, 'now').mockImplementation(() => (clock += step));
+    }
+    const press = (key) => fireEvent.keyDown(window, { key });
+
+    it('types digits, decimal, backspace, sign, stepper and ×', () => {
+      slowClock();
+      render(<Modal />);
+      ['1', '2', ',', '5'].forEach(press);
+      expect(shown()).toContain('12.5 Kč');
+      press('Backspace');
+      expect(shown()).toContain('12. Kč');
+      press('c');
+      expect(shown()).toContain('0 Kč');
+      press('ArrowUp');
+      expect(badge()).toBe('2×');
+      press('-');
+      expect(badge()).toContain('-2×');
+      press('Delete');
+      ['4', '*'].forEach(press);
+      expect(badge()).toBe('4×');
+    });
+
+    it('Enter submits only when the amount is valid', () => {
+      slowClock();
+      const onSubmit = vi.fn();
+      render(<Modal onSubmit={onSubmit} />);
+      press('Enter');
+      expect(onSubmit).not.toHaveBeenCalled();
+      press('5');
+      press('Enter');
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('a fast burst (barcode scanner) is ignored and never submits', () => {
+      slowClock(10);
+      const onSubmit = vi.fn();
+      render(<Modal onSubmit={onSubmit} />);
+      ['5', '9', '0', '1', '2', '3', 'Enter'].forEach(press);
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(shown()).not.toContain('590123');
+    });
+
+    it('Escape closes the modal', () => {
+      slowClock();
+      const onClose = vi.fn();
+      render(<Modal onClose={onClose} />);
+      press('Escape');
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

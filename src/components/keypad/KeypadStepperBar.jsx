@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { stepQty } from '../../utils/keypadInput.js';
 
 export default function KeypadStepperBar({
   itemMultiplier = 1,
@@ -14,23 +15,13 @@ export default function KeypadStepperBar({
   const handleStepDown = () => {
     if (triggerKeyAnimation) triggerKeyAnimation('STEP_DOWN');
     if (!setItemMultiplier) return;
-    setItemMultiplier(prev => {
-      const current = prev || 1;
-      if (current === 1) return -1; // 1 -> -1 (activate return)
-      if (current > 1) return current - 1; // 3 -> 2 -> 1
-      return current - 1; // -1 -> -2 -> -3
-    });
+    setItemMultiplier(prev => stepQty(prev, -1));
   };
 
   const handleStepUp = () => {
     if (triggerKeyAnimation) triggerKeyAnimation('STEP_UP');
     if (!setItemMultiplier) return;
-    setItemMultiplier(prev => {
-      const current = prev || 1;
-      if (current === -1) return 1; // -1 -> 1 (exit return)
-      if (current < -1) return current + 1; // -3 -> -2 -> -1
-      return current + 1; // 1 -> 2 -> 3
-    });
+    setItemMultiplier(prev => stepQty(prev, 1));
   };
 
   return (

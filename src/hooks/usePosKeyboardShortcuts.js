@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { soundFx } from '../utils/audio.js';
 import { parseScaleBarcode } from '../utils/barcodeUtils.js';
 import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
-import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
+import { appendDigit, appendDecimal, applyMultiply, stepQty } from '../utils/keypadInput.js';
 import { isKeyboardOwned } from '../utils/keyboardOwner.js';
 
 export function usePosKeyboardShortcuts({
@@ -222,20 +222,10 @@ export function usePosKeyboardShortcuts({
         }
       } else if (key === 'ArrowUp' || key === '+' || key === 'Add') {
         e.preventDefault();
-        setItemMultiplier(prev => {
-          const current = prev || 1;
-          if (current === -1) return 1;
-          if (current < -1) return current + 1;
-          return current + 1;
-        });
+        setItemMultiplier(prev => stepQty(prev, 1));
       } else if (key === 'ArrowDown') {
         e.preventDefault();
-        setItemMultiplier(prev => {
-          const current = prev || 1;
-          if (current === 1) return -1;
-          if (current > 1) return current - 1;
-          return current - 1;
-        });
+        setItemMultiplier(prev => stepQty(prev, -1));
       } else if (key === '.' || key === ',') {
         e.preventDefault();
         setKeypadAmount(prev => appendDecimal(prev));

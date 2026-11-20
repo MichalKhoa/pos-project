@@ -76,6 +76,15 @@ describe('keyboard shortcuts use shared entry rules', () => {
     expect(state.amount).toBe('12345678');
   });
 
+  it('+ and ArrowDown stop at 99 and -99', () => {
+    const a = setup('', 99);
+    a.press('+');
+    expect(a.state.mult).toBe(99);
+    const b = setup('', -99);
+    b.press('ArrowDown');
+    expect(b.state.mult).toBe(-99);
+  });
+
   it('* keeps return mode and rejects decimals', () => {
     const a = setup('5', -1);
     a.press('*');
@@ -112,6 +121,15 @@ describe('keypad P2 feedback', () => {
     ['2', ',', '5', '×'].forEach(click);
     expect(screen.getByRole('button', { name: '×' })).toHaveClass('key-reject');
     expect(document.querySelector('.keypad-amount-display')).toHaveClass('key-reject');
+  });
+});
+
+describe('on-screen stepper cap', () => {
+  it('stops at 99', () => {
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    const up = screen.getByLabelText(/Zvýšit množství/);
+    for (let i = 0; i < 120; i += 1) fireEvent.click(up);
+    expect(document.querySelector('.multiplier-badge').textContent).toBe('99×');
   });
 });
 

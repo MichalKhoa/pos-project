@@ -48,3 +48,12 @@ export function applyMultiply(amountStr, itemMultiplier) {
   }
   return { amountStr: '', itemMultiplier: sign || itemMultiplier < 0 ? -qty : qty };
 }
+
+// Stepper (+1 / -1) on the signed quantity. Zero is skipped (1 <-> -1) and the
+// result stays within +-MAX_MULTIPLIER, like the x key.
+export function stepQty(current, delta) {
+  const cur = current || 1;
+  let next = cur + delta;
+  if (next === 0) next = delta > 0 ? 1 : -1;
+  return Math.max(-MAX_MULTIPLIER, Math.min(MAX_MULTIPLIER, next));
+}
