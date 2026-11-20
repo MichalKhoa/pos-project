@@ -197,7 +197,7 @@ export default function WeightEntryModal({
 
     if (!isValidSubmission || !preset) {
       if (isOpenPrice && effectiveUnitPrice <= 0) {
-        soundFx.playErrorTone();
+        soundFx.playError();
         setActiveField('unit_price');
       }
       return;
@@ -239,7 +239,7 @@ export default function WeightEntryModal({
         } else if (isValidSubmission) {
           handleSubmit();
         } else if (isOpenPrice && effectiveUnitPrice <= 0) {
-          soundFx.playErrorTone();
+          soundFx.playError();
           setActiveField('unit_price');
         }
         return;
