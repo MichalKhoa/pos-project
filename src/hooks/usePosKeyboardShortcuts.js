@@ -208,6 +208,11 @@ export function usePosKeyboardShortcuts({
         barcodeBufferRef.current = key;
       }
 
+      // Barcode scans above still work with a modal open (price check re-scans). The pad
+      // shortcuts below must not: digits would type into the pad behind the modal and Enter
+      // would add a custom line or open payment. Convention: a modal renders .modal-overlay.
+      if (document.querySelector('.modal-overlay')) return;
+
       if (/^[0-9]$/.test(key)) {
         e.preventDefault();
         setKeypadAmount(prev => appendDigit(prev, key));

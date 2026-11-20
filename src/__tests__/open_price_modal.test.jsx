@@ -5,6 +5,7 @@ import QuickPresetGrid from '../components/QuickPresetGrid';
 import OpenPriceModal from '../components/presets/OpenPriceModal';
 import CustomItemModal from '../components/CustomItemModal';
 import WeightEntryModal from '../components/presets/WeightEntryModal';
+import PriceCheckModal from '../components/PriceCheckModal';
 import { LanguageProvider } from '../i18n/LanguageContext';
 import { usePosKeyboardShortcuts } from '../hooks/usePosKeyboardShortcuts.js';
 import { acquireKeyboard, releaseKeyboard, isKeyboardOwned } from '../utils/keyboardOwner.js';
@@ -309,5 +310,83 @@ describe('modals own the keyboard so the register shortcuts do not fire behind t
     expect(isKeyboardOwned()).toBe(false);
     press('7');
     expect(setKeypadAmount).toHaveBeenCalled();
+  });
+});
+
+describe('any modal on screen keeps the pad shortcuts quiet, scans still work', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.querySelectorAll('.modal-overlay').forEach((el) => el.remove());
+  });
+
+  function mount(step) {
+    let clock = 1000;
+    vi.spyOn(Date, 'now').mockImplementation(() => (clock += step));
+    const props = {
+      isAppLocked: false, activeTab: 'register', keypadAmount: '5', setKeypadAmount: vi.fn(),
+      setItemMultiplier: vi.fn(), itemMultiplier: 1, cartItems: [{ id: 'a' }], paymentModalMethod: null,
+      setPaymentModalMethod: vi.fn(), handleAddToCart: vi.fn(), storeConfig: {},
+      presets: [{ id: 'p1', name: 'Cola', price: 10, barcode: '8594000111222' }]
+    };
+    renderHook(() => usePosKeyboardShortcuts(props));
+    const press = (key) => act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key })); });
+    return { props, press };
+  }
+
+  const addOverlay = () => {
+    const el = document.createElement('div');
+    el.className = 'modal-overlay';
+    document.body.appendChild(el);
+    return el;
+  };
+
+  it('digits, decimal and Enter do nothing while a .modal-overlay is mounted', () => {
+    const { props, press } = mount(500);
+    const overlay = addOverlay();
+    ['7', '.', 'x', 'Backspace', 'Enter'].forEach(press);
+    expect(props.setKeypadAmount).not.toHaveBeenCalled();
+    expect(props.handleAddToCart).not.toHaveBeenCalled();
+    expect(props.setPaymentModalMethod).not.toHaveBeenCalled();
+    overlay.remove();
+    press('7');
+    expect(props.setKeypadAmount).toHaveBeenCalled();
+    press('Enter');
+    expect(props.handleAddToCart).toHaveBeenCalledTimes(1);
+  });
+
+  it('a barcode scan still adds the item with a modal mounted, without typing a digit', () => {
+    const { props, press } = mount(10);
+    addOverlay();
+    ['8', '5', '9', '4', '0', '0', '0', '1', '1', '1', '2', '2', '2', 'Enter'].forEach(press);
+    expect(props.handleAddToCart).toHaveBeenCalledTimes(1);
+    expect(props.handleAddToCart).toHaveBeenCalledWith(expect.objectContaining({ id: 'p1' }));
+    // only the clear that follows a scan, never a typed digit
+    props.setKeypadAmount.mock.calls.forEach(([arg]) => expect(arg).toBe(''));
+  });
+});
+
+describe('price check modal Enter adds the item once', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('does not also add a custom line from the pad shortcuts', () => {
+    let clock = 1000;
+    vi.spyOn(Date, 'now').mockImplementation(() => (clock += 500));
+    const handleAddToCart = vi.fn();
+    const onAddToCart = vi.fn();
+    const setPaymentModalMethod = vi.fn();
+    renderHook(() => usePosKeyboardShortcuts({
+      isAppLocked: false, activeTab: 'register', keypadAmount: '7', setKeypadAmount: vi.fn(),
+      setItemMultiplier: vi.fn(), itemMultiplier: 1, cartItems: [{ id: 'a' }], paymentModalMethod: null,
+      setPaymentModalMethod, handleAddToCart, storeConfig: {}
+    }));
+    render(
+      <LanguageProvider>
+        <PriceCheckModal item={{ id: 'p1', name: 'Banány', price: 39.9, vat: 12 }} storeConfig={{}} onAddToCart={onAddToCart} onClose={vi.fn()} />
+      </LanguageProvider>
+    );
+    act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); });
+    expect(onAddToCart).toHaveBeenCalledTimes(1);
+    expect(handleAddToCart).not.toHaveBeenCalled();
+    expect(setPaymentModalMethod).not.toHaveBeenCalled();
   });
 });
