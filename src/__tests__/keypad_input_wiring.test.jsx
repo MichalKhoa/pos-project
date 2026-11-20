@@ -131,4 +131,13 @@ describe('keypad accessibility and i18n', () => {
     expect(document.body.textContent).not.toMatch(/DPH|Násobit/);
     localStorage.removeItem('voltflow_pos_lang');
   });
+
+  it('labels the × key and has no second backspace in the amount display', () => {
+    localStorage.setItem('voltflow_pos_lang', 'en');
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    expect(screen.getByRole('button', { name: '×' }).textContent).toContain('qty');
+    ['4', '2'].forEach(click);
+    expect(document.querySelector('.keypad-amount-display button')).toBeNull();
+    localStorage.removeItem('voltflow_pos_lang');
+  });
 });

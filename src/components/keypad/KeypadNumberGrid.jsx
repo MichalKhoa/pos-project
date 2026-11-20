@@ -140,6 +140,7 @@ export default function KeypadNumberGrid({
         title={t('keypad.multiply_title')}
       >
         ×
+        <span className="key-sublabel" aria-hidden="true">{t('keypad.multiply_hint')}</span>
       </button>
 
       {/* Enter / Add to cart */}

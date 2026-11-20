@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
+import { returnLineName } from './utils/customItemId.js';
 import Cart from './components/Cart';
 import ShiftStatsWidget from './components/keypad/ShiftStatsWidget';
 import AppModals from './components/app/AppModals';
@@ -625,9 +626,7 @@ export default function App() {
     const effectiveQty = isNegativeMultiplier ? Math.abs(rawQty) : (rawQty === 0 ? 1 : rawQty);
 
     const isReturnItem = effectivePrice < 0;
-    const itemName = isReturnItem && !item.name.includes('VRATKA') && !item.name.includes('Vratka') && !item.name.includes('↩️')
-      ? `↩️ ${item.name}`
-      : item.name;
+    const itemName = isReturnItem ? returnLineName(item.name) : item.name;
 
     addToCart({
       ...item,

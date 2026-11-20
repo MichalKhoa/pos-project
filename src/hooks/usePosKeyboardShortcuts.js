@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { soundFx } from '../utils/audio.js';
 import { parseScaleBarcode } from '../utils/barcodeUtils.js';
-import { newCustomItemId } from '../utils/customItemId.js';
+import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 
 export function usePosKeyboardShortcuts({
@@ -263,7 +263,7 @@ export function usePosKeyboardShortcuts({
           const unitPrice = isReturn ? -Math.abs(amtVal) : Math.abs(amtVal);
           handleAddToCart({
             id: newCustomItemId(),
-            name: isReturn ? 'Vratka / Vrácené zboží' : 'Volný prodej',
+            name: isReturn ? DEFAULT_RETURN_ITEM_NAME : DEFAULT_ITEM_NAME,
             price: unitPrice,
             vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
             quantity: qty,

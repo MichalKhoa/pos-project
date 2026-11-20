@@ -107,6 +107,7 @@ export const translations = {
       clear_title: "Vymazat vše",
       sign_title: "Změnit znaménko (±)",
       multiply_title: "Násobit",
+      multiply_hint: "množství",
       step_down_label: "Snížit množství (-1)",
       step_down_title: "Snížit množství (−1 / Vratka)",
       step_up_label: "Zvýšit množství (+1)",
@@ -127,8 +128,7 @@ export const translations = {
       inc_qty: "Pridat 1ks",
       dec_qty: "Odebrat 1ks",
       multiplier: "Násobič",
-      sign_toggle: "± Vratka",
-      return_item_default: "↩️ Vratka / Vrácené zboží"
+      sign_toggle: "± Vratka"
     },
     calendar: {
       title: "Kalendář Směny & Státní Svátky ČR",
@@ -1550,6 +1550,7 @@ export const translations = {
       clear_title: "Xóa tất cả",
       sign_title: "Đổi dấu (±)",
       multiply_title: "Nhân số lượng",
+      multiply_hint: "số lượng",
       step_down_label: "Giảm số lượng (-1)",
       step_down_title: "Giảm số lượng (−1 / Trả hàng)",
       step_up_label: "Tăng số lượng (+1)",
@@ -1570,8 +1571,7 @@ export const translations = {
       inc_qty: "Thêm 1",
       dec_qty: "Bớt 1",
       multiplier: "Số nhân",
-      sign_toggle: "± Trả hàng",
-      return_item_default: "↩️ Hàng trả lại"
+      sign_toggle: "± Trả hàng"
     },
     calendar: {
       title: "Lịch Ca Làm Việc & Ngày Lễ Séc",
@@ -2993,6 +2993,7 @@ export const translations = {
       clear_title: "Clear all",
       sign_title: "Toggle sign (±)",
       multiply_title: "Multiply",
+      multiply_hint: "qty",
       step_down_label: "Decrease quantity (-1)",
       step_down_title: "Decrease quantity (−1 / Return)",
       step_up_label: "Increase quantity (+1)",
@@ -3013,8 +3014,7 @@ export const translations = {
       inc_qty: "Add 1",
       dec_qty: "Remove 1",
       multiplier: "Multiplier",
-      sign_toggle: "± Refund",
-      return_item_default: "↩️ Returned Item"
+      sign_toggle: "± Refund"
     },
     calendar: {
       title: "Shift Calendar & Czech National Holidays",

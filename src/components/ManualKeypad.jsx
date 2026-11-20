@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calculator, Delete, Banknote } from 'lucide-react';
+import { Calculator, Banknote } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
 import KeypadVatSelector from './keypad/KeypadVatSelector';
@@ -7,9 +7,8 @@ import KeypadStepperBar from './keypad/KeypadStepperBar';
 import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
 import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 import { soundFx } from '../utils/audio';
-import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
 import { formatKc } from '../utils/money.js';
-import { newCustomItemId } from '../utils/customItemId.js';
+import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 
 export default function ManualKeypad({
@@ -115,7 +114,7 @@ export default function ManualKeypad({
 
     onAddToCart({
       id: newCustomItemId(),
-      name: label.trim() || (isReturn ? 'Vratka / Vrácené zboží' : 'Volný prodej'),
+      name: label.trim() || (isReturn ? DEFAULT_RETURN_ITEM_NAME : DEFAULT_ITEM_NAME),
       price: unitPrice,
       vat: selectedVat,
       quantity: qty,
@@ -129,12 +128,6 @@ export default function ManualKeypad({
     soundFx.playScanChime();
     triggerKeyAnimation('ENTER');
   };
-
-  const inlineBackspaceHandlers = useHoldBackspace({
-    onBackspace: () => handleKeyPress('BACK'),
-    onClear: () => handleKeyPress('CLEAR'),
-    disabled: !amountStr && itemMultiplier === 1
-  });
 
   return (
     <div
@@ -185,7 +178,7 @@ export default function ManualKeypad({
           />
         </div>
 
-        {/* ── Amount display card with inline Backspace ── */}
+        {/* ── Amount display card ── */}
         <div
           className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''} ${rejectKey ? 'key-reject' : ''}`}
           style={{
@@ -234,7 +227,7 @@ export default function ManualKeypad({
             )}
           </div>
 
-          {/* Main Price Readout Row with Inline Backspace */}
+          {/* Main Price Readout Row */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -256,46 +249,6 @@ export default function ManualKeypad({
                 ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'}`
                 : (amountStr ? `${amountStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč'))}
             </div>
-
-            {/* Inline Backspace button (Subtle & Borderless) */}
-            <button
-              type="button"
-              {...inlineBackspaceHandlers}
-              disabled={!amountStr && itemMultiplier === 1}
-              style={{
-                width: '34px',
-                height: '34px',
-                minWidth: '34px',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                background: 'transparent',
-                color: amountStr ? 'var(--text-muted)' : 'transparent',
-                opacity: amountStr ? 0.75 : 0,
-                cursor: amountStr ? 'pointer' : 'default',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'color 0.15s ease, opacity 0.15s ease, background 0.15s ease',
-                flexShrink: 0,
-                padding: 0
-              }}
-              onMouseEnter={e => {
-                if (amountStr) {
-                  e.currentTarget.style.color = 'var(--accent-rose)';
-                  e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-rose) 10%, transparent)';
-                  e.currentTarget.style.opacity = '1';
-                }
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = amountStr ? 'var(--text-muted)' : 'transparent';
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.opacity = amountStr ? '0.75' : '0';
-              }}
-              title={t('keypad.backspace_title')}
-              aria-label={t('keypad.backspace_title')}
-            >
-              <Delete size={18} />
-            </button>
           </div>
 
           {/* Subtotal line */}
