@@ -23,7 +23,7 @@ export default function KeypadNumberGrid({
   const unitAmount = Math.abs(parseFloat(amountStr)) || 0;
   const qty = Math.max(1, Math.abs(itemMultiplier || 1));
   const summary = hasValidAmount
-    ? `${qty > 1 ? `${qty} × ${formatKc(unitAmount)} = ` : ''}${formatKc((isReturn ? -1 : 1) * unitAmount * qty)} Kč${selectedVat !== undefined ? ` · DPH ${selectedVat}%` : ''}`
+    ? `${qty > 1 ? `${qty} × ${formatKc(unitAmount)} = ` : ''}${formatKc((isReturn ? -1 : 1) * unitAmount * qty)} Kč${selectedVat !== undefined ? ` · ${t('keypad.vat_label')} ${selectedVat}%` : ''}`
     : '';
 
   const backspaceHoldHandlers = useHoldBackspace({
@@ -48,7 +48,8 @@ export default function KeypadNumberGrid({
         type="button"
         className={`key-btn key-action ${activeKey === 'BACK' ? 'active-press' : ''}`}
         {...backspaceHoldHandlers}
-        title="Backspace"
+        title={t('keypad.backspace_title')}
+        aria-label={t('keypad.backspace_title')}
       >
         <Delete size={22} />
       </button>
@@ -68,7 +69,7 @@ export default function KeypadNumberGrid({
         type="button"
         className={`key-btn key-action ${activeKey === 'CLEAR' ? 'active-press' : ''}`}
         onClick={() => onKeyPress('CLEAR')}
-        title="Clear"
+        title={t('keypad.clear_title')}
       >
         C
       </button>
@@ -120,7 +121,7 @@ export default function KeypadNumberGrid({
           background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
           borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
         }}
-        title="Změnit znaménko (±)"
+        title={t('keypad.sign_title')}
       >
         ±
       </button>
@@ -136,7 +137,7 @@ export default function KeypadNumberGrid({
           fontSize: '1.45rem',
           background: itemMultiplier > 1 ? '#d97706' : undefined
         }}
-        title="Násobit"
+        title={t('keypad.multiply_title')}
       >
         ×
       </button>

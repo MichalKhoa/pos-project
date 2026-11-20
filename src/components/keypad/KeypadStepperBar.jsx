@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function KeypadStepperBar({
   itemMultiplier = 1,
@@ -7,6 +8,7 @@ export default function KeypadStepperBar({
   triggerKeyAnimation,
   activeKey
 }) {
+  const { t } = useTranslation();
   const isReturn = itemMultiplier < 0;
 
   const handleStepDown = () => {
@@ -47,8 +49,8 @@ export default function KeypadStepperBar({
         type="button"
         className={`key-btn ${activeKey === 'STEP_DOWN' ? 'active-press' : ''}`}
         onClick={handleStepDown}
-        aria-label="Snížit množství (-1)"
-        title="Snížit množství (−1 / Vratka)"
+        aria-label={t('keypad.step_down_label')}
+        title={t('keypad.step_down_title')}
         style={{
           flex: 1,
           height: '42px',
@@ -90,8 +92,8 @@ export default function KeypadStepperBar({
         type="button"
         className={`key-btn ${activeKey === 'STEP_UP' ? 'active-press' : ''}`}
         onClick={handleStepUp}
-        aria-label="Zvýšit množství (+1)"
-        title="Zvýšit množství (+1)"
+        aria-label={t('keypad.step_up_label')}
+        title={t('keypad.step_up_label')}
         style={{
           flex: 1,
           height: '42px',

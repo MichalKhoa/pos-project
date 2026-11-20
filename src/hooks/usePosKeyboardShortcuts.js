@@ -263,7 +263,7 @@ export function usePosKeyboardShortcuts({
           const unitPrice = isReturn ? -Math.abs(amtVal) : Math.abs(amtVal);
           handleAddToCart({
             id: newCustomItemId(),
-            name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
+            name: isReturn ? 'Vratka / Vrácené zboží' : 'Volný prodej',
             price: unitPrice,
             vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
             quantity: qty,

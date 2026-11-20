@@ -140,7 +140,7 @@ export default function CustomItemModal({
 
     onAddToCart?.({
       id: id || newCustomItemId(),
-      name: name.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
+      name: name.trim() || (isReturn ? 'Vratka / Vrácené zboží' : 'Volný prodej'),
       price: unitPrice,
       vat: selectedVat,
       quantity: qty,

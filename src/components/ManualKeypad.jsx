@@ -8,6 +8,7 @@ import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
 import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 import { soundFx } from '../utils/audio';
 import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
+import { formatKc } from '../utils/money.js';
 import { newCustomItemId } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 
@@ -114,7 +115,7 @@ export default function ManualKeypad({
 
     onAddToCart({
       id: newCustomItemId(),
-      name: label.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
+      name: label.trim() || (isReturn ? 'Vratka / Vrácené zboží' : 'Volný prodej'),
       price: unitPrice,
       vat: selectedVat,
       quantity: qty,
@@ -216,7 +217,7 @@ export default function ManualKeypad({
                 ? 'var(--accent-rose)'
                 : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
             }}>
-              {t('keypad.amount_label')}{isReturn && <span className="keypad-return-pill">VRATKA</span>}
+              {t('keypad.amount_label')}{isReturn && <span className="keypad-return-pill">{t('keypad.return_pill')}</span>}
             </span>
 
             {itemMultiplier !== 1 && (
@@ -290,7 +291,8 @@ export default function ManualKeypad({
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.opacity = amountStr ? '0.75' : '0';
               }}
-              title="Smazat poslední číslici (Backspace)"
+              title={t('keypad.backspace_title')}
+              aria-label={t('keypad.backspace_title')}
             >
               <Delete size={18} />
             </button>
@@ -308,7 +310,7 @@ export default function ManualKeypad({
               paddingTop: '2px',
               marginTop: '2px'
             }}>
-              = Celkem {(Math.abs(itemMultiplier) * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1)).toLocaleString('cs-CZ')} Kč
+              {t('keypad.total_preview')}{formatKc(Math.abs(itemMultiplier) * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1))} Kč
             </div>
           )}
         </div>
@@ -376,8 +378,8 @@ export default function ManualKeypad({
               transition: 'all 0.15s ease',
               touchAction: 'manipulation'
             }}
-            aria-label="Pohyby hotovosti v pokladně (Vklad / Výběr)"
-            title="Pohyby hotovosti v pokladně (Vklad / Výběr)"
+            aria-label={t('keypad.cash_movement_title')}
+            title={t('keypad.cash_movement_title')}
           >
             <Banknote size={17} />
             <span>{t('cash.cash_btn') || '± Pokladna'}</span>

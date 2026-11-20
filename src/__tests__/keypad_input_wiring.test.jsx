@@ -114,3 +114,21 @@ describe('keypad P2 feedback', () => {
     expect(document.querySelector('.keypad-amount-display')).toHaveClass('key-reject');
   });
 });
+
+describe('keypad accessibility and i18n', () => {
+  it('every keypad button has an accessible name', () => {
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    const unnamed = [...document.querySelectorAll('.keypad-card-box button')]
+      .filter((b) => !(b.getAttribute('aria-label') || b.textContent.trim()));
+    expect(unnamed).toHaveLength(0);
+  });
+
+  it('shows English keypad strings when the language is EN', () => {
+    localStorage.setItem('voltflow_pos_lang', 'en');
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    expect(screen.getByRole('button', { name: 'VAT 21%' })).toBeInTheDocument();
+    expect(screen.getByTitle('Multiply')).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/DPH|Násobit/);
+    localStorage.removeItem('voltflow_pos_lang');
+  });
+});

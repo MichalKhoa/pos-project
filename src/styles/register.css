@@ -1076,14 +1076,14 @@ select.input-field:focus {
   min-height: 62px;
   aspect-ratio: auto;
   background: var(--bg-input);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: 1.22rem;
   font-weight: 700;
   gap: 0.6rem;
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 1;
   box-shadow: var(--shadow-key);
   transition: background-color 0.05s ease, opacity 0.15s ease;
 }
