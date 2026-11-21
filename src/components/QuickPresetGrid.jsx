@@ -28,7 +28,6 @@ function QuickPresetGrid({
   onReorderPresets,
   keypadAmount = '',
   onClearKeypadAmount,
-  isAdminMode = false,
   storeConfig = null,
   isPriceCheckActive = false,
   onTogglePriceCheck = null,
@@ -261,175 +260,26 @@ function QuickPresetGrid({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <div className="section-header">
+      <div className="section-header catalog-header">
         <div className="section-title">
           <Layers size={18} style={{ color: 'var(--accent-blue)' }} />
           <span>{t('presets.title')}</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-            ({filteredPresets.length})
-          </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap' }}>
+        <div className="catalog-actions">
           {itemMultiplier > 1 && (
-            <div
-              style={{
-                background: '#d97706',
-                color: '#ffffff',
-                height: '38px',
-                padding: '0 0.65rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                boxShadow: '0 2px 6px rgba(245, 158, 11, 0.35)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}
-              title="Aktivní násobič množství"
-            >
+            <div className="catalog-multiplier" title={t('presets.multiplier_active')}>
               <span>⚡ {itemMultiplier}×</span>
               <button
                 type="button"
                 onClick={() => setItemMultiplier && setItemMultiplier(1)}
-                style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '1px' }}
+                aria-label={t('common.clear')}
               >
                 <X size={13} />
               </button>
             </div>
           )}
 
-          {/* Custom Item 1-Tap Opener */}
-          <button
-            type="button"
-            className="nav-tab custom-item-btn"
-            style={{
-              height: '38px',
-              minHeight: '38px',
-              padding: '0 0.75rem',
-              fontSize: '0.82rem',
-              background: 'rgba(56, 189, 248, 0.12)',
-              color: 'var(--accent-blue, #38bdf8)',
-              border: '1px solid rgba(56, 189, 248, 0.35)',
-              fontWeight: '700',
-              gap: '0.35rem',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              touchAction: 'manipulation'
-            }}
-            onClick={handleOpenCustomItem}
-            title={t('custom_item.title') || 'Vlastní položka'}
-          >
-            <Calculator size={15} strokeWidth={2.5} />
-            <span>{t('custom_item.custom_btn') || t('custom_item.title') || 'Vlastní položka'}</span>
-          </button>
-
-          {/* Action Buttons */}
-          <button
-            type="button"
-            className="nav-tab"
-            style={{
-              height: '38px',
-              minHeight: '38px',
-              padding: '0 0.75rem',
-              fontSize: '0.82rem',
-              background: 'rgba(255,255,255,0.06)',
-              color: 'var(--accent-blue)',
-              fontWeight: '700',
-              gap: '0.35rem',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              touchAction: 'manipulation'
-            }}
-            onClick={() => {
-              setEditingPreset(null);
-              setActiveModal('add');
-            }}
-            title={t('presets.add_preset')}
-          >
-            <Plus size={15} />
-            <span>{t('common.add') || 'Přidat'}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`nav-tab ${isEditMode ? 'active' : ''}`}
-            style={{
-              height: '38px',
-              minHeight: '38px',
-              padding: '0 0.85rem',
-              fontSize: '0.82rem',
-              background: isEditMode ? 'var(--accent-amber)' : 'rgba(255,255,255,0.06)',
-              color: isEditMode ? '#000000' : 'var(--text-primary)',
-              fontWeight: '700',
-              gap: '0.35rem',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              touchAction: 'manipulation'
-            }}
-            onClick={() => setIsEditMode(!isEditMode)}
-            title="Zapnout/Vypnout režim úprav tlačítek pokladny"
-          >
-            {isEditMode ? <Check size={15} /> : <Edit3 size={15} />}
-            <span>{isEditMode ? 'Hotovo' : t('presets.edit') || 'Upravit'}</span>
-          </button>
-
-          {/* Price Check Mode 1-Tap Toggle Button */}
-          {onTogglePriceCheck && (
-            <button
-              type="button"
-              className={`nav-tab price-check-toggle-btn ${isPriceCheckActive ? 'active' : ''}`}
-              style={{
-                height: '38px',
-                minHeight: '38px',
-                padding: '0 0.75rem',
-                fontSize: '0.82rem',
-                background: isPriceCheckActive ? '#059669' : 'rgba(255,255,255,0.06)',
-                color: isPriceCheckActive ? '#ffffff' : 'var(--accent-emerald, #10b981)',
-                border: isPriceCheckActive ? '1px solid #34d399' : '1px solid rgba(16, 185, 129, 0.3)',
-                fontWeight: '700',
-                gap: '0.35rem',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                touchAction: 'manipulation',
-                boxShadow: isPriceCheckActive ? '0 0 12px rgba(16, 185, 129, 0.4)' : 'none'
-              }}
-              onClick={onTogglePriceCheck}
-              title="Kontrola ceny / Cenovka (F2)"
-            >
-              <Search size={15} strokeWidth={2.5} />
-              <span>{isPriceCheckActive ? t('price_check.toggle_active') : t('price_check.toggle_btn')}</span>
-            </button>
-          )}
-
-          {isAdminMode && (
-            <button
-              type="button"
-              className="nav-tab"
-              style={{
-                height: '38px',
-                minHeight: '38px',
-                padding: '0 0.75rem',
-                fontSize: '0.82rem',
-                background: 'rgba(255,255,255,0.06)',
-                color: 'var(--text-secondary)',
-                fontWeight: '700',
-                gap: '0.35rem',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                touchAction: 'manipulation'
-              }}
-              onClick={() => setIsCategoryModalOpen(true)}
-              title={t('presets.manage_categories')}
-            >
-              <FolderPlus size={15} />
-              <span>{t('presets.add_category')}</span>
-            </button>
-          )}
-
-          {/* Dedicated Modern Product Search Bar (First from the right) */}
           <div className="preset-search-bar">
             <Search size={15} className="preset-search-icon" />
             <input
@@ -455,6 +305,42 @@ function QuickPresetGrid({
               </button>
             )}
           </div>
+
+          {/* Custom Item 1-Tap Opener */}
+          <button
+            type="button"
+            className="nav-tab catalog-action-btn is-custom"
+            onClick={handleOpenCustomItem}
+            title={t('custom_item.title')}
+          >
+            <Calculator size={15} strokeWidth={2.5} />
+            <span>{t('custom_item.custom_btn')}</span>
+          </button>
+
+          {/* Price Check Mode 1-Tap Toggle (F2) */}
+          {onTogglePriceCheck && (
+            <button
+              type="button"
+              className={`nav-tab catalog-action-btn is-icon is-price-check ${isPriceCheckActive ? 'active' : ''}`}
+              onClick={onTogglePriceCheck}
+              title={t('price_check.toggle_hint')}
+              aria-label={isPriceCheckActive ? t('price_check.toggle_active') : t('price_check.toggle_btn')}
+              aria-pressed={isPriceCheckActive}
+            >
+              <Search size={17} strokeWidth={2.5} />
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`nav-tab catalog-action-btn is-icon is-edit ${isEditMode ? 'active' : ''}`}
+            onClick={() => setIsEditMode(!isEditMode)}
+            title={t('presets.toggle_edit')}
+            aria-label={t('presets.edit')}
+            aria-pressed={isEditMode}
+          >
+            {isEditMode ? <Check size={17} /> : <Edit3 size={17} />}
+          </button>
         </div>
       </div>
 
@@ -468,9 +354,6 @@ function QuickPresetGrid({
         onReorderCategories={onReorderCategories}
       />
 
-      {/* Light Separator between Categories and Presets */}
-      <div className="category-presets-separator" />
-
       {/* Edit Mode Control Bar with Category Management & Drag-to-Delete Trash Dropzone */}
       {isEditMode && (
         <div className="preset-edit-mode-bar">
@@ -482,11 +365,24 @@ function QuickPresetGrid({
           <button
             type="button"
             className="preset-edit-cat-btn"
+            onClick={() => {
+              setEditingPreset(null);
+              setActiveModal('add');
+            }}
+            title={t('presets.add_preset')}
+          >
+            <Plus size={15} />
+            <span>{t('presets.add_preset')}</span>
+          </button>
+
+          <button
+            type="button"
+            className="preset-edit-cat-btn"
             onClick={() => handleOpenCategoryManager(null)}
             title={t('presets.manage_categories')}
           >
             <FolderPlus size={15} />
-            <span>{t('presets.manage_categories') || 'Kategorie'}</span>
+            <span>{t('presets.add_category')}</span>
           </button>
 
           <div
@@ -524,7 +420,6 @@ function QuickPresetGrid({
             preset={preset}
             index={index}
             isEditMode={isEditMode}
-            itemMultiplier={itemMultiplier}
             isDraggingThis={draggedIndex === index}
             isDragOverThis={dragOverIndex === index}
             onDragStart={handleDragStart}

@@ -742,7 +742,6 @@ export default function PresetModal({
                         index={0}
                         totalCount={1}
                         isEditMode={false}
-                        itemMultiplier={1}
                         onClick={() => {}}
                         storeConfig={storeConfig}
                         buttonStyle={buttonStyle}

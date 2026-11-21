@@ -1080,7 +1080,6 @@ export default function App() {
                         onReorderPresets={handleReorderPresets}
                         keypadAmount={keypadAmount}
                         onClearKeypadAmount={handleClearKeypadAmount}
-                        isAdminMode={isAdminMode}
                         storeConfig={storeConfig}
                         isPriceCheckActive={isPriceCheckActive}
                         onTogglePriceCheck={handleTogglePriceCheck}

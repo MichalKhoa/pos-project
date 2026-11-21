@@ -9,7 +9,6 @@ function PresetTileCard({
   preset,
   index,
   isEditMode,
-  itemMultiplier,
   isDraggingThis,
   isDragOverThis,
   onDragStart,
@@ -59,26 +58,19 @@ function PresetTileCard({
       onDragLeave={(e) => onDragLeave(e, index)}
       onDrop={(e) => onDrop(e, index)}
       onDragEnd={onDragEnd}
-      className={`preset-card style-${activeStyle} ${hasPhoto ? 'has-photo' : ''} ${stockBadge?.type === 'out-of-stock' ? 'is-out-of-stock' : ''} ${isEditMode ? 'edit-mode' : ''} ${isDraggingThis ? 'dragging' : ''} ${isDragOverThis ? 'drag-over' : ''}`}
+      className={`preset-card style-${activeStyle} ${hasPhoto ? 'has-photo' : ''} ${stockBadge ? 'has-stock-badge' : ''} ${stockBadge?.type === 'out-of-stock' ? 'is-out-of-stock' : ''} ${isEditMode ? 'edit-mode' : ''} ${isDraggingThis ? 'dragging' : ''} ${isDragOverThis ? 'drag-over' : ''}`}
       style={{
         '--card-accent': accent,
         '--card-fg': readableTextOn(accent),
         outline: isEditMode
           ? (isDragOverThis ? '2px solid var(--accent-blue)' : '2px dashed var(--accent-amber)')
-          : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : 'none'),
-        boxShadow: itemMultiplier > 1 && !isEditMode ? '0 0 12px rgba(245, 158, 11, 0.4)' : undefined,
+          : 'none',
         opacity: isDraggingThis ? 0.35 : undefined,
         cursor: isEditMode ? 'grab' : 'pointer'
       }}
       onClick={() => onClick(preset)}
     >
       <PresetTileArt preset={preset} />
-
-      {itemMultiplier > 1 && !isEditMode && (
-        <div className="preset-multiplier-badge">
-          ×{itemMultiplier}
-        </div>
-      )}
 
       <div className="preset-card-header">
         <div className="preset-name">
@@ -89,23 +81,27 @@ function PresetTileCard({
           <div
             className="preset-corner-icon"
             style={{ color: 'var(--accent-amber)', opacity: 1 }}
-            title="Kliknutím upravíte • Přetažením změníte pořadí"
+            title={t('presets.edit_mode_hint')}
           >
             <Edit3 size={15} />
           </div>
         )}
-
-        {stockBadge && (
-          <span className={`preset-stock-badge ${stockBadge.type}`}>
-            {stockBadge.text}
-          </span>
-        )}
       </div>
 
+      {stockBadge && (
+        <span className={`preset-stock-badge ${stockBadge.type}`}>
+          {stockBadge.text}
+        </span>
+      )}
+
       <div className="preset-price-tag">
-        {!preset.isOpenPrice && preset.price > 0 && (
+        {!preset.isOpenPrice && preset.price > 0 ? (
           <span className="preset-price-chip">
             <span className="preset-price">{`${preset.price} Kč`}</span>
+          </span>
+        ) : (
+          <span className="preset-price-chip is-open" aria-hidden="true">
+            <span className="preset-price">… Kč</span>
           </span>
         )}
 
@@ -119,7 +115,6 @@ function PresetTileCard({
 
 export function arePresetCardPropsEqual(prevProps, nextProps) {
   if (prevProps.isEditMode !== nextProps.isEditMode) return false;
-  if (prevProps.itemMultiplier !== nextProps.itemMultiplier) return false;
   if (prevProps.isDraggingThis !== nextProps.isDraggingThis) return false;
   if (prevProps.isDragOverThis !== nextProps.isDragOverThis) return false;
   if (prevProps.buttonStyle !== nextProps.buttonStyle) return false;

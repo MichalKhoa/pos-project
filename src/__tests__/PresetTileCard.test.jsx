@@ -219,7 +219,23 @@ describe('PresetTileCard Component', () => {
     );
     expect(container.querySelector('.preset-photo')).toBeTruthy();
     expect(container.querySelector('.preset-watermark')).toBeNull();
-    expect(container.querySelector('.preset-price-chip')).toBeNull();
+    expect(container.querySelector('.preset-price-chip:not(.is-open)')).toBeNull();
+  });
+
+  it('keeps an empty dashed price slot on open-price tiles so rows stay even', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard {...baseProps} preset={{ ...defaultPreset, isOpenPrice: true }} />
+    );
+    const slot = container.querySelector('.preset-price-tag .preset-price-chip.is-open');
+    expect(slot).toBeTruthy();
+    expect(slot.textContent).not.toMatch(/3\.5/);
+  });
+
+  it('shows no per-tile multiplier badge', () => {
+    const { container } = renderWithLang(
+      <PresetTileCard {...baseProps} itemMultiplier={3} preset={defaultPreset} />
+    );
+    expect(container.querySelector('.preset-multiplier-badge')).toBeNull();
   });
 
   it('applies color-fill style and the readable text colour variable', () => {
@@ -231,7 +247,7 @@ describe('PresetTileCard Component', () => {
     expect(card.style.getPropertyValue('--card-fg')).toBe('#111827');
   });
 
-  it('marks out-of-stock tiles and keeps the badge in the header', () => {
+  it('marks out-of-stock tiles and places the badge as a corner child of the tile', () => {
     const { container } = renderWithLang(
       <PresetTileCard
         {...baseProps}
@@ -240,7 +256,7 @@ describe('PresetTileCard Component', () => {
       />
     );
     expect(container.querySelector('.preset-card.is-out-of-stock')).toBeTruthy();
-    expect(container.querySelector('.preset-card-header .preset-stock-badge.out-of-stock')).toBeTruthy();
+    expect(container.querySelector('.preset-card > .preset-stock-badge.out-of-stock')).toBeTruthy();
   });
 
   it('catalogue grid view uses the watermark, price chip and normalised legacy style', () => {
@@ -300,7 +316,6 @@ describe('arePresetCardPropsEqual memo comparator', () => {
     },
     index: 0,
     isEditMode: false,
-    itemMultiplier: 1,
     isDraggingThis: false,
     isDragOverThis: false,
     onClick: noop,
