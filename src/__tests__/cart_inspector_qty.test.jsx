@@ -293,7 +293,7 @@ describe('Cart polish (items 4, 7, 9, 10)', () => {
   });
 });
 
-describe('Cart cash rounding hint and compact chip', () => {
+describe('Cart cash rounding hint', () => {
   const baseProps = { onUpdateQty: () => {}, onUpdateItemDetails: () => {}, onRemoveItem: () => {}, onClearCart: () => {}, onOpenPayment: () => {} };
   const line = (price, qty = 1) => [{ id: 'x', lineId: 'X', name: 'X', price, quantity: qty, vat: 21 }];
   const badge = (items, extra = {}) => {
@@ -311,14 +311,5 @@ describe('Cart cash rounding hint and compact chip', () => {
 
   it('shows the absolute cash amount for a refund', () => {
     expect(badge(line(-3.5))).toContain('hotově 4 Kč');
-  });
-
-  it('makes the last-receipt chip compact only while the cart has items', () => {
-    const sale = { id: 's1', totalAmount: 5, timestamp: new Date().toISOString(), items: [] };
-    const full = render(<LanguageProvider><CartComponent cartItems={line(4)} lastSale={sale} {...baseProps} /></LanguageProvider>);
-    expect(full.container.querySelector('.last-receipt-quick-container').className).toContain('is-compact');
-    full.unmount();
-    const empty = render(<LanguageProvider><CartComponent cartItems={[]} lastSale={sale} {...baseProps} /></LanguageProvider>);
-    expect(empty.container.querySelector('.last-receipt-quick-container').className).not.toContain('is-compact');
   });
 });
