@@ -7,6 +7,7 @@ import { useRejectFlash } from '../../hooks/useRejectFlash.js';
 import { appendDigit, appendDecimal, applyMultiply, stepQty } from '../../utils/keypadInput.js';
 import KeypadStepperBar from '../keypad/KeypadStepperBar.jsx';
 import KeypadNumberGrid from '../keypad/KeypadNumberGrid.jsx';
+import KeypadAmountDisplay from '../keypad/KeypadAmountDisplay.jsx';
 
 // A key within this many ms of the previous one is a barcode scanner, not a hand.
 const SCAN_KEY_GAP_MS = 70;
@@ -142,7 +143,7 @@ export default function OpenPriceModal({
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-card-elevated)',
-          overflow: 'hidden'
+          overflowY: 'auto'
         }}
       >
         {/* Modal Header */}
@@ -153,71 +154,19 @@ export default function OpenPriceModal({
               {openPriceTarget.name}
             </span>
           </div>
-          <button type="button" className="close-modal-btn" onClick={onClose}>
+          <button type="button" className="close-modal-btn" onClick={onClose} aria-label={t('common.close')}>
             <X size={18} />
           </button>
         </div>
 
         <div style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-          {/* ── Compact Amount Display Card (Matches Main Keypad) ── */}
-          <div
-            className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''} ${rejectKey ? 'key-reject' : ''}`}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '0.45rem 0.75rem',
-              borderRadius: '6px',
-              border: isReturn
-                ? '2px solid var(--accent-rose)'
-                : (hasValidAmount ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)'),
-              background: isReturn
-                ? 'rgba(239, 68, 68, 0.06)'
-                : (hasValidAmount ? 'color-mix(in srgb, var(--accent-blue) 4%, var(--bg-input))' : 'var(--bg-input)'),
-              boxShadow: isReturn
-                ? '0 0 12px rgba(239, 68, 68, 0.18)'
-                : (hasValidAmount ? '0 0 12px rgba(59, 130, 246, 0.15)' : 'none'),
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {/* Header row: mode indicator & multiplier pill */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                letterSpacing: '0.06em',
-                color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)'
-              }}>
-                {isReturn ? 'Cena pro vrácení — ↩️ VRATKA' : 'Zadejte cenu za jednotku (Kč)'}
-              </span>
-
-              {openPriceQty !== 1 && (
-                <span style={{
-                  fontSize: '0.8rem',
-                  fontWeight: '700',
-                  color: isReturn ? 'var(--accent-rose)' : 'var(--accent-amber)',
-                  background: isReturn ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-                  padding: '1px 5px',
-                  borderRadius: '4px'
-                }}>
-                  {isReturn ? `↩️ ${openPriceQty}×` : `⚡ ${openPriceQty}×`}
-                </span>
-              )}
-            </div>
-
-            {/* Main price readout */}
-            <div style={{
-              fontSize: '1.45rem',
-              fontWeight: '700',
-              fontFamily: 'var(--font-mono)',
-              color: isReturn
-                ? 'var(--accent-rose)'
-                : (enteredOpenPrice ? 'var(--text-primary)' : 'var(--text-muted)'),
-              wordBreak: 'break-all',
-              marginTop: '1px'
-            }}>
-              {enteredOpenPrice ? `${enteredOpenPrice} Kč` : (isReturn ? '-0 Kč' : '0 Kč')}
-            </div>
-          </div>
+          <KeypadAmountDisplay
+            isReturn={isReturn}
+            hasValidAmount={hasValidAmount}
+            multiplier={openPriceQty}
+            amountStr={enteredOpenPrice}
+            rejected={rejectKey}
+          />
 
           {/* ── Quantity stepper (shared with the main keypad) ── */}
           <KeypadStepperBar

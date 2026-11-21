@@ -148,10 +148,6 @@ export default function KeypadNumberGrid({
         type="button"
         className={`key-btn key-enter ${hasValidAmount ? 'key-enter-active' : ''} ${activeKey === 'ENTER' ? 'active-press' : ''}`}
         style={{
-          gridColumn: 'span 4',
-          minHeight: '62px',
-          height: '62px',
-          aspectRatio: 'auto',
           background: isReturn && hasValidAmount
             ? '#dc2626'
             : undefined,
@@ -165,13 +161,13 @@ export default function KeypadNumberGrid({
         onClick={onAddCustomItem}
         disabled={!hasValidAmount}
       >
-        <PlusCircle size={22} />
+        <PlusCircle size={30} strokeWidth={2.25} />
         <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15 }}>
           <span>
           {!hasValidAmount
             ? t('keypad.enter_amount')
             : (isReturn
-                ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
+                ? t('keypad.add_return_item')
                 : t('keypad.add_to_cart'))}
           </span>
           {summary && <span className="key-enter-summary">{summary}</span>}

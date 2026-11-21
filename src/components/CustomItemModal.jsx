@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useId } from 'react';
-import { Tag, Calculator, X, Keyboard, Delete } from 'lucide-react';
+import { Tag, Calculator, X, Keyboard } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { soundFx } from '../utils/audio.js';
-import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
 import { openSystemKeyboard } from '../api/posApi.js';
 import KeypadStepperBar from './keypad/KeypadStepperBar.jsx';
 import KeypadVatSelector from './keypad/KeypadVatSelector.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid.jsx';
+import KeypadAmountDisplay from './keypad/KeypadAmountDisplay.jsx';
 import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
 import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
 import { useOwnKeyboard } from '../utils/keyboardOwner.js';
@@ -150,12 +150,6 @@ export default function CustomItemModal({
     onClose?.();
   };
 
-  const inlineBackspaceHandlers = useHoldBackspace({
-    onBackspace: () => handleKeyPress('BACK'),
-    onClear: () => handleKeyPress('CLEAR'),
-    disabled: !priceStr
-  });
-
   if (!isOpen) return null;
 
   const RETAIL_TAGS = [
@@ -178,7 +172,7 @@ export default function CustomItemModal({
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-card-elevated)',
-          overflow: 'hidden'
+          overflowY: 'auto'
         }}
       >
         {/* Modal Header */}
@@ -186,7 +180,7 @@ export default function CustomItemModal({
           <div className="modal-title" style={{ fontSize: '1rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <Calculator size={17} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {isReturn ? (t('keypad.sign_toggle') || '↩️ Vratka zboží') : (t('custom_item.title') || 'Vlastní / Nezařazená položka')}
+              {isReturn ? t('keypad.sign_toggle') : (t('custom_item.title') || 'Vlastní / Nezařazená položka')}
             </span>
           </div>
           <button
@@ -242,7 +236,7 @@ export default function CustomItemModal({
                 <button
                   type="button"
                   onClick={() => setName('')}
-                  aria-label="Clear name"
+                  aria-label={t('custom_item.clear_name')}
                   style={{
                     background: 'transparent',
                     border: 'none',
@@ -318,115 +312,15 @@ export default function CustomItemModal({
             activeKey={activeKey}
           />
 
-          {/* ── 3. Compact Amount Display Card (Matches Main Keypad) ── */}
-          <div
-            data-testid="amount-display"
-            className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '0.45rem 0.75rem',
-              borderRadius: '6px',
-              border: isReturn
-                ? '2px solid var(--accent-rose)'
-                : (hasValidAmount ? '1.5px solid var(--accent-blue)' : '1px solid var(--border-color)'),
-              background: isReturn
-                ? 'rgba(239, 68, 68, 0.06)'
-                : (hasValidAmount ? 'color-mix(in srgb, var(--accent-blue) 4%, var(--bg-input))' : 'var(--bg-input)'),
-              boxShadow: isReturn
-                ? '0 0 12px rgba(239, 68, 68, 0.18)'
-                : (hasValidAmount ? '0 0 12px rgba(59, 130, 246, 0.15)' : 'none'),
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {/* Header row: mode indicator & multiplier pill */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{
-                fontSize: '0.8rem',
-                fontWeight: '700',
-                letterSpacing: '0.06em',
-                color: isReturn ? 'var(--accent-rose)' : 'var(--text-muted)'
-              }}>
-                {isReturn ? 'Cena pro vrácení — ↩️ VRATKA' : 'Zadejte cenu za jednotku (Kč)'}
-              </span>
-
-              {itemMultiplier !== 1 && (
-                <span style={{
-                  fontSize: '0.8rem',
-                  fontWeight: '700',
-                  color: isReturn ? 'var(--accent-rose)' : 'var(--accent-amber)',
-                  background: isReturn ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-                  padding: '1px 5px',
-                  borderRadius: '4px'
-                }}>
-                  {isReturn ? `↩️ ${itemMultiplier}×` : `⚡ ${itemMultiplier}×`}
-                </span>
-              )}
-            </div>
-
-            {/* Main Price Readout Row with Inline Backspace */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.5rem',
-              marginTop: '1px'
-            }}>
-              <div style={{
-                fontSize: '1.45rem',
-                fontWeight: '700',
-                fontFamily: 'var(--font-mono)',
-                color: isReturn
-                  ? 'var(--accent-rose)'
-                  : (priceStr ? 'var(--text-primary)' : 'var(--text-muted)'),
-                wordBreak: 'break-all',
-                flex: 1
-              }}>
-                {priceStr ? `${priceStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč')}
-              </div>
-
-              {/* Inline Backspace button */}
-              <button
-                type="button"
-                className="keypad-inline-backspace-btn"
-                {...inlineBackspaceHandlers}
-                disabled={!priceStr}
-                aria-label="Inline Backspace"
-                title={t('keypad.backspace_title')}
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  minWidth: '34px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: 'none',
-                  background: 'transparent',
-                  color: priceStr ? 'var(--text-muted)' : 'transparent',
-                  opacity: priceStr ? 0.75 : 0,
-                  cursor: priceStr ? 'pointer' : 'default',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.15s ease',
-                  padding: 0
-                }}
-              >
-                <Delete size={18} />
-              </button>
-            </div>
-
-            {/* Total calculation preview when qty != 1 */}
-            {itemMultiplier !== 1 && hasValidAmount && (
-              <div style={{
-                fontSize: '0.8rem',
-                color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
-                fontWeight: '700',
-                marginTop: '1px'
-              }}>
-                {isReturn ? t('keypad.total_return_preview') : t('keypad.total_preview')}
-                {(Math.abs(itemMultiplier) * parseFloat(priceStr || 0)).toLocaleString('cs-CZ')} Kč ({itemMultiplier} ks)
-              </div>
-            )}
-          </div>
+          {/* ── 3. Amount display (the line total is on the Add button) ── */}
+          <KeypadAmountDisplay
+            testId="amount-display"
+            isReturn={isReturn}
+            hasValidAmount={hasValidAmount}
+            multiplier={itemMultiplier}
+            amountStr={priceStr}
+            rejected={rejectKey}
+          />
 
           {/* ── 4. VAT Selector Chips ── */}
           <KeypadVatSelector

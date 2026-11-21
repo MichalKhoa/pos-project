@@ -38,15 +38,12 @@ export default function KeypadStepperBar({
       {/* Step Down Button (−1) */}
       <button
         type="button"
-        className={`key-btn ${activeKey === 'STEP_DOWN' ? 'active-press' : ''}`}
+        className={`key-btn key-step-down ${activeKey === 'STEP_DOWN' ? 'active-press' : ''}`}
         onClick={handleStepDown}
         aria-label={t('keypad.step_down_label')}
         title={t('keypad.step_down_title')}
         style={{
           flex: 1,
-          height: '42px',
-          minHeight: '42px',
-          aspectRatio: 'auto',
           fontSize: '1.08rem',
           fontWeight: '700',
           display: 'flex',
@@ -66,30 +63,24 @@ export default function KeypadStepperBar({
         className={`multiplier-badge ${isReturn ? 'has-return' : (itemMultiplier > 1 ? 'has-multiplier' : '')}`}
         style={{
           flex: 1,
-          height: '42px',
-          minHeight: '42px',
-          aspectRatio: 'auto',
           fontSize: '1.18rem',
           letterSpacing: '0.02em',
           padding: '0 0.5rem',
           borderRadius: 'var(--radius-md)'
         }}
       >
-        {isReturn ? `↩️ ${itemMultiplier}×` : `${itemMultiplier}×`}
+        {itemMultiplier}×
       </div>
 
       {/* Step Up Button (+1) */}
       <button
         type="button"
-        className={`key-btn ${activeKey === 'STEP_UP' ? 'active-press' : ''}`}
+        className={`key-btn key-step-up ${activeKey === 'STEP_UP' ? 'active-press' : ''}`}
         onClick={handleStepUp}
         aria-label={t('keypad.step_up_label')}
         title={t('keypad.step_up_label')}
         style={{
           flex: 1,
-          height: '42px',
-          minHeight: '42px',
-          aspectRatio: 'auto',
           fontSize: '1.08rem',
           fontWeight: '700',
           display: 'flex',

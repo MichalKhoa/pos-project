@@ -97,7 +97,8 @@ function QuickPresetGrid({
       const isPinned = p.showInPresets !== undefined ? !!p.showInPresets : (p.show_in_presets !== undefined ? !!p.show_in_presets : true);
       if (!isPinned) return false;
 
-      const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+      // A typed search looks through every category, not only the open one.
+      const matchesCategory = searchTerm.trim() || activeCategory === 'all' || p.category === activeCategory;
       const matchesSearch = !searchTerm.trim() ||
         (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (p.price && p.price.toString().includes(searchTerm)) ||

@@ -316,7 +316,7 @@
 }
 
 .preset-grid.density-compact {
-  --tile-h: 82px;
+  --tile-h: 92px;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 0.4rem;
 }
@@ -339,7 +339,7 @@
 }
 
 .preset-grid.density-standard {
-  --tile-h: 88px;
+  --tile-h: 100px;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 0.6rem;
 }
@@ -348,7 +348,7 @@
 }
 
 .preset-grid.density-large {
-  --tile-h: 112px;
+  --tile-h: 118px;
   grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
   gap: 0.75rem;
 }
@@ -485,6 +485,9 @@
 
 .preset-card > .preset-card-header,
 .preset-card > .preset-price-tag { position: relative; z-index: 1; }
+/* Name gives way; the price chip never gets clipped. */
+.preset-card > .preset-card-header { min-height: 0; flex: 0 1 auto; overflow: hidden; }
+.preset-card > .preset-price-tag { flex-shrink: 0; }
 
 /* Price chip */
 .preset-price-chip {
@@ -1108,18 +1111,44 @@ select.input-field:focus {
   box-shadow: 0 1px 0 rgba(225, 29, 72, 0.3) !important;
 }
 
+/* Stepper: -1 blue, +1 green (rose and amber already mean return and multiplier) */
+.key-btn.key-step-down {
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 3px 0 rgba(59, 130, 246, 0.3);
+}
+
+.key-btn.key-step-up {
+  color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 3px 0 rgba(16, 185, 129, 0.3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .key-btn.key-step-down:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-blue);
+  }
+  .key-btn.key-step-up:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--accent-emerald);
+  }
+}
+
 .key-btn.key-enter {
   grid-column: span 4;
-  height: 62px;
-  min-height: 62px;
+  height: 78px;
+  min-height: 78px;
   aspect-ratio: auto;
   background: var(--bg-input);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  font-size: 1.22rem;
-  font-weight: 700;
-  gap: 0.6rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  gap: 0.8rem;
   cursor: not-allowed;
   opacity: 1;
   box-shadow: var(--shadow-key);
@@ -1863,6 +1892,20 @@ select.input-field:focus {
   transform: translateY(1px) !important;
 }
 
+.payment-actions-grid .pay-btn {
+  height: 68px;
+  min-height: 68px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  gap: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.payment-actions-grid .pay-btn svg {
+  width: 26px;
+  height: 26px;
+}
+
 .pay-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -2201,9 +2244,9 @@ select.input-field:focus {
   }
 
   .key-btn.key-enter {
-    height: 48px;
-    min-height: 46px;
-    font-size: 1.05rem;
+    height: 60px;
+    min-height: 60px;
+    font-size: 1.3rem;
   }
 
   /* Cart Panel */
@@ -2293,6 +2336,12 @@ select.input-field:focus {
     font-size: 1.05rem;
   }
 
+  .payment-actions-grid .pay-btn {
+    height: 58px;
+    min-height: 58px;
+    font-size: 1.2rem;
+  }
+
   .split-pay-btn {
     height: 38px;
     min-height: 38px;
@@ -2318,6 +2367,11 @@ select.input-field:focus {
     height: 48px;
     min-height: 48px;
   }
+
+  .payment-actions-grid .pay-btn {
+    height: 58px;
+    min-height: 58px;
+  }
 }
 
 /* Keypad: rejected press (for example × on a decimal) */
@@ -2338,8 +2392,17 @@ select.input-field:focus {
   }
 }
 
+.key-btn.key-enter > span {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .key-enter-summary {
-  font-size: 0.78rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
   font-weight: 600;
   opacity: 0.9;
   font-family: var(--font-mono);
