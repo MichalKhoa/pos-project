@@ -33,6 +33,8 @@
 
 ## 🏗️ System Architecture
 
+Full detail with sequence diagrams, ER model and flows: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        Tauri v2 Desktop Shell                          │
@@ -176,16 +178,20 @@ pos-project-himmel/
 │   ├── pos_backend.spec           # PyInstaller spec configuration (onefile & onedir)
 │   ├── database.py                # SQLite connection & auto-migrations
 │   ├── models.py                  # SQLAlchemy ORM models (Sale, Item, Preset, Config)
-│   ├── routers/                   # REST endpoints (sales, inventory, eet, printer, payments)
-│   ├── services/                  # Business logic (eet_crypto, escpos, email_listener)
+│   ├── routers/                   # REST endpoints (sales, catalog, stock, cash, eet, printer, payments, reports, system)
+│   ├── services/                  # Business logic (eet_*, escpos, csob terminal, email listener, backups)
 │   └── tests/                     # Python unittest test suite
 ├── src/                           # React 19 Touchscreen Frontend
 │   ├── App.jsx                    # POS register shell & view router
 │   ├── api/posApi.js              # HTTP client API wrapper
 │   ├── components/                # Modular UI components (Cart, Keypad, Modals, Settings)
-│   ├── hooks/                     # Custom hooks (useCart, useRegisterKeypad, useTauri)
+│   ├── hooks/                     # Custom hooks (useCart, usePosCatalog, useUnsentSales, useTauri)
 │   ├── i18n/translations.js       # Localization dictionary (cs, vi, en)
 │   └── utils/                     # Tax invariants, roundCZK, currency math
+├── backend_cloud/                 # Optional home-server API (staging, analytics, exports)
+├── web/                           # Optional remote owner dashboard (React + Router)
+├── backend_cloud/                 # Optional home-server API (staging, analytics, exports)
+├── web/                           # Optional remote owner dashboard (React + Router)
 ├── src-tauri/                     # Tauri v2 Desktop Wrapper
 │   ├── src/lib.rs                 # Rust sidecar management, tray menu, window lifecycle
 │   ├── capabilities/default.json  # Tauri v2 security capabilities
@@ -249,11 +255,11 @@ python -m unittest discover -s backend/tests -p "test_*.py"
 
 ## 📖 Additional Guides & Documentation
 
+- [System Architecture (diagrams, data model, flows)](docs/ARCHITECTURE.md)
 - [Master Product & Architecture Roadmap](docs/ROADMAP.md)
 - [Cashier Setup & Touch Operations Guide](docs/guides/CASHIER_SETUP_GUIDE.md)
 - [ČSOB Ingenico Move 3500 Terminal Integration](docs/guides/CSOB_TERMINAL_GUIDE.md)
 - [Real-Time QR Payment Bank Email Listener Guide](docs/guides/REALTIME_QR_EMAIL_VERIFICATION_GUIDE.md)
-- [Database Safety & Auto-Migration System](docs/plans/archive/DONE_DATABASE_SAFETY_PLAN.md)
+- [Database lifecycle and migrations](docs/ARCHITECTURE.md#44-database-lifecycle)
 - [EET 2.0 Legal & Cryptographic Specifications](docs/README.md)
-- [Token Optimization & Context Shielding Measures](docs/TOKEN_SAVING_MEASURES.md)
-- [Token Usage & Cloud Cost Tracking Guide](docs/TOKEN_TRACKING.md)
+- [Security audit](docs/guides/SECURITY_AUDIT.md) and [audit findings](docs/audit/FINDINGS.md)

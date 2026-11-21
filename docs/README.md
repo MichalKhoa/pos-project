@@ -9,20 +9,32 @@ Welcome to the comprehensive technical documentation and operational guides for 
 ```
 docs/
 ├── README.md                          # Documentation index (this file)
-├── ROADMAP.md                         # Master product & technical roadmap (Active living document)
-├── plans/                             # Active Implementation Plans (Things to do now)
-│   └── REMOTE_WEB_DASHBOARD_PLAN.md   # Phase 2: Remote Home Admin Dashboard & Cloud Sync
-├── guides/                            # Operator & Administrator Manuals
+├── ARCHITECTURE.md                    # Whole-system architecture: diagrams, data model, flows
+├── ROADMAP.md                         # Master product & technical roadmap (living document)
+├── plans/                             # Implementation plans, one per batch or feature (BATCH_*, KEYPAD_*, THEME_*, ...)
+├── audit/                             # Audit findings, fix recommendations, flow maps, theme audit
+├── guides/                            # Operator & administrator manuals
 │   ├── CASHIER_SETUP_GUIDE.md         # Daily cashier touch workflows & register usage
 │   ├── CSOB_TERMINAL_GUIDE.md         # ČSOB Ingenico Move 3500 terminal TCP configuration
+│   ├── HARDWARE_INSTALLATION_GUIDE.md # Printer, drawer and display installation
 │   ├── REALTIME_QR_EMAIL_VERIFICATION_GUIDE.md # Bank email listener instant QR verification
+│   ├── NUDAVANI_EMAIL_PLATBY_MANUAL.md # Email payment setup (Czech)
 │   ├── SCALING_AND_NETWORK_SECURITY.md# Multi-register networking & firewall configuration
+│   ├── SECURITY_AUDIT.md              # Security audit notes
 │   ├── LITESTREAM_R2_SETUP.md         # Off-site real-time SQLite database replication to S3/R2
-│   └── WINDOWS_SERVICE_SETUP.md       # Windows background service administration
+│   ├── WINDOWS_SERVICE_SETUP.md       # Windows background service administration
+│   └── OPENROUTER_MCP_OPTIMIZATION_GUIDE.md # Developer tooling notes
 ├── eet_docs/                          # Official Czech EET 2.0 Specifications & Metodika
 │   └── markdown/                      # Converted Markdown EET documentation & schemas
 └── csob_docs/                         # ČSOB Business Connector technical specifications
 ```
+
+---
+
+## 🧭 Start here
+
+- New to the codebase: read [ARCHITECTURE.md](ARCHITECTURE.md) first.
+- Backend details: [../backend/README.md](../backend/README.md). Frontend details: [../src/README.md](../src/README.md).
 
 ---
 
