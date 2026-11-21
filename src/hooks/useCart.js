@@ -2,6 +2,21 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 import { soundFx } from '../utils/audio';
 
+let lineSeq = 0;
+const newLineId = () => `line-${Date.now().toString(36)}-${(lineSeq++).toString(36)}`;
+
+// A cart can hold two lines of the same product (different price), so lines are addressed by lineId.
+// Product id and numeric index stay accepted for older callers.
+function findLineIndex(items, identifier) {
+  const byLine = items.findIndex(i => i.lineId !== undefined && i.lineId === identifier);
+  if (byLine > -1) return byLine;
+  return typeof identifier === 'number' && identifier < items.length && items[identifier]?.id !== identifier
+    ? identifier
+    : items.findIndex(i => i.id === identifier);
+}
+
+const withLineIds = (items) => items.map(i => (i.lineId ? i : { ...i, lineId: newLineId() }));
+
 export function useCart() {
   const [cartItems, setCartItems] = useState([]);
   const [cartDiscountPercent, setCartDiscountPercent] = useState(0);
@@ -76,7 +91,7 @@ export function useCart() {
         };
       } else {
         const initialQty = Math.round(quantity * 1000) / 1000;
-        updated = [...prev, { ...item, quantity: initialQty }];
+        updated = [...prev, { ...item, lineId: newLineId(), quantity: initialQty }];
       }
 
       // Trigger undo toast for addition
@@ -88,9 +103,7 @@ export function useCart() {
 
   const updateQuantity = useCallback((identifier, newQty) => {
     setCartItems(prev => {
-      const index = typeof identifier === 'number' && identifier < prev.length && prev[identifier]?.id !== identifier
-        ? identifier
-        : prev.findIndex(i => i.id === identifier);
+      const index = findLineIndex(prev, identifier);
 
       if (index === -1) return prev;
       const itemToUpdate = prev[index];
@@ -116,9 +129,7 @@ export function useCart() {
 
   const updateItemDiscount = useCallback((identifier, discountPercent) => {
     setCartItems(prev => {
-      const index = typeof identifier === 'number' && identifier < prev.length && prev[identifier]?.id !== identifier
-        ? identifier
-        : prev.findIndex(i => i.id === identifier);
+      const index = findLineIndex(prev, identifier);
 
       if (index === -1) return prev;
       const updated = [...prev];
@@ -129,9 +140,7 @@ export function useCart() {
 
   const updateItemDetails = useCallback((identifier, updates) => {
     setCartItems(prev => {
-      const index = typeof identifier === 'number' && identifier < prev.length && prev[identifier]?.id !== identifier
-        ? identifier
-        : prev.findIndex(i => i.id === identifier);
+      const index = findLineIndex(prev, identifier);
 
       if (index === -1) return prev;
       const existingItem = prev[index];
@@ -161,9 +170,7 @@ export function useCart() {
 
   const removeItem = useCallback((identifier) => {
     setCartItems(prev => {
-      const index = typeof identifier === 'number' && identifier < prev.length && prev[identifier]?.id !== identifier
-        ? identifier
-        : prev.findIndex(i => i.id === identifier);
+      const index = findLineIndex(prev, identifier);
 
       if (index === -1) return prev;
       const itemToRemove = prev[index];
@@ -299,7 +306,7 @@ export function useCart() {
         result.autoParked = true;
       }
 
-      setCartItems(target.items);
+      setCartItems(withLineIds(target.items));
       setCartDiscountPercent(target.cartDiscountPercent || 0);
       setItemMultiplier(target.itemMultiplier || 1);
       soundFx.playSuccessChime();

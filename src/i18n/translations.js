@@ -43,7 +43,16 @@ export const translations = {
       refund_title: "↩️ Vratka / Vrácení Zboží",
       refund_customer: "↩️ K VRÁCENÍ ZÁKAZNÍKOVI:",
       refund_cash: "Vrátit Hotovost",
-      refund_card: "Vrátit na Kartu"
+      refund_card: "Vrátit na Kartu",
+      return_badge: "↩️ VRATKA",
+      refund_total: "↩️ K VRÁCENÍ",
+      edit_hint: "Kliknutím upravíte množství, slevu nebo poznámku",
+      cleared_title: "Košík byl vysypán",
+      cleared_sub: "{count} položek v paměti (8 s)",
+      restore_cart: "Obnovit košík",
+      decrease_qty: "Ubrat množství",
+      increase_qty: "Přidat množství",
+      cash_short: "hotově {amount} Kč"
     },
     parked_carts: {
       card_title: "Odložené Nákupy (Zákazníci)",
@@ -73,7 +82,8 @@ export const translations = {
       note_placeholder: "např. Bez ledu, S sebou...",
       delete_item: "Odstranit položku",
       no_discount: "Bez slevy",
-      close: "Zavřít"
+      close: "Zavřít",
+      line_total: "Celkem za položku:"
     },
     shift_stats: {
       title: "Dnešní směna (Přehled)",
@@ -94,6 +104,16 @@ export const translations = {
     },
     keypad: {
       backspace_title: "Smazat poslední znak (Backspace)",
+      clear_title: "Vymazat vše",
+      sign_title: "Změnit znaménko (±)",
+      multiply_title: "Násobit",
+      multiply_hint: "množství",
+      step_down_label: "Snížit množství (-1)",
+      step_down_title: "Snížit množství (−1 / Vratka)",
+      step_up_label: "Zvýšit množství (+1)",
+      vat_label: "DPH",
+      return_pill: "VRATKA",
+      cash_movement_title: "Pohyby hotovosti v pokladně (Vklad / Výběr)",
       total_return_preview: "↩️ Vratka celkem: ",
       total_preview: "= Celkem: ",
       manual_title: "Ruční Zadání Částky",
@@ -108,8 +128,7 @@ export const translations = {
       inc_qty: "Pridat 1ks",
       dec_qty: "Odebrat 1ks",
       multiplier: "Násobič",
-      sign_toggle: "± Vratka",
-      return_item_default: "↩️ Vratka / Vrácené zboží"
+      sign_toggle: "± Vratka"
     },
     calendar: {
       title: "Kalendář Směny & Státní Svátky ČR",
@@ -216,6 +235,8 @@ export const translations = {
       drop_to_delete: "Pusťte pro smazání položky",
       confirm_delete_named: "Opravdu chcete smazat položku \"{name}\"?",
       edit_mode_hint: "Klepnutím upravíte • Přetažením změníte pořadí",
+      multiplier_active: "Aktivní násobič množství",
+      toggle_edit: "Zapnout/vypnout režim úprav tlačítek pokladny",
       done_editing: "Hotovo",
       out_of_stock: "Vyprodáno",
       low_stock: "Zbývá {count} ks",
@@ -693,6 +714,8 @@ export const translations = {
       receipt_branding_desc: "\"Vystaveno v pokladním systému VoltFlow POS\"",
       enable_b2b_invoicing: "Firemní faktury (B2B)",
       enable_b2b_invoicing_desc: "Zobrazí tlačítko B2B faktury a vyhledávání ARES v platebním okně",
+      inventory_enabled_label: "Skladové hospodářství (Sklad)",
+      inventory_enabled_desc: "Zobrazí záložku Sklad, odpočet zásob při prodeji a skladové limity na produktech",
       receipt_print_test_btn: "Vytisknout zkušební účtenku",
       receipt_print_sending: "Odesílám na tiskárnu...",
       receipt_preview_mode_normal: "Prodej (Běžný)",
@@ -845,10 +868,8 @@ export const translations = {
       preset_size_large: "Velká (L)",
       preset_style_label: "Styl tlačítek",
       preset_style_desc: "Vzhled a barevné provedení tlačítek v pokladně.",
-      preset_style_left_stripe: "Levý proužek",
+      preset_style_tinted: "Tónovaná",
       preset_style_color_fill: "Plná barva",
-      preset_style_modern_card: "Moderní karta",
-      preset_style_modern_glass: "Moderní sklo",
       cart_item_style_label: "Vzhled položek v košíku",
       cart_item_style_desc: "Vyberte vizuální styl a strukturu položek v košíku.",
       cart_item_style_elevated_card: "Moderní karta",
@@ -1185,6 +1206,7 @@ export const translations = {
     },
     price_check: {
       toggle_btn: "Kontrola ceny",
+      toggle_hint: "Kontrola ceny / Cenovka (F2)",
       toggle_short: "Cenovka",
       toggle_active: "Cenovka: AKTIVNÍ",
       modal_title: "Kontrola ceny zboží",
@@ -1467,7 +1489,16 @@ export const translations = {
       refund_title: "↩️ Trả Hàng / Hoàn Tiền",
       refund_customer: "↩️ HOÀN TIỀN CHO KHÁCH:",
       refund_cash: "Hoàn Tiền Mặt",
-      refund_card: "Hoàn Vào Thẻ"
+      refund_card: "Hoàn Vào Thẻ",
+      return_badge: "↩️ TRẢ HÀNG",
+      refund_total: "↩️ HOÀN TIỀN",
+      edit_hint: "Chạm để sửa số lượng, giảm giá hoặc ghi chú",
+      cleared_title: "Giỏ hàng đã bị xóa",
+      cleared_sub: "{count} sản phẩm trong bộ nhớ (8 giây)",
+      restore_cart: "Khôi phục giỏ hàng",
+      decrease_qty: "Giảm số lượng",
+      increase_qty: "Tăng số lượng",
+      cash_short: "tiền mặt {amount} Kč"
     },
     parked_carts: {
       card_title: "Đơn hàng tạm giữ (Khách hàng)",
@@ -1497,7 +1528,8 @@ export const translations = {
       note_placeholder: "vd: Không đá, Mang về...",
       delete_item: "Xóa món",
       no_discount: "Không giảm",
-      close: "Đóng"
+      close: "Đóng",
+      line_total: "Tổng món:"
     },
     shift_stats: {
       title: "Ca hôm nay (Tổng quan)",
@@ -1518,6 +1550,16 @@ export const translations = {
     },
     keypad: {
       backspace_title: "Xóa ký tự cuối (Backspace)",
+      clear_title: "Xóa tất cả",
+      sign_title: "Đổi dấu (±)",
+      multiply_title: "Nhân số lượng",
+      multiply_hint: "số lượng",
+      step_down_label: "Giảm số lượng (-1)",
+      step_down_title: "Giảm số lượng (−1 / Trả hàng)",
+      step_up_label: "Tăng số lượng (+1)",
+      vat_label: "VAT",
+      return_pill: "TRẢ HÀNG",
+      cash_movement_title: "Thu chi tiền mặt trong két (Nộp / Rút)",
       total_return_preview: "↩️ Tổng trả hàng: ",
       total_preview: "= Tổng: ",
       manual_title: "Nhập Số Tiền Thủ Công",
@@ -1532,8 +1574,7 @@ export const translations = {
       inc_qty: "Thêm 1",
       dec_qty: "Bớt 1",
       multiplier: "Số nhân",
-      sign_toggle: "± Trả hàng",
-      return_item_default: "↩️ Hàng trả lại"
+      sign_toggle: "± Trả hàng"
     },
     calendar: {
       title: "Lịch Ca Làm Việc & Ngày Lễ Séc",
@@ -1640,6 +1681,8 @@ export const translations = {
       drop_to_delete: "Thả vào đây để xóa",
       confirm_delete_named: "Bạn có chắc chắn muốn xóa \"{name}\"?",
       edit_mode_hint: "Nhấn để sửa • Kéo để đổi vị trí",
+      multiplier_active: "Hệ số số lượng đang bật",
+      toggle_edit: "Bật/tắt chế độ chỉnh sửa nút bán hàng",
       done_editing: "Xong",
       out_of_stock: "Hết hàng",
       low_stock: "Còn {count} cái",
@@ -2117,6 +2160,8 @@ export const translations = {
       receipt_branding_desc: "\"Xuất từ hệ thống bán hàng VoltFlow POS\"",
       enable_b2b_invoicing: "Hóa đơn doanh nghiệp (B2B)",
       enable_b2b_invoicing_desc: "Hiển thị nút hóa đơn B2B và tra cứu ARES trong cửa sổ thanh toán",
+      inventory_enabled_label: "Quản lý kho hàng (Kho)",
+      inventory_enabled_desc: "Hiển thị tab Kho, tự động trừ tồn kho khi bán và cảnh báo tồn kho trên sản phẩm",
       receipt_print_test_btn: "In thử hóa đơn",
       receipt_print_sending: "Đang gửi tới máy in...",
       receipt_preview_mode_normal: "Bán hàng (Bình thường)",
@@ -2269,10 +2314,8 @@ export const translations = {
       preset_size_large: "Lớn (L)",
       preset_style_label: "Kiểu nút",
       preset_style_desc: "Giao diện và màu sắc của nút sản phẩm.",
-      preset_style_left_stripe: "Vạch bên trái",
+      preset_style_tinted: "Phủ màu nhạt",
       preset_style_color_fill: "Màu toàn phần",
-      preset_style_modern_card: "Thẻ hiện đại",
-      preset_style_modern_glass: "Kính mờ hiện đại",
       cart_item_style_label: "Kiểu mục trong giỏ hàng",
       cart_item_style_desc: "Chọn kiểu hiển thị và bố cục của các món hàng trong giỏ.",
       cart_item_style_elevated_card: "Thẻ hiện đại",
@@ -2609,6 +2652,7 @@ export const translations = {
     },
     price_check: {
       toggle_btn: "Kiểm tra giá",
+      toggle_hint: "Kiểm tra giá / Nhãn giá (F2)",
       toggle_short: "Xem giá",
       toggle_active: "Xem giá: ĐANG BẬT",
       modal_title: "Kiểm tra giá sản phẩm",
@@ -2891,7 +2935,16 @@ export const translations = {
       refund_title: "↩️ Item Return / Refund",
       refund_customer: "↩️ REFUND TO CUSTOMER:",
       refund_cash: "Refund Cash",
-      refund_card: "Refund to Card"
+      refund_card: "Refund to Card",
+      return_badge: "↩️ RETURN",
+      refund_total: "↩️ REFUND DUE",
+      edit_hint: "Tap to edit quantity, discount or note",
+      cleared_title: "Cart cleared",
+      cleared_sub: "{count} items in memory (8 s)",
+      restore_cart: "Restore cart",
+      decrease_qty: "Decrease quantity",
+      increase_qty: "Increase quantity",
+      cash_short: "cash {amount} Kč"
     },
     parked_carts: {
       card_title: "Parked Carts (Customers)",
@@ -2921,7 +2974,8 @@ export const translations = {
       note_placeholder: "e.g. No ice, Takeaway...",
       delete_item: "Remove item",
       no_discount: "No disc.",
-      close: "Close"
+      close: "Close",
+      line_total: "Item total:"
     },
     shift_stats: {
       title: "Today's Shift (Summary)",
@@ -2942,6 +2996,16 @@ export const translations = {
     },
     keypad: {
       backspace_title: "Delete last character (Backspace)",
+      clear_title: "Clear all",
+      sign_title: "Toggle sign (±)",
+      multiply_title: "Multiply",
+      multiply_hint: "qty",
+      step_down_label: "Decrease quantity (-1)",
+      step_down_title: "Decrease quantity (−1 / Return)",
+      step_up_label: "Increase quantity (+1)",
+      vat_label: "VAT",
+      return_pill: "RETURN",
+      cash_movement_title: "Cash drawer movements (Deposit / Withdrawal)",
       total_return_preview: "↩️ Return total: ",
       total_preview: "= Total: ",
       manual_title: "Manual Amount Entry",
@@ -2956,8 +3020,7 @@ export const translations = {
       inc_qty: "Add 1",
       dec_qty: "Remove 1",
       multiplier: "Multiplier",
-      sign_toggle: "± Refund",
-      return_item_default: "↩️ Returned Item"
+      sign_toggle: "± Refund"
     },
     calendar: {
       title: "Shift Calendar & Czech National Holidays",
@@ -3064,6 +3127,8 @@ export const translations = {
       drop_to_delete: "Drop to delete item",
       confirm_delete_named: "Are you sure you want to delete \"{name}\"?",
       edit_mode_hint: "Tap to edit • Drag to reorder",
+      multiplier_active: "Quantity multiplier active",
+      toggle_edit: "Turn button edit mode on/off",
       done_editing: "Done",
       out_of_stock: "Out of stock",
       low_stock: "{count} left",
@@ -3541,6 +3606,8 @@ export const translations = {
       receipt_branding_desc: "\"Issued by VoltFlow POS register\"",
       enable_b2b_invoicing: "Corporate invoicing (B2B)",
       enable_b2b_invoicing_desc: "Show B2B invoice toggle and ARES lookup in the payment modal",
+      inventory_enabled_label: "Inventory Management (Stock)",
+      inventory_enabled_desc: "Show Inventory tab, automatic stock deduction on sale, and stock badges on products",
       receipt_print_test_btn: "Print test receipt",
       receipt_print_sending: "Sending to printer...",
       receipt_preview_mode_normal: "Sale (Normal)",
@@ -3693,10 +3760,8 @@ export const translations = {
       preset_size_large: "Large (L)",
       preset_style_label: "Button style",
       preset_style_desc: "Visual appearance and color layout of register buttons.",
-      preset_style_left_stripe: "Left stripe",
+      preset_style_tinted: "Tinted",
       preset_style_color_fill: "Full color",
-      preset_style_modern_card: "Modern card",
-      preset_style_modern_glass: "Modern glass",
       cart_item_style_label: "Cart item style",
       cart_item_style_desc: "Choose visual appearance and layout of items in the cart.",
       cart_item_style_elevated_card: "Elevated card",
@@ -4033,6 +4098,7 @@ export const translations = {
     },
     price_check: {
       toggle_btn: "Price Check",
+      toggle_hint: "Price check / Shelf label (F2)",
       toggle_short: "Price Tag",
       toggle_active: "Price Check: ACTIVE",
       modal_title: "Product Price Check",

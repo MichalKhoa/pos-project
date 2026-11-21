@@ -2,21 +2,29 @@ import React from 'react';
 import { Delete, PlusCircle } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
+import { formatKc } from '../../utils/money.js';
 
 export default function KeypadNumberGrid({
   activeKey,
   onKeyPress,
   itemMultiplier,
-  setItemMultiplier,
   amountStr,
-  setAmountStr,
-  triggerKeyAnimation,
+  onMultiply,
+  selectedVat,
+  rejectKey = null,
   hasValidAmount,
   onAddCustomItem
 }) {
   const { t } = useTranslation();
 
   const isReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
+
+  // What the Add button will put in the cart, so the cashier can check it before committing
+  const unitAmount = Math.abs(parseFloat(amountStr)) || 0;
+  const qty = Math.max(1, Math.abs(itemMultiplier || 1));
+  const summary = hasValidAmount
+    ? `${qty > 1 ? `${qty} × ${formatKc(unitAmount)} = ` : ''}${formatKc((isReturn ? -1 : 1) * unitAmount * qty)} Kč${selectedVat !== undefined ? ` · ${t('keypad.vat_label')} ${selectedVat}%` : ''}`
+    : '';
 
   const backspaceHoldHandlers = useHoldBackspace({
     onBackspace: () => onKeyPress('BACK'),
@@ -40,7 +48,8 @@ export default function KeypadNumberGrid({
         type="button"
         className={`key-btn key-action ${activeKey === 'BACK' ? 'active-press' : ''}`}
         {...backspaceHoldHandlers}
-        title="Backspace"
+        title={t('keypad.backspace_title')}
+        aria-label={t('keypad.backspace_title')}
       >
         <Delete size={22} />
       </button>
@@ -60,7 +69,7 @@ export default function KeypadNumberGrid({
         type="button"
         className={`key-btn key-action ${activeKey === 'CLEAR' ? 'active-press' : ''}`}
         onClick={() => onKeyPress('CLEAR')}
-        title="Clear"
+        title={t('keypad.clear_title')}
       >
         C
       </button>
@@ -112,7 +121,7 @@ export default function KeypadNumberGrid({
           background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
           borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
         }}
-        title="Změnit znaménko (±)"
+        title={t('keypad.sign_title')}
       >
         ±
       </button>
@@ -120,31 +129,18 @@ export default function KeypadNumberGrid({
       {/* × multiplier */}
       <button
         type="button"
-        className={`key-btn key-action ${itemMultiplier > 1 ? 'active-multiplier' : ''} ${activeKey === 'MULTIPLY' ? 'active-press' : ''}`}
-        onClick={() => {
-          triggerKeyAnimation('MULTIPLY');
-          if (itemMultiplier > 1) {
-            if (setItemMultiplier) setItemMultiplier(1);
-            if (setAmountStr) setAmountStr('');
-            return;
-          }
-          if (amountStr && !amountStr.includes('.')) {
-            const q = parseInt(amountStr, 10);
-            if (!isNaN(q) && q >= 1 && q <= 99) {
-              if (setItemMultiplier) setItemMultiplier(q);
-              if (setAmountStr) setAmountStr('');
-            }
-          }
-        }}
+        className={`key-btn key-action ${itemMultiplier > 1 ? 'active-multiplier' : ''} ${activeKey === 'MULTIPLY' ? 'active-press' : ''} ${rejectKey ? 'key-reject' : ''}`}
+        onClick={onMultiply}
         style={{
           color: itemMultiplier > 1 ? '#fff' : 'var(--accent-amber)',
           fontWeight: '700',
           fontSize: '1.45rem',
           background: itemMultiplier > 1 ? '#d97706' : undefined
         }}
-        title="Násobit"
+        title={t('keypad.multiply_title')}
       >
         ×
+        <span className="key-sublabel" aria-hidden="true">{t('keypad.multiply_hint')}</span>
       </button>
 
       {/* Enter / Add to cart */}
@@ -170,12 +166,15 @@ export default function KeypadNumberGrid({
         disabled={!hasValidAmount}
       >
         <PlusCircle size={22} />
-        <span>
+        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.15 }}>
+          <span>
           {!hasValidAmount
             ? t('keypad.enter_amount')
             : (isReturn
                 ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
                 : t('keypad.add_to_cart'))}
+          </span>
+          {summary && <span className="key-enter-summary">{summary}</span>}
         </span>
       </button>
     </div>

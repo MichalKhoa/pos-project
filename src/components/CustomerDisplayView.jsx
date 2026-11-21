@@ -364,7 +364,7 @@ export default function CustomerDisplayView({ storeConfig }) {
                   </div>
                   <div className="cd-list-body">
                     {cartItems.map((item, idx) => (
-                      <div key={item.id || idx} className="cd-cart-item">
+                      <div key={item.lineId || `${item.id}-${idx}`} className="cd-cart-item">
                         <div className="cd-item-info">
                           <span className="cd-item-name">{item.name}</span>
                           {item.vatRate !== undefined && (

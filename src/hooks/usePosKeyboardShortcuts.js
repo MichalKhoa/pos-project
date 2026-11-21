@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { soundFx } from '../utils/audio.js';
 import { parseScaleBarcode } from '../utils/barcodeUtils.js';
+import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
+import { appendDigit, appendDecimal, applyMultiply, stepQty } from '../utils/keypadInput.js';
+import { isKeyboardOwned } from '../utils/keyboardOwner.js';
 
 export function usePosKeyboardShortcuts({
   isAppLocked,
@@ -42,6 +45,9 @@ export function usePosKeyboardShortcuts({
       // F-002: a payment modal owns the keyboard. A scan during payment must neither add an
       // item to the cart nor type into the keypad; the modal shows the warning.
       if (paymentModalMethod) return;
+
+      // A modal that owns the keyboard (open-price, custom item, weight) gets every key.
+      if (isKeyboardOwned()) return;
 
       // F2 hotkey: Toggle Price Check Mode (Cenovka)
       if (key === 'F2') {
@@ -202,15 +208,14 @@ export function usePosKeyboardShortcuts({
         barcodeBufferRef.current = key;
       }
 
+      // Barcode scans above still work with a modal open (price check re-scans). The pad
+      // shortcuts below must not: digits would type into the pad behind the modal and Enter
+      // would add a custom line or open payment. Convention: a modal renders .modal-overlay.
+      if (document.querySelector('.modal-overlay')) return;
+
       if (/^[0-9]$/.test(key)) {
         e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev.includes('.')) {
-            const parts = prev.split('.');
-            if (parts[1] && parts[1].length >= 2) return prev;
-          }
-          return prev.length < 8 ? prev + key : prev;
-        });
+        setKeypadAmount(prev => appendDigit(prev, key));
       } else if (key === '-' || key === 'Subtract') {
         e.preventDefault();
         const currentlyReturn = (itemMultiplier < 0) || Boolean(keypadAmount && keypadAmount.startsWith('-'));
@@ -222,26 +227,13 @@ export function usePosKeyboardShortcuts({
         }
       } else if (key === 'ArrowUp' || key === '+' || key === 'Add') {
         e.preventDefault();
-        setItemMultiplier(prev => {
-          const current = prev || 1;
-          if (current === -1) return 1;
-          if (current < -1) return current + 1;
-          return current + 1;
-        });
+        setItemMultiplier(prev => stepQty(prev, 1));
       } else if (key === 'ArrowDown') {
         e.preventDefault();
-        setItemMultiplier(prev => {
-          const current = prev || 1;
-          if (current === 1) return -1;
-          if (current > 1) return current - 1;
-          return current - 1;
-        });
+        setItemMultiplier(prev => stepQty(prev, -1));
       } else if (key === '.' || key === ',') {
         e.preventDefault();
-        setKeypadAmount(prev => {
-          if (prev.includes('.')) return prev;
-          return prev ? prev + '.' : '0.';
-        });
+        setKeypadAmount(prev => appendDecimal(prev));
       } else if (key === 'Backspace') {
         e.preventDefault();
         setKeypadAmount(prev => prev.slice(0, -1));
@@ -251,18 +243,15 @@ export function usePosKeyboardShortcuts({
         setItemMultiplier(1);
       } else if (key === '*' || key.toLowerCase() === 'x') {
         e.preventDefault();
+        // Functional update so a fast "5*" sees the 5 even before the next render.
         setKeypadAmount(prev => {
-          if (prev && !prev.includes('.')) {
-            const parsedQty = parseInt(prev, 10);
-            if (!isNaN(parsedQty) && parsedQty !== 0 && parsedQty >= -999 && parsedQty <= 999) {
-              setItemMultiplier(parsedQty);
-              return '';
-            }
+          const result = applyMultiply(prev, itemMultiplier);
+          if (!result) {
+            soundFx.playError();
+            return prev;
           }
-          if (itemMultiplier !== 1) {
-            setItemMultiplier(1);
-          }
-          return prev;
+          setItemMultiplier(result.itemMultiplier);
+          return result.amountStr;
         });
       } else if (key === 'Enter') {
         e.preventDefault();
@@ -272,8 +261,8 @@ export function usePosKeyboardShortcuts({
           const qty = Math.max(1, Math.abs(itemMultiplier || 1));
           const unitPrice = isReturn ? -Math.abs(amtVal) : Math.abs(amtVal);
           handleAddToCart({
-            id: `custom-${Date.now()}`,
-            name: isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej',
+            id: newCustomItemId(),
+            name: isReturn ? DEFAULT_RETURN_ITEM_NAME : DEFAULT_ITEM_NAME,
             price: unitPrice,
             vat: storeConfig?.defaultVat !== undefined ? parseInt(storeConfig.defaultVat, 10) : 21,
             quantity: qty,

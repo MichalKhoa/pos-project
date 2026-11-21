@@ -1,8 +1,16 @@
-import React from 'react';
-import { Tag, X, ChevronUp, ChevronDown, Delete, PlusCircle } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Tag, X } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { soundFx } from '../../utils/audio.js';
-import { useHoldBackspace } from '../../hooks/useHoldBackspace.js';
+import { useOwnKeyboard } from '../../utils/keyboardOwner.js';
+import { useRejectFlash } from '../../hooks/useRejectFlash.js';
+import { appendDigit, appendDecimal, applyMultiply, stepQty } from '../../utils/keypadInput.js';
+import KeypadStepperBar from '../keypad/KeypadStepperBar.jsx';
+import KeypadNumberGrid from '../keypad/KeypadNumberGrid.jsx';
+
+// A key within this many ms of the previous one is a barcode scanner, not a hand.
+const SCAN_KEY_GAP_MS = 70;
+const SCAN_ENTER_GAP_MS = 100;
 
 export default function OpenPriceModal({
   openPriceTarget,
@@ -14,87 +22,111 @@ export default function OpenPriceModal({
   onSubmit
 }) {
   const { t } = useTranslation();
+  const isOpen = Boolean(openPriceTarget);
+  useOwnKeyboard(isOpen);
+  const [rejectKey, flashReject] = useRejectFlash();
 
-  const handleStepDown = () => {
-    soundFx.playKeypadClick();
-    setOpenPriceQty(prev => {
-      const current = prev || 1;
-      if (current === 1) return -1; // 1 -> -1 (activate return mode directly)
-      if (current > 1) return current - 1; // 3 -> 2 -> 1
-      return current - 1; // -1 -> -2 -> -3 (more returns)
-    });
-  };
-
-  const handleStepUp = () => {
-    soundFx.playKeypadClick();
-    setOpenPriceQty(prev => {
-      const current = prev || 1;
-      if (current === -1) return 1; // -1 -> 1 (exit return mode)
-      if (current < -1) return current + 1; // -3 -> -2 -> -1
-      return current + 1; // 1 -> 2 -> 3
-    });
-  };
-
-  const handleDigit = (d) => {
-    soundFx.playKeypadClick();
-    setEnteredOpenPrice(prev => {
-      if (prev.includes('.')) {
-        const parts = prev.split('.');
-        if (parts[1] && parts[1].length >= 2) return prev;
-      }
-      return prev.length < 10 ? prev + d : prev;
-    });
-  };
-
-  const handleDoubleZero = () => {
-    soundFx.playKeypadClick();
-    setEnteredOpenPrice(prev => {
-      if (!prev || prev === '0') return '0';
-      if (prev.includes('.')) {
-        const parts = prev.split('.');
-        if (parts[1] && parts[1].length >= 1) return prev;
-      }
-      return prev.length < 9 ? prev + '00' : prev;
-    });
-  };
-
-  const handleComma = () => {
-    soundFx.playKeypadClick();
-    setEnteredOpenPrice(prev => {
-      if (prev.includes('.')) return prev;
-      return prev ? prev + '.' : '0.';
-    });
-  };
-
-  const handleBackspace = () => {
-    soundFx.playKeypadClick();
-    setEnteredOpenPrice(prev => (prev.length > 1 ? prev.slice(0, -1) : ''));
-  };
-
-  const handleClear = () => {
-    soundFx.playDeleteTone();
-    setEnteredOpenPrice('');
-  };
-
-  const handleToggleSign = () => {
-    soundFx.playKeypadClick();
-    setOpenPriceQty(prev => (prev < 0 ? Math.abs(prev || 1) : -Math.abs(prev || 1)));
-    setEnteredOpenPrice(prev => (prev.startsWith('-') ? prev.slice(1) : prev));
-  };
-
-  const isReturn = openPriceQty < 0 || Boolean(enteredOpenPrice && enteredOpenPrice.startsWith('-'));
+  // The signed quantity is the single source of the return state (see QuickPresetGrid).
+  const isReturn = openPriceQty < 0;
   const hasValidAmount = Boolean(enteredOpenPrice && !isNaN(parseFloat(enteredOpenPrice)) && parseFloat(enteredOpenPrice) > 0);
 
-  const backspaceHoldHandlers = useHoldBackspace({
-    onBackspace: handleBackspace,
-    onClear: handleClear,
-  });
+  const handleKeyPress = (val) => {
+    if (val === 'CLEAR') {
+      soundFx.playDeleteTone();
+      setEnteredOpenPrice('');
+      setOpenPriceQty(1);
+      return;
+    }
+    soundFx.playKeypadClick();
+    if (val === '±') {
+      setOpenPriceQty(prev => (prev < 0 ? Math.abs(prev || 1) : -Math.abs(prev || 1)));
+    } else if (val === 'BACK') {
+      setEnteredOpenPrice(prev => prev.slice(0, -1));
+    } else if (val === '.') {
+      setEnteredOpenPrice(prev => appendDecimal(prev));
+    } else {
+      setEnteredOpenPrice(prev => appendDigit(prev, val));
+    }
+  };
 
-  const inlineBackspaceHandlers = useHoldBackspace({
-    onBackspace: handleBackspace,
-    onClear: handleClear,
-    disabled: !enteredOpenPrice
-  });
+  const handleMultiply = () => {
+    const result = applyMultiply(enteredOpenPrice, openPriceQty);
+    if (!result) {
+      soundFx.playError();
+      flashReject();
+      return;
+    }
+    soundFx.playKeypadClick();
+    setEnteredOpenPrice(result.amountStr);
+    setOpenPriceQty(result.itemMultiplier);
+  };
+
+  const handleSubmit = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (hasValidAmount) onSubmit(e);
+  };
+
+  // Physical keyboard (USB numpad). Same keys as the register shortcuts; a scanner burst is
+  // ignored and can never submit a line.
+  const lastKeyAtRef = useRef(0);
+  const keyHandlerRef = useRef(null);
+  keyHandlerRef.current = (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const key = e.key;
+    if (key === 'Escape') {
+      e.preventDefault();
+      onClose();
+      return;
+    }
+    const now = Date.now();
+    const gap = now - lastKeyAtRef.current;
+    lastKeyAtRef.current = now;
+
+    if (key === 'Enter') {
+      e.preventDefault();
+      if (gap > SCAN_ENTER_GAP_MS) handleSubmit();
+      return;
+    }
+    if (key.length === 1 && gap <= SCAN_KEY_GAP_MS) {
+      e.preventDefault();
+      return;
+    }
+
+    if (/^[0-9]$/.test(key)) {
+      e.preventDefault();
+      handleKeyPress(key);
+    } else if (key === '.' || key === ',') {
+      e.preventDefault();
+      handleKeyPress('.');
+    } else if (key === 'Backspace') {
+      e.preventDefault();
+      handleKeyPress('BACK');
+    } else if (key === 'Delete' || key.toLowerCase() === 'c') {
+      e.preventDefault();
+      handleKeyPress('CLEAR');
+    } else if (key === '-' || key === 'Subtract') {
+      e.preventDefault();
+      handleKeyPress('±');
+    } else if (key === '+' || key === 'Add' || key === 'ArrowUp') {
+      e.preventDefault();
+      soundFx.playKeypadClick();
+      setOpenPriceQty(prev => stepQty(prev, 1));
+    } else if (key === 'ArrowDown') {
+      e.preventDefault();
+      soundFx.playKeypadClick();
+      setOpenPriceQty(prev => stepQty(prev, -1));
+    } else if (key === '*' || key.toLowerCase() === 'x') {
+      e.preventDefault();
+      handleMultiply();
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const listener = (e) => keyHandlerRef.current(e);
+    window.addEventListener('keydown', listener);
+    return () => window.removeEventListener('keydown', listener);
+  }, [isOpen]);
 
   if (!openPriceTarget) return null;
 
@@ -126,10 +158,10 @@ export default function OpenPriceModal({
           </button>
         </div>
 
-        <form onSubmit={onSubmit} style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+        <div style={{ padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
           {/* ── Compact Amount Display Card (Matches Main Keypad) ── */}
           <div
-            className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
+            className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''} ${rejectKey ? 'key-reject' : ''}`}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -172,312 +204,56 @@ export default function OpenPriceModal({
               )}
             </div>
 
-            {/* Main Price Readout Row with Inline Backspace */}
+            {/* Main price readout */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.5rem',
+              fontSize: '1.45rem',
+              fontWeight: '700',
+              fontFamily: 'var(--font-mono)',
+              color: isReturn
+                ? 'var(--accent-rose)'
+                : (enteredOpenPrice ? 'var(--text-primary)' : 'var(--text-muted)'),
+              wordBreak: 'break-all',
               marginTop: '1px'
             }}>
-              <div style={{
-                fontSize: '1.45rem',
-                fontWeight: '700',
-                fontFamily: 'var(--font-mono)',
-                color: isReturn
-                  ? 'var(--accent-rose)'
-                  : (enteredOpenPrice ? 'var(--text-primary)' : 'var(--text-muted)'),
-                wordBreak: 'break-all',
-                flex: 1
-              }}>
-                {enteredOpenPrice ? `${enteredOpenPrice} Kč` : (isReturn ? '-0 Kč' : '0 Kč')}
-              </div>
-
-              {/* Inline Backspace button (Subtle & Borderless) */}
-              <button
-                type="button"
-                {...inlineBackspaceHandlers}
-                disabled={!enteredOpenPrice}
-                style={{
-                  width: '34px',
-                  height: '34px',
-                  minWidth: '34px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: 'none',
-                  background: 'transparent',
-                  color: enteredOpenPrice ? 'var(--text-muted)' : 'transparent',
-                  opacity: enteredOpenPrice ? 0.75 : 0,
-                  cursor: enteredOpenPrice ? 'pointer' : 'default',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.15s ease',
-                  padding: 0
-                }}
-                title="Smazat poslední znak (Backspace)"
-              >
-                <Delete size={18} />
-              </button>
+              {enteredOpenPrice ? `${enteredOpenPrice} Kč` : (isReturn ? '-0 Kč' : '0 Kč')}
             </div>
-
-            {/* Total calculation preview when qty > 1 */}
-            {openPriceQty !== 1 && hasValidAmount && (
-              <div style={{
-                fontSize: '0.8rem',
-                color: isReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)',
-                fontWeight: '700',
-                marginTop: '1px'
-              }}>
-                {isReturn ? '↩️ Vratka celkem: ' : '= Celkem: '}
-                {(Math.abs(openPriceQty) * parseFloat(enteredOpenPrice || 0)).toLocaleString('cs-CZ')} Kč ({openPriceQty} ks)
-              </div>
-            )}
           </div>
 
-          {/* ── Sleek 42px Quantity Stepper (Matches Main Keypad) ── */}
-          <div
-            className="keypad-stepper-bar"
+          {/* ── Quantity stepper (shared with the main keypad) ── */}
+          <KeypadStepperBar
+            itemMultiplier={openPriceQty}
+            setItemMultiplier={setOpenPriceQty}
+            triggerKeyAnimation={() => soundFx.playKeypadClick()}
+          />
+
+          {/* ── Number grid with the Add button and its line-total summary ── */}
+          <KeypadNumberGrid
+            onKeyPress={handleKeyPress}
+            itemMultiplier={openPriceQty}
+            amountStr={enteredOpenPrice}
+            onMultiply={handleMultiply}
+            rejectKey={rejectKey}
+            hasValidAmount={hasValidAmount}
+            onAddCustomItem={handleSubmit}
+          />
+
+          {/* ── Cancel ── */}
+          <button
+            type="button"
+            className="nav-tab"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              width: '100%',
-              boxSizing: 'border-box'
+              justifyContent: 'center',
+              height: '44px',
+              minHeight: '44px',
+              fontSize: '0.95rem',
+              fontWeight: '700',
+              borderRadius: 'var(--radius-md)'
             }}
+            onClick={onClose}
           >
-            <button
-              type="button"
-              className="key-btn"
-              onClick={handleStepDown}
-              style={{
-                flex: 1,
-                height: '42px',
-                minHeight: '42px',
-                aspectRatio: 'auto',
-                background: '#dc2626',
-                color: '#ffffff',
-                border: 'none',
-                fontSize: '0.96rem',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
-                cursor: 'pointer'
-              }}
-              title="Snížit množství (−1 / Vratka)"
-            >
-              <ChevronDown size={19} strokeWidth={2.5} />
-              <span>-1</span>
-            </button>
-
-            <div
-              className={`multiplier-badge ${isReturn ? 'has-return' : (openPriceQty > 1 ? 'has-multiplier' : '')}`}
-              style={{
-                flex: 1,
-                height: '42px',
-                minHeight: '42px',
-                aspectRatio: 'auto',
-                fontSize: '1.05rem',
-                letterSpacing: '0.02em',
-                padding: '0 0.5rem',
-                borderRadius: 'var(--radius-md)'
-              }}
-            >
-              {isReturn ? `↩️ ${openPriceQty}×` : `${openPriceQty}×`}
-            </div>
-
-            <button
-              type="button"
-              className="key-btn"
-              onClick={handleStepUp}
-              style={{
-                flex: 1,
-                height: '42px',
-                minHeight: '42px',
-                aspectRatio: 'auto',
-                background: '#059669',
-                color: '#ffffff',
-                border: 'none',
-                fontSize: '0.96rem',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
-                cursor: 'pointer'
-              }}
-              title="Zvýšit množství (+1)"
-            >
-              <ChevronUp size={19} strokeWidth={2.5} />
-              <span>+1</span>
-            </button>
-          </div>
-
-          {/* ── Standard 4×4 Touch Numpad (Matches KeypadNumberGrid) ── */}
-          <div className="keypad-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.45rem' }}>
-            {/* Row 1: 7 8 9 ⌫ */}
-            {['7', '8', '9'].map(num => (
-              <button
-                key={num}
-                type="button"
-                className="key-btn"
-                onClick={() => handleDigit(num)}
-              >
-                {num}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="key-btn key-action"
-              {...backspaceHoldHandlers}
-              title="Backspace"
-            >
-              <Delete size={22} />
-            </button>
-
-            {/* Row 2: 4 5 6 C */}
-            {['4', '5', '6'].map(num => (
-              <button
-                key={num}
-                type="button"
-                className="key-btn"
-                onClick={() => handleDigit(num)}
-              >
-                {num}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="key-btn key-action"
-              style={{ fontSize: '1.15rem', fontWeight: '700' }}
-              onClick={handleClear}
-              title="Smazat vše (Clear)"
-            >
-              C
-            </button>
-
-            {/* Row 3: 1 2 3 , */}
-            {['1', '2', '3'].map(num => (
-              <button
-                key={num}
-                type="button"
-                className="key-btn"
-                onClick={() => handleDigit(num)}
-              >
-                {num}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="key-btn"
-              style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--accent-blue)' }}
-              onClick={handleComma}
-              title="Čárka"
-            >
-              ,
-            </button>
-
-            {/* Row 4: 0 00 ± × */}
-            <button
-              type="button"
-              className="key-btn"
-              onClick={() => handleDigit('0')}
-            >
-              0
-            </button>
-            <button
-              type="button"
-              className="key-btn"
-              onClick={handleDoubleZero}
-            >
-              00
-            </button>
-            <button
-              type="button"
-              className={`key-btn ${isReturn ? 'active-return' : ''}`}
-              style={{
-                fontSize: '1.45rem',
-                fontWeight: '700',
-                color: isReturn ? 'var(--accent-rose)' : 'var(--text-primary)',
-                background: isReturn ? 'rgba(239, 68, 68, 0.15)' : undefined,
-                borderColor: isReturn ? 'rgba(239, 68, 68, 0.6)' : undefined
-              }}
-              onClick={handleToggleSign}
-              title="Změnit znaménko (± Vratka)"
-            >
-              ±
-            </button>
-            <button
-              type="button"
-              className="key-btn key-action"
-              style={{
-                fontSize: '1.45rem',
-                fontWeight: '700',
-                color: openPriceQty > 1 ? '#fff' : 'var(--accent-amber)',
-                background: openPriceQty > 1 ? '#d97706' : undefined
-              }}
-              onClick={handleStepUp}
-              title="Zvýšit množství (×)"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* ── Action Buttons Row ── */}
-          <div style={{ display: 'flex', gap: '0.55rem', marginTop: '0.45rem' }}>
-            <button
-              type="button"
-              className="nav-tab"
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                height: '52px',
-                minHeight: '52px',
-                fontSize: '0.95rem',
-                fontWeight: '700',
-                borderRadius: 'var(--radius-md)'
-              }}
-              onClick={onClose}
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              className={`key-btn key-enter ${hasValidAmount ? 'key-enter-active' : ''}`}
-              style={{
-                flex: 1.8,
-                height: '52px',
-                minHeight: '52px',
-                aspectRatio: 'auto',
-                fontSize: '1.05rem',
-                fontWeight: '700',
-                gap: '0.5rem',
-                background: isReturn && hasValidAmount
-                  ? '#dc2626'
-                  : undefined,
-                borderColor: isReturn && hasValidAmount
-                  ? '#ef4444'
-                  : undefined,
-                boxShadow: isReturn && hasValidAmount
-                  ? '0 4px 14px rgba(239, 68, 68, 0.35)'
-                  : undefined
-              }}
-              disabled={!hasValidAmount}
-            >
-              <PlusCircle size={22} />
-              <span>
-                {isReturn
-                  ? (t('keypad.add_return_item') || '↩️ Vložit Vratku Zboží')
-                  : t('keypad.add_to_cart')}
-              </span>
-            </button>
-          </div>
-        </form>
+            {t('common.cancel')}
+          </button>
+        </div>
       </div>
     </div>
   );

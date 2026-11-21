@@ -3,6 +3,8 @@ import { soundFx } from '../../utils/audio';
 import { Tag, ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import { useTauri } from '../../hooks/useTauri.js';
+import { useStoreConfig } from '../../context/StoreConfigContext.jsx';
+import { normalizePresetStyle } from '../../utils/presetTileStyle.js';
 
 export default function LayoutSection({
   config,
@@ -26,6 +28,7 @@ export default function LayoutSection({
   };
   const { t } = useTranslation();
   const { openCustomerDisplay } = useTauri();
+  const { fontSize, setFontSize } = useStoreConfig();
 
   const ACCENT_COLORS = [
     { id: 'indigo', name: t('settings.accent_indigo') || 'Indigo', hex: '#6366f1' },
@@ -151,15 +154,13 @@ export default function LayoutSection({
 
           <div className="settings-segmented-group" style={{ flexWrap: 'wrap' }}>
             {[
-              { id: 'left-stripe', label: '▍ ' + (t('settings.preset_style_left_stripe') || 'Levý proužek') },
-              { id: 'color-fill', label: '█ ' + (t('settings.preset_style_color_fill') || 'Plná barva') },
-              { id: 'modern-card', label: '✦ ' + (t('settings.preset_style_modern_card') || 'Moderní karta') },
-              { id: 'modern-glass', label: '❖ ' + (t('settings.preset_style_modern_glass') || 'Moderní sklo') }
+              { id: 'tinted', label: t('settings.preset_style_tinted') || 'Tónovaná' },
+              { id: 'color-fill', label: '█ ' + (t('settings.preset_style_color_fill') || 'Plná barva') }
             ].map(st => (
               <button
                 key={st.id}
                 type="button"
-                className={`settings-segmented-btn ${(config.presetButtonStyle || 'left-stripe') === st.id ? 'active' : ''}`}
+                className={`settings-segmented-btn ${normalizePresetStyle(config.presetButtonStyle) === st.id ? 'active' : ''}`}
                 onClick={() => {
                   handleUpdate({ presetButtonStyle: st.id });
                   try {
@@ -216,6 +217,22 @@ export default function LayoutSection({
 
           <label className="settings-switch-toggle">
             <input type="checkbox" checked={soundOn} onChange={e => toggleSound(e.target.checked)} />
+            <span className="settings-switch-slider" />
+          </label>
+        </div>
+
+        <div className="settings-toggle-row">
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">{t('settings.inventory_enabled_label') || 'Skladové hospodářství (Sklad)'}</span>
+            <span className="settings-toggle-subtitle">{t('settings.inventory_enabled_desc') || 'Zobrazí záložku Sklad, odpočet zásob při prodeji a skladové limity na produktech.'}</span>
+          </div>
+
+          <label className="settings-switch-toggle">
+            <input
+              type="checkbox"
+              checked={Boolean(config.inventoryEnabled)}
+              onChange={e => handleUpdate({ inventoryEnabled: e.target.checked })}
+            />
             <span className="settings-switch-slider" />
           </label>
         </div>
@@ -460,16 +477,8 @@ export default function LayoutSection({
               <button
                 key={sz.id}
                 type="button"
-                className={`settings-segmented-btn ${(config.fontSize || 'md') === sz.id ? 'active' : ''}`}
-                onClick={() => {
-                  handleUpdate({ fontSize: sz.id });
-                  try {
-                    localStorage.setItem('voltflow_font_size', sz.id);
-                  } catch (e) {
-                    console.warn(e);
-                  }
-                  document.documentElement.setAttribute('data-font-size', sz.id);
-                }}
+                className={`settings-segmented-btn ${fontSize === sz.id ? 'active' : ''}`}
+                onClick={() => setFontSize(sz.id)}
               >
                 {sz.label}
               </button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Delete, Banknote } from 'lucide-react';
+import { Calculator, Banknote } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid';
 import KeypadVatSelector from './keypad/KeypadVatSelector';
@@ -7,7 +7,10 @@ import KeypadStepperBar from './keypad/KeypadStepperBar';
 import ParkedCartsDrawer from './keypad/ParkedCartsDrawer';
 import ShiftStatsWidget from './keypad/ShiftStatsWidget';
 import { soundFx } from '../utils/audio';
-import { useHoldBackspace } from '../hooks/useHoldBackspace.js';
+import { formatKc } from '../utils/money.js';
+import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
+import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
+import { useRejectFlash } from '../hooks/useRejectFlash.js';
 
 export default function ManualKeypad({
   onAddToCart,
@@ -35,6 +38,7 @@ export default function ManualKeypad({
   const [label, setLabel] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => defaultVat !== undefined ? parseInt(defaultVat, 10) : 21);
   const [activeKey, setActiveKey] = useState(null);
+  const [rejectKey, flashReject] = useRejectFlash();
 
   useEffect(() => {
     if (defaultVat !== undefined && defaultVat !== null) {
@@ -76,23 +80,23 @@ export default function ManualKeypad({
       return;
     }
     if (val === '.' || val === ',') {
-      if (amountStr.includes('.')) return;
-      setAmountStr(prev => (prev ? prev + '.' : '0.'));
-      return;
-    }
-    if (val === '.00') {
-      if (amountStr.includes('.')) return;
-      setAmountStr(prev => (prev ? prev + '.00' : '0.00'));
+      setAmountStr(prev => appendDecimal(prev));
       return;
     }
 
-    if (amountStr.includes('.')) {
-      const parts = amountStr.split('.');
-      if (parts[1] && parts[1].length >= 2) return;
-    }
+    setAmountStr(prev => appendDigit(prev, val));
+  };
 
-    if (amountStr.length >= 10) return;
-    setAmountStr(prev => prev + val);
+  const handleMultiply = () => {
+    triggerKeyAnimation('MULTIPLY');
+    const result = applyMultiply(amountStr, itemMultiplier);
+    if (!result) {
+      soundFx.playError();
+      flashReject();
+      return;
+    }
+    setAmountStr(result.amountStr);
+    if (setItemMultiplier) setItemMultiplier(result.itemMultiplier);
   };
 
   const isReturn = (itemMultiplier < 0) || Boolean(amountStr && amountStr.startsWith('-'));
@@ -106,8 +110,8 @@ export default function ManualKeypad({
     const unitPrice = isReturn ? -Math.abs(numericAmount) : Math.abs(numericAmount);
 
     onAddToCart({
-      id: `custom-${Date.now()}`,
-      name: label.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
+      id: newCustomItemId(),
+      name: label.trim() || (isReturn ? DEFAULT_RETURN_ITEM_NAME : DEFAULT_ITEM_NAME),
       price: unitPrice,
       vat: selectedVat,
       quantity: qty,
@@ -116,16 +120,11 @@ export default function ManualKeypad({
 
     if (setAmountStr) setAmountStr('');
     setLabel('');
+    setSelectedVat(defaultVat !== undefined && defaultVat !== null ? parseInt(defaultVat, 10) : 21);
     if (setItemMultiplier && itemMultiplier !== 1) setItemMultiplier(1);
     soundFx.playScanChime();
     triggerKeyAnimation('ENTER');
   };
-
-  const inlineBackspaceHandlers = useHoldBackspace({
-    onBackspace: () => handleKeyPress('BACK'),
-    onClear: () => handleKeyPress('CLEAR'),
-    disabled: !amountStr && itemMultiplier === 1
-  });
 
   return (
     <div
@@ -176,9 +175,9 @@ export default function ManualKeypad({
           />
         </div>
 
-        {/* ── Amount display card with inline Backspace ── */}
+        {/* ── Amount display card ── */}
         <div
-          className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''}`}
+          className={`keypad-amount-display ${hasValidAmount ? 'has-value' : ''} ${rejectKey ? 'key-reject' : ''}`}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -208,7 +207,7 @@ export default function ManualKeypad({
                 ? 'var(--accent-rose)'
                 : (itemMultiplier > 1 ? 'var(--accent-amber)' : 'var(--text-muted)')
             }}>
-              {isReturn ? `${t('keypad.amount_label')} — ↩️ VRATKA` : t('keypad.amount_label')}
+              {t('keypad.amount_label')}{isReturn && <span className="keypad-return-pill">{t('keypad.return_pill')}</span>}
             </span>
 
             {itemMultiplier !== 1 && (
@@ -220,12 +219,12 @@ export default function ManualKeypad({
                 padding: '1px 5px',
                 borderRadius: '4px'
               }}>
-                ⚡ {itemMultiplier}×
+                {itemMultiplier}×
               </span>
             )}
           </div>
 
-          {/* Main Price Readout Row with Inline Backspace */}
+          {/* Main Price Readout Row */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -244,48 +243,9 @@ export default function ManualKeypad({
               flex: 1
             }}>
               {itemMultiplier !== 1
-                ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : (isReturn ? '-___ Kč' : '___ Kč')}`
+                ? `${itemMultiplier} × ${amountStr ? `${amountStr} Kč` : '___ Kč'}`
                 : (amountStr ? `${amountStr} Kč` : (isReturn ? '-0 Kč' : '0 Kč'))}
             </div>
-
-            {/* Inline Backspace button (Subtle & Borderless) */}
-            <button
-              type="button"
-              {...inlineBackspaceHandlers}
-              disabled={!amountStr && itemMultiplier === 1}
-              style={{
-                width: '34px',
-                height: '34px',
-                minWidth: '34px',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                background: 'transparent',
-                color: amountStr ? 'var(--text-muted)' : 'transparent',
-                opacity: amountStr ? 0.75 : 0,
-                cursor: amountStr ? 'pointer' : 'default',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'color 0.15s ease, opacity 0.15s ease, background 0.15s ease',
-                flexShrink: 0,
-                padding: 0
-              }}
-              onMouseEnter={e => {
-                if (amountStr) {
-                  e.currentTarget.style.color = 'var(--accent-rose)';
-                  e.currentTarget.style.background = 'color-mix(in srgb, var(--accent-rose) 10%, transparent)';
-                  e.currentTarget.style.opacity = '1';
-                }
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = amountStr ? 'var(--text-muted)' : 'transparent';
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.opacity = amountStr ? '0.75' : '0';
-              }}
-              title="Smazat poslední číslici (Backspace)"
-            >
-              <Delete size={18} />
-            </button>
           </div>
 
           {/* Subtotal line */}
@@ -300,7 +260,7 @@ export default function ManualKeypad({
               paddingTop: '2px',
               marginTop: '2px'
             }}>
-              = Celkem {(Math.abs(itemMultiplier) * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1)).toLocaleString('cs-CZ')} Kč
+              {t('keypad.total_preview')}{formatKc(Math.abs(itemMultiplier) * Math.abs(parseFloat(amountStr)) * (isReturn ? -1 : 1))} Kč
             </div>
           )}
         </div>
@@ -325,10 +285,10 @@ export default function ManualKeypad({
           activeKey={activeKey}
           onKeyPress={handleKeyPress}
           itemMultiplier={itemMultiplier}
-          setItemMultiplier={setItemMultiplier}
           amountStr={amountStr}
-          setAmountStr={setAmountStr}
-          triggerKeyAnimation={triggerKeyAnimation}
+          onMultiply={handleMultiply}
+          selectedVat={selectedVat}
+          rejectKey={rejectKey}
           hasValidAmount={hasValidAmount}
           onAddCustomItem={handleAddCustomItem}
         />
@@ -368,8 +328,8 @@ export default function ManualKeypad({
               transition: 'all 0.15s ease',
               touchAction: 'manipulation'
             }}
-            aria-label="Pohyby hotovosti v pokladně (Vklad / Výběr)"
-            title="Pohyby hotovosti v pokladně (Vklad / Výběr)"
+            aria-label={t('keypad.cash_movement_title')}
+            title={t('keypad.cash_movement_title')}
           >
             <Banknote size={17} />
             <span>{t('cash.cash_btn') || '± Pokladna'}</span>

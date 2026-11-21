@@ -73,7 +73,7 @@ describe('RefundModal', () => {
       ]
     };
 
-    renderRefundModal({ sale, onConfirmRefund });
+    renderRefundModal({ sale, onConfirmRefund, storeConfig: { inventoryEnabled: true } });
 
     fireEvent.click(screen.getAllByTitle('-1 ks')[0]);
     fireEvent.click(screen.getByRole('button', { name: /Potvrdit vratku/i }));
@@ -125,7 +125,7 @@ describe('RefundModal', () => {
       items: [{ id: 'i1', name: 'Hrnek', price: 100, quantity: 1, vat: 21 }]
     };
 
-    renderRefundModal({ sale, onConfirmRefund });
+    renderRefundModal({ sale, onConfirmRefund, storeConfig: { inventoryEnabled: true } });
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Jiné (vlastní popis)' } });
     const customInput = screen.getByPlaceholderText('Specific reason...');

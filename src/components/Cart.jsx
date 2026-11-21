@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown, PauseCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
-import { calculateCartTotals } from '../utils/tax';
+import { calculateCartTotals, roundCashTotal } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
 import { canRefund } from '../utils/saleSync';
 import { countCartItems } from '../utils/cartCount';
 import { formatReceiptMoney } from '../utils/receiptAmounts';
+import { formatKc } from '../utils/money';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
@@ -35,17 +37,17 @@ function ClearedCartBanner({ snapshot, onRestore }) {
         <RotateCcw size={22} className="cleared-banner-icon" />
         <div>
           <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent-blue)' }}>
-            Košík byl vysypán
+            {t('cart.cleared_title')}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            {itemTotalCount} položek v paměti (8s)
+            {t('cart.cleared_sub', { count: itemTotalCount })}
           </div>
         </div>
       </div>
 
       <button type="button" className="restore-cart-btn" onClick={onRestore}>
         <RotateCcw size={16} />
-        <span>Obnovit košík</span>
+        <span>{t('cart.restore_cart')}</span>
       </button>
 
       <div className="cleared-banner-progress-bg">
@@ -90,6 +92,12 @@ function formatQtyWithUnit(item) {
   return `${formatted} ${unit}`;
 }
 
+// Lines are addressed by lineId; two lines of one product (different price) share the same id
+const lineKey = (item) => item.lineId ?? item.id;
+
+// "Základ daně (Netto):" becomes "Základ daně" so base and VAT fit on one line
+const shortTaxLabel = (label) => label.replace(/\s*\([^)]*\)/, '').replace(/:\s*$/, '');
+
 function Cart({
   cartItems,
   onUpdateQty,
@@ -112,9 +120,42 @@ function Cart({
   onInitiateRefund = null
 }) {
   const { t, language } = useTranslation();
-  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedLineKey, setSelectedLineKey] = useState(null);
   const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
   const lastReceiptRef = useRef(null);
+  const itemsContainerRef = useRef(null);
+  const prevItemsRef = useRef(cartItems);
+  const flashTimerRef = useRef(null);
+
+  // Bring the line that was just added or increased into view and flash it
+  useEffect(() => {
+    const prev = prevItemsRef.current;
+    prevItemsRef.current = cartItems;
+    if (prev === cartItems) return;
+
+    let changedIndex = null;
+    if (cartItems.length === prev.length + 1) {
+      // Append lands last; undoing a removal restores the line in the middle
+      const firstDiff = cartItems.findIndex((item, i) => item !== prev[i]);
+      changedIndex = firstDiff > -1 ? firstDiff : cartItems.length - 1;
+    } else if (cartItems.length === prev.length) {
+      const idx = cartItems.findIndex((item, i) => item.id === prev[i]?.id && item.quantity > prev[i].quantity);
+      if (idx > -1) changedIndex = idx;
+    }
+    if (changedIndex === null) return;
+
+    const card = itemsContainerRef.current?.querySelector(`[data-line-index="${changedIndex}"]`);
+    if (!card) return;
+    card.scrollIntoView?.({ block: 'nearest' });
+    // Restart the CSS flash outside React state so repeat scans re-flash and a later render cannot strand it
+    itemsContainerRef.current.querySelectorAll('.is-flash').forEach((el) => el.classList.remove('is-flash'));
+    void card.offsetWidth;
+    card.classList.add('is-flash');
+    clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = setTimeout(() => card.classList.remove('is-flash'), 600);
+  }, [cartItems]);
+
+  useEffect(() => () => clearTimeout(flashTimerRef.current), []);
 
   useEffect(() => {
     if (!isLastReceiptOpen) return;
@@ -197,6 +238,9 @@ function Cart({
 
   const isRefundTransaction = finalGrandTotal < 0;
   const totalItemCount = useMemo(() => countCartItems(cartItems), [cartItems]);
+  // Cash rounds to whole koruna; show it next to the item count so the cashier knows before opening payment
+  const cashRounded = roundCashTotal(finalGrandTotal);
+  const showCashHint = cartItems.length > 0 && Math.abs(cashRounded - finalGrandTotal) > 0.004;
   const itemCountLabel = (() => {
     const category = new Intl.PluralRules(language).select(Math.abs(totalItemCount));
     const word = t(`cart.items_${category}`);
@@ -204,8 +248,8 @@ function Cart({
   })();
 
   const activeItem = useMemo(() => {
-    return cartItems.find(i => i.id === selectedItemId) || null;
-  }, [cartItems, selectedItemId]);
+    return cartItems.find(i => lineKey(i) === selectedLineKey) || null;
+  }, [cartItems, selectedLineKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
@@ -213,11 +257,11 @@ function Cart({
       {activeItem && (
         <CartItemInspector
           item={activeItem}
-          onClose={() => setSelectedItemId(null)}
+          onClose={() => setSelectedLineKey(null)}
           onUpdateDetails={onUpdateItemDetails || onUpdateQty}
           onRemoveItem={(id) => {
             onRemoveItem(id);
-            setSelectedItemId(null);
+            setSelectedLineKey(null);
           }}
         />
       )}
@@ -227,7 +271,7 @@ function Cart({
         <div className="cart-title" style={{ flexShrink: 1, minWidth: 0, gap: '0.4rem' }}>
           <ShoppingCart size={18} style={{ color: isRefundTransaction ? 'var(--accent-rose)' : 'var(--accent-blue)', flexShrink: 0 }} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {isRefundTransaction ? '↩️ Vratka / Vrácení Zboží' : t('cart.title')}
+            {isRefundTransaction ? t('cart.refund_title') : t('cart.title')}
           </span>
           {cartItems.length > 0 && (
             <span className="cart-badge-count" style={{ marginLeft: '0.2rem', flexShrink: 0, background: isRefundTransaction ? 'var(--accent-rose)' : undefined }}>
@@ -255,37 +299,38 @@ function Cart({
               {onParkCart && (
                 <button
                   type="button"
-                  className="clear-cart-btn btn-park"
+                  className="clear-cart-btn btn-park is-icon"
                   onClick={onParkCart}
-                  title={t('parked_carts.park_btn_title') || 'Odložit nákup'}
+                  title={t('parked_carts.park_btn_title')}
+                  aria-label={t('parked_carts.park_btn')}
                 >
-                  <PauseCircle size={13} style={{ flexShrink: 0 }} />
-                  <span>{t('parked_carts.park_btn_short') || t('parked_carts.park_btn') || 'Odložit'}</span>
+                  <PauseCircle size={16} style={{ flexShrink: 0 }} />
                 </button>
               )}
 
               {/* Open Custom Discount Modal for Cart */}
               <button
                 type="button"
-                className={`clear-cart-btn ${cartDiscountPercent > 0 ? 'btn-active-discount' : ''}`}
+                className={`clear-cart-btn is-icon ${cartDiscountPercent > 0 ? 'btn-active-discount' : ''}`}
                 onClick={() => onOpenCustomDiscount && onOpenCustomDiscount(null)}
                 title={t('cart.discount')}
+                aria-label={t('cart.discount')}
               >
-                <Percent size={13} style={{ flexShrink: 0 }} />
-                <span>{cartDiscountPercent > 0 ? `-${cartDiscountPercent}%` : t('cart.discount_short')}</span>
+                <Percent size={16} style={{ flexShrink: 0 }} />
+                {cartDiscountPercent > 0 && <span>-{cartDiscountPercent}%</span>}
               </button>
 
               <button
                 type="button"
-                className="clear-cart-btn btn-danger"
+                className="clear-cart-btn btn-danger is-icon"
                 onClick={() => {
-                  setSelectedItemId(null);
+                  setSelectedLineKey(null);
                   onClearCart();
                 }}
                 title={t('cart.clear')}
+                aria-label={t('cart.clear')}
               >
-                <Trash2 size={13} style={{ flexShrink: 0 }} />
-                <span>{t('cart.clear')}</span>
+                <Trash2 size={16} style={{ flexShrink: 0 }} />
               </button>
             </>
           )}
@@ -294,7 +339,7 @@ function Cart({
 
       {/* Last Receipt Quick Actions Chip & Popover */}
       {lastSale && (
-        <div ref={lastReceiptRef} className="last-receipt-quick-container">
+        <div ref={lastReceiptRef} className={`last-receipt-quick-container ${cartItems.length > 0 ? 'is-compact' : ''}`}>
           <button
             type="button"
             className={`last-receipt-chip-btn ${isLastReceiptOpen ? 'is-active' : ''} ${isOlderThanToday ? 'is-past-day' : ''}`}
@@ -334,7 +379,7 @@ function Cart({
               <div className="last-receipt-popover-details">
                 <div className="last-receipt-detail-row">
                   <span className="last-receipt-label">{t('last_receipt.amount')}</span>
-                  <strong className="last-receipt-value amount">{lastSaleAmount.toFixed(2)} Kč</strong>
+                  <strong className="last-receipt-value amount">{formatKc(lastSaleAmount)} Kč</strong>
                 </div>
                 <div className="last-receipt-detail-row">
                   <span className="last-receipt-label">{t('last_receipt.date') || 'Datum:'}</span>
@@ -344,7 +389,7 @@ function Cart({
                   <div className="last-receipt-detail-row">
                     <span className="last-receipt-label">{t('last_receipt.payment_method') || 'Platba:'}</span>
                     <span className="last-receipt-value payment">
-                      {lastSale.paymentMethod === 'cash' ? '💵 Hotovost' : (lastSale.paymentMethod === 'card' ? '💳 Karta' : lastSale.paymentMethod)}
+                      {lastSale.paymentMethod === 'cash' ? t('payment.cash') : (lastSale.paymentMethod === 'card' ? t('payment.card') : lastSale.paymentMethod)}
                     </span>
                   </div>
                 )}
@@ -412,7 +457,7 @@ function Cart({
       )}
 
       {/* Cart Items List */}
-      <div className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>
+      <div ref={itemsContainerRef} className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>
         {cartItems.length === 0 ? (
           <div className="empty-cart">
             {clearedCartSnapshot ? (
@@ -433,25 +478,26 @@ function Cart({
           </div>
         ) : (
           cartItems.map((item, index) => {
-            const itemVat = item.vat !== undefined && item.vat !== null ? parseInt(item.vat, 10) : 21;
             const itemDisc = item.discountPercent || 0;
             const effectiveUnitPrice = item.price * (1 - itemDisc / 100);
             const lineTotal = effectiveUnitPrice * item.quantity;
             const isItemReturn = item.price < 0 || lineTotal < 0;
-            const isSelected = selectedItemId === item.id;
+            const isSelected = selectedLineKey === lineKey(item);
             const isItemWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted;
             const step = isItemWeighted ? 0.1 : 1;
+            const isLastUnit = item.quantity <= step;
 
             return (
               <div
-                key={`${item.id}-${index}`}
+                key={lineKey(item)}
+                data-line-index={index}
                 className={`cart-item-card style-${activeCartItemStyle} ${isSelected ? 'is-active' : ''}`}
                 style={{
                   borderColor: isItemReturn ? 'rgba(239, 68, 68, 0.4)' : undefined,
                   background: isItemReturn ? 'rgba(239, 68, 68, 0.05)' : undefined
                 }}
-                onClick={() => setSelectedItemId(prev => prev === item.id ? null : item.id)}
-                title="Kliknutím upravíte množství, slevu nebo poznámku"
+                onClick={() => setSelectedLineKey(prev => prev === lineKey(item) ? null : lineKey(item))}
+                title={t('cart.edit_hint')}
               >
                 {/* Row 1 Top: Item Name & Action Buttons (Qty Stepper, Delete) */}
                 <div className="cart-item-row-top">
@@ -459,7 +505,7 @@ function Cart({
                     <span className="cart-item-name-text">
                       {isItemReturn && (
                         <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-rose)', padding: '1px 5px', borderRadius: '4px', fontSize: '0.84rem', fontWeight: '700', marginRight: '5px' }}>
-                          ↩️ VRATKA
+                          {t('cart.return_badge')}
                         </span>
                       )}
                       {item.name}
@@ -478,12 +524,13 @@ function Cart({
                     <div className="cart-stepper-box">
                       <button
                         type="button"
-                        className="cart-stepper-btn cart-stepper-btn-minus"
+                        className={`cart-stepper-btn cart-stepper-btn-minus ${isLastUnit ? 'is-last' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onUpdateQty(item.id, Math.round((item.quantity - step) * 1000) / 1000);
+                          onUpdateQty(lineKey(item), Math.round((item.quantity - step) * 1000) / 1000);
                         }}
-                        title={isItemWeighted ? "-0.1 kg" : "-1 ks"}
+                        title={isLastUnit ? t('inspector.delete_item') : (isItemWeighted ? "-0.1 kg" : "-1 ks")}
+                        aria-label={isLastUnit ? t('inspector.delete_item') : `${t('cart.decrease_qty')} (${isItemWeighted ? '-0.1 kg' : '-1 ks'})`}
                       >
                         <Minus size={15} strokeWidth={2.5} />
                       </button>
@@ -493,9 +540,10 @@ function Cart({
                         className="cart-stepper-btn cart-stepper-btn-plus"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onUpdateQty(item.id, Math.round((item.quantity + step) * 1000) / 1000);
+                          onUpdateQty(lineKey(item), Math.round((item.quantity + step) * 1000) / 1000);
                         }}
                         title={isItemWeighted ? "+0.1 kg" : "+1 ks"}
+                        aria-label={`${t('cart.increase_qty')} (${isItemWeighted ? '+0.1 kg' : '+1 ks'})`}
                       >
                         <Plus size={15} strokeWidth={2.5} />
                       </button>
@@ -506,10 +554,11 @@ function Cart({
                       className="cart-del-btn touch-target-lg"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRemoveItem(item.id);
-                        if (selectedItemId === item.id) setSelectedItemId(null);
+                        onRemoveItem(lineKey(item));
+                        if (selectedLineKey === lineKey(item)) setSelectedLineKey(null);
                       }}
-                      title="Smazat položku"
+                      title={t('inspector.delete_item')}
+                      aria-label={t('inspector.delete_item')}
                     >
                       <Trash2 size={17} />
                     </button>
@@ -521,32 +570,31 @@ function Cart({
                   <div className="cart-item-unit-details">
                     {isItemWeighted ? (
                       <span>
-                        {formatQty(item.quantity)} {item.unit || 'kg'} × {effectiveUnitPrice.toFixed(2)} Kč = {lineTotal.toFixed(2)} Kč
-                        <span style={{ opacity: 0.6, fontSize: '0.8rem' }}> ({t('cart.vat')} {itemVat}%)</span>
+                        {formatQty(item.quantity)} {item.unit || 'kg'} × {formatKc(effectiveUnitPrice)} Kč
                       </span>
                     ) : (
                       <>
                         {itemDisc > 0 ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
                             <s style={{ opacity: 0.5, fontSize: '0.8rem' }}>
-                              {parseFloat(item.price).toFixed(2)} Kč
+                              {formatKc(item.price)} Kč
                             </s>
                             <span style={{ color: isItemReturn ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontWeight: '700' }}>
-                              {effectiveUnitPrice.toFixed(2)} Kč
+                              {formatKc(effectiveUnitPrice)} Kč
                             </span>
                           </span>
                         ) : (
                           <span style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined, fontWeight: isItemReturn ? '800' : 'normal' }}>
-                            {parseFloat(item.price).toFixed(2)} Kč
+                            {formatKc(item.price)} Kč
                           </span>
                         )}
-                        <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)} ({t('cart.vat')} {itemVat}%)</span>
+                        <span style={{ opacity: 0.6 }}> × {formatQtyWithUnit(item)}</span>
                       </>
                     )}
                   </div>
 
                   <div className="cart-item-line-total-price" style={{ color: isItemReturn ? 'var(--accent-rose)' : undefined }}>
-                    {lineTotal.toFixed(2)} Kč
+                    {formatKc(lineTotal)} Kč
                   </div>
                 </div>
               </div>
@@ -561,18 +609,13 @@ function Cart({
           {cartDiscountPercent > 0 && (
             <div className="summary-row" style={{ color: 'var(--accent-rose)', fontWeight: '700' }}>
               <span>{t('cart.discount')} ({cartDiscountPercent}%):</span>
-              <span style={{ fontFamily: 'var(--font-mono)' }}>-{cartDiscountAmount.toFixed(2)} Kč</span>
+              <span style={{ fontFamily: 'var(--font-mono)' }}>-{formatKc(cartDiscountAmount)} Kč</span>
             </div>
           )}
 
-          <div className="summary-row">
-            <span>{t('cart.tax_base')}</span>
-            <span style={{ fontFamily: 'var(--font-mono)' }}>{totalNet.toFixed(2)} Kč</span>
-          </div>
-
-          <div className="summary-row">
-            <span>{t('cart.tax_total')}</span>
-            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{totalTax.toFixed(2)} Kč</span>
+          <div className="summary-row summary-row-tax">
+            <span>{shortTaxLabel(t('cart.tax_base'))} <span className="summary-value">{formatKc(totalNet)} Kč</span></span>
+            <span>{shortTaxLabel(t('cart.tax_total'))} <span className="summary-value">{formatKc(totalTax)} Kč</span></span>
           </div>
         </div>
 
@@ -580,14 +623,15 @@ function Cart({
         <div className={`total-hero-card ${isRefundTransaction ? 'is-refund' : ''}`}>
           <div className="total-hero-label">
             <span className="total-hero-title">
-              {isRefundTransaction ? '↩️ K VRÁCENÍ' : t('cart.total')}
+              {isRefundTransaction ? t('cart.refund_total') : t('cart.total')}
             </span>
             <span className="total-items-badge">
               {totalItemCount} {itemCountLabel}
+              {showCashHint && ` · ${t('cart.cash_short', { amount: formatKc(Math.abs(cashRounded)).replace(/\.00$/, '') })}`}
             </span>
           </div>
           <span className="total-hero-amount total-amount">
-            {isRefundTransaction ? `${Math.abs(finalGrandTotal).toFixed(2)} Kč` : `${finalGrandTotal.toFixed(2)} Kč`}
+            {isRefundTransaction ? `${formatKc(Math.abs(finalGrandTotal))} Kč` : `${formatKc(finalGrandTotal)} Kč`}
           </span>
         </div>
 
@@ -600,7 +644,7 @@ function Cart({
             onClick={() => onOpenPayment('cash')}
           >
             <Banknote size={18} />
-            <span>{isRefundTransaction ? 'Vrátit Hotovost' : t('payment.cash')}</span>
+            <span>{isRefundTransaction ? t('cart.refund_cash') : t('payment.cash')}</span>
           </button>
 
           <button
@@ -612,61 +656,38 @@ function Cart({
           >
             <CreditCard size={18} style={{ flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {isRefundTransaction ? 'Vrátit na Kartu' : t('payment.card_btn')}
+              {isRefundTransaction ? t('cart.refund_card') : t('payment.card_btn')}
             </span>
           </button>
         </div>
 
-        {/* Split Payment Button */}
-        {cartItems.length > 0 && (
-          <button
-            type="button"
-            className="split-pay-btn"
-            onClick={() => onOpenPayment('split')}
-          >
-            <Split size={16} style={{ flexShrink: 0 }} />
-            <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
-          </button>
-        )}
+        {/* Secondary actions: split payment and cash drawer share one row */}
+        {(cartItems.length > 0 || onOpenCashDrawer) && (
+          <div className="cart-secondary-actions">
+            {cartItems.length > 0 && (
+              <button
+                type="button"
+                className="split-pay-btn"
+                onClick={() => onOpenPayment('split')}
+              >
+                <Split size={16} style={{ flexShrink: 0 }} />
+                <span>{t('payment.split')} ({t('payment.cash')} + {t('payment.card')})</span>
+              </button>
+            )}
 
-        {/* Cashier Drawer Release Button (Bottom of Cart) */}
-        {onOpenCashDrawer && (
-          <button
-            type="button"
-            className="cart-drawer-btn"
-            onClick={onOpenCashDrawer}
-            title={t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}
-            style={{
-              height: '42px',
-              fontSize: '0.84rem',
-              fontWeight: '700',
-              background: 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)',
-              color: 'var(--text-secondary)',
-              border: '1px solid color-mix(in srgb, var(--border-color) 75%, transparent)',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              width: '100%',
-              cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
-              transition: 'all 0.15s ease',
-              marginTop: '0.2rem',
-              touchAction: 'manipulation'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'color-mix(in srgb, var(--text-primary) 6%, transparent)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'color-mix(in srgb, var(--text-primary) 3.5%, transparent)';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-          >
-            <CashDrawerIcon size={17} color="var(--accent-amber)" />
-            <span>{t('cart.open_drawer') || 'Otevřít pokladní zásuvku'}</span>
-          </button>
+            {onOpenCashDrawer && (
+              <button
+                type="button"
+                className={`cart-drawer-btn ${cartItems.length > 0 ? 'is-compact' : ''}`}
+                onClick={onOpenCashDrawer}
+                title={t('cart.open_drawer')}
+                aria-label={t('cart.open_drawer')}
+              >
+                <CashDrawerIcon size={17} color="var(--accent-amber)" />
+                {cartItems.length === 0 && <span>{t('cart.open_drawer')}</span>}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

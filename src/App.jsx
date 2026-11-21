@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Navbar from './components/Navbar';
 import QuickPresetGrid from './components/QuickPresetGrid';
 import ManualKeypad from './components/ManualKeypad';
+import { returnLineName } from './utils/customItemId.js';
 import Cart from './components/Cart';
 import ShiftStatsWidget from './components/keypad/ShiftStatsWidget';
 import AppModals from './components/app/AppModals';
@@ -77,6 +78,13 @@ export default function App() {
       return DEFAULT_STORE_CONFIG;
     }
   });
+
+  // Redirect away from inventory tab when the inventory module is disabled
+  useEffect(() => {
+    if (!storeConfig?.inventoryEnabled && activeTab === 'inventory') {
+      setActiveTab('register');
+    }
+  }, [storeConfig?.inventoryEnabled, activeTab]);
 
   // Sync high-legibility density mode to DOM root attribute
   useEffect(() => {
@@ -618,9 +626,7 @@ export default function App() {
     const effectiveQty = isNegativeMultiplier ? Math.abs(rawQty) : (rawQty === 0 ? 1 : rawQty);
 
     const isReturnItem = effectivePrice < 0;
-    const itemName = isReturnItem && !item.name.includes('VRATKA') && !item.name.includes('Vratka') && !item.name.includes('↩️')
-      ? `↩️ ${item.name}`
-      : item.name;
+    const itemName = isReturnItem ? returnLineName(item.name) : item.name;
 
     addToCart({
       ...item,
@@ -730,7 +736,7 @@ export default function App() {
 
   const handleApplyCustomDiscount = ({ type, value, scope, targetItem }) => {
     if (scope === 'ITEM' && targetItem) {
-      handleUpdateItemDiscount(targetItem.id, value);
+      handleUpdateItemDiscount(targetItem.lineId ?? targetItem.id, value);
     } else if (scope === 'CART') {
       if (type === 'PERCENT') {
         handleApplyCartDiscount(value);
@@ -1074,7 +1080,6 @@ export default function App() {
                         onReorderPresets={handleReorderPresets}
                         keypadAmount={keypadAmount}
                         onClearKeypadAmount={handleClearKeypadAmount}
-                        isAdminMode={isAdminMode}
                         storeConfig={storeConfig}
                         isPriceCheckActive={isPriceCheckActive}
                         onTogglePriceCheck={handleTogglePriceCheck}
@@ -1136,7 +1141,7 @@ export default function App() {
           );
         })()}
 
-        {activeTab === 'inventory' && (
+        {storeConfig?.inventoryEnabled && activeTab === 'inventory' && (
           <InventoryView
             presets={presets}
             categories={categories}

@@ -15,7 +15,7 @@ function keysOpenedBy(selector) {
   const { container, unmount } = render(
     <LanguageProvider>
       <StoreConfigProvider>
-        <Navbar activeTab="register" setActiveTab={setActiveTab} storeConfig={{}} />
+        <Navbar activeTab="register" setActiveTab={setActiveTab} storeConfig={{ inventoryEnabled: true }} />
       </StoreConfigProvider>
     </LanguageProvider>
   );

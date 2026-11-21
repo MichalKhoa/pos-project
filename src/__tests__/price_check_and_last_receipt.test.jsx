@@ -258,7 +258,9 @@ describe('Last Receipt Quick Actions & Price Check Mode', () => {
         { id: 'preset-kofola', name: 'Kofola 0.5L', price: 35, vat: 21, barcode: '8594005551111', showInPresets: true, trackStock: true, stockQuantity: 24 }
       ];
       setStorageItem('presets', mockPresets);
+      setStorageItem('config', { inventoryEnabled: true });
       posApi.fetchPresetsBackend.mockResolvedValue(mockPresets);
+      posApi.fetchStoreConfigBackend.mockResolvedValue({ inventoryEnabled: true });
 
       renderApp();
 
@@ -287,7 +289,9 @@ describe('Last Receipt Quick Actions & Price Check Mode', () => {
         { id: 'preset-birell', name: 'Birell Pomelo 0.5L', price: 38, vat: 21, barcode: '8594001234567', showInPresets: true }
       ];
       setStorageItem('presets', mockPresets);
+      setStorageItem('config', { inventoryEnabled: true });
       posApi.fetchPresetsBackend.mockResolvedValue(mockPresets);
+      posApi.fetchStoreConfigBackend.mockResolvedValue({ inventoryEnabled: true });
 
       renderApp();
 
@@ -315,7 +319,9 @@ describe('Last Receipt Quick Actions & Price Check Mode', () => {
         { id: 'preset-croissant', name: '7Days Croissant', price: 22, vat: 12, barcode: '5201360521006', showInPresets: true }
       ];
       setStorageItem('presets', mockPresets);
+      setStorageItem('config', { inventoryEnabled: true });
       posApi.fetchPresetsBackend.mockResolvedValue(mockPresets);
+      posApi.fetchStoreConfigBackend.mockResolvedValue({ inventoryEnabled: true });
 
       renderApp();
 

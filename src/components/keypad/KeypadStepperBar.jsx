@@ -1,5 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from '../../i18n/LanguageContext.jsx';
+import { stepQty } from '../../utils/keypadInput.js';
 
 export default function KeypadStepperBar({
   itemMultiplier = 1,
@@ -7,28 +9,19 @@ export default function KeypadStepperBar({
   triggerKeyAnimation,
   activeKey
 }) {
+  const { t } = useTranslation();
   const isReturn = itemMultiplier < 0;
 
   const handleStepDown = () => {
     if (triggerKeyAnimation) triggerKeyAnimation('STEP_DOWN');
     if (!setItemMultiplier) return;
-    setItemMultiplier(prev => {
-      const current = prev || 1;
-      if (current === 1) return -1; // 1 -> -1 (activate return)
-      if (current > 1) return current - 1; // 3 -> 2 -> 1
-      return current - 1; // -1 -> -2 -> -3
-    });
+    setItemMultiplier(prev => stepQty(prev, -1));
   };
 
   const handleStepUp = () => {
     if (triggerKeyAnimation) triggerKeyAnimation('STEP_UP');
     if (!setItemMultiplier) return;
-    setItemMultiplier(prev => {
-      const current = prev || 1;
-      if (current === -1) return 1; // -1 -> 1 (exit return)
-      if (current < -1) return current + 1; // -3 -> -2 -> -1
-      return current + 1; // 1 -> 2 -> 3
-    });
+    setItemMultiplier(prev => stepQty(prev, 1));
   };
 
   return (
@@ -47,16 +40,13 @@ export default function KeypadStepperBar({
         type="button"
         className={`key-btn ${activeKey === 'STEP_DOWN' ? 'active-press' : ''}`}
         onClick={handleStepDown}
-        aria-label="Snížit množství (-1)"
-        title="Snížit množství (−1 / Vratka)"
+        aria-label={t('keypad.step_down_label')}
+        title={t('keypad.step_down_title')}
         style={{
           flex: 1,
           height: '42px',
           minHeight: '42px',
           aspectRatio: 'auto',
-          background: '#dc2626',
-          color: '#ffffff',
-          border: 'none',
           fontSize: '1.08rem',
           fontWeight: '700',
           display: 'flex',
@@ -64,7 +54,6 @@ export default function KeypadStepperBar({
           justifyContent: 'center',
           gap: '0.35rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)',
           cursor: 'pointer'
         }}
       >
@@ -94,16 +83,13 @@ export default function KeypadStepperBar({
         type="button"
         className={`key-btn ${activeKey === 'STEP_UP' ? 'active-press' : ''}`}
         onClick={handleStepUp}
-        aria-label="Zvýšit množství (+1)"
-        title="Zvýšit množství (+1)"
+        aria-label={t('keypad.step_up_label')}
+        title={t('keypad.step_up_label')}
         style={{
           flex: 1,
           height: '42px',
           minHeight: '42px',
           aspectRatio: 'auto',
-          background: '#059669',
-          color: '#ffffff',
-          border: 'none',
           fontSize: '1.08rem',
           fontWeight: '700',
           display: 'flex',
@@ -111,7 +97,6 @@ export default function KeypadStepperBar({
           justifyContent: 'center',
           gap: '0.35rem',
           borderRadius: 'var(--radius-md)',
-          boxShadow: '0 2px 5px rgba(16, 185, 129, 0.3)',
           cursor: 'pointer'
         }}
       >

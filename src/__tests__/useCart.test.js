@@ -254,4 +254,55 @@ describe('useCart', () => {
     const fallback = renderHook(() => useCart());
     expect(fallback.result.current.parkedCarts).toEqual([]);
   });
+
+  describe('two lines of the same product', () => {
+    const setup = () => {
+      const hook = renderHook(() => useCart());
+      act(() => { hook.result.current.addToCart({ id: 'p1', name: 'Rohlík', price: 100, vat: 12 }, 1); });
+      act(() => { hook.result.current.updateItemDetails('p1', { price: 80 }); });
+      act(() => { hook.result.current.addToCart({ id: 'p1', name: 'Rohlík', price: 100, vat: 12 }, 1); });
+      expect(hook.result.current.cartItems).toHaveLength(2);
+      return hook;
+    };
+
+    it('updateQuantity by lineId changes only that line', () => {
+      const { result } = setup();
+      const second = result.current.cartItems[1];
+      act(() => { result.current.updateQuantity(second.lineId, 5); });
+      expect(result.current.cartItems.map((i) => i.quantity)).toEqual([1, 5]);
+    });
+
+    it('updateItemDiscount and updateItemDetails by lineId touch only that line', () => {
+      const { result } = setup();
+      const second = result.current.cartItems[1];
+      act(() => { result.current.updateItemDiscount(second.lineId, 10); });
+      act(() => { result.current.updateItemDetails(second.lineId, { note: 'x' }); });
+      expect(result.current.cartItems.map((i) => i.discountPercent || 0)).toEqual([0, 10]);
+      expect(result.current.cartItems.map((i) => i.note)).toEqual([undefined, 'x']);
+    });
+
+    it('removeItem by lineId removes only that line', () => {
+      const { result } = setup();
+      const second = result.current.cartItems[1];
+      act(() => { result.current.removeItem(second.lineId); });
+      expect(result.current.cartItems).toHaveLength(1);
+      expect(result.current.cartItems[0].price).toBe(80);
+    });
+
+    it('gives every line a unique lineId and backfills restored legacy parked lines', () => {
+      const { result } = setup();
+      const ids = result.current.cartItems.map((i) => i.lineId);
+      expect(new Set(ids).size).toBe(2);
+
+      localStorage.setItem('voltflow_pos_parked_carts', JSON.stringify([{
+        id: 'hold-legacy', items: [{ id: 'a', name: 'A', price: 1, quantity: 1 }, { id: 'a', name: 'A', price: 2, quantity: 1 }]
+      }]));
+      const fresh = renderHook(() => useCart());
+      act(() => { fresh.result.current.restoreParkedCart('hold-legacy'); });
+      const restored = fresh.result.current.cartItems;
+      expect(restored).toHaveLength(2);
+      expect(restored[0].lineId).toBeTruthy();
+      expect(restored[0].lineId).not.toBe(restored[1].lineId);
+    });
+  });
 });

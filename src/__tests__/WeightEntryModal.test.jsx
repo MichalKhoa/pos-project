@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WeightEntryModal from '../components/presets/WeightEntryModal';
 import { LanguageProvider } from '../i18n/LanguageContext';
+import { soundFx } from '../utils/audio';
 
 function renderModal(props) {
   const defaultProps = {
@@ -436,5 +437,17 @@ describe('WeightEntryModal', () => {
       expect(screen.queryByRole('button', { name: 'g' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: ',' })).toBeEnabled();
     });
+  });
+  it('plays the error tone instead of throwing when Enter is pressed on an open-price item without a price', () => {
+    const playError = vi.spyOn(soundFx, 'playError').mockImplementation(() => {});
+    const { props } = renderModal({
+      preset: { id: 'p-open', name: 'Volné ovoce', price: 0, unit: 'kg', isOpenPrice: true }
+    });
+
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    expect(playError).toHaveBeenCalledTimes(1);
+    expect(props.onAddToCart).not.toHaveBeenCalled();
+    playError.mockRestore();
   });
 });

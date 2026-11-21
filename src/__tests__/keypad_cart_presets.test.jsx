@@ -117,7 +117,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(stepDownBtn);
 
       // Verify subtotal preview text shows return total
-      expect(screen.getByText(/= Celkem -100 Kč/i)).toBeInTheDocument();
+      expect(screen.getByText(/= Celkem: -100\.00 Kč/i)).toBeInTheDocument();
 
       // Click Add button
       const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });
@@ -146,7 +146,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       // Step down into return mode (-1)
       const stepDownBtn = screen.getByRole('button', { name: /snížit|−1|-1/i });
       fireEvent.click(stepDownBtn);
-      expect(screen.getByText(/= Celkem -100 Kč/i)).toBeInTheDocument();
+      expect(screen.getByText(/= Celkem: -100\.00 Kč/i)).toBeInTheDocument();
 
       // Press ± to toggle return mode OFF
       const plusMinusBtn = screen.getByRole('button', { name: '±' });
@@ -185,7 +185,7 @@ describe('Keypad, Presets & Cart Interaction Tests', () => {
       fireEvent.click(plusMinusBtn);
 
       // Verify subtotal preview text shows negative total, not positive
-      expect(screen.getByText(/= Celkem -200 Kč/i)).toBeInTheDocument();
+      expect(screen.getByText(/= Celkem: -200\.00 Kč/i)).toBeInTheDocument();
 
       // Click Add button
       const addBtn = screen.getByRole('button', { name: /Vratku|Přidat/i });

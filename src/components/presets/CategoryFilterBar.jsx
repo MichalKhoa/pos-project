@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Edit3, FolderPlus, GripVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Edit3, GripVertical } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 
 export default function CategoryFilterBar({
@@ -14,6 +14,23 @@ export default function CategoryFilterBar({
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const isDraggingRef = useRef(false);
+  const barRef = useRef(null);
+
+  // Keep the selected chip visible in the scrolling row.
+  useEffect(() => {
+    const bar = barRef.current;
+    const chip = bar?.querySelector('.category-chip.active');
+    if (!chip) return;
+    // Scroll only the bar itself; scrollIntoView could also move ancestor panels.
+    const left = chip.offsetLeft - bar.offsetLeft;
+    if (left < bar.scrollLeft) bar.scrollLeft = left - 8;
+    else if (left + chip.offsetWidth > bar.scrollLeft + bar.clientWidth - 28) bar.scrollLeft = left + chip.offsetWidth - bar.clientWidth + 36;
+  }, [activeCategory]);
+
+  // Mouse wheel scrolls the row sideways.
+  const handleWheel = (e) => {
+    if (e.deltaY && !e.deltaX) barRef.current.scrollLeft += e.deltaY;
+  };
 
   const handleDragStart = (e, index) => {
     if (!isEditMode) return;
@@ -83,7 +100,7 @@ export default function CategoryFilterBar({
   };
 
   return (
-    <div className="category-bar">
+    <div className="category-bar is-scroll" ref={barRef} onWheel={handleWheel}>
       {categories.map((cat, index) => {
         const isAll = cat.id === 'all';
         const isDraggable = isEditMode && !isAll;
@@ -108,7 +125,7 @@ export default function CategoryFilterBar({
             }}
             title={
               isEditMode && !isAll
-                ? `Klepnutím upravíte kategorii • Přetažením změníte pořadí`
+                ? t('presets.edit_mode_hint')
                 : undefined
             }
           >
@@ -122,18 +139,6 @@ export default function CategoryFilterBar({
           </button>
         );
       })}
-
-      {isEditMode && onManageCategories && (
-        <button
-          type="button"
-          className="category-chip category-chip-manage"
-          onClick={() => onManageCategories()}
-          title={t('presets.manage_categories')}
-        >
-          <FolderPlus size={14} style={{ marginRight: '4px' }} />
-          <span>{t('presets.add_category') || 'Správa kategorií'}</span>
-        </button>
-      )}
     </div>
   );
 }

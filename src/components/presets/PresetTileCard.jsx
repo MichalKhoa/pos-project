@@ -1,14 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 import { Edit3 } from 'lucide-react';
-import { getPresetIconComponent } from '../../utils/presetIcons';
+import PresetTileArt from './PresetTileArt';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { normalizePresetStyle, readableTextOn } from '../../utils/presetTileStyle';
 
 function PresetTileCard({
   preset,
   index,
   isEditMode,
-  itemMultiplier,
   isDraggingThis,
   isDragOverThis,
   onDragStart,
@@ -21,11 +21,13 @@ function PresetTileCard({
   buttonStyle = null
 }) {
   const { t } = useLanguage();
-  const IconComponent = !preset.imageUrl ? getPresetIconComponent(preset.icon) : null;
   const shouldShowVat = storeConfig?.showPresetVat === true && preset.vat !== undefined;
-  const activeStyle = buttonStyle || storeConfig?.presetButtonStyle || 'left-stripe';
+  const activeStyle = normalizePresetStyle(buttonStyle || storeConfig?.presetButtonStyle);
+  const accent = preset.color || '#3b82f6';
+  const hasPhoto = Boolean(preset.imageUrl);
 
-  const isStockTracked = Boolean(preset.trackStock ?? preset.track_stock);
+  const isInventoryEnabled = Boolean(storeConfig?.inventoryEnabled);
+  const isStockTracked = isInventoryEnabled && Boolean(preset.trackStock ?? preset.track_stock);
   const rawStock = preset.stockQuantity ?? preset.stock_quantity;
   const stockQuantity = rawStock !== undefined && rawStock !== null ? Number(rawStock) : 0;
   const rawMinStock = preset.minStockAlert ?? preset.min_stock_alert;
@@ -56,68 +58,52 @@ function PresetTileCard({
       onDragLeave={(e) => onDragLeave(e, index)}
       onDrop={(e) => onDrop(e, index)}
       onDragEnd={onDragEnd}
-      className={`preset-card style-${activeStyle} ${isEditMode ? 'edit-mode' : ''} ${isDraggingThis ? 'dragging' : ''} ${isDragOverThis ? 'drag-over' : ''}`}
+      className={`preset-card style-${activeStyle} ${hasPhoto ? 'has-photo' : ''} ${stockBadge ? 'has-stock-badge' : ''} ${stockBadge?.type === 'out-of-stock' ? 'is-out-of-stock' : ''} ${isEditMode ? 'edit-mode' : ''} ${isDraggingThis ? 'dragging' : ''} ${isDragOverThis ? 'drag-over' : ''}`}
       style={{
-        '--card-accent': preset.color || '#3b82f6',
+        '--card-accent': accent,
+        '--card-fg': readableTextOn(accent),
         outline: isEditMode
           ? (isDragOverThis ? '2px solid var(--accent-blue)' : '2px dashed var(--accent-amber)')
-          : (itemMultiplier > 1 ? '2px solid var(--accent-amber)' : 'none'),
-        boxShadow: itemMultiplier > 1 && !isEditMode ? '0 0 12px rgba(245, 158, 11, 0.4)' : undefined,
-        opacity: isDraggingThis ? 0.35 : 1,
+          : 'none',
+        opacity: isDraggingThis ? 0.35 : undefined,
         cursor: isEditMode ? 'grab' : 'pointer'
       }}
       onClick={() => onClick(preset)}
     >
-      {itemMultiplier > 1 && !isEditMode && (
-        <div className="preset-multiplier-badge">
-          ×{itemMultiplier}
-        </div>
-      )}
+      <PresetTileArt preset={preset} />
 
-      {/* Header Row: Name on Left, Edit Indicator (Edit Mode) OR Corner Icon (Normal Mode) */}
       <div className="preset-card-header">
         <div className="preset-name">
           <span>{preset.name}</span>
         </div>
 
-        {/* Top-Right Corner: Clean Edit Pencil (Edit Mode) OR Corner Icon/Photo (Normal Mode) */}
-        {isEditMode ? (
+        {isEditMode && (
           <div
             className="preset-corner-icon"
             style={{ color: 'var(--accent-amber)', opacity: 1 }}
-            title="Kliknutím upravíte • Přetažením změníte pořadí"
+            title={t('presets.edit_mode_hint')}
           >
             <Edit3 size={15} />
           </div>
-        ) : (
-          (preset.imageUrl || IconComponent) && (
-            <div className="preset-corner-icon">
-              {preset.imageUrl ? (
-                <img
-                  src={preset.imageUrl}
-                  alt=""
-                  className="preset-corner-thumb"
-                />
-              ) : (
-                <IconComponent size={18} />
-              )}
-            </div>
-          )
         )}
       </div>
 
-      {/* Stock Availability Badge */}
       {stockBadge && (
         <span className={`preset-stock-badge ${stockBadge.type}`}>
           {stockBadge.text}
         </span>
       )}
 
-      {/* Footer Row: Price on Left, Smooth Subtle VAT Text in Corner */}
       <div className="preset-price-tag">
-        <span className="preset-price">
-          {preset.isOpenPrice ? '' : preset.price > 0 ? `${preset.price} Kč` : ''}
-        </span>
+        {!preset.isOpenPrice && preset.price > 0 ? (
+          <span className="preset-price-chip">
+            <span className="preset-price">{`${preset.price} Kč`}</span>
+          </span>
+        ) : (
+          <span className="preset-price-chip is-open" aria-hidden="true">
+            <span className="preset-price">… Kč</span>
+          </span>
+        )}
 
         {shouldShowVat && (
           <span className="preset-vat-text">{preset.vat}%</span>
@@ -129,7 +115,6 @@ function PresetTileCard({
 
 export function arePresetCardPropsEqual(prevProps, nextProps) {
   if (prevProps.isEditMode !== nextProps.isEditMode) return false;
-  if (prevProps.itemMultiplier !== nextProps.itemMultiplier) return false;
   if (prevProps.isDraggingThis !== nextProps.isDraggingThis) return false;
   if (prevProps.isDragOverThis !== nextProps.isDragOverThis) return false;
   if (prevProps.buttonStyle !== nextProps.buttonStyle) return false;
@@ -137,6 +122,7 @@ export function arePresetCardPropsEqual(prevProps, nextProps) {
   if (prevProps.onClick !== nextProps.onClick) return false;
   if (prevProps.storeConfig?.presetButtonStyle !== nextProps.storeConfig?.presetButtonStyle) return false;
   if (prevProps.storeConfig?.showPresetVat !== nextProps.storeConfig?.showPresetVat) return false;
+  if (Boolean(prevProps.storeConfig?.inventoryEnabled) !== Boolean(nextProps.storeConfig?.inventoryEnabled)) return false;
 
   const p1 = prevProps.preset;
   const p2 = nextProps.preset;

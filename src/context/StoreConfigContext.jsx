@@ -4,19 +4,28 @@ import { DEFAULT_STORE_CONFIG } from '../data/initialData';
 import { fetchStoreConfigBackend, saveStoreConfigBackend, saveSecuritySettingsBackend } from '../api/posApi';
 import { getStorageItem, setStorageItem } from '../utils/storage';
 
+export const FONT_SIZES = ['sm', 'md', 'lg', 'xl'];
 const TECHNICIAN_SESSION_TIMEOUT_SECONDS = 10 * 60; // 10 minutes = 600s
 
 const StoreConfigContext = createContext(null);
 
 export function StoreConfigProvider({ children }) {
   const [storeConfig, setStoreConfig] = useState(() => {
+    // The backend does not store fontSize, so the localStorage key is its only persisted copy.
+    let savedFontSize;
+    try {
+      savedFontSize = localStorage.getItem('voltflow_font_size') || undefined;
+    } catch {
+      // ignore storage error
+    }
+    const fontSize = FONT_SIZES.includes(savedFontSize) ? { fontSize: savedFontSize } : {};
     try {
       const saved = getStorageItem('config');
-      if (saved) return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved) };
+      if (saved) return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved), ...fontSize };
     } catch {
       // ignore parse error
     }
-    return DEFAULT_STORE_CONFIG;
+    return { ...DEFAULT_STORE_CONFIG, ...fontSize };
   });
 
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -206,8 +215,7 @@ export function StoreConfigProvider({ children }) {
   }, [isAdminMode]);
 
   const setFontSize = useCallback((size) => {
-    const validSizes = ['sm', 'md', 'lg', 'xl'];
-    if (validSizes.includes(size)) {
+    if (FONT_SIZES.includes(size)) {
       document.documentElement.setAttribute('data-font-size', size);
       try {
         localStorage.setItem('voltflow_font_size', size);
@@ -219,10 +227,8 @@ export function StoreConfigProvider({ children }) {
   }, [updateStoreConfig]);
 
   const cycleFontSize = useCallback(() => {
-    const validSizes = ['sm', 'md', 'lg', 'xl'];
-    const currentIndex = validSizes.indexOf(currentFontSize);
-    const nextIndex = (currentIndex + 1) % validSizes.length;
-    setFontSize(validSizes[nextIndex]);
+    const nextIndex = (FONT_SIZES.indexOf(currentFontSize) + 1) % FONT_SIZES.length;
+    setFontSize(FONT_SIZES[nextIndex]);
   }, [currentFontSize, setFontSize]);
 
   const value = {

@@ -7,6 +7,10 @@ import { openSystemKeyboard } from '../api/posApi.js';
 import KeypadStepperBar from './keypad/KeypadStepperBar.jsx';
 import KeypadVatSelector from './keypad/KeypadVatSelector.jsx';
 import KeypadNumberGrid from './keypad/KeypadNumberGrid.jsx';
+import { newCustomItemId, DEFAULT_ITEM_NAME, DEFAULT_RETURN_ITEM_NAME } from '../utils/customItemId.js';
+import { appendDigit, appendDecimal, applyMultiply } from '../utils/keypadInput.js';
+import { useOwnKeyboard } from '../utils/keyboardOwner.js';
+import { useRejectFlash } from '../hooks/useRejectFlash.js';
 
 export default function CustomItemModal({
   isOpen = true,
@@ -20,10 +24,12 @@ export default function CustomItemModal({
 }) {
   const { t } = useTranslation();
   const nameInputId = useId();
+  useOwnKeyboard(isOpen);
 
   const [priceStr, setPriceStr] = useState('');
   const [name, setName] = useState('');
   const [selectedVat, setSelectedVat] = useState(() => (defaultVat !== undefined && defaultVat !== null ? parseInt(defaultVat, 10) : 21));
+  const [rejectKey, flashReject] = useRejectFlash();
   const [itemMultiplier, setItemMultiplier] = useState(() => initialMultiplier || 1);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -93,6 +99,7 @@ export default function CustomItemModal({
     if (val === 'CLEAR') {
       soundFx.playDeleteTone();
       setPriceStr('');
+      setItemMultiplier(1);
       return;
     }
 
@@ -103,31 +110,23 @@ export default function CustomItemModal({
     }
 
     if (val === '.' || val === ',') {
-      if (priceStr.includes('.')) return;
-      setPriceStr(prev => (prev ? prev + '.' : '0.'));
+      setPriceStr(prev => appendDecimal(prev));
       return;
     }
 
-    if (val === '.00' || val === '00') {
-      if (priceStr.includes('.')) {
-        const parts = priceStr.split('.');
-        if (parts[1] && parts[1].length >= 1) return;
-      }
-      if (!priceStr || priceStr === '0') {
-        setPriceStr('0');
-        return;
-      }
-      setPriceStr(prev => (prev.length < 9 ? prev + '00' : prev));
+    setPriceStr(prev => appendDigit(prev, val));
+  };
+
+  const handleMultiply = () => {
+    triggerKeyAnimation('MULTIPLY');
+    const result = applyMultiply(priceStr, itemMultiplier);
+    if (!result) {
+      soundFx.playError();
+      flashReject();
       return;
     }
-
-    if (priceStr.includes('.')) {
-      const parts = priceStr.split('.');
-      if (parts[1] && parts[1].length >= 2) return;
-    }
-
-    if (priceStr.length >= 10) return;
-    setPriceStr(prev => (prev === '0' ? val : prev + val));
+    setPriceStr(result.amountStr);
+    setItemMultiplier(result.itemMultiplier);
   };
 
   const handleAddCustomItem = (e) => {
@@ -139,8 +138,8 @@ export default function CustomItemModal({
     const unitPrice = isReturn ? -Math.abs(numericAmount) : Math.abs(numericAmount);
 
     onAddToCart?.({
-      id: id || `custom-${Date.now()}`,
-      name: name.trim() || (isReturn ? '↩️ Vratka / Vrácené zboží' : 'Volný prodej'),
+      id: id || newCustomItemId(),
+      name: name.trim() || (isReturn ? DEFAULT_RETURN_ITEM_NAME : DEFAULT_ITEM_NAME),
       price: unitPrice,
       vat: selectedVat,
       quantity: qty,
@@ -441,10 +440,10 @@ export default function CustomItemModal({
             activeKey={activeKey}
             onKeyPress={handleKeyPress}
             itemMultiplier={itemMultiplier}
-            setItemMultiplier={setItemMultiplier}
             amountStr={priceStr}
-            setAmountStr={setPriceStr}
-            triggerKeyAnimation={triggerKeyAnimation}
+            onMultiply={handleMultiply}
+            selectedVat={selectedVat}
+            rejectKey={rejectKey}
             hasValidAmount={hasValidAmount}
             onAddCustomItem={handleAddCustomItem}
           />
