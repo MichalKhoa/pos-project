@@ -1,6 +1,6 @@
 import { generateQrDataUrl } from './qrCode.js';
 import { generateBarcodeSVG } from './barcodeGenerator.js';
-import { formatReceiptMoney as money, receiptTotals } from './receiptAmounts.js';
+import { formatReceiptMoney as money, receiptTotals, receiptLineTotals } from './receiptAmounts.js';
 import { parseSaleTimestamp } from './dateUtils.js';
 
 export function escapeHtml(str) {
@@ -93,15 +93,15 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
       ? `<div style="${getSeparatorCss(sepStyle, sepSpacing)}">~ ~ ~ ~ ~ ~ ~ ~ ~</div>`
       : `<div style="${getSeparatorCss(sepStyle, sepSpacing)}"></div>`);
 
+  const lineTotals = receiptLineTotals(items, saleData.cartDiscountPercent ?? saleData.cart_discount_percent);
   const itemsHtml = items.map((item, idx) => {
     const disc = item.discountPercent || 0;
-    const effPrice = item.price * (1 - disc / 100);
     const itemName = escapeHtml(item.name);
     const barcode = escapeHtml(item.barcode || item.sku || '');
     const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
     const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
     const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
-    const lineTotalStr = (effPrice * item.quantity).toFixed(2);
+    const lineTotalStr = lineTotals[idx].toFixed(2);
 
     if (isA4) {
       return `
@@ -109,7 +109,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
           <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
           <td style="padding: 6px 8px; text-align: left; font-weight: ${boldItems ? '700' : '500'};">${itemName} ${showSku && barcode ? `<span style="font-size:9px; color:#6b7280;">(${barcode})</span>` : ''}</td>
           <td style="padding: 6px 8px; text-align: center;">${qtyFormatted} ${unitStr}</td>
-          <td style="padding: 6px 8px; text-align: right;">${item.price.toFixed(2)} Kč</td>
+          <td style="padding: 6px 8px; text-align: right;">${(item.quantity ? lineTotals[idx] / item.quantity : 0).toFixed(2)} Kč</td>
           <td style="padding: 6px 8px; text-align: center;">${item.vat}%</td>
           <td style="padding: 6px 8px; text-align: right; font-weight: ${boldPrices ? '800' : '600'};">${lineTotalStr} Kč</td>
         </tr>
@@ -127,7 +127,7 @@ export function generateReceiptHtml({ saleData, items, storeConfig, paperWidth }
           ${itemDensity === 'standard' && showVat ? `<div style="font-size: ${is58mm ? '7.5px' : '8.5px'}; color: #555;">DPH ${item.vat}%</div>` : ''}
         </td>
         <td style="text-align: center; width: 14%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: 800; font-size: ${is58mm ? '9.5px' : '12px'};">${qtyFormatted}${isWeighted ? ' ' + unitStr : ''}</td>
-        <td style="text-align: right; width: 34%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: ${boldPrices ? '900' : '500'}; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${money(effPrice * item.quantity)}&nbsp;Kč</td>
+        <td style="text-align: right; width: 34%; padding: ${itemDensity === 'compact' ? '2px 0' : '4px 0'}; font-weight: ${boldPrices ? '900' : '500'}; font-family: monospace; font-size: ${is58mm ? '10px' : '13px'}; white-space: nowrap;">${money(lineTotals[idx])}&nbsp;Kč</td>
       </tr>
     `;
   }).join('');

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Scissors } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { generateBarcodeSVG } from '../../utils/barcodeGenerator.js';
-import { formatReceiptMoney, receiptTotals } from '../../utils/receiptAmounts.js';
+import { formatReceiptMoney, receiptTotals, receiptLineTotals } from '../../utils/receiptAmounts.js';
 import { parseSaleTimestamp } from '../../utils/dateUtils.js';
 
 export default function ReceiptPreviewPaper({
@@ -18,6 +18,7 @@ export default function ReceiptPreviewPaper({
   const isRefund = saleData.isRefund || saleData.is_refund;
   const money = formatReceiptMoney;
   const totals = receiptTotals(saleData);
+  const lineTotals = receiptLineTotals(resolvedItems, saleData.cartDiscountPercent ?? saleData.cart_discount_percent);
   const fik = saleData.fik || saleData.pok || saleData.fik_code;
   const bkp = saleData.bkp || saleData.bkp_code;
   const pkp = saleData.pkp || saleData.pkp_code;
@@ -267,10 +268,10 @@ export default function ReceiptPreviewPaper({
             <tbody>
               {resolvedItems.map((item, idx) => {
                 const itemDisc = item.discountPercent || 0;
-                const unitPriceInc = item.price * (1 - itemDisc / 100);
                 const vatRate = item.vat !== undefined ? item.vat : 21;
-                const priceEx = unitPriceInc / (1 + vatRate / 100);
-                const totInc = unitPriceInc * item.quantity;
+                const totInc = lineTotals[idx];
+                // Unit price after line and cart discount, so unit x quantity matches the line total
+                const priceEx = (item.quantity ? totInc / item.quantity : 0) / (1 + vatRate / 100);
                 const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
                 const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
                 const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
@@ -414,7 +415,6 @@ export default function ReceiptPreviewPaper({
             <tbody>
               {resolvedItems.map((item, idx) => {
                 const itemDisc = item.discountPercent || 0;
-                const unitPrice = item.price * (1 - itemDisc / 100);
                 const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
                 const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
                 const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
@@ -456,7 +456,7 @@ export default function ReceiptPreviewPaper({
                       fontFamily: 'monospace',
                       padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0'
                     }}>
-                      {money(unitPrice * item.quantity)}&nbsp;Kč
+                      {money(lineTotals[idx])}&nbsp;Kč
                     </td>
                   </tr>
                 );

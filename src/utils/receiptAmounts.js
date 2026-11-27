@@ -1,4 +1,4 @@
-import { roundCashTotal } from './tax.js';
+import { roundCashTotal, roundCZK, calculateItemLineGross } from './tax.js';
 
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
@@ -24,4 +24,14 @@ export function receiptTotals(sale) {
   // A whole stored total with a stored rounding is the local shape: step back to the exact total.
   const exact = Number.isInteger(total) && stored !== 0 ? round2(total - stored) : total;
   return { exact, rounding: round2(payable - exact), payable };
+}
+
+// Per-line amounts with the cart discount spread over every line, the same factor as
+// calculateCartTotals and the thermal printer (compute_item_line_totals), so lines sum to the total.
+export function receiptLineTotals(items, cartDiscountPercent = 0) {
+  const grosses = items.map(calculateItemLineGross);
+  const raw = roundCZK(grosses.reduce((sum, g) => sum + g, 0));
+  const pct = Number(cartDiscountPercent) || 0;
+  const factor = pct && raw ? roundCZK(raw - roundCZK(raw * pct / 100)) / raw : 1;
+  return grosses.map(g => roundCZK(g * factor));
 }
