@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
-import { formatLocalDate, getPeriodDateRange } from '../utils/dateUtils';
+import { formatLocalDate, getPeriodDateRange, parseSaleTimestamp } from '../utils/dateUtils';
 
 export function useSalesPeriodFilter({ salesHistory = [], initialDateFilter = null } = {}) {
   const { t, language } = useTranslation();
@@ -87,7 +87,7 @@ export function useSalesPeriodFilter({ salesHistory = [], initialDateFilter = nu
     if (periodFilter === 'all') return salesHistory;
     const { start, end } = computedDateRange;
     return salesHistory.filter(sale => {
-      const saleDate = new Date(sale.timestamp || sale.created_at || sale.date);
+      const saleDate = parseSaleTimestamp(sale.timestamp || sale.created_at || sale.date);
       return saleDate >= start && saleDate <= end;
     });
   }, [salesHistory, periodFilter, computedDateRange]);

@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../../utils/dateUtils';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { History, X, Filter, Loader2, ArrowDownRight, ArrowUpRight, RefreshCw, Layers } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -97,7 +98,7 @@ export default function StockMovementLedgerModal({
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     try {
-      const d = new Date(dateStr);
+      const d = parseSaleTimestamp(dateStr);
       return d.toLocaleString('cs-CZ', {
         day: '2-digit',
         month: '2-digit',

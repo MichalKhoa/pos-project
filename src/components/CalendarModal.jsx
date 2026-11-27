@@ -1,3 +1,4 @@
+import { formatLocalDate } from '../utils/dateUtils';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Receipt, Banknote, CreditCard, RotateCcw, FileText, ArrowRight, Check, AlertOctagon, Info } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
@@ -125,7 +126,7 @@ export default function CalendarModal({
     const map = {};
     salesHistory.forEach(sale => {
       if (!sale.timestamp) return;
-      const dateKey = new Date(sale.timestamp).toISOString().slice(0, 10);
+      const dateKey = formatLocalDate(sale.timestamp);
       if (!map[dateKey]) {
         map[dateKey] = {
           count: 0,

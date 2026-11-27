@@ -2,7 +2,7 @@
  * Himmel POS — Multi-Period Comparison Data Aggregator
  * Computes comparative statistics for Last 30 Days, Last 12 Weeks, and Last 12 Months.
  */
-import { formatLocalDate } from './dateUtils';
+import { formatLocalDate, parseSaleTimestamp } from './dateUtils';
 
 /**
  * Aggregates sales for the last N calendar days.
@@ -136,7 +136,7 @@ export function aggregateWeeklyStats(sales = [], weeksCount = 12, referenceDate 
   sales.forEach(sale => {
     const rawDate = sale.created_at || sale.timestamp || sale.date;
     if (!rawDate) return;
-    const saleTime = new Date(rawDate).getTime();
+    const saleTime = parseSaleTimestamp(rawDate).getTime();
     const amt = parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0;
 
     for (const wb of weekBuckets) {
@@ -215,7 +215,7 @@ export function aggregateMonthlyStats(sales = [], monthsCount = 12, referenceDat
   sales.forEach(sale => {
     const rawDate = sale.created_at || sale.timestamp || sale.date;
     if (!rawDate) return;
-    const saleTime = new Date(rawDate).getTime();
+    const saleTime = parseSaleTimestamp(rawDate).getTime();
     const amt = parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0;
 
     for (const mb of monthBuckets) {

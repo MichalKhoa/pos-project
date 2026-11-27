@@ -607,7 +607,7 @@ def submit_inventory_audit(payload: InventoryAuditRequestSchema, db: Session = D
                 detail=f"Fyzické množství nesmí být záporné (zadáno: {it.physical_quantity})."
             )
 
-    now = datetime.now()
+    now = datetime.utcnow()
     audit_id = f"inv_{uuid.uuid4().hex[:12]}"
 
     with atomic_transaction(db):
@@ -829,7 +829,7 @@ def record_deposit_movement(payload: DepositMovementRequestSchema, db: Session =
         qty_delta = payload.quantity
 
     total_val = round(qty_delta * dep_val, 2)
-    now = datetime.now()
+    now = datetime.utcnow()
     mov_id = f"dep_{uuid.uuid4().hex[:12]}"
 
     with atomic_transaction(db):
