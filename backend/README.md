@@ -14,25 +14,41 @@ backend/
 ├── database.py                # SQLite engine, session maker, freeze-safe path resolution
 ├── migrations.py              # Automatic schema auto-migration manager
 ├── main.py                    # FastAPI entrypoint, lifespan, static mounting, routers
-├── models.py                  # SQLAlchemy ORM models (Sale, Item, Preset, StoreConfig)
+├── models.py                  # SQLAlchemy ORM models (see docs/ARCHITECTURE.md#5-data-model)
 ├── requirements.txt           # Python dependencies
-├── routers/                   # REST API & WebSocket endpoints
-│   ├── config.py              # Store configuration & hardware setup
-│   ├── display.py             # WebSocket customer LCD display streaming
-│   ├── eet.py                 # EET status checks & manual retry triggers
-│   ├── inventory.py           # Product inventory, stock ledger, categories
-│   ├── payments.py            # Czech SPD QR generator & email verification
-│   ├── printer.py             # ESC/POS print jobs & cash drawer pulse
-│   └── sales.py               # Sales ledger, transactions, returns/refunds
+├── routers/                   # REST API & WebSocket endpoints (all under /api/v1)
+│   ├── cash.py                # Shifts, cash movements, Z-report
+│   ├── catalog.py             # Categories, presets, barcode lookup
+│   ├── config.py              # Store configuration, PIN checks, health, backup status
+│   ├── display.py             # WebSocket customer display streaming
+│   ├── eet.py                 # EET status, certificate upload, offline queue, resend
+│   ├── payments.py            # Czech SPD QR, QR verification, card terminal
+│   ├── printer.py             # ESC/POS print jobs, drawer pulse, reports
+│   ├── qr.py                  # Offline QR generator
+│   ├── reports.py             # Tax statement and VAT overview
+│   ├── sales.py               # Sales ledger, transactions, refunds, Pohoda export
+│   ├── stock.py               # Inventory ledger, write-offs, audits, deposits
+│   ├── system.py              # Diagnostics, backups, restore, ARES, shutdown
+│   └── updater.py             # Update status and apply
 ├── services/                  # Hardware drivers & business logic
-│   ├── csob_connector.py      # ČSOB Ingenico Move 3500 terminal TCP client
+│   ├── backup_service.py      # Hourly zip backups
+│   ├── cloud_sync_service.py  # Cloud backup upload
+│   ├── csob_terminal_service.py # ČSOB Ingenico Move 3500 terminal TCP client
 │   ├── eet_crypto.py          # PKCS#12 parser, PKP RSA-SHA256, BKP SHA-1
 │   ├── eet_resend_daemon.py   # Background daemon retrying offline EET receipts
 │   ├── eet_service.py         # High-level EET manager
 │   ├── eet_soap.py            # WS-Security 1.0 SOAP envelope builder
 │   ├── email_payment_listener.py # IMAP listener for instant QR payment verification
 │   ├── escpos_service.py      # ESC/POS hardware printer driver (USB/Serial/TCP)
-│   └── hardware_display_service.py # Line-display serial drivers
+│   ├── hardware_display_service.py # Line-display serial drivers
+│   ├── hardware_profile.py    # RAM tier -> SQLite cache and prewarm sizing
+│   ├── pin_auth.py            # PIN, recovery code and master key checks
+│   ├── pohoda_export.py       # Pohoda XML export
+│   ├── printer_discovery.py   # Connected printer detection
+│   ├── qr_bank_service.py     # SPD QR payload
+│   ├── rate_limiter.py        # Per-IP attempt limiter
+│   ├── remote_staging_sync.py # Pulls staged batches from the cloud API
+│   └── security_utils.py      # Certificate password encryption helpers
 └── tests/                     # Automated Python unittest suite
 ```
 
@@ -64,22 +80,29 @@ Output: `backend/dist_standalone/pos-backend-standalone` (or `.exe` on Windows).
 
 | Method | Route | Description |
 | :--- | :--- | :--- |
-| `GET` | `/` | Service health status and version metadata |
-| `GET` | `/api/v1/sales/` | Paginated sales ledger transactions |
-| `POST` | `/api/v1/sales/` | Record new sale, calculate taxes, dispatch EET signing |
-| `GET` | `/api/v1/sales/{id}` | Fetch individual sale details |
-| `DELETE` | `/api/v1/sales/{id}` | Storno / refund reverse transaction |
-| `GET` | `/api/v1/inventory/` | Product catalog, stock levels, barcodes |
-| `POST` | `/api/v1/inventory/` | Create or update inventory item |
-| `POST` | `/api/v1/printer/print` | Dispatch ESC/POS thermal receipt print job |
-| `POST` | `/api/v1/printer/drawer` | Send pulse to open cash drawer via RJ11 |
-| `GET` | `/api/v1/eet/status` | Certificate validity and Finanční správa connectivity |
-| `POST` | `/api/v1/eet/resend/{id}` | Re-queue offline transaction to EET SOAP server |
-| `POST` | `/api/v1/payments/generate-qr-string` | Generate Czech SPD bank QR payload string |
-| `POST` | `/api/v1/payments/verify-qr` | Verify bank transfer arrival via IMAP cache |
-| `GET` | `/api/v1/config/` | Retrieve active store and hardware configuration |
-| `PUT` | `/api/v1/config/` | Update store settings, printer addresses, EET certs |
-| `WS` | `/api/v1/ws/customer-display` | WebSocket channel for real-time customer LCD updates |
+| `GET` | `/api/v1/status` | Health probe and hardware tier |
+| `GET` | `/api/v1/sales/` | Sales ledger |
+| `POST` | `/api/v1/sales/` | Record sale: server VAT recalculation, EET signing, stock deduction (idempotent) |
+| `GET` | `/api/v1/sales/{id}` | Single sale |
+| `GET` | `/api/v1/sales/by-receipt/{number}` | Look up a sale for refund |
+| `PUT` | `/api/v1/sales/{id}/refund-status` | Mark refund status and optional restock |
+| `GET` | `/api/v1/catalog/presets` | Product presets |
+| `GET` | `/api/v1/catalog/barcode/{code}` | Barcode lookup |
+| `POST` | `/api/v1/inventory/intake` | Stock intake |
+| `GET` | `/api/v1/cash/current-shift` | Open shift state |
+| `POST` | `/api/v1/cash/close-shift` | Close shift and Z-report |
+| `POST` | `/api/v1/printer/print` | ESC/POS receipt print job |
+| `POST` | `/api/v1/printer/open-drawer` | RJ11 drawer pulse |
+| `GET` | `/api/v1/eet/status` | EET status and pending offline count |
+| `POST` | `/api/v1/eet/process-queue` | Resend offline EET receipts |
+| `POST` | `/api/v1/eet/force-resend` | Force resend |
+| `POST` | `/api/v1/payments/generate-qr-string` | Czech SPD QR payload |
+| `POST` | `/api/v1/payments/verify-qr` | Verify bank transfer via IMAP cache |
+| `POST` | `/api/v1/payments/terminal/pay` | Card payment on the ČSOB terminal |
+| `GET` / `POST` | `/api/v1/config` | Read or update store and hardware configuration |
+| `WS` | `/api/v1/ws/customer-display` | Customer display channel |
+
+The full route list per router is in [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md#42-routers-and-endpoints).
 
 Interactive OpenAPI documentation is available at:
 👉 **`http://localhost:8000/docs`**
@@ -93,7 +116,7 @@ Interactive OpenAPI documentation is available at:
 - Supports **USB** (`vendor_id`, `product_id`), **Serial** (`COM1`, `/dev/ttyUSB0`), and **Network** (TCP/IP e.g. `192.168.1.200:9100`).
 - Configurable top/bottom feed margins, diacritics stripping (CP852 / UTF-8), and cutter control.
 
-### 2. ČSOB Payment Terminal (`services/csob_connector.py`)
+### 2. ČSOB Payment Terminal (`services/csob_terminal_service.py`)
 - TCP IP communication with ČSOB Ingenico Move 3500 payment terminals.
 - Automated amount passing, currency coding, and receipt authorization printing.
 

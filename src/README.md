@@ -1,5 +1,7 @@
 # Himmel POS - React 19 Frontend Documentation
 
+> Whole-system view (backend, data model, flows): [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md). Hooks, contexts and utils are summarised in section 6 there.
+
 This directory contains the user interface for **Himmel POS**, built with **React 19** and **Vite**. The frontend is engineered specifically for fast, error-free operation on touchscreens, offering real-time cart manipulation, multi-payment options, receipt generation, sales history management, product catalog administration, and store settings configuration.
 
 ---
@@ -34,10 +36,10 @@ src/
 
 ## 🧩 Component Architecture
 
-### 1. [`App.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/App.jsx)
+### 1. [`App.jsx`](./App.jsx)
 - **Role**: Core application state container and router.
 - **State Managed**:
-  - `activeTab`: Controls active screen (`register`, `sales`, `catalog`, `settings`).
+  - `activeTab`: Controls active screen (`register`, `presets`, `inventory` when enabled, `history`, `analytics`, `settings`).
   - `cart`: Array of items currently selected in cart with quantity, unit price, VAT, and custom discount.
   - `cartDiscount`: Percentage discount applied globally to cart total (0%, 5%, 10%, 15%, 20%).
   - `categories` / `presets`: Product catalog items with fallback to initial defaults and persistent sync to `localStorage`.
@@ -49,18 +51,18 @@ src/
 
 ### 2. Register View Components
 
-#### [`Navbar.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/Navbar.jsx)
+#### [`Navbar.jsx`](./components/Navbar.jsx)
 - Top navigation bar containing app branding, view selector tabs, real-time EET status badge (`Online`, `Offline`, `Playground`), and current date/time ticker.
 
-#### [`QuickPresetGrid.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/QuickPresetGrid.jsx)
+#### [`QuickPresetGrid.jsx`](./components/QuickPresetGrid.jsx)
 - Grid layout displaying touch-friendly product buttons with color badges, item prices, and VAT rates.
 - Includes category pill filter buttons and live text search input for fast product discovery.
 
-#### [`ManualKeypad.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/ManualKeypad.jsx)
+#### [`ManualKeypad.jsx`](./components/ManualKeypad.jsx)
 - Numeric keypad allowing cashiers to quickly add unlisted or custom items by typing monetary amounts.
 - Includes quick tax rate selectors (21% Standard, 12% Reduced, 0% Zero) and custom item name field.
 
-#### [`Cart.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/Cart.jsx)
+#### [`Cart.jsx`](./components/Cart.jsx)
 - Displays current shopping cart list with item quantity increment/decrement controls, per-item percentage discounts, and item removal actions.
 - Displays summary statistics: Subtotal, total VAT amount, applied cart discount, and final amount due.
 - Contains global cart discount selector buttons and clear cart / checkout action triggers.
@@ -69,7 +71,7 @@ src/
 
 ### 3. Payment & Receipt Modals
 
-#### [`PaymentModal.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/PaymentModal.jsx)
+#### [`PaymentModal.jsx`](./components/PaymentModal.jsx)
 - Interactive checkout dialog with shared bottom `PaymentFinishBar` (`Dokončit bez tisku` / `Dokončit a vytisknout`) and optional header B2B corporate invoice toggle (hidden by default unless `storeConfig.enableB2bInvoicing` is enabled in Settings), supporting four payment workflows:
   1. **Hotovost (Cash)**: Quick Exact/Reset pills, 6 Czech banknote cards (`100`–`5 000 Kč`), 4 quick coin buttons (`+5`, `+10`, `+20`, `+50 Kč`), expanded 3x4 numpad, and full-width change-due banner.
   2. **Karta (Card)**: ČSOB terminal or manual card confirmation workflow.
@@ -77,7 +79,7 @@ src/
   4. **Kombinovaná (Split Payment)**: Two-step checkout splitting order total across Cash and Card/QR.
 - Triggers transaction saving and EET signing via backend API.
 
-#### [`ReceiptModal.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/ReceiptModal.jsx)
+#### [`ReceiptModal.jsx`](./components/ReceiptModal.jsx)
 - Displays formatted thermal receipt preview including store details, receipt number, itemized rows, tax summary table, and EET fiscal signatures (FIK, BKP, PKP).
 - Actions: Direct physical thermal print via `python-escpos` backend, browser window print, and receipt text copy.
 
@@ -85,18 +87,18 @@ src/
 
 ### 4. Admin & Backoffice Views
 
-#### [`SalesHistoryView.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/SalesHistoryView.jsx)
+#### [`SalesHistoryView.jsx`](./components/SalesHistoryView.jsx)
 - Comprehensive sales ledger view listing past completed transactions.
 - Filter by payment method, search by receipt number, filter by date range.
 - Shows EET fiscal status for each sale (`EVD_OK`, `OFFLINE_PENDING`, `VERIFIED_ONLY`).
 - Allows manual re-submission of pending EET transactions to Finanční správa ČR.
 - Export transaction records to CSV file.
 
-#### [`PresetsCatalogView.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/PresetsCatalogView.jsx)
+#### [`PresetsCatalogView.jsx`](./components/PresetsCatalogView.jsx)
 - Interface for adding, editing, and deleting product categories and preset product items.
 - Configurable fields: Product name, price, category, VAT rate (21%, 12%, 0%), SKU code, and color badge.
 
-#### [`SettingsView.jsx`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/components/SettingsView.jsx)
+#### [`SettingsView.jsx`](./components/SettingsView.jsx)
 - Store metadata settings: Business name, address, IČO, DIČ, register ID (`id_pokl`), premises ID (`id_provozovny`).
 - Hardware ESC/POS settings: Interface mode (USB, Serial, Network), device path / IP address, receipt header and footer text.
 - Czech EET 2.0 settings: Certificate `.p12` file path, password, environment (`playground` vs `production`).
@@ -110,14 +112,14 @@ The application uses standard `localStorage` keys to persist client state across
 
 | Key | Description | Default Fallback |
 | :--- | :--- | :--- |
-| `himmel_pos_categories` | Array of product categories | `DEFAULT_CATEGORIES` in [`initialData.js`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/data/initialData.js) |
-| `himmel_pos_presets` | Array of quick-preset products | `DEFAULT_PRESETS` in [`initialData.js`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/data/initialData.js) |
-| `himmel_pos_config` | Store & hardware configuration | `DEFAULT_STORE_CONFIG` in [`initialData.js`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/data/initialData.js) |
+| `himmel_pos_categories` | Array of product categories | `DEFAULT_CATEGORIES` in [`initialData.js`](./data/initialData.js) |
+| `himmel_pos_presets` | Array of quick-preset products | `DEFAULT_PRESETS` in [`initialData.js`](./data/initialData.js) |
+| `himmel_pos_config` | Store & hardware configuration | `DEFAULT_STORE_CONFIG` in [`initialData.js`](./data/initialData.js) |
 | `himmel_pos_sales` | Sales history ledger array | Initial sample transaction |
 
 ---
 
-## 📡 API Service Layer ([`posApi.js`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/api/posApi.js))
+## 📡 API Service Layer ([`posApi.js`](./api/posApi.js))
 
 The API service abstracts communicate with the Python FastAPI backend running at `http://localhost:8000`:
 
@@ -131,7 +133,7 @@ The API service abstracts communicate with the Python FastAPI backend running at
 
 ---
 
-## 🎨 Design System & CSS Variables ([`index.css`](file:///c:/Users/micha/Documents/GitHub/pos-project-himmel/src/index.css))
+## 🎨 Design System & CSS Variables ([`index.css`](./index.css))
 
 The UI relies on vanilla CSS custom properties (variables) defining dark glassmorphism styling and vibrant color accents:
 

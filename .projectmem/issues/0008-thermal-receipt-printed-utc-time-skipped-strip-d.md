@@ -1,0 +1,4 @@
+# #0008 Thermal receipt printed UTC time, skipped strip-diacritics on table rows, printed 0 Kč cash lines on refunds/reprints, and a ? for the contact bullet (Batch H A1, A4, A9, A14)
+
+- 2026-11-17T11:43:12Z `issue`: Thermal receipt printed UTC time, skipped strip-diacritics on table rows, printed 0 Kč cash lines on refunds/reprints, and a ? for the contact bullet (Batch H A1, A4, A9, A14) [backend/services/escpos_service.py]
+- 2026-11-17T11:43:16Z `fix`: Batch H phase 2 (f336a4f): receipt/invoice/DUZP/protocol times now local via _local_dt (naive = UTC); headers, price column and VAT recap go through write_receipt_text; strip mode keeps x, D, =, dashes, quotes, EUR; no zero cash lines on refund/reprint; contacts joined with |. Tests: test_receipt_text.py (16). [backend/services/escpos_service.py]

@@ -155,6 +155,11 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
   });
 
   describe('refund guards (F-026)', () => {
+    // Storno lives in the history ledger; returns the row's Storno button
+    const openLedgerStorno = async () => {
+      fireEvent.click((await screen.findAllByText(/Historie/i))[0]);
+      return (await screen.findAllByRole('button', { name: /^Storno$/ }))[0];
+    };
     const sale = (extra = {}) => ({
       id: 'sale-1', receiptNumber: '2026-000010', timestamp: new Date().toISOString(), totalAmount: 150,
       paymentMethod: 'cash', items: [{ id: 'p1', name: 'Víno bílé', price: 150, quantity: 1, vat: 21 }], ...extra
@@ -163,8 +168,7 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
     it('quick storno is disabled for a sale the server does not have', async () => {
       localStorage.setItem('voltflow_pos_sales', JSON.stringify([sale({ syncState: 'PENDING' })]));
       renderAppWithProviders();
-      fireEvent.click(await screen.findByRole('button', { name: /Poslední:\s*150\s*Kč/i }));
-      expect(screen.getByRole('button', { name: /Rychlé storno/i })).toBeDisabled();
+      expect(await openLedgerStorno()).toBeDisabled();
     });
 
     it('a cash sale of 3.50 paid as 4 is refunded as 4 and the 0.50 is noted as rounding', async () => {
@@ -179,8 +183,7 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
       localStorage.setItem('voltflow_pos_sales', JSON.stringify([stored]));
       renderAppWithProviders();
 
-      fireEvent.click(await screen.findByRole('button', { name: /Poslední:\s*4\s*Kč/i }));
-      fireEvent.click(screen.getByRole('button', { name: /Rychlé storno/i }));
+      fireEvent.click(await openLedgerStorno());
       await screen.findByText(/Vratka \/ Storno Účtenky/i);
       fireEvent.click(screen.getByRole('button', { name: /Provést vratku|Potvrdit|Vystavit/i }));
 
@@ -200,8 +203,7 @@ describe('sale that the server did not store (F-001 part 2, F-014)', () => {
       localStorage.setItem('voltflow_pos_sales', JSON.stringify([stored]));
       renderAppWithProviders();
 
-      fireEvent.click(await screen.findByRole('button', { name: /Poslední:\s*150\s*Kč/i }));
-      fireEvent.click(screen.getByRole('button', { name: /Rychlé storno/i }));
+      fireEvent.click(await openLedgerStorno());
       await screen.findByText(/Vratka \/ Storno Účtenky/i);
       fireEvent.click(screen.getByRole('button', { name: /Provést vratku|Potvrdit|Vystavit/i }));
 

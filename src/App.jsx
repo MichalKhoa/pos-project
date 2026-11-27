@@ -252,35 +252,6 @@ export default function App() {
     setUnknownPriceCheckBarcode(barcode);
   }, []);
 
-  // Most recent completed sale for Quick Reprint / Storno chip
-  const lastSale = useMemo(() => {
-    if (!salesHistory || salesHistory.length === 0) return null;
-    return salesHistory[0];
-  }, [salesHistory]);
-
-  const handleReprintSale = useCallback(async (sale) => {
-    if (!sale) return;
-    soundFx.playScanChime();
-    try {
-      const res = await printReceiptBackend(sale, storeConfig);
-      if (res && res.status === 'PRINTED' && res.physical !== false) {
-        soundFx.playSuccessChime();
-        setFlashBanner({
-          message: t('payment.receipt_printed', { n: sale.receiptNumber || sale.receipt_number || '' }),
-          type: 'success'
-        });
-      } else {
-        setCurrentReceiptData(sale);
-        setFlashBanner({
-          message: `Účtenka #${sale.receiptNumber || sale.receipt_number || ''} otevřena k tisku`,
-          type: 'info'
-        });
-      }
-    } catch {
-      setCurrentReceiptData(sale);
-    }
-  }, [storeConfig, t]);
-
   // Open Cash Drawer Handler
   const handleOpenCashDrawer = useCallback(async () => {
     soundFx.playCashChime();
@@ -1121,9 +1092,6 @@ export default function App() {
                     onOpenParkedModal={handleOpenParkedModal}
                     onParkCart={parkCurrentCart}
                     cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
-                    lastSale={lastSale}
-                    onReprintLastReceipt={handleReprintSale}
-                    onInitiateRefund={handleInitiateRefund}
                   />
                   {isTwoColumn && storeConfig?.shiftWidgetPosition === 'under_cart' && (
                     <ShiftStatsWidget

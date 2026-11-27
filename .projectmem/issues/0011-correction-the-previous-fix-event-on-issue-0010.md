@@ -1,0 +1,4 @@
+# #0011 Correction: the previous fix event on issue #0010 was logged in error (wrong issue id) — #0010 (ReceiptPreviewPaper.jsx/receiptHtmlGenerator.js missing cart-discount scaling) is still open and unrelated to this fix.
+
+- 2026-11-17T13:07:11Z `issue`: Correction: the previous fix event on issue #0010 was logged in error (wrong issue id) — #0010 (ReceiptPreviewPaper.jsx/receiptHtmlGenerator.js missing cart-discount scaling) is still open and unrelated to this fix. [src/components/receipt/ReceiptPreviewPaper.jsx:270]
+- 2026-11-17T13:37:37Z `fix`: Store header now prints a short "---" mark under the store name, and the retail layout's "Datum a čas"/"Obsluha" lines use write_label_value (right-aligned, like totals) instead of plain centered text — matches the Phase 5 receipt mockup. 3 test_receipt_text.py assertions updated for the new padded format; golden fixtures regenerated. [backend/services/escpos_service.py:757-776,960-973]

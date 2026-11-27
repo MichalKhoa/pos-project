@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, Printer, Receipt, ChevronDown, PauseCircle } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Percent, Split, RotateCcw, Clock, PauseCircle } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
 import { calculateCartTotals, roundCashTotal } from '../utils/tax';
 import CashDrawerIcon from './CashDrawerIcon';
 import CartItemInspector from './cart/CartItemInspector';
-import { canRefund } from '../utils/saleSync';
 import { countCartItems } from '../utils/cartCount';
-import { formatReceiptMoney } from '../utils/receiptAmounts';
 import { formatKc } from '../utils/money';
 
 function ClearedCartBanner({ snapshot, onRestore }) {
@@ -57,26 +55,6 @@ function ClearedCartBanner({ snapshot, onRestore }) {
   );
 }
 
-function parseSaleItems(sale) {
-  if (!sale) return [];
-  let raw = sale.items || sale.cartItems || [];
-  if (typeof raw === 'string') {
-    try {
-      raw = JSON.parse(raw);
-    } catch {
-      raw = [];
-    }
-  }
-  if (!Array.isArray(raw)) return [];
-  return raw.map((item, idx) => ({
-    id: item.id || `item-${idx}`,
-    name: item.name || item.title || item.item_name || 'Položka',
-    price: item.price !== undefined ? parseFloat(item.price) : (item.unit_price !== undefined ? parseFloat(item.unit_price) : 0),
-    quantity: item.quantity !== undefined ? parseFloat(item.quantity) : (item.qty !== undefined ? parseFloat(item.qty) : 1),
-    unit: item.unit
-  }));
-}
-
 function formatQty(qty) {
   if (qty === null || qty === undefined) return '0';
   const num = Number(qty);
@@ -114,15 +92,10 @@ function Cart({
   parkedCartsCount = 0,
   onOpenParkedModal = null,
   onParkCart = null,
-  cartItemStyle = 'elevated-card',
-  lastSale = null,
-  onReprintLastReceipt = null,
-  onInitiateRefund = null
+  cartItemStyle = 'elevated-card'
 }) {
   const { t, language } = useTranslation();
   const [selectedLineKey, setSelectedLineKey] = useState(null);
-  const [isLastReceiptOpen, setIsLastReceiptOpen] = useState(false);
-  const lastReceiptRef = useRef(null);
   const itemsContainerRef = useRef(null);
   const prevItemsRef = useRef(cartItems);
   const flashTimerRef = useRef(null);
@@ -156,68 +129,6 @@ function Cart({
   }, [cartItems]);
 
   useEffect(() => () => clearTimeout(flashTimerRef.current), []);
-
-  useEffect(() => {
-    if (!isLastReceiptOpen) return;
-    const handleOutsideClick = (e) => {
-      if (lastReceiptRef.current && !lastReceiptRef.current.contains(e.target)) {
-        setIsLastReceiptOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('touchstart', handleOutsideClick);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('touchstart', handleOutsideClick);
-    };
-  }, [isLastReceiptOpen]);
-
-  const lastSaleAmount = useMemo(() => {
-    if (!lastSale) return 0;
-    return (lastSale.totalAmount !== undefined ? lastSale.totalAmount : (lastSale.total_amount !== undefined ? lastSale.total_amount : lastSale.total)) || 0;
-  }, [lastSale]);
-
-  const lastSaleItems = useMemo(() => {
-    return parseSaleItems(lastSale);
-  }, [lastSale]);
-
-  const { lastSaleChipTime, lastSaleDateTime, isOlderThanToday } = useMemo(() => {
-    if (!lastSale) return { lastSaleChipTime: '', lastSaleDateTime: '', isOlderThanToday: false };
-    const dateVal = lastSale.timestamp || lastSale.created_at || lastSale.date;
-    if (!dateVal) return { lastSaleChipTime: '', lastSaleDateTime: '', isOlderThanToday: false };
-    try {
-      const saleDate = new Date(dateVal);
-      if (isNaN(saleDate.getTime())) return { lastSaleChipTime: '', lastSaleDateTime: '', isOlderThanToday: false };
-
-      const now = new Date();
-      const isToday = saleDate.toDateString() === now.toDateString();
-
-      const yesterday = new Date(now);
-      yesterday.setDate(now.getDate() - 1);
-      const isYesterday = saleDate.toDateString() === yesterday.toDateString();
-
-      const timeStr = saleDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = saleDate.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit' });
-      const fullDateStr = saleDate.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
-
-      let chipTime = timeStr;
-      if (isYesterday) {
-        chipTime = `${t('last_receipt.yesterday') || 'Včera'} ${timeStr}`;
-      } else if (!isToday) {
-        chipTime = `${dateStr} ${timeStr}`;
-      }
-
-      const fullDateTime = `${isToday ? (t('last_receipt.today') || 'Dnes') + ', ' : (isYesterday ? (t('last_receipt.yesterday') || 'Včera') + ', ' : fullDateStr + ', ')}${timeStr}`;
-
-      return {
-        lastSaleChipTime: chipTime,
-        lastSaleDateTime: fullDateTime,
-        isOlderThanToday: !isToday
-      };
-    } catch {
-      return { lastSaleChipTime: '', lastSaleDateTime: '', isOlderThanToday: false };
-    }
-  }, [lastSale, t]);
 
   const activeCartItemStyle = useMemo(() => {
     try {
@@ -336,125 +247,6 @@ function Cart({
           )}
         </div>
       </div>
-
-      {/* Last Receipt Quick Actions Chip & Popover */}
-      {lastSale && (
-        <div ref={lastReceiptRef} className={`last-receipt-quick-container ${cartItems.length > 0 ? 'is-compact' : ''}`}>
-          <button
-            type="button"
-            className={`last-receipt-chip-btn ${isLastReceiptOpen ? 'is-active' : ''} ${isOlderThanToday ? 'is-past-day' : ''}`}
-            onClick={() => setIsLastReceiptOpen(prev => !prev)}
-            title={t('last_receipt.tooltip') || 'Poslední účtenka: Rychlý dotisk a Storno'}
-            aria-expanded={isLastReceiptOpen}
-            aria-haspopup="dialog"
-          >
-            <Receipt size={16} className="last-receipt-chip-icon" />
-            <span className="last-receipt-chip-text">
-              {t('last_receipt.chip_label', {
-                amount: formatReceiptMoney(Math.abs(lastSaleAmount)),
-                time: lastSaleChipTime
-              }) || `Poslední: ${formatReceiptMoney(Math.abs(lastSaleAmount))} Kč (${lastSaleChipTime})`}
-            </span>
-            {lastSaleItems.length > 0 && (
-              <span className="last-receipt-chip-count-badge">
-                {lastSaleItems.length} {t('last_receipt.items_count') || 'pol.'}
-              </span>
-            )}
-            <ChevronDown size={14} className={`last-receipt-chip-chevron ${isLastReceiptOpen ? 'is-open' : ''}`} />
-          </button>
-
-          {/* Last Receipt Popover */}
-          {isLastReceiptOpen && (
-            <div className="last-receipt-popover">
-              <div className="last-receipt-popover-header">
-                <div className="last-receipt-popover-title">
-                  <Receipt size={14} />
-                  <span>{t('last_receipt.popover_title')}</span>
-                </div>
-                <span className="last-receipt-popover-badge">
-                  #{lastSale.receiptNumber || lastSale.receipt_number || '---'}
-                </span>
-              </div>
-
-              <div className="last-receipt-popover-details">
-                <div className="last-receipt-detail-row">
-                  <span className="last-receipt-label">{t('last_receipt.amount')}</span>
-                  <strong className="last-receipt-value amount">{formatKc(lastSaleAmount)} Kč</strong>
-                </div>
-                <div className="last-receipt-detail-row">
-                  <span className="last-receipt-label">{t('last_receipt.date') || 'Datum:'}</span>
-                  <span className="last-receipt-value time">{lastSaleDateTime}</span>
-                </div>
-                {lastSale.paymentMethod && (
-                  <div className="last-receipt-detail-row">
-                    <span className="last-receipt-label">{t('last_receipt.payment_method') || 'Platba:'}</span>
-                    <span className="last-receipt-value payment">
-                      {lastSale.paymentMethod === 'cash' ? t('payment.cash') : (lastSale.paymentMethod === 'card' ? t('payment.card') : lastSale.paymentMethod)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Items List Preview */}
-              {lastSaleItems.length > 0 && (
-                <div className="last-receipt-items-container">
-                  <div className="last-receipt-items-header">
-                    <span>{t('last_receipt.items_header') || 'Položky účtenky'}</span>
-                    <span className="last-receipt-items-count-tag">
-                      {lastSaleItems.length} {t('last_receipt.items_count') || 'pol.'}
-                    </span>
-                  </div>
-                  <div className="last-receipt-items-list">
-                    {lastSaleItems.map((item, idx) => {
-                      const itemTotal = item.price * item.quantity;
-                      return (
-                        <div key={item.id || idx} className="last-receipt-item-row">
-                          <span className="last-receipt-item-qty">{item.quantity}×</span>
-                          <span className="last-receipt-item-name" title={item.name}>{item.name}</span>
-                          <span className="last-receipt-item-price">{formatReceiptMoney(itemTotal)} Kč</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="last-receipt-popover-actions">
-                {onReprintLastReceipt && (
-                  <button
-                    type="button"
-                    className="last-receipt-action-btn btn-reprint"
-                    onClick={() => {
-                      onReprintLastReceipt(lastSale);
-                      setIsLastReceiptOpen(false);
-                    }}
-                    title={t('last_receipt.reprint')}
-                  >
-                    <Printer size={15} strokeWidth={2.5} />
-                    <span>{t('last_receipt.reprint')}</span>
-                  </button>
-                )}
-
-                {onInitiateRefund && (
-                  <button
-                    type="button"
-                    className="last-receipt-action-btn btn-storno"
-                    onClick={() => {
-                      onInitiateRefund(lastSale);
-                      setIsLastReceiptOpen(false);
-                    }}
-                    disabled={!canRefund(lastSale)}
-                    title={canRefund(lastSale) ? t('last_receipt.quick_refund') : t('refund_guard.not_stored')}
-                  >
-                    <RotateCcw size={15} strokeWidth={2.5} />
-                    <span>{t('last_receipt.quick_refund')}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Cart Items List */}
       <div ref={itemsContainerRef} className={`cart-items-container cart-item-style-${activeCartItemStyle}`}>
