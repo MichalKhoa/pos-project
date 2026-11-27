@@ -10,6 +10,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from escpos_helpers import print_sale, receipt_lines
+from test_receipt_text import PragueTimeCase
 
 FIXTURES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "receipts")
 
@@ -45,7 +46,8 @@ STORE = {
 }
 
 
-class GoldenFileTests(unittest.TestCase):
+# The golden files hold Prague local time; the CI runner runs in UTC.
+class GoldenFileTests(PragueTimeCase):
     def _golden(self, name, paper_width, font_size, cols):
         _, printer = print_sale(SALE, {**STORE, "printerPaperWidth": paper_width,
                                         "receiptFontSize": font_size, "receiptLineColumns": cols})
