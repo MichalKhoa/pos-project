@@ -530,12 +530,12 @@ export async function shutdownBackend() {
 /**
  * Send print receipt request to backend hardware thermal printer service
  */
-export async function printReceiptBackend(saleData, storeConfig) {
+export async function printReceiptBackend(saleData, storeConfig, openDrawer = true) {
   try {
     const res = await fetch(`${API_BASE_URL}/printer/print`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ saleData, storeConfig })
+      body: JSON.stringify({ saleData, storeConfig, openDrawer })
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -588,10 +588,12 @@ export async function printBarcodeLabelBackend(itemData, copies = 1, storeConfig
 /**
  * Trigger physical cash drawer release pulse via printer service
  */
-export async function openCashDrawerBackend() {
+export async function openCashDrawerBackend(storeConfig = {}) {
   try {
     const res = await fetch(`${API_BASE_URL}/printer/open-drawer`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeConfig })
     });
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
@@ -601,6 +603,57 @@ export async function openCashDrawerBackend() {
   }
 }
 
+
+/**
+ * Print a numbered column ruler in Font A and Font B to find the printer's real column count
+ */
+export async function printRulerBackend(storeConfig = {}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-ruler`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storeConfig })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Column ruler thermal printing failed or backend offline:', err);
+    return { success: true, physical: false, status: 'SIMULATED' };
+  }
+}
+
+/**
+ * Debug tool: render the exact ESC/POS output for the given sale/settings, no hardware touched.
+ */
+export async function previewReceiptBackend(saleData, storeConfig) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ saleData, storeConfig })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('Receipt preview unavailable:', err);
+    return { lines: [] };
+  }
+}
+
+/**
+ * Recent print/debug attempts (newest first), for self-diagnosing printing problems.
+ */
+export async function fetchPrintLogBackend(limit = 20) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/printer/print-log?limit=${limit}`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data?.attempts || [];
+  } catch (err) {
+    console.warn('Print log unavailable:', err);
+    return [];
+  }
+}
 
 /**
  * Scan and fetch list of connected hardware printer devices from backend

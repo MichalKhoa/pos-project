@@ -260,7 +260,7 @@ export default function App() {
       message: 'Otevírání peněžní zásuvky...'
     });
     try {
-      const res = await openCashDrawerBackend();
+      const res = await openCashDrawerBackend(storeConfig);
       if (res && res.success) {
         setFlashBanner({
           type: 'success',
@@ -279,7 +279,7 @@ export default function App() {
       });
     }
     setTimeout(() => setFlashBanner(null), 3000);
-  }, []);
+  }, [storeConfig]);
 
   // Test Sales Management
 

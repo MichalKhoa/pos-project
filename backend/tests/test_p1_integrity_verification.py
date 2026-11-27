@@ -30,18 +30,18 @@ class TestP1IntegrityVerification(unittest.TestCase):
         self.db.commit()
 
         num_a = generate_next_receipt_number(self.db, test_year)
-        self.assertEqual(num_a, f"{test_year}-000001")
+        self.assertEqual(num_a, f"{test_year}-0000001")
 
         # Simulate crash/abort before commit
         self.db.rollback()
 
         # Due to DB-C1 flush instead of commit, rollback preserves sequence slot
         num_b = generate_next_receipt_number(self.db, test_year)
-        self.assertEqual(num_b, f"{test_year}-000001", "Sequence slot must be reused after rollback, no gap")
+        self.assertEqual(num_b, f"{test_year}-0000001", "Sequence slot must be reused after rollback, no gap")
 
         self.db.commit()
         num_c = generate_next_receipt_number(self.db, test_year)
-        self.assertEqual(num_c, f"{test_year}-000002")
+        self.assertEqual(num_c, f"{test_year}-0000002")
         self.db.commit()
 
     def test_db_h1_concurrent_stock_decrements_no_lost_updates(self):

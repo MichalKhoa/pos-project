@@ -18,6 +18,17 @@ export function formatLocalDate(dateInput) {
 }
 
 /**
+ * Parses a sale timestamp. The server sends UTC without a zone ("2026-11-16T14:00:00"), which
+ * `new Date` reads as local time, so a date-time with no zone counts as UTC (same rule as the printer).
+ * @param {Date|string|number} ts
+ * @returns {Date}
+ */
+export function parseSaleTimestamp(ts) {
+  if (typeof ts === 'string' && /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(ts)) return new Date(`${ts}Z`);
+  return new Date(ts);
+}
+
+/**
  * Parses a 'YYYY-MM-DD' string into a local Date object at start of day (00:00:00.000).
  * @param {string} dateStr 'YYYY-MM-DD'
  * @returns {Date}

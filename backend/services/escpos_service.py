@@ -1,10 +1,11 @@
 import os
+import re
 import sys
 import glob
 import logging
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger("pos-escpos")
@@ -30,6 +31,29 @@ def receipt_totals(sale_data: dict):
     return (exact, round(payable - exact, 2), payable)
 
 
+def compute_item_line_totals(items: list, cart_discount_percent: float = 0) -> list:
+    """Per-item printed gross, Decimal HALF_UP like sales.py's recalculate_sale_totals.
+
+    Each line's own discount first, then the cart discount applied proportionally to every
+    line (the same `cart_factor` the server uses), so the printed lines sum to the printed total.
+    """
+    item_grosses = []
+    for item in items:
+        price = float(item.get('price', 0) or 0)
+        qty = float(item.get('quantity', 1))
+        discount = float(item.get('discountPercent') or item.get('discount_percent') or 0)
+        item_grosses.append(round_currency(price * qty * (1 - discount / 100)))
+
+    raw_subtotal = round_currency(sum(item_grosses))
+    cart_factor = 1.0
+    if cart_discount_percent and raw_subtotal:
+        cart_discount_amount = round_currency(raw_subtotal * cart_discount_percent / 100)
+        final_grand_total = round_currency(raw_subtotal - cart_discount_amount)
+        cart_factor = final_grand_total / raw_subtotal
+
+    return [round_currency(g * cart_factor) for g in item_grosses]
+
+
 def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
     """Decorator that automatically retries printer connection with exponential backoff on USB/Serial hardware hiccups."""
     def decorator(func):
@@ -51,6 +75,7 @@ def with_printer_reconnect(max_retries: int = 3, delay_seconds: float = 1.0):
 
 
 from services.printer_discovery import detect_connected_printers
+from services.security_utils import round_currency
 
 
 def get_receipt_separator(style: str, width: int) -> str:
@@ -84,7 +109,7 @@ def print_receipt_logo(printer, logo_base64: str, is_58mm: bool):
     try:
         import base64
         import io
-        from PIL import Image
+        from PIL import Image, ImageOps
 
         raw_b64 = logo_base64.split(",", 1)[1] if "," in logo_base64 else logo_base64
         img_bytes = base64.b64decode(raw_b64)
@@ -105,11 +130,32 @@ def print_receipt_logo(printer, logo_base64: str, is_58mm: bool):
             new_h = max(1, int(pil_img.height * scale))
             pil_img = pil_img.resize((max_dots, new_h), Image.Resampling.LANCZOS)
 
-        bw_img = pil_img.convert('1')
+        # D7: auto-contrast plus a flat threshold instead of Floyd-Steinberg dithering,
+        # which turns clean line-art logos into speckled noise.
+        gray_img = ImageOps.autocontrast(pil_img.convert('L'))
+        bw_img = gray_img.point(lambda p: 255 if p > 128 else 0, mode='1')
         printer.set(align='center')
         printer.image(bw_img, center=True)
     except Exception as img_err:
         logger.warning(f"Failed to print receipt logo image: {img_err}")
+
+
+def _local_dt(ts) -> datetime:
+    """Local time for an ISO string or datetime. A naive value is UTC: the server stores datetime.utcnow()."""
+    dt = ts if isinstance(ts, datetime) else datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone()
+
+
+# Letters that NFKD cannot reduce to ASCII and that would otherwise vanish in strip mode.
+_ASCII_FALLBACK = str.maketrans({"×": "x", "Đ": "D", "đ": "d", "═": "=", "–": "-", "—": "-",
+                                 "„": '"', "“": '"', "”": '"', "‚": "'", "‘": "'", "’": "'", "€": "EUR"})
+
+
+def _to_ascii(text: str) -> str:
+    import unicodedata
+    return unicodedata.normalize('NFKD', text.translate(_ASCII_FALLBACK)).encode('ASCII', 'ignore').decode('ascii')
 
 
 def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encoding: str = "CP852"):
@@ -120,9 +166,7 @@ def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encod
     if not text:
         return
     if strip_diacritics:
-        import unicodedata
-        clean = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
-        printer.text(clean)
+        printer.text(_to_ascii(text))
         return
 
     try:
@@ -135,9 +179,7 @@ def write_receipt_text(printer, text: str, strip_diacritics: bool = False, encod
             else:
                 printer.text(raw_bytes.decode(encoding, errors='replace'))
         except Exception:
-            import unicodedata
-            clean = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
-            printer.text(clean)
+            printer.text(_to_ascii(text))
 
 
 def set_escpos_font(printer, font: str = 'b', bold: bool = False, double_height: bool = False, double_width: bool = False, align: str = 'left'):
@@ -181,6 +223,257 @@ def set_escpos_font(printer, font: str = 'b', bold: bool = False, double_height:
             pass
 
 
+def receipt_columns(line_width: int, kind: str) -> tuple:
+    """
+    Column widths for a receipt table, computed from the line width. Columns plus gaps fill the line.
+      retail    -> (name, qty, price)            two gaps
+      invoice   -> (name, qty, vat, price)       three gaps; vat is 0 on narrow lines (no column, two gaps)
+      tax_recap -> (rate, net, tax, gross)       three gaps; gross is 0 on narrow lines (no column, two gaps)
+    """
+    lw = int(line_width)
+    if kind == "retail":
+        qty_w, price_w = (5, 10) if lw <= 32 else ((6, 11) if lw <= 42 else (7, 13))
+        return (lw - 2 - qty_w - price_w, qty_w, price_w)
+    if kind == "invoice":
+        if lw <= 35:
+            qty_w, vat_w, price_w = 5, 0, 11
+        elif lw <= 48:
+            qty_w, vat_w, price_w = 5, 5, (15 if lw >= 48 else 12)
+        else:
+            qty_w, vat_w, price_w = 6, 6, 15
+        gaps = 3 if vat_w else 2
+        return (lw - gaps - qty_w - vat_w - price_w, qty_w, vat_w, price_w)
+    if kind == "tax_recap":
+        rate_w = 6 if lw <= 42 else (8 if lw < 64 else 10)
+        if lw <= 35:
+            rest = lw - rate_w - 2
+            net_w = rest // 2
+            return (rate_w, net_w, rest - net_w, 0)
+        rest = lw - rate_w - 3
+        net_w = rest // 3 if lw > 64 else min(16, rest // 3)
+        return (rate_w, net_w, net_w, rest - 2 * net_w)
+    raise ValueError(f"unknown column kind: {kind}")
+
+
+def wrap_text(text: str, width: int) -> list:
+    """
+    Wrap text at word boundaries into lines of at most `width` characters. Words longer than
+    `width` are split. Leading spaces of a line are kept as an indent on every wrapped line.
+    """
+    lines = []
+    width = max(1, int(width))
+    for raw in str(text).splitlines():
+        body = raw.strip()
+        if not body:
+            continue
+        if len(raw.rstrip()) <= width:  # fits: keep the text exactly as written
+            lines.append(raw.rstrip())
+            continue
+        indent = raw[:len(raw) - len(raw.lstrip(' '))]
+        if len(indent) >= width:
+            indent = ""
+        room = width - len(indent)
+        current = ""
+        for word in body.split():
+            while len(word) > room:
+                if current:
+                    lines.append(indent + current)
+                    current = ""
+                lines.append(indent + word[:room])
+                word = word[room:]
+            if not current:
+                current = word
+            elif len(current) + 1 + len(word) <= room:
+                current += " " + word
+            else:
+                lines.append(indent + current)
+                current = word
+        if current:
+            lines.append(indent + current)
+    return lines
+
+
+def label_value_rows(label: str, value: str, width: int) -> list:
+    """Label on the left, value on the right, one line; two lines when they do not fit together."""
+    label, value = str(label), str(value)
+    if len(label) + len(value) + 1 <= width:
+        return [label + " " * (width - len(label) - len(value)) + value]
+    return (wrap_text(label, width) or [""]) + [value.rjust(width)]  # never cut an amount
+
+
+def format_item_row(name: str, qty_text: str, price_text: str, widths: tuple, line_width: int,
+                    vat_text: str = "", vat_w: int = 0) -> list:
+    """
+    One item row as a list of (left, right) pairs; the printed line is left + right.
+    A long name wraps over full lines. Quantity, optional VAT and price stay on the last line,
+    right aligned. A value wider than its column takes room from the name column.
+    `widths` is (name, qty, price); `vat_w` adds a VAT column between quantity and price.
+    """
+    _, qty_w, price_w = widths
+    qty_w, price_w = max(qty_w, len(qty_text)), max(price_w, len(price_text))
+    vat_w = max(vat_w, len(vat_text)) if vat_w else 0
+    gaps = 3 if vat_w else 2
+    name_w = line_width - gaps - qty_w - vat_w - price_w
+    right = f" {qty_text:^{qty_w}}" + (f" {vat_text:^{vat_w}}" if vat_w else "") + f" {price_text:>{price_w}}"
+    if name_w < 8:  # no room next to the numbers: name lines, then the numbers on their own line
+        rows = [(line, "") for line in wrap_text(name, line_width)]
+        rows.append(("", right.strip().rjust(line_width)))
+        return rows
+    lines = wrap_text(name, line_width) or [""]
+    if len(lines[-1]) <= name_w:
+        last = lines.pop()
+        return [(line, "") for line in lines] + [(f"{last:<{name_w}}", right)]
+    return [(line, "") for line in lines] + [(" " * name_w, right)]
+
+
+def write_wrapped(printer, text: str, width: int, strip_diacritics: bool = False, encoding: str = "CP852"):
+    """Write text wrapped to `width`, one printed line per wrapped line."""
+    for line in wrap_text(text, width):
+        write_receipt_text(printer, f"{line}\n", strip_diacritics, encoding)
+
+
+def write_label_value(printer, label: str, value: str, width: int, strip_diacritics: bool = False, encoding: str = "CP852"):
+    """Write a label and a right aligned value as one line of `width` (two lines when too long)."""
+    for line in label_value_rows(label, value, width):
+        write_receipt_text(printer, f"{line}\n", strip_diacritics, encoding)
+
+
+# D11: line pitch in dots (ESC 3 n), tighter than the printer's 1/6-inch default (about 1/6*203=34 dots).
+# Hardware calibration knobs: tune against a real printer in Phase 6, do not inline them.
+LINE_DOTS_FONT_A = 28
+LINE_DOTS_FONT_B = 21
+
+# D4: extra feed (ESC J n, in dots) around each separator, per the receiptSeparatorSpacing setting.
+SEPARATOR_SPACING_DOTS = {"compact": 0, "standard": 6, "spacious": 16}
+
+# D6: CODE128 at width 2 no longer fits the 58mm print area past this many characters.
+# Hardware calibration knob: tune against a real printer in Phase 6.
+BARCODE_58MM_WIDTH2_CHAR_LIMIT = 14
+
+
+def set_line_spacing(printer, font: str = 'a'):
+    """ESC 3 n: set the line pitch for the given font (D11)."""
+    if hasattr(printer, '_raw'):
+        dots = LINE_DOTS_FONT_B if str(font).lower() == 'b' else LINE_DOTS_FONT_A
+        try:
+            printer._raw(b'\x1b3' + bytes([dots]))
+        except Exception:
+            pass
+
+
+def print_separator(printer, line: str, spacing: str = "standard"):
+    """Print one rule line, then feed the extra dots the spacing setting asks for (D4)."""
+    printer.text(line + "\n")
+    dots = SEPARATOR_SPACING_DOTS.get(spacing, 6)
+    if dots and hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1bJ' + bytes([dots]))
+        except Exception:
+            pass
+
+
+def reverse_print(printer, on: bool):
+    """GS B n: toggle white-on-black reverse printing (D8, refund titles)."""
+    if hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1dB' + bytes([1 if on else 0]))
+        except Exception:
+            pass
+
+
+def print_ruler(printer, line_width: int):
+    """Print a numbered column ruler in Font A then Font B, with `|` at `line_width` (D15)."""
+    ruler = ("1234567890" * 7)[:64]
+    for font in ('a', 'b'):
+        set_escpos_font(printer, font=font, bold=False, align='left')
+        set_line_spacing(printer, font)  # D11: each font's own pitch, not just the job's starting font
+        marked = ruler[:line_width] + "|" + ruler[line_width:]
+        printer.text(marked + "\n")
+    set_escpos_font(printer, font='a', bold=False, align='left')
+
+
+# Control sequences the receipt writes: (ESC|GS) command plus its fixed-size arguments.
+# Shared by the debug preview below and by backend/tests/escpos_helpers.py.
+_ESCPOS_CONTROL = re.compile(
+    rb"\x1b[!MEatJ3dV-]."  # one argument byte; 'p' (drawer pulse) is 3 bytes, handled below
+    rb"|\x1b[2@=]"          # no argument
+    rb"|\x1bp..."           # drawer pulse: m t1 t2
+    rb"|\x1d[VhwfHBLW]\x41?.?"  # GS V / h / w / f / H / B: one or two argument bytes
+    rb"|\x1d\(k.{3}[\x00-\xff]*?(?=\x1d\(k|\Z)",  # native QR blocks
+    re.DOTALL,
+)
+
+
+def _strip_escpos_barcode(data: bytes) -> bytes:
+    """Remove `GS k m n d1..dn` barcode blocks (variable length, so not a fixed regex)."""
+    out = bytearray()
+    i = 0
+    while i < len(data):
+        if data[i:i + 2] == b"\x1dk" and i + 3 < len(data):
+            n = data[i + 3]
+            i += 4 + n
+            continue
+        out.append(data[i])
+        i += 1
+    return bytes(out)
+
+
+def decode_escpos_preview(data: bytes, encoding: str = "cp852") -> list:
+    """Decode raw ESC/POS bytes to text lines with control sequences removed (debug preview)."""
+    raw = _ESCPOS_CONTROL.sub(b"", _strip_escpos_barcode(data))
+    return raw.decode(encoding, errors="replace").split("\n")
+
+
+def begin_job(printer, encoding: str = "CP852", font: str = "a"):
+    """Reset the printer (ESC @), select the codepage, then set the line pitch for the font (D11)."""
+    if hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1b@')
+        except Exception:
+            pass
+    try:
+        if hasattr(printer, 'charcode'):
+            printer.charcode(encoding if encoding in ['CP852', 'CP1250'] else 'CP852')
+    except Exception:
+        pass
+    set_line_spacing(printer, font)
+
+
+def end_job(printer):
+    """Restore the standard line pitch, then reset the printer (ESC @), after the cut."""
+    if hasattr(printer, '_raw'):
+        try:
+            printer._raw(b'\x1b2')  # restore standard 1/6-inch line pitch
+        except Exception:
+            pass
+        try:
+            printer._raw(b'\x1b@')
+        except Exception:
+            pass
+
+
+def kick_drawer(printer, pin: int = 2):
+    """Kick the cash drawer on the configured pin (2 or 5)."""
+    try:
+        printer.cashdraw(5 if pin == 5 else 2)
+    except Exception:
+        pass
+
+
+def drawer_pin_from(store_config: dict) -> int:
+    """Read the configured drawer pin (2 or 5, default 2); coerces so '5' from config matches too."""
+    try:
+        return 5 if int(store_config.get("drawerPin", 2)) == 5 else 2
+    except (ValueError, TypeError):
+        return 2
+
+
+def build_spayd_payload(iban: str, amount: float, receipt_num: str, store_name: str) -> str:
+    """Build a Czech SPAYD QR payload. AM is the absolute amount; MSG is ASCII upper case without '*'."""
+    msg = _to_ascii(store_name).upper().replace('*', '').strip()[:30]
+    return f"SPD*1.0*ACC:{iban}*AM:{abs(amount):.2f}*CC:CZK*X-VS:{receipt_num}*MSG:{msg}"
+
+
 class Win32SpoolerRawFallback:
     """
     Direct win32print spooler driver fallback when python-escpos profile/capabilities fail.
@@ -190,6 +483,7 @@ class Win32SpoolerRawFallback:
     def __init__(self, printer_name: str):
         self.printer_name = printer_name
         self.handle = None
+        self._encoding = 'cp852'
 
     def open(self, job_name: str = "VoltFlow_POS_Job"):
         import win32print
@@ -216,13 +510,16 @@ class Win32SpoolerRawFallback:
         if not txt:
             return
         try:
-            raw = txt.encode('cp852', errors='replace')
+            raw = txt.encode(self._encoding, errors='replace')
         except Exception:
             raw = txt.encode('ascii', errors='replace')
         self._raw(raw)
 
     def charcode(self, code: str = 'CP852'):
-        pass
+        # ESC t n: slot 18 = CP852, slot 45 = CP1250 (same slots python-escpos uses on the normal path)
+        n = 45 if code == 'CP1250' else 18
+        self._raw(b'\x1bt' + bytes([n]))
+        self._encoding = 'cp1250' if code == 'CP1250' else 'cp852'
 
     def cut(self, mode: str = 'PART', **kwargs):
         # GS V 66 0 (Feed and partial cut)
@@ -372,16 +669,40 @@ class ESCPOSPrinterService:
 
         return printer
 
-    def print_receipt(self, sale_data: dict, store_config: dict) -> dict:
+    def print_receipt(self, sale_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
         """
         Prints a formatted 58mm or 80mm thermal receipt using python-escpos.
         If physical printer is not connected, logs receipt output cleanly to console.
         Returns a dict: {"success": True, "physical": True/False, "status": "PRINTED"/"SIMULATED"}
         """
         with _hardware_printer_lock:
-            return self._do_print_receipt(sale_data, store_config)
+            return self._do_print_receipt(sale_data, store_config, open_drawer)
 
-    def _do_print_receipt(self, sale_data: dict, store_config: dict) -> dict:
+    def preview_receipt(self, sale_data: dict, store_config: dict) -> dict:
+        """
+        Debug tool: render the exact ESC/POS output for the given sale/settings against a
+        Dummy printer, with no hardware touched, and return it as decoded text lines.
+        """
+        from escpos.printer import Dummy
+
+        dummy = Dummy()
+        original_get_device = self._get_printer_device
+        self._get_printer_device = lambda *args, **kwargs: dummy
+        try:
+            # A Dummy device never touches hardware, so this never needs the
+            # lock that serializes real print/drawer/ruler/summary jobs.
+            result = self._do_print_receipt(sale_data, store_config, open_drawer=False)
+        finally:
+            self._get_printer_device = original_get_device
+
+        if not result.get("success", True):
+            return {"success": False, "error": result.get("error", "Preview failed"), "lines": []}
+
+        encoding = str(store_config.get("receiptEncoding", "CP852")).lower()
+        lines = decode_escpos_preview(dummy.output, encoding)
+        return {"success": True, "lines": lines}
+
+    def _do_print_receipt(self, sale_data: dict, store_config: dict, open_drawer: bool = True) -> dict:
         paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
         is_a4 = paper_width == "A4"
         is_58mm = not is_a4 and paper_width in ["58", "48"]
@@ -422,16 +743,18 @@ class ESCPOSPrinterService:
         try:
             # Customization Settings
             sep_style = store_config.get("receiptSeparatorStyle", "dashed")
+            sep_spacing = store_config.get("receiptSeparatorSpacing", "standard")
             separator = get_receipt_separator(sep_style, sec_line_width)
             dash_line = get_receipt_separator("dashed", sec_line_width)
             double_line = get_receipt_separator("double", sec_line_width)
             item_dash_line = get_receipt_separator("dashed", line_width)
 
-            top_margin = int(store_config.get("receiptTopMargin", 0))
-            bottom_margin = int(store_config.get("receiptBottomMargin", 1))
+            top_margin = max(0, min(5, int(store_config.get("receiptTopMargin", 0))))
+            bottom_margin = max(0, min(5, int(store_config.get("receiptBottomMargin", 1))))
             copies = max(1, min(2, int(store_config.get("receiptCopies", 1))))
             encoding = store_config.get("receiptEncoding", "CP852")
             strip_diacritics = bool(store_config.get("stripDiacritics", False))
+            drawer_pin = drawer_pin_from(store_config)
 
             bold_store = bool(store_config.get("receiptBoldStoreName", True))
             bold_items = bool(store_config.get("receiptBoldItemNames", True))
@@ -459,25 +782,16 @@ class ESCPOSPrinterService:
 
             if printer:
                 try:
-                    # Set ESC/POS codepage to CP852 / CP1250 if supported
-                    try:
-                        if hasattr(printer, 'charcode'):
-                            printer.charcode(encoding if encoding in ['CP852', 'CP1250'] else 'CP852')
-                    except Exception:
-                        pass
-
-                    # Restore standard 1/6-inch line pitch (prevents line collision / text overlapping)
-                    if hasattr(printer, '_raw'):
-                        try:
-                            printer._raw(b'\x1b2')
-                        except Exception:
-                            pass
+                    # Job start: ESC @ reset, then codepage and line pitch
+                    begin_job(printer, encoding, base_font)
 
                     is_refund = bool(sale_data.get("isRefund") or sale_data.get("is_refund") or (sale_data.get("totalAmount") is not None and sale_data.get("totalAmount") < 0))
                     receipt_num = str(sale_data.get("receiptNumber", ""))
                     orig_num = str(sale_data.get("originalReceiptNumber") or sale_data.get("original_receipt_number") or "")
                     refund_reason = str(sale_data.get("refundReason") or sale_data.get("refund_reason") or "")
                     pm = str(sale_data.get('paymentMethod', '')).upper()
+                    cart_discount_pct = float(sale_data.get("cartDiscountPercent", sale_data.get("cart_discount_percent", 0)) or 0)
+                    line_totals = compute_item_line_totals(sale_data.get('items', []), cart_discount_pct)
 
                     for copy_idx in range(copies):
                         # Top Margin Feed
@@ -488,31 +802,40 @@ class ESCPOSPrinterService:
                         if copies == 2:
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
                             if copy_idx == 0:
-                                write_receipt_text(printer, "*** ÚČTENKA PRO ZÁKAZNÍKA (Kopie 1/2) ***\n", strip_diacritics, encoding)
+                                write_wrapped(printer, "*** ÚČTENKA PRO ZÁKAZNÍKA (Kopie 1/2) ***", line_width, strip_diacritics, encoding)
                             else:
-                                write_receipt_text(printer, "*** KOPIE PRO OBCHODNÍKA (Kopie 2/2) ***\n", strip_diacritics, encoding)
-                            printer.text(dash_line + "\n")
+                                write_wrapped(printer, "*** KOPIE PRO OBCHODNÍKA (Kopie 2/2) ***", line_width, strip_diacritics, encoding)
+                            print_separator(printer, dash_line, sep_spacing)
 
                         # Store Logo (if enabled)
                         if show_logo and logo_base64:
                             print_receipt_logo(printer, logo_base64, is_58mm)
 
-                        # Store Header: Unified base_font throughout
-                        set_escpos_font(printer, font=base_font, bold=bold_store, align='center')
-                        write_receipt_text(printer, f"{store_config.get('storeName', 'VoltFlow POS')}\n", strip_diacritics, encoding)
+                        # Store Header: double height, and double width too when it fits half the line (D1, D14)
+                        store_name_val = str(store_config.get('storeName', 'VoltFlow POS'))
+                        name_half_fits = len(store_name_val) <= line_width // 2
+                        set_escpos_font(printer, font=base_font, bold=bold_store, align='center',
+                                        double_height=True, double_width=name_half_fits)
+                        write_wrapped(printer, store_name_val, (line_width // 2) if name_half_fits else line_width,
+                                      strip_diacritics, encoding)
+
+                        # Short centered mark under the store name, distinct from the full-width separators.
+                        set_escpos_font(printer, font=base_font, bold=False, align='center')
+                        write_receipt_text(printer, "---\n", strip_diacritics, encoding)
 
                         set_escpos_font(printer, font=base_font, bold=False, align='center')
                         if store_config.get('street'):
-                            write_receipt_text(printer, f"{store_config.get('street')}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, str(store_config.get('street')), line_width, strip_diacritics, encoding)
                         if store_config.get('city'):
-                            write_receipt_text(printer, f"{store_config.get('city')}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, str(store_config.get('city')), line_width, strip_diacritics, encoding)
 
                         vat_status = store_config.get("receiptVatPayerStatus", "payer")
-                        vat_badge = "Plátce DPH" if vat_status == "payer" else "Neplátce DPH"
+                        is_payer = vat_status == "payer"
+                        vat_badge = "Plátce DPH" if is_payer else "Neplátce DPH"
                         ico_str = store_config.get('ico', '')
                         dic_str = store_config.get('dic', '')
                         if ico_str or dic_str:
-                            write_receipt_text(printer, f"IČO: {ico_str} | DIČ: {dic_str} ({vat_badge})\n", strip_diacritics, encoding)
+                            write_wrapped(printer, f"IČO: {ico_str} | DIČ: {dic_str} ({vat_badge})", line_width, strip_diacritics, encoding)
 
                         # Optional Store Contacts
                         if show_contacts:
@@ -522,49 +845,55 @@ class ESCPOSPrinterService:
                             if store_config.get("receiptStoreEmail"):
                                 contacts.append(f"Email: {store_config.get('receiptStoreEmail')}")
                             if contacts:
-                                write_receipt_text(printer, " • ".join(contacts) + "\n", strip_diacritics, encoding)
+                                write_wrapped(printer, " | ".join(contacts), line_width, strip_diacritics, encoding)
 
                         reg_no = store_config.get('registerNo') or 'Pokladna #01'
                         prov_no = store_config.get('idProvozovny') or '11'
-                        write_receipt_text(printer, f"Provozovna: {prov_no} | {reg_no}\n", strip_diacritics, encoding)
+                        write_wrapped(printer, f"Provozovna: {prov_no} | {reg_no}", line_width, strip_diacritics, encoding)
 
                         if custom_header:
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
-                            write_receipt_text(printer, f"{custom_header}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, custom_header, line_width, strip_diacritics, encoding)
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
 
                         set_escpos_font(printer, font=base_font, bold=False, align='center')
-                        printer.text(separator + "\n")
 
                         # Document Title & Timestamp
                         is_inv = bool(sale_data.get("isInvoice") or sale_data.get("is_invoice") or sale_data.get("invoice_number"))
                         inv_num_val = sale_data.get("invoiceNumber") or sale_data.get("invoice_number") or ""
 
+                        # D2: the title block below always draws its own rule, except "minimal" (no rule at all).
+                        if not is_inv and title_style == "minimal":
+                            print_separator(printer, separator, sep_spacing)
+
                         if is_inv:
                             # ==================== FORMAL B2B INVOICE THERMAL LAYOUT ====================
-                            inv_title = f"OPRAVNÝ DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}" if is_refund else f"FAKTURA - DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}"
+                            if is_refund:
+                                inv_title = f"OPRAVNÝ DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}" if is_payer else f"OPRAVNÁ FAKTURA č. {inv_num_val or receipt_num}"
+                            else:
+                                inv_title = f"FAKTURA - DAŇOVÝ DOKLAD č. {inv_num_val or receipt_num}" if is_payer else f"FAKTURA č. {inv_num_val or receipt_num}"
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
-                            printer.text(separator + "\n")
-                            write_receipt_text(printer, f"{inv_title}\n", strip_diacritics, encoding)
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
+                            write_wrapped(printer, inv_title, line_width, strip_diacritics, encoding)
+                            print_separator(printer, separator, sep_spacing)
 
                             # DODAVATEL Box
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
                             write_receipt_text(printer, "DODAVATEL:\n", strip_diacritics, encoding)
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
                             s_name = store_config.get('storeName', 'VoltFlow POS')
-                            write_receipt_text(printer, f" {s_name}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, f" {s_name}", line_width, strip_diacritics, encoding)
                             s_street = store_config.get('street', '')
                             s_city = store_config.get('city', '')
                             if s_street or s_city:
-                                write_receipt_text(printer, f" {s_street}, {s_city}\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, f" IČO: {ico_str} | DIČ: {dic_str} ({vat_badge})\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, " Zapsán v živnostenském rejstříku\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f" {s_street}, {s_city}", line_width, strip_diacritics, encoding)
+                            write_wrapped(printer, f" IČO: {ico_str} | DIČ: {dic_str} ({vat_badge})", line_width, strip_diacritics, encoding)
+                            write_wrapped(printer, " Zapsán v živnostenském rejstříku", line_width, strip_diacritics, encoding)
                             raw_iban = (store_config.get('bankAccountIban') or store_config.get('bank_account_iban') or '').strip()
                             if raw_iban:
-                                write_receipt_text(printer, f" Účet/IBAN: {raw_iban}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f" Účet/IBAN: {raw_iban}", line_width, strip_diacritics, encoding)
 
-                            printer.text(dash_line + "\n")
+                            print_separator(printer, dash_line, sep_spacing)
 
                             # ODBĚRATEL Box
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
@@ -574,28 +903,26 @@ class ESCPOSPrinterService:
                             c_addr = sale_data.get("customerAddress") or sale_data.get("customer_address") or ""
                             c_ico = sale_data.get("customerIco") or sale_data.get("customer_ico") or ""
                             c_dic = sale_data.get("customerDic") or sale_data.get("customer_dic") or ""
-                            write_receipt_text(printer, f" {c_name}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, f" {c_name}", line_width, strip_diacritics, encoding)
                             if c_addr:
-                                write_receipt_text(printer, f" {c_addr}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f" {c_addr}", line_width, strip_diacritics, encoding)
                             id_line = f" IČO: {c_ico}"
                             if c_dic:
                                 id_line += f" | DIČ: {c_dic}"
-                            write_receipt_text(printer, f"{id_line}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, f"{id_line}", line_width, strip_diacritics, encoding)
 
-                            printer.text(dash_line + "\n")
+                            print_separator(printer, dash_line, sep_spacing)
 
                             # Invoice Dates & Metadata
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
                             vs_num = "".join(filter(str.isdigit, str(inv_num_val or receipt_num))) or receipt_num
-                            b2b_lbl_w = 18 if is_58mm else (28 if line_width >= 64 else 22)
-                            b2b_val_w = max(10, line_width - b2b_lbl_w)
-                            write_receipt_text(printer, f"{'Evidenční číslo:':<{b2b_lbl_w}}{receipt_num:>{b2b_val_w}}\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, f"{'Variabilní symbol:':<{b2b_lbl_w}}{vs_num:>{b2b_val_w}}\n", strip_diacritics, encoding)
+                            write_label_value(printer, "Evidenční číslo:", receipt_num, line_width, strip_diacritics, encoding)
+                            write_label_value(printer, "Variabilní symbol:", vs_num, line_width, strip_diacritics, encoding)
 
                             ts_val = str(sale_data.get("timestamp", ""))
                             if ts_val:
                                 try:
-                                    dt = datetime.fromisoformat(ts_val.replace("Z", "+00:00"))
+                                    dt = _local_dt(ts_val)
                                     formatted_ts = dt.strftime("%d.%m.%Y %H:%M:%S")
                                     duzp_str = dt.strftime("%d.%m.%Y")
                                 except Exception:
@@ -605,268 +932,231 @@ class ESCPOSPrinterService:
                                 formatted_ts = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
                                 duzp_str = datetime.now().strftime("%d.%m.%Y")
 
-                            write_receipt_text(printer, f"{'Datum vystavení:':<{b2b_lbl_w}}{formatted_ts:>{b2b_val_w}}\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, f"{'DUZP:':<{b2b_lbl_w}}{duzp_str:>{b2b_val_w}}\n", strip_diacritics, encoding)
+                            write_label_value(printer, "Datum vystavení:", formatted_ts, line_width, strip_diacritics, encoding)
+                            write_label_value(printer, "DUZP:", duzp_str, line_width, strip_diacritics, encoding)
 
                             pm_label = "HOTOVOST" if pm in ["CASH", "HOTOVOST"] else ("KARTA" if pm in ["CARD", "KARTA"] else ("KOMBINOVANÁ" if pm in ["SPLIT"] else "PŘEVOD"))
-                            write_receipt_text(printer, f"{'Forma úhrady:':<{b2b_lbl_w}}{f'{pm_label} (Uhrazeno)':>{b2b_val_w}}\n", strip_diacritics, encoding)
+                            write_label_value(printer, "Forma úhrady:", f'{pm_label} (Uhrazeno)', line_width, strip_diacritics, encoding)
 
                             if is_refund and orig_num:
-                                write_receipt_text(printer, f"{'Původní faktura:':<{b2b_lbl_w}}{f'#{orig_num}':>{b2b_val_w}}\n", strip_diacritics, encoding)
+                                write_label_value(printer, "Původní faktura:", f'#{orig_num}', line_width, strip_diacritics, encoding)
                             if is_refund and refund_reason:
-                                write_receipt_text(printer, f"Důvod opravy: {refund_reason}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f"Důvod opravy: {refund_reason}", line_width, strip_diacritics, encoding)
 
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
 
                             # Itemized Line Items for Invoice
+                            inv_name_w, inv_qty_w, inv_vat_w, inv_price_w = receipt_columns(line_width, "invoice")
+                            inv_vat_w = inv_vat_w if is_payer else 0
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
-                            if is_58mm:
-                                inv_name_w, inv_qty_w, inv_price_w = (14, 5, 11)
-                                printer.text(f"{'Položka':<{inv_name_w}} {'Ks':^{inv_qty_w}} {'Celk.':>{inv_price_w}}\n")
-                            elif line_width >= 64:
-                                inv_name_w, inv_qty_w, inv_vat_w, inv_price_w = (34, 6, 6, 15)
-                                printer.text(f"{'Položka':<{inv_name_w}} {'Ks':^{inv_qty_w}} {'DPH':^{inv_vat_w}} {'Celk.':>{inv_price_w}}\n")
-                            else:  # 48 cols
-                                inv_name_w, inv_qty_w, inv_vat_w, inv_price_w = (20, 5, 5, 15)
-                                printer.text(f"{'Položka':<{inv_name_w}} {'Ks':^{inv_qty_w}} {'DPH':^{inv_vat_w}} {'Celk.':>{inv_price_w}}\n")
-                            printer.text(dash_line + "\n")
+                            inv_head = f"{'Položka':<{inv_name_w}} {'Ks':^{inv_qty_w}} "
+                            if inv_vat_w:
+                                inv_head += f"{'DPH':^{inv_vat_w}} "
+                            write_receipt_text(printer, inv_head + f"{'Celk.':>{inv_price_w}}\n", strip_diacritics, encoding)
+                            print_separator(printer, dash_line, sep_spacing)
 
-                            for item in sale_data.get('items', []):
+                            for idx, item in enumerate(sale_data.get('items', [])):
                                 qty = float(item.get('quantity', 1))
-                                disc = float(item.get('discountPercent') or item.get('discount_percent') or 0)
-                                price_inc = float(item.get('price', 0)) * (1.0 - disc / 100.0)
                                 vat_rate = float(item.get('vat', 21))
-                                tot_inc = price_inc * qty
+                                tot_inc = line_totals[idx]
                                 name_raw = str(item.get('name', 'Položka'))
                                 unit_val = item.get('unit') or ('kg' if (item.get('is_weighted') or item.get('isWeighted')) else 'ks')
                                 is_weighted = bool(item.get('is_weighted') or item.get('isWeighted') or (qty % 1 != 0) or (unit_val in ['kg', 'g']))
                                 qty_str = f"{qty:.3f}{unit_val}" if is_weighted else (f"{int(qty)}" if qty % 1 == 0 else f"{qty:.2f}")
-
-                                set_escpos_font(printer, font=base_font, bold=bold_items, align='left')
-                                if is_58mm:
-                                    if len(name_raw) <= inv_name_w:
-                                        write_receipt_text(printer, f"{name_raw:<{inv_name_w}}", strip_diacritics, encoding)
-                                        set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                        printer.text(f" {qty_str:^{inv_qty_w}} {tot_inc:>{inv_price_w}.2f}\n")
-                                    else:
-                                        write_receipt_text(printer, f"{name_raw[:line_width]}\n", strip_diacritics, encoding)
-                                        set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                        printer.text(f"{'':<{inv_name_w}} {qty_str:^{inv_qty_w}} {tot_inc:>{inv_price_w}.2f}\n")
-                                else:
-                                    tot_str = f"{tot_inc:.2f}"
-                                    vat_str = f"{vat_rate:.0f}%"
-                                    if len(name_raw) <= inv_name_w:
-                                        write_receipt_text(printer, f"{name_raw:<{inv_name_w}}", strip_diacritics, encoding)
-                                        set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                        printer.text(f" {qty_str:^{inv_qty_w}} {vat_str:^{inv_vat_w}} {tot_str:>{inv_price_w}}\n")
-                                    else:
-                                        write_receipt_text(printer, f"{name_raw[:line_width]}\n", strip_diacritics, encoding)
-                                        set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                        printer.text(f"{'':<{inv_name_w}} {qty_str:^{inv_qty_w}} {vat_str:^{inv_vat_w}} {tot_str:>{inv_price_w}}\n")
+                                rows = format_item_row(name_raw, qty_str, f"{tot_inc:.2f}", (inv_name_w, inv_qty_w, inv_price_w),
+                                                       line_width, f"{vat_rate:.0f}%", inv_vat_w)
+                                for left, right in rows:
+                                    set_escpos_font(printer, font=base_font, bold=bold_items, align='left')
+                                    write_receipt_text(printer, left, strip_diacritics, encoding)
+                                    set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
+                                    write_receipt_text(printer, right + "\n", strip_diacritics, encoding)
 
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
 
                         else:
                             # ==================== RETAIL RECEIPT LAYOUT ====================
-                            raw_title = f"STORNO DOKLAD č. {receipt_num}" if is_refund else f"DAŇOVÝ DOKLAD č. {receipt_num}"
+                            if is_refund:
+                                raw_title = f"STORNO DOKLAD č. {receipt_num}"
+                            else:
+                                raw_title = f"DAŇOVÝ DOKLAD č. {receipt_num}" if is_payer else f"ÚČTENKA č. {receipt_num}"
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
+                            if is_refund:  # D8: print the refund title in reverse (white on black)
+                                reverse_print(printer, True)
 
                             if title_style == "framed":
                                 box_line = "+" + "-" * (line_width - 2) + "+"
-                                printer.text(box_line + "\n")
-                                write_receipt_text(printer, f"|{raw_title.center(line_width - 2)}|\n", strip_diacritics, encoding)
-                                printer.text(box_line + "\n")
+                                print_separator(printer, box_line, sep_spacing)
+                                for title_line in wrap_text(raw_title, line_width - 2):
+                                    write_receipt_text(printer, f"|{title_line.center(line_width - 2)}|\n", strip_diacritics, encoding)
+                                print_separator(printer, box_line, sep_spacing)
                             elif title_style == "banner":
-                                printer.text(dash_line + "\n")
-                                write_receipt_text(printer, f"══ {raw_title} ══\n", strip_diacritics, encoding)
-                                printer.text(dash_line + "\n")
+                                print_separator(printer, dash_line, sep_spacing)
+                                if len(raw_title) + 6 <= line_width:
+                                    write_receipt_text(printer, f"══ {raw_title} ══\n", strip_diacritics, encoding)
+                                else:  # no room for the decoration
+                                    write_wrapped(printer, raw_title, line_width, strip_diacritics, encoding)
+                                print_separator(printer, dash_line, sep_spacing)
                             elif title_style == "classic":
-                                printer.text(dash_line + "\n")
-                                write_receipt_text(printer, f"{raw_title}\n", strip_diacritics, encoding)
-                                printer.text(dash_line + "\n")
+                                print_separator(printer, dash_line, sep_spacing)
+                                write_wrapped(printer, raw_title, line_width, strip_diacritics, encoding)
+                                print_separator(printer, dash_line, sep_spacing)
                             else:  # minimal
-                                write_receipt_text(printer, f"{raw_title}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, raw_title, line_width, strip_diacritics, encoding)
 
+                            if is_refund:
+                                reverse_print(printer, False)
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
                             if is_refund and orig_num:
                                 set_escpos_font(printer, font=base_font, bold=True, align='center')
-                                write_receipt_text(printer, f"Původní doklad: #{orig_num}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f"Původní doklad: #{orig_num}", line_width, strip_diacritics, encoding)
                                 set_escpos_font(printer, font=base_font, bold=False, align='center')
                             if is_refund and refund_reason:
-                                write_receipt_text(printer, f"Důvod: {refund_reason}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f"Důvod: {refund_reason}", line_width, strip_diacritics, encoding)
 
                             ts_val = str(sale_data.get("timestamp", ""))
                             if ts_val:
                                 try:
-                                    dt = datetime.fromisoformat(ts_val.replace("Z", "+00:00"))
-                                    formatted_ts = dt.strftime("%d.%m.%Y %H:%M:%S")
+                                    formatted_ts = _local_dt(ts_val).strftime("%d.%m.%Y %H:%M:%S")
                                 except Exception:
                                     formatted_ts = ts_val[:19].replace('T', ' ')
                             else:
                                 formatted_ts = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
-                            write_receipt_text(printer, f"Datum a čas: {formatted_ts}\n", strip_diacritics, encoding)
+                            set_escpos_font(printer, font=base_font, bold=False, align='left')
+                            write_label_value(printer, "Datum a čas:", formatted_ts, line_width, strip_diacritics, encoding)
 
                             if show_cashier:
                                 cashier_name = sale_data.get("cashier") or sale_data.get("cashierName") or "Pokladní"
-                                write_receipt_text(printer, f"Obsluha: {cashier_name}\n", strip_diacritics, encoding)
+                                write_label_value(printer, "Obsluha:", cashier_name, line_width, strip_diacritics, encoding)
 
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
 
                             # Items Table Header
-                            if is_58mm:
-                                if line_width <= 32:
-                                    name_w = 15
-                                    qty_w = 5
-                                    price_w = 10
-                                else:  # 42 cols
-                                    name_w = 23
-                                    qty_w = 6
-                                    price_w = 11
-                            elif line_width >= 64:
-                                name_w = 42
-                                qty_w = 7
-                                price_w = 13
-                            else:  # 48 cols
-                                name_w = 26
-                                qty_w = 7
-                                price_w = 13
+                            name_w, qty_w, price_w = receipt_columns(line_width, "retail")
 
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
-                            printer.text(f"{'Položka':<{name_w}} {'Ks':^{qty_w}} {'Cena':>{price_w}}\n")
-                            printer.text(dash_line + "\n")
+                            write_receipt_text(printer, f"{'Položka':<{name_w}} {'Ks':^{qty_w}} {'Cena':>{price_w}}\n", strip_diacritics, encoding)
+                            print_separator(printer, dash_line, sep_spacing)
 
                             # Line Items
-                            for item in sale_data.get('items', []):
+                            for idx, item in enumerate(sale_data.get('items', [])):
                                 qty = float(item.get('quantity', 1))
                                 disc = float(item.get('discountPercent') or item.get('discount_percent') or 0)
-                                unit_price = float(item.get('price', 0)) * (1.0 - disc / 100.0)
-                                tot = unit_price * qty
-                                tot_str = f"{tot:.2f} Kč" if tot % 1 != 0 else f"{tot:.0f} Kč"
+                                tot = line_totals[idx]
+                                tot_str = f"{tot:.2f} Kč"  # D5: always two decimals in the item table
                                 name_raw = str(item.get('name', 'Položka'))
                                 unit_val = item.get('unit') or ('kg' if (item.get('is_weighted') or item.get('isWeighted')) else 'ks')
                                 is_weighted = bool(item.get('is_weighted') or item.get('isWeighted') or (qty % 1 != 0) or (unit_val in ['kg', 'g']))
-                                qty_formatted = f"{qty:.3f} {unit_val}" if is_weighted else (f"{int(qty)}" if qty % 1 == 0 else f"{qty:.2f}")
+                                qty_formatted = f"{qty:.3f}{unit_val}" if is_weighted else (f"{int(qty)}" if qty % 1 == 0 else f"{qty:.2f}")
 
-                                set_escpos_font(printer, font=base_font, bold=bold_items, align='left')
-                                if len(name_raw) <= name_w:
-                                    write_receipt_text(printer, f"{name_raw:<{name_w}}", strip_diacritics, encoding)
+                                for left, right in format_item_row(name_raw, qty_formatted, tot_str, (name_w, qty_w, price_w), line_width):
+                                    set_escpos_font(printer, font=base_font, bold=bold_items, align='left')
+                                    write_receipt_text(printer, left, strip_diacritics, encoding)
                                     set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                    printer.text(f" {qty_formatted:^{qty_w}} {tot_str:>{price_w}}\n")
-                                else:
-                                    write_receipt_text(printer, f"{name_raw[:line_width]}\n", strip_diacritics, encoding)
-                                    set_escpos_font(printer, font=base_font, bold=bold_prices, align='left')
-                                    printer.text(f"{'':<{name_w}} {qty_formatted:^{qty_w}} {tot_str:>{price_w}}\n")
+                                    write_receipt_text(printer, right + "\n", strip_diacritics, encoding)
 
                                 # Sub-details in base_font (normal, indented)
                                 set_escpos_font(printer, font=base_font, bold=False, align='left')
-                                if is_weighted:
-                                    write_receipt_text(printer, f"  {qty:.3f} {unit_val} × {float(item.get('price', 0)):.2f} Kč\n", strip_diacritics, encoding)
                                 if show_sku and (item.get('barcode') or item.get('sku')):
-                                    write_receipt_text(printer, f"  Kód: {item.get('barcode') or item.get('sku')}\n", strip_diacritics, encoding)
+                                    write_wrapped(printer, f"  Kód: {item.get('barcode') or item.get('sku')}", line_width, strip_diacritics, encoding)
+                                # D3: qty × unit price whenever qty is not 1 (unconditional, as the old
+                                # weighted-only line was); discount and DPH fold onto the same line,
+                                # right-aligned, only in standard density.
+                                detail_left = ""
+                                if is_weighted or qty != 1:
+                                    qty_disp = f"{qty:.3f} {unit_val}" if is_weighted else (f"{int(qty)}" if qty % 1 == 0 else f"{qty:.2f}")
+                                    detail_left = f"  {qty_disp} × {float(item.get('price', 0)):.2f} Kč"
+                                detail_right = ""
                                 if item_density == "standard":
                                     if show_disc and disc > 0:
-                                        write_receipt_text(printer, f"  (-{disc:.0f}% sleva)\n", strip_diacritics, encoding)
-                                    if show_vat:
-                                        vat_rate = item.get('vat', 21)
-                                        write_receipt_text(printer, f"  DPH {vat_rate}%\n", strip_diacritics, encoding)
+                                        detail_left += f" (-{disc:.0f}%)"
+                                    if show_vat and is_payer:
+                                        detail_right = f"DPH {item.get('vat', 21)}%"
+                                if detail_left or detail_right:
+                                    if detail_right and len(detail_left) + 1 + len(detail_right) < line_width:
+                                        pad = line_width - len(detail_right)
+                                        write_receipt_text(printer, f"{detail_left:<{pad}}{detail_right}\n", strip_diacritics, encoding)
+                                    else:
+                                        # no room to share the line: each part gets its own, never exceeding line_width
+                                        if detail_left:
+                                            write_receipt_text(printer, f"{detail_left}\n", strip_diacritics, encoding)
+                                        if detail_right:
+                                            write_receipt_text(printer, f"{detail_right:>{line_width}}\n", strip_diacritics, encoding)
 
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
 
                         # ==================== HIGH-CONTRAST TOTAL BANNER ====================
                         set_escpos_font(printer, font=base_font, bold=False, align='left')
-                        printer.text(double_line + "\n")
+                        print_separator(printer, double_line, sep_spacing)
 
                         exact_total, cash_rounding, tot_val_num = receipt_totals(sale_data)
                         if cash_rounding != 0:
-                            fmt_money = lambda v: f"{v:.0f} Kč" if v % 1 == 0 else f"{v:.2f} Kč"
-                            sub_lbl_w = 18 if is_58mm else (28 if line_width >= 64 else 22)
-                            sub_val_w = max(10, line_width - sub_lbl_w)
-                            write_receipt_text(printer, f"{'Mezisoučet:':<{sub_lbl_w}}{fmt_money(exact_total):>{sub_val_w}}\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, f"{'Zaokrouhlení:':<{sub_lbl_w}}{('+' if cash_rounding > 0 else '') + fmt_money(cash_rounding):>{sub_val_w}}\n", strip_diacritics, encoding)
+                            # D5: two decimals in the subtotal/rounding lines; the total below keeps whole koruna.
+                            fmt_money = lambda v: f"{v:.2f} Kč"
+                            write_label_value(printer, "Mezisoučet:", fmt_money(exact_total), line_width, strip_diacritics, encoding)
+                            write_label_value(printer, "Zaokrouhlení:", ('+' if cash_rounding > 0 else '') + fmt_money(cash_rounding), line_width, strip_diacritics, encoding)
                         tot_val_str = f"{tot_val_num:.0f} Kč" if tot_val_num % 1 == 0 else f"{tot_val_num:.2f} Kč"
                         tot_label = "CELKEM K VRÁCENÍ:" if is_refund else "CELKEM K ÚHRADĚ:"
 
-                        # Unified crisp bold total that fits line width edge-to-edge
-                        set_escpos_font(printer, font=base_font, bold=bold_total, align='left')
-                        spacing_w = max(1, line_width - len(tot_label) - len(tot_val_str))
-                        write_receipt_text(printer, f"{tot_label}{' ' * spacing_w}{tot_val_str}\n", strip_diacritics, encoding)
+                        # Unified crisp bold total: double height, and double width when it still fits (D1, D14)
+                        total_half_fits = len(tot_label) + len(tot_val_str) + 1 <= line_width // 2
+                        total_width = (line_width // 2) if total_half_fits else line_width
+                        set_escpos_font(printer, font=base_font, bold=bold_total, align='left',
+                                        double_height=True, double_width=total_half_fits)
+                        write_label_value(printer, tot_label, tot_val_str, total_width, strip_diacritics, encoding)
 
                         set_escpos_font(printer, font=base_font, bold=False, align='left')
-                        printer.text(double_line + "\n")
+                        print_separator(printer, double_line, sep_spacing)
 
                         # ==================== PAYMENT & CASH DETAILS ====================
                         set_escpos_font(printer, font=base_font, bold=False, align='left')
-                        pm_lbl_w = 18 if is_58mm else (28 if line_width >= 64 else 22)
-                        pm_val_w = max(10, line_width - pm_lbl_w)
 
                         pm_label = "HOTOVOST" if pm in ["CASH", "HOTOVOST"] else ("KARTA" if pm in ["CARD", "KARTA"] else ("KOMBINOVANÁ" if pm in ["SPLIT"] else "QR PLATBA"))
-                        write_receipt_text(printer, f"{'Způsob úhrady:':<{pm_lbl_w}}{pm_label:>{pm_val_w}}\n", strip_diacritics, encoding)
+                        write_label_value(printer, "Způsob úhrady:", pm_label, line_width, strip_diacritics, encoding)
 
                         if pm in ["CASH", "HOTOVOST"]:
                             tend = float(sale_data.get("tenderedAmount") or sale_data.get("tendered_amount") or 0)
                             chg = float(sale_data.get("changeDue") or sale_data.get("change_due") or 0)
-                            tend_str = f"{tend:.0f} Kč" if tend % 1 == 0 else f"{tend:.2f} Kč"
-                            chg_str = f"{chg:.0f} Kč" if chg % 1 == 0 else f"{chg:.2f} Kč"
-                            write_receipt_text(printer, f"{'Přijatá hotovost:':<{pm_lbl_w}}{tend_str:>{pm_val_w}}\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, f"{'Vrácená hotovost:':<{pm_lbl_w}}{chg_str:>{pm_val_w}}\n", strip_diacritics, encoding)
+                            # A refund has no tendered cash; a reprint has no stored tendered amount.
+                            if not is_refund and tend > 0:
+                                tend_str = f"{tend:.0f} Kč" if tend % 1 == 0 else f"{tend:.2f} Kč"
+                                chg_str = f"{chg:.0f} Kč" if chg % 1 == 0 else f"{chg:.2f} Kč"
+                                write_label_value(printer, "Přijatá hotovost:", tend_str, line_width, strip_diacritics, encoding)
+                                write_label_value(printer, "Vrácená hotovost:", chg_str, line_width, strip_diacritics, encoding)
                         elif pm == "SPLIT" and sale_data.get("splitDetails"):
                             split = sale_data.get("splitDetails")
                             c_part = float(split.get('cash') or 0)
                             k_part = float(split.get('card') or 0)
                             cash_part = f"{c_part:.0f} Kč" if c_part % 1 == 0 else f"{c_part:.2f} Kč"
                             card_part = f"{k_part:.0f} Kč" if k_part % 1 == 0 else f"{k_part:.2f} Kč"
-                            write_receipt_text(printer, f"{'- Uhrazeno Hotově:':<{pm_lbl_w}}{cash_part:>{pm_val_w}}\n", strip_diacritics, encoding)
-                            write_receipt_text(printer, f"{'- Uhrazeno Kartou:':<{pm_lbl_w}}{card_part:>{pm_val_w}}\n", strip_diacritics, encoding)
+                            write_label_value(printer, "- Uhrazeno Hotově:", cash_part, line_width, strip_diacritics, encoding)
+                            write_label_value(printer, "- Uhrazeno Kartou:", card_part, line_width, strip_diacritics, encoding)
 
                         # ==================== REKAPITULACE DPH ====================
                         tax_summary = sale_data.get("taxSummary") or sale_data.get("tax_summary")
-                        if tax_matrix_style != "none" and tax_summary and isinstance(tax_summary, dict):
+                        if tax_matrix_style != "none" and tax_summary and isinstance(tax_summary, dict) and is_payer:
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
                             set_escpos_font(printer, font=base_font, bold=True, align='left')
                             write_receipt_text(printer, "REKAPITULACE DPH:\n", strip_diacritics, encoding)
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
 
-                            if is_58mm:
-                                if line_width <= 32:
-                                    printer.text(f"{'Sazba':<6} {'Základ':>12} {'Daň':>12}\n")
-                                    printer.text(dash_line + "\n")
-                                    for t in tax_summary.values():
-                                        r_str = f"{t.get('rate')}%"
-                                        net_str = f"{float(t.get('net', 0)):.2f} Kč"
-                                        tax_str = f"{float(t.get('tax', 0)):.2f} Kč"
-                                        printer.text(f"{r_str:<6} {net_str:>12} {tax_str:>12}\n")
-                                else:  # 42 cols
-                                    printer.text(f"{'Sazba':<6} {'Základ':>11} {'Daň':>11} {'Celkem':>11}\n")
-                                    printer.text(dash_line + "\n")
-                                    for t in tax_summary.values():
-                                        r_str = f"{t.get('rate')}%"
-                                        net_str = f"{float(t.get('net', 0)):.2f} Kč"
-                                        tax_str = f"{float(t.get('tax', 0)):.2f} Kč"
-                                        gross_str = f"{float(t.get('gross', 0)):.2f} Kč"
-                                        printer.text(f"{r_str:<6} {net_str:>11} {tax_str:>11} {gross_str:>11}\n")
-                            elif line_width >= 64:
-                                printer.text(f"{'Sazba':<10} {'Základ':>16} {'Daň':>16} {'Celkem':>19}\n")
-                                printer.text(dash_line + "\n")
-                                for t in tax_summary.values():
-                                    r_str = f"{t.get('rate')}%"
-                                    net_str = f"{float(t.get('net', 0)):.2f} Kč"
-                                    tax_str = f"{float(t.get('tax', 0)):.2f} Kč"
-                                    gross_str = f"{float(t.get('gross', 0)):.2f} Kč"
-                                    printer.text(f"{r_str:<10} {net_str:>16} {tax_str:>16} {gross_str:>19}\n")
-                            else:  # 48 cols
-                                printer.text(f"{'Sazba':<8} {'Základ':>12} {'Daň':>12} {'Celkem':>13}\n")
-                                printer.text(dash_line + "\n")
-                                for t in tax_summary.values():
-                                    r_str = f"{t.get('rate')}%"
-                                    net_str = f"{float(t.get('net', 0)):.2f} Kč"
-                                    tax_str = f"{float(t.get('tax', 0)):.2f} Kč"
-                                    gross_str = f"{float(t.get('gross', 0)):.2f} Kč"
-                                    printer.text(f"{r_str:<8} {net_str:>12} {tax_str:>12} {gross_str:>13}\n")
+                            rate_w, net_w, tax_w, gross_w = receipt_columns(line_width, "tax_recap")
+                            head = f"{'Sazba':<{rate_w}} {'Základ':>{net_w}} {'Daň':>{tax_w}}"
+                            if gross_w:
+                                head += f" {'Celkem':>{gross_w}}"
+                            write_receipt_text(printer, head + "\n", strip_diacritics, encoding)
+                            print_separator(printer, dash_line, sep_spacing)
+                            for t in tax_summary.values():
+                                cells = [f"{float(t.get(key, 0)):.2f}" for key in ("net", "tax", "gross")[:3 if gross_w else 2]]
+                                widths_ = (net_w, tax_w, gross_w)
+                                if all(len(c) + 4 <= w for c, w in zip(cells, widths_)):
+                                    cells = [f"{c} Kč" for c in cells]  # room for the currency, otherwise the bare number
+                                row = f"{str(t.get('rate')) + '%':<{rate_w}}" + "".join(f" {c:>{w}}" for c, w in zip(cells, widths_))
+                                write_receipt_text(printer, row + "\n", strip_diacritics, encoding)
 
                         # ==================== FISCAL EET BLOCK ====================
                         fik = sale_data.get("fik") or sale_data.get("fik_code")
@@ -874,79 +1164,81 @@ class ESCPOSPrinterService:
                         pkp = sale_data.get("pkp") or sale_data.get("pkp_code")
                         if store_config.get("eetEnabled") and (fik or bkp or pkp):
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
                             eet_title = "EET 2.0 (Běžný online režim)" if fik else "EET 2.0 (Zjednodušený neonline režim)"
-                            write_receipt_text(printer, f"{eet_title}\n", strip_diacritics, encoding)
+                            write_wrapped(printer, eet_title, line_width, strip_diacritics, encoding)
                             set_escpos_font(printer, font=base_font, bold=False, align='left')
                             if fik:
-                                write_receipt_text(printer, f"FIK: {fik}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f"FIK: {fik}", line_width, strip_diacritics, encoding)
                             if bkp:
-                                write_receipt_text(printer, f"BKP: {bkp}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f"BKP: {bkp}", line_width, strip_diacritics, encoding)
                             if pkp and not fik:
-                                write_receipt_text(printer, f"PKP: {pkp[:32]}...\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f"PKP: {pkp[:32]}...", line_width, strip_diacritics, encoding)
 
                         # ==================== QR CODE ====================
+                        # D6: module size 4 (58mm) / 5 (80mm), up from the previous fixed 3. Not yet
+                        # checked against a real printable-width budget; confirm it isn't clipped in Phase 6.
                         raw_iban = (store_config.get('bankAccountIban') or store_config.get('bank_account_iban') or '').replace(' ', '').upper()
                         store_name = store_config.get('storeName') or store_config.get('store_name') or 'VoltFlow POS'
-                        if qr_type == "spayd" and raw_iban and raw_iban != 'CZ6508000000001234567890':
+                        if qr_type == "spayd" and raw_iban and raw_iban != 'CZ6508000000001234567890' and not is_refund:
                             tot_czk = float(sale_data.get('totalAmount', 0))
-                            spayd_payload = f"SPD*1.0*ACC:{raw_iban}*AM:{tot_czk:.2f}*CC:CZK*X-VS:{receipt_num}*MSG:{store_name[:30]}"
+                            spayd_payload = build_spayd_payload(raw_iban, tot_czk, receipt_num, store_name)
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
                             set_escpos_font(printer, font=base_font, bold=True, align='center')
-                            write_receipt_text(printer, "QR PLATBA (PŘEVOD NA ÚČET)\n", strip_diacritics, encoding)
+                            write_wrapped(printer, "QR PLATBA (PŘEVOD NA ÚČET)", line_width, strip_diacritics, encoding)
                             try:
                                 if hasattr(printer, 'qr'):
-                                    printer.qr(spayd_payload, size=3)
+                                    printer.qr(spayd_payload, size=(4 if is_58mm else 5), native=True)
                             except Exception as qr_err:
-                                logger.debug(f"ESC/POS QR print note: {qr_err}")
+                                logger.warning(f"ESC/POS QR print note: {qr_err}")
                         elif qr_type == "url":
                             qr_url = store_config.get("receiptQrCodeUrl") or store_config.get("receipt_qr_code_url")
                             if qr_url:
                                 set_escpos_font(printer, font=base_font, bold=False, align='center')
-                                printer.text(separator + "\n")
+                                print_separator(printer, separator, sep_spacing)
                                 set_escpos_font(printer, font=base_font, bold=True, align='center')
-                                write_receipt_text(printer, "ELEKTRONICKÁ ÚČTENKA\n", strip_diacritics, encoding)
+                                write_wrapped(printer, "ELEKTRONICKÁ ÚČTENKA", line_width, strip_diacritics, encoding)
                                 try:
                                     if hasattr(printer, 'qr'):
-                                        printer.qr(qr_url, size=3)
+                                        printer.qr(qr_url, size=(4 if is_58mm else 5))
                                 except Exception as qr_err:
-                                    logger.debug(f"ESC/POS QR print note: {qr_err}")
+                                    logger.warning(f"ESC/POS QR print note: {qr_err}")
 
                         # ==================== BARCODE ====================
                         if show_barcode and receipt_num:
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
-                            printer.text(separator + "\n")
+                            print_separator(printer, separator, sep_spacing)
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
                             try:
                                 if hasattr(printer, 'barcode'):
-                                    printer.barcode(receipt_num, 'CODE128', height=46, width=2, pos='BELOW', align_ct=True)
+                                    bc_width = 1 if (is_58mm and len(receipt_num) > BARCODE_58MM_WIDTH2_CHAR_LIMIT) else 2
+                                    printer.barcode("{B" + receipt_num, 'CODE128', height=46, width=bc_width, pos='BELOW', align_ct=True)
                                 else:
-                                    write_receipt_text(printer, f"||| {receipt_num} |||\n", strip_diacritics, encoding)
+                                    write_wrapped(printer, f"||| {receipt_num} |||", line_width, strip_diacritics, encoding)
                             except Exception as bc_err:
-                                logger.debug(f"ESC/POS Barcode print note: {bc_err}")
+                                logger.warning(f"ESC/POS Barcode print note: {bc_err}")
                                 try:
-                                    write_receipt_text(printer, f"||| {receipt_num} |||\n", strip_diacritics, encoding)
+                                    write_wrapped(printer, f"||| {receipt_num} |||", line_width, strip_diacritics, encoding)
                                 except Exception:
                                     pass
 
                         # ==================== FOOTER & BRANDING ====================
                         set_escpos_font(printer, font=base_font, bold=False, align='center')
-                        printer.text(separator + "\n")
+                        print_separator(printer, separator, sep_spacing)
                         footer_raw = store_config.get('receiptFooterLines') or store_config.get('receiptFooter') or "Děkujeme za váš nákup!"
                         set_escpos_font(printer, font=base_font, bold=bold_footer, align='center')
                         for f_line in footer_raw.splitlines():
                             if f_line.strip():
-                                write_receipt_text(printer, f"{f_line.strip()}\n", strip_diacritics, encoding)
+                                write_wrapped(printer, f_line.strip(), line_width, strip_diacritics, encoding)
 
                         if show_branding:
                             set_escpos_font(printer, font=base_font, bold=False, align='center')
-                            write_receipt_text(printer, "Vystaveno v pokladním systému VoltFlow POS\n", strip_diacritics, encoding)
+                            write_wrapped(printer, "Vystaveno v pokladním systému VoltFlow POS", line_width, strip_diacritics, encoding)
 
-                        # Bottom feed: minimal 1-2 lines before cutter to prevent paper waste
-                        feed_lines = max(1, min(2, bottom_margin))
-                        for _ in range(feed_lines):
+                        # Bottom feed before the cutter
+                        for _ in range(bottom_margin):
                             printer.text("\n")
 
                         # Partial cut between copies or full cut at end
@@ -954,15 +1246,8 @@ class ESCPOSPrinterService:
                             if copy_idx < copies - 1:
                                 printer.cut(mode='PART')
                             else:
-                                if pm in ["CASH", "HOTOVOST", "SPLIT"]:
-                                    try:
-                                        printer.cashdraw(2)
-                                    except Exception:
-                                        pass
-                                    try:
-                                        printer.cashdraw(5)
-                                    except Exception:
-                                        pass
+                                if pm in ["CASH", "HOTOVOST", "SPLIT"] and open_drawer:
+                                    kick_drawer(printer, drawer_pin)
                                 # Use partial cut with minimal feed (GS V 65 2) or standard cut
                                 try:
                                     if hasattr(printer, '_raw'):
@@ -979,6 +1264,9 @@ class ESCPOSPrinterService:
                     logger.error(f"Error during ESC/POS print execution: {print_exec_err}")
                     return {"success": False, "physical": False, "status": "ERROR", "error": str(print_exec_err)}
                 finally:
+                    # Always reset (ESC @), even on error: an exception mid-job could otherwise leave the
+                    # printer stuck in reverse-print mode (GS B) or the tightened line pitch (D8, D11).
+                    end_job(printer)
                     try:
                         if hasattr(printer, 'close'):
                             printer.close()
@@ -1074,14 +1362,7 @@ class ESCPOSPrinterService:
 
                     printer.cut()
                     if open_drawer:
-                        try:
-                            printer.cashdraw(2)
-                        except Exception:
-                            pass
-                        try:
-                            printer.cashdraw(5)
-                        except Exception:
-                            pass
+                        kick_drawer(printer, drawer_pin_from(store_config))
 
                     return {"success": True, "physical": True, "status": "PRINTED"}
                 except Exception as print_err:
@@ -1308,14 +1589,7 @@ class ESCPOSPrinterService:
 
                     printer.cut()
                     if open_drawer:
-                        try:
-                            printer.cashdraw(2)
-                        except Exception:
-                            pass
-                        try:
-                            printer.cashdraw(5)
-                        except Exception:
-                            pass
+                        kick_drawer(printer, drawer_pin_from(store_config))
 
                     return {"success": True, "physical": True, "status": "PRINTED"}
                 except Exception as print_err:
@@ -1343,28 +1617,21 @@ class ESCPOSPrinterService:
             return {"success": False, "physical": False, "status": "ERROR", "error": str(e)}
 
 
-    def open_cash_drawer(self) -> dict:
+    def open_cash_drawer(self, store_config: dict = None) -> dict:
         """
         Sends pulse signal to thermal printer cash drawer RJ11/RJ12 port to kick the drawer open.
         """
         with _hardware_printer_lock:
-            return self._do_open_cash_drawer()
+            return self._do_open_cash_drawer(store_config)
 
-    def _do_open_cash_drawer(self) -> dict:
+    def _do_open_cash_drawer(self, store_config: dict = None) -> dict:
         logger.info(f"Opening cash drawer via printer interface {self.interface_type}")
+        drawer_pin = drawer_pin_from(store_config or {})
         try:
             printer = self._get_printer_device("VoltFlow_POS_Drawer_Kick")
             if printer:
                 try:
-                    # Try kicking pin 2 and pin 5 to cover all cash drawer wiring types
-                    try:
-                        printer.cashdraw(2)
-                    except Exception:
-                        pass
-                    try:
-                        printer.cashdraw(5)
-                    except Exception:
-                        pass
+                    kick_drawer(printer, drawer_pin)
                     return {"success": True, "physical": True, "status": "OPENED"}
                 except Exception as kick_err:
                     logger.warning(f"Cash drawer kick warning: {kick_err}")
@@ -1399,7 +1666,7 @@ class ESCPOSPrinterService:
                         try:
                             win32print.StartDocPrinter(h, 1, ("VoltFlow_POS_Drawer_Kick", None, "RAW"))
                             win32print.StartPagePrinter(h)
-                            win32print.WritePrinter(h, b'\x1b\x70\x00\x19\xfa\x1b\x70\x01\x19\xfa')
+                            win32print.WritePrinter(h, b'\x1b\x70' + bytes([1 if drawer_pin == 5 else 0]) + b'\x19\xfa')
                             win32print.EndPagePrinter(h)
                             win32print.EndDocPrinter(h)
                             return {"success": True, "physical": True, "status": "OPENED"}
@@ -1412,6 +1679,42 @@ class ESCPOSPrinterService:
             return {"success": True, "physical": False, "status": "SIMULATED"}
         except Exception as err:
             logger.error(f"Failed to open cash drawer: {err}")
+            return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
+
+    def print_ruler(self, store_config: dict) -> dict:
+        """Prints a numbered column ruler in Font A and Font B so the real column count can be read off (D15)."""
+        with _hardware_printer_lock:
+            return self._do_print_ruler(store_config)
+
+    def _do_print_ruler(self, store_config: dict) -> dict:
+        paper_width = str(store_config.get("printerPaperWidth", store_config.get("printer_paper_width", "80"))).upper()
+        is_58mm = paper_width in ["58", "48"]
+        configured_cols = store_config.get("receiptLineColumns") or store_config.get("receipt_line_columns")
+        try:
+            configured_cols = int(configured_cols)
+        except (ValueError, TypeError):
+            configured_cols = 42 if is_58mm else 48
+
+        try:
+            printer = self._get_printer_device("VoltFlow_POS_Ruler")
+            if printer:
+                try:
+                    begin_job(printer, store_config.get("receiptEncoding", "CP852"))
+                    print_ruler(printer, configured_cols)
+                    printer.cut()
+                    end_job(printer)
+                    return {"success": True, "physical": True, "status": "PRINTED"}
+                finally:
+                    try:
+                        if hasattr(printer, 'close'):
+                            printer.close()
+                    except Exception:
+                        pass
+
+            print(f"--- COLUMN RULER SIMULATION ({configured_cols} cols) ---")
+            return {"success": True, "physical": False, "status": "SIMULATED"}
+        except Exception as err:
+            logger.error(f"Failed to print ruler: {err}")
             return {"success": False, "physical": False, "status": "ERROR", "error": str(err)}
 
     def print_barcode_label(self, item_data: dict, store_config: dict, copies: int = 1, validity_date: Optional[str] = None) -> dict:
@@ -1552,12 +1855,7 @@ class ESCPOSPrinterService:
 
         ts_raw = protocol_data.get("timestamp")
         try:
-            if isinstance(ts_raw, str):
-                ts = datetime.fromisoformat(ts_raw.replace("Z", ""))
-            elif isinstance(ts_raw, datetime):
-                ts = ts_raw
-            else:
-                ts = datetime.now()
+            ts = _local_dt(ts_raw) if isinstance(ts_raw, (str, datetime)) else datetime.now()
             date_str = ts.strftime("%d.%m.%Y %H:%M")
         except Exception:
             date_str = str(ts_raw or "")
@@ -1706,12 +2004,7 @@ class ESCPOSPrinterService:
 
         ts_raw = protocol_data.get("timestamp")
         try:
-            if isinstance(ts_raw, str):
-                ts = datetime.fromisoformat(ts_raw.replace("Z", ""))
-            elif isinstance(ts_raw, datetime):
-                ts = ts_raw
-            else:
-                ts = datetime.now()
+            ts = _local_dt(ts_raw) if isinstance(ts_raw, (str, datetime)) else datetime.now()
             date_str = ts.strftime("%d.%m.%Y %H:%M")
         except Exception:
             date_str = str(ts_raw or "")

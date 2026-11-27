@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Printer, CheckCircle, Upload, Trash2, Image } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext.jsx';
 import ReceiptPreviewPaper from '../receipt/ReceiptPreviewPaper.jsx';
-import { printReceiptBackend } from '../../api/posApi.js';
+import { printReceiptBackend, printRulerBackend } from '../../api/posApi.js';
 import { soundFx } from '../../utils/audio.js';
+import { receiptColumnOptions, effectiveReceiptColumns } from '../../utils/receiptColumns.js';
 
 export default function ReceiptSection({
   config,
@@ -151,6 +152,28 @@ export default function ReceiptSection({
     }
   };
 
+  const handlePrintRuler = async () => {
+    setTestPrinting(true);
+    setTestMessage(null);
+    soundFx.playKeypadClick();
+    try {
+      const res = await printRulerBackend(config);
+      soundFx.playSuccessChime();
+      setTestMessage({
+        type: 'success',
+        text: res?.status === 'PRINTED'
+          ? (t('settings.receipt_ruler_printed') || 'Pravítko sloupců bylo odesláno na tiskárnu.')
+          : (t('settings.receipt_ruler_simulated') || 'Tisk pravítka simulován (tiskárna offline).')
+      });
+    } catch (err) {
+      soundFx.playErrorChime?.();
+      setTestMessage({ type: 'error', text: t('settings.receipt_ruler_failed') || `Chyba tisku: ${err.message}` });
+    } finally {
+      setTestPrinting(false);
+      setTimeout(() => setTestMessage(null), 4000);
+    }
+  };
+
   const is58mm = (config.printerPaperWidth || '80') === '58';
 
   return (
@@ -191,7 +214,7 @@ export default function ReceiptSection({
                   className={`settings-segmented-btn ${(config.receiptFontSize || 'compact') === fSize.id ? 'active' : ''}`}
                   onClick={() => handleUpdate({
                     receiptFontSize: fSize.id,
-                    receiptLineColumns: fSize.id === 'compact' ? 64 : 48
+                    receiptLineColumns: receiptColumnOptions(config.printerPaperWidth, fSize.id)[0]
                   })}
                   style={{ minHeight: '38px', fontSize: '0.78rem' }}
                 >
@@ -208,21 +231,18 @@ export default function ReceiptSection({
                 {t('settings.receipt_line_columns') || 'Šířka řádku (Počet znaků)'}
               </label>
               <span className="settings-toggle-subtitle">
-                {t('settings.receipt_line_columns_desc') || '48 znaků pro Font A nebo 64 znaků pro Font B (přesně pokrývá celou šířku 80mm pásky bez mezer)'}
+                {t('settings.receipt_line_columns_desc') || 'Kolik znaků vaše tiskárna skutečně vytiskne na řádek. Plná oblast tisku: 48 (Font A) nebo 64 (Font B); užší oblast 512 bodů: 42 nebo 56. Pásky 58 mm: 32 nebo 42.'}
               </span>
             </div>
-            <div className="settings-segmented-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.35rem' }}>
-              {(config.receiptFontSize === 'compact' ? [
-                { id: 64, label: t('settings.receipt_cols_64') || '64 znaků (Kompaktní pro Font B)' },
-                { id: 42, label: t('settings.receipt_cols_42') || '42 znaků (Pro 58mm / Zúžené)' }
-              ] : [
-                { id: 48, label: t('settings.receipt_cols_48') || '48 znaků (Standardní pro Font A)' },
-                { id: 42, label: t('settings.receipt_cols_42') || '42 znaků (Pro 58mm / Zúžené)' }
-              ]).map(cOpt => (
+            <div className="settings-segmented-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.35rem' }}>
+              {receiptColumnOptions(config.printerPaperWidth, config.receiptFontSize || 'compact').map(cols => ({
+                id: cols,
+                label: `${cols} ${t('settings.receipt_cols_unit') || 'znaků'}`
+              })).map(cOpt => (
                 <button
                   key={cOpt.id}
                   type="button"
-                  className={`settings-segmented-btn ${(parseInt(config.receiptLineColumns ?? (config.receiptFontSize === 'compact' ? 64 : 48), 10)) === cOpt.id ? 'active' : ''}`}
+                  className={`settings-segmented-btn ${effectiveReceiptColumns(config.printerPaperWidth, config.receiptFontSize || 'compact', config.receiptLineColumns) === cOpt.id ? 'active' : ''}`}
                   onClick={() => handleUpdate({ receiptLineColumns: cOpt.id })}
                   style={{ minHeight: '38px', fontSize: '0.78rem' }}
                 >
@@ -230,6 +250,15 @@ export default function ReceiptSection({
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              disabled={testPrinting}
+              onClick={handlePrintRuler}
+              className="settings-segmented-btn"
+              style={{ marginTop: '0.4rem', minHeight: '34px', fontSize: '0.75rem', width: '100%' }}
+            >
+              {t('settings.receipt_print_ruler_btn') || 'Vytisknout pravítko sloupců'}
+            </button>
           </div>
 
           {/* Separator Style */}

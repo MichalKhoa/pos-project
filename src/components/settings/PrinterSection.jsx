@@ -15,6 +15,7 @@ export default function PrinterSection({
   const { t } = useTranslation();
   const [drawerTesting, setDrawerTesting] = useState(false);
   const [drawerMessage, setDrawerMessage] = useState(null);
+  const [manualEntry, setManualEntry] = useState(false);
 
   const handleUpdate = (updates) => {
     if (saveConfigBatch) {
@@ -30,7 +31,7 @@ export default function PrinterSection({
     setDrawerMessage(null);
     soundFx.playCashChime();
     try {
-      await openCashDrawerBackend();
+      await openCashDrawerBackend(config);
       setDrawerMessage(t('settings.drawer_success') || 'Signál pro otevření zásuvky byl úspěšně odeslán.');
       setTimeout(() => setDrawerMessage(null), 3500);
     } catch {
@@ -74,31 +75,62 @@ export default function PrinterSection({
           <label className="settings-label">
             {t('settings.printer_active_device') || 'Aktivní tiskové zařízení'}
           </label>
-          <select
-            className="settings-input"
-            value={config.printerAddress || '/dev/usb/lp0'}
-            onChange={e => {
-              const selectedAddr = e.target.value;
-              const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
-              const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
-              handleUpdate({
-                printerAddress: selectedAddr,
-                printerInterface: interfaceType
-              });
-            }}
-          >
-            {printerDevices.map(dev => (
-              <option key={dev.id} value={dev.address}>
-                {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}
-                {dev.name} ({dev.interface})
-              </option>
-            ))}
-          </select>
-          {currentDev && (
+          {!manualEntry ? (
+            <select
+              className="settings-input"
+              value={config.printerAddress || '/dev/usb/lp0'}
+              onChange={e => {
+                const selectedAddr = e.target.value;
+                const matchedDev = printerDevices.find(d => d.address === selectedAddr || d.id === selectedAddr);
+                const interfaceType = matchedDev ? matchedDev.interface : (selectedAddr.includes('192.') ? 'NETWORK' : 'USB');
+                handleUpdate({
+                  printerAddress: selectedAddr,
+                  printerInterface: interfaceType
+                });
+              }}
+            >
+              {printerDevices.map(dev => (
+                <option key={dev.id} value={dev.address}>
+                  {dev.status === 'CONNECTED' ? '🟢 ' : dev.status === 'VIRTUAL' ? '🌐 ' : '⚙️ '}
+                  {dev.name} ({dev.interface})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                className="settings-input"
+                placeholder="/dev/usb/lp0, 192.168.1.50, /dev/ttyUSB0 ..."
+                value={config.printerAddress || ''}
+                onChange={e => handleUpdate({ printerAddress: e.target.value })}
+              />
+              <select
+                className="settings-input"
+                style={{ flex: '0 0 140px' }}
+                value={config.printerInterface || 'USB'}
+                onChange={e => handleUpdate({ printerInterface: e.target.value })}
+              >
+                <option value="USB">USB</option>
+                <option value="NETWORK">NETWORK</option>
+                <option value="SERIAL">SERIAL</option>
+              </select>
+            </div>
+          )}
+          {currentDev && !manualEntry && (
             <span style={{ fontSize: '0.8rem', color: currentDev.status === 'CONNECTED' ? 'var(--accent-emerald)' : 'var(--text-muted)' }}>
               {currentDev.status === 'CONNECTED' ? (t('settings.printer_status_connected') || 'Připojeno a připraveno k tisku') : (t('settings.printer_status_virtual') || 'Virtuální / offline náhled')}
             </span>
           )}
+          <button
+            type="button"
+            onClick={() => setManualEntry(v => !v)}
+            style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', padding: '0.3rem 0', textAlign: 'left' }}
+          >
+            {manualEntry
+              ? (t('settings.printer_pick_from_list') || '← Vybrat ze seznamu nalezených zařízení')
+              : (t('settings.printer_enter_manually') || 'Zařízení nenalezeno? Zadat adresu manuálně →')}
+          </button>
         </div>
       </div>
       </div>
@@ -166,6 +198,30 @@ export default function PrinterSection({
             <p className="settings-section-desc">
               {t('settings.drawer_desc') || 'Zásuvka připojená kabelem RJ11 do tiskárny se automaticky otevírá při platbě hotovostí.'}
             </p>
+          </div>
+        </div>
+
+        <div className="settings-toggle-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.9rem', marginBottom: '0.9rem' }}>
+          <div className="settings-toggle-label-wrap">
+            <span className="settings-toggle-title">
+              {t('settings.drawer_pin_label') || 'Kolík pro impuls zásuvky'}
+            </span>
+            <span className="settings-toggle-subtitle">
+              {t('settings.drawer_pin_desc') || 'Většina tiskáren používá kolík 2; pokud se zásuvka neotevře, zkuste kolík 5.'}
+            </span>
+          </div>
+
+          <div className="settings-segmented-group">
+            {[2, 5].map(pin => (
+              <button
+                key={pin}
+                type="button"
+                className={`settings-segmented-btn ${(config.drawerPin || 2) === pin ? 'active' : ''}`}
+                onClick={() => handleUpdate({ drawerPin: pin })}
+              >
+                {t('settings.drawer_pin_option', { pin }) || `Kolík ${pin}`}
+              </button>
+            ))}
           </div>
         </div>
 
