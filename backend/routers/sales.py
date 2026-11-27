@@ -22,7 +22,7 @@ eet_service = CzechEETService()
 def generate_next_receipt_number(db: Session, year: Optional[int] = None) -> str:
     """
     Atomically increments and retrieves the next receipt sequence number for the specified year.
-    Returns format: YYYY-XXXXXX (e.g. 2026-000042)
+    Returns format: YYYY-XXXXXXX (e.g. 2026-0000042)
     """
     if not year:
         year = datetime.now().year
@@ -47,13 +47,13 @@ def generate_next_receipt_number(db: Session, year: Optional[int] = None) -> str
     next_num = seq_obj.last_seq
     db.flush()
 
-    return f"{year}-{next_num:06d}"
+    return f"{year}-{next_num:07d}"
 
 
 def generate_next_invoice_number(db: Session, year: Optional[int] = None) -> str:
     """
     Atomically increments and retrieves the next B2B invoice sequence number for the specified year.
-    Returns format: FA-YYYY-XXXX (e.g. FA-2026-0001)
+    Returns format: FA-YYYY-XXXXXXX (e.g. FA-2026-0000001)
     """
     if not year:
         year = datetime.now().year
@@ -78,7 +78,7 @@ def generate_next_invoice_number(db: Session, year: Optional[int] = None) -> str
     next_num = seq_obj.last_seq
     db.flush()
 
-    return f"FA-{year}-{next_num:04d}"
+    return f"FA-{year}-{next_num:07d}"
 
 
 class SaleItemSchema(BaseModel):
@@ -608,7 +608,7 @@ def get_next_receipt_number_preview(db: Session = Depends(get_db)):
                 pass
         next_num = max_num + 1
 
-    return {"next_receipt_number": f"{year}-{next_num:06d}"}
+    return {"next_receipt_number": f"{year}-{next_num:07d}"}
 
 
 @router.get("/stats/daily")

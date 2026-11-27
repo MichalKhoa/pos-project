@@ -28,6 +28,7 @@ class StoreConfigSchema(BaseModel):
     printerInterface: Optional[str] = None
     printerAddress: Optional[str] = None
     printerPaperWidth: Optional[str] = None
+    drawerPin: Optional[int] = None
     idProvozovny: Optional[str] = None
     idPokl: Optional[str] = None
     eetEnabled: Optional[bool] = None
@@ -115,6 +116,7 @@ def get_store_config(db: Session = Depends(get_db)):
         "printerInterface": config.printer_interface,
         "printerAddress": config.printer_address,
         "printerPaperWidth": config.printer_paper_width,
+        "drawerPin": getattr(config, 'drawer_pin', 2) or 2,
         "idProvozovny": config.id_provozovny or "11",
         "idPokl": config.id_pokl or "1",
         "eetEnabled": config.eet_enabled if config.eet_enabled is not None else False,
@@ -207,6 +209,7 @@ def update_store_config(request: Request, data: StoreConfigSchema, db: Session =
     if data.printerInterface is not None: config.printer_interface = data.printerInterface
     if data.printerAddress is not None: config.printer_address = data.printerAddress
     if data.printerPaperWidth is not None: config.printer_paper_width = data.printerPaperWidth
+    if data.drawerPin is not None: config.drawer_pin = data.drawerPin
     if data.idProvozovny is not None: config.id_provozovny = data.idProvozovny
     if data.idPokl is not None: config.id_pokl = data.idPokl
     if data.eetEnabled is not None: config.eet_enabled = data.eetEnabled

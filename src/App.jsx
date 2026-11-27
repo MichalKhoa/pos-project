@@ -39,7 +39,7 @@ import {
   fetchSaleByReceiptNumber,
   getCurrentShift
 } from './api/posApi';
-import { formatLocalDate } from './utils/dateUtils';
+import { formatLocalDate, parseSaleTimestamp } from './utils/dateUtils';
 import SalesHistoryView from './components/SalesHistoryView';
 import AnalyticsView from './components/AnalyticsView';
 import PresetsCatalogView from './components/PresetsCatalogView';
@@ -252,35 +252,6 @@ export default function App() {
     setUnknownPriceCheckBarcode(barcode);
   }, []);
 
-  // Most recent completed sale for Quick Reprint / Storno chip
-  const lastSale = useMemo(() => {
-    if (!salesHistory || salesHistory.length === 0) return null;
-    return salesHistory[0];
-  }, [salesHistory]);
-
-  const handleReprintSale = useCallback(async (sale) => {
-    if (!sale) return;
-    soundFx.playScanChime();
-    try {
-      const res = await printReceiptBackend(sale, storeConfig);
-      if (res && res.status === 'PRINTED' && res.physical !== false) {
-        soundFx.playSuccessChime();
-        setFlashBanner({
-          message: t('payment.receipt_printed', { n: sale.receiptNumber || sale.receipt_number || '' }),
-          type: 'success'
-        });
-      } else {
-        setCurrentReceiptData(sale);
-        setFlashBanner({
-          message: `Účtenka #${sale.receiptNumber || sale.receipt_number || ''} otevřena k tisku`,
-          type: 'info'
-        });
-      }
-    } catch {
-      setCurrentReceiptData(sale);
-    }
-  }, [storeConfig, t]);
-
   // Open Cash Drawer Handler
   const handleOpenCashDrawer = useCallback(async () => {
     soundFx.playCashChime();
@@ -289,7 +260,7 @@ export default function App() {
       message: 'Otevírání peněžní zásuvky...'
     });
     try {
-      const res = await openCashDrawerBackend();
+      const res = await openCashDrawerBackend(storeConfig);
       if (res && res.success) {
         setFlashBanner({
           type: 'success',
@@ -308,7 +279,7 @@ export default function App() {
       });
     }
     setTimeout(() => setFlashBanner(null), 3000);
-  }, []);
+  }, [storeConfig]);
 
   // Test Sales Management
 
@@ -513,7 +484,7 @@ export default function App() {
             const remainingLocal = prev.filter(s => !seenIds.has(s.id));
 
             const merged = [...pendingLocalSales, ...safelyMergedBackend, ...remainingLocal];
-            merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            merged.sort((a, b) => parseSaleTimestamp(b.timestamp) - parseSaleTimestamp(a.timestamp));
             return merged;
           });
         }
@@ -1121,9 +1092,6 @@ export default function App() {
                     onOpenParkedModal={handleOpenParkedModal}
                     onParkCart={parkCurrentCart}
                     cartItemStyle={storeConfig?.cartItemStyle || 'elevated-card'}
-                    lastSale={lastSale}
-                    onReprintLastReceipt={handleReprintSale}
-                    onInitiateRefund={handleInitiateRefund}
                   />
                   {isTwoColumn && storeConfig?.shiftWidgetPosition === 'under_cart' && (
                     <ShiftStatsWidget

@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { Scissors } from 'lucide-react';
 import { generateQrDataUrl } from '../../utils/qrCode.js';
 import { generateBarcodeSVG } from '../../utils/barcodeGenerator.js';
-import { formatReceiptMoney, receiptTotals } from '../../utils/receiptAmounts.js';
+import { formatReceiptMoney, receiptTotals, receiptLineTotals } from '../../utils/receiptAmounts.js';
+import { parseSaleTimestamp } from '../../utils/dateUtils.js';
 
 export default function ReceiptPreviewPaper({
   saleData,
@@ -17,6 +18,7 @@ export default function ReceiptPreviewPaper({
   const isRefund = saleData.isRefund || saleData.is_refund;
   const money = formatReceiptMoney;
   const totals = receiptTotals(saleData);
+  const lineTotals = receiptLineTotals(resolvedItems, saleData.cartDiscountPercent ?? saleData.cart_discount_percent);
   const fik = saleData.fik || saleData.pok || saleData.fik_code;
   const bkp = saleData.bkp || saleData.bkp_code;
   const pkp = saleData.pkp || saleData.pkp_code;
@@ -227,11 +229,11 @@ export default function ReceiptPreviewPaper({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Datum vystavení:</span>
-              <span>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</span>
+              <span>{parseSaleTimestamp(saleData.timestamp).toLocaleString('cs-CZ')}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Datum zdanit. plnění (DUZP):</span>
-              <strong>{new Date(saleData.timestamp).toLocaleDateString('cs-CZ')}</strong>
+              <strong>{parseSaleTimestamp(saleData.timestamp).toLocaleDateString('cs-CZ')}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Forma úhrady:</span>
@@ -266,10 +268,10 @@ export default function ReceiptPreviewPaper({
             <tbody>
               {resolvedItems.map((item, idx) => {
                 const itemDisc = item.discountPercent || 0;
-                const unitPriceInc = item.price * (1 - itemDisc / 100);
                 const vatRate = item.vat !== undefined ? item.vat : 21;
-                const priceEx = unitPriceInc / (1 + vatRate / 100);
-                const totInc = unitPriceInc * item.quantity;
+                const totInc = lineTotals[idx];
+                // Unit price after line and cart discount, so unit x quantity matches the line total
+                const priceEx = (item.quantity ? totInc / item.quantity : 0) / (1 + vatRate / 100);
                 const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
                 const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
                 const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
@@ -391,7 +393,7 @@ export default function ReceiptPreviewPaper({
               </div>
             )}
             <div style={{ fontSize: is58mm ? '10.88px' : '12px', marginTop: '2px', color: '#555' }}>
-              Datum & čas: <b>{new Date(saleData.timestamp).toLocaleString('cs-CZ')}</b>
+              Datum & čas: <b>{parseSaleTimestamp(saleData.timestamp).toLocaleString('cs-CZ')}</b>
             </div>
             {showCashier && (
               <div style={{ fontSize: is58mm ? '10.4px' : '11.52px', color: '#555' }}>
@@ -413,7 +415,6 @@ export default function ReceiptPreviewPaper({
             <tbody>
               {resolvedItems.map((item, idx) => {
                 const itemDisc = item.discountPercent || 0;
-                const unitPrice = item.price * (1 - itemDisc / 100);
                 const isWeighted = item.unit === 'kg' || item.unit === 'g' || item.isWeighted || item.is_weighted || (typeof item.quantity === 'number' && item.quantity % 1 !== 0);
                 const unitStr = item.unit || (isWeighted ? 'kg' : 'ks');
                 const qtyFormatted = isWeighted ? Number(Number(item.quantity).toFixed(3)).toString() : item.quantity;
@@ -431,9 +432,9 @@ export default function ReceiptPreviewPaper({
                       >
                         {clean(item.name)} {showDisc && itemDisc > 0 ? <span style={{ color: '#dc2626', fontStyle: 'italic' }}>(-{itemDisc}%)</span> : ''}
                       </div>
-                      {isWeighted && (
+                      {(isWeighted || item.quantity !== 1) && (
                         <div style={{ fontSize: '9.5px', color: '#555' }}>
-                          {qtyFormatted} {unitStr} × {parseFloat(item.price).toFixed(2)} Kč
+                          {isWeighted ? `${qtyFormatted} ${unitStr}` : qtyFormatted} × {parseFloat(item.price).toFixed(2)} Kč
                         </div>
                       )}
                       {showSku && (item.barcode || item.sku) && (
@@ -455,7 +456,7 @@ export default function ReceiptPreviewPaper({
                       fontFamily: 'monospace',
                       padding: itemDensity === 'compact' ? '3.2px 0' : '5.6px 0'
                     }}>
-                      {money(unitPrice * item.quantity)}&nbsp;Kč
+                      {money(lineTotals[idx])}&nbsp;Kč
                     </td>
                   </tr>
                 );
@@ -521,7 +522,8 @@ export default function ReceiptPreviewPaper({
           </div>
         )}
 
-        {saleData.paymentMethod === 'cash' && (
+        {/* Same rule as the printer: a refund has no tendered cash, a reprint may have none stored. */}
+        {saleData.paymentMethod === 'cash' && !isRefund && Number(saleData.tenderedAmount) > 0 && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Přijatá hotovost:</span>

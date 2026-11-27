@@ -251,7 +251,7 @@ def get_price_history(preset_id: str, db: Session = Depends(get_db)):
 def generate_next_write_off_number(db: Session, year: Optional[int] = None) -> str:
     """
     Atomically increments and retrieves the next write-off protocol sequence number (§ 25 ZoÚ).
-    Format: ODP-YYYY-XXXX (e.g. ODP-2026-0001)
+    Format: ODP-YYYY-XXXXXXX (e.g. ODP-2026-0000001)
     """
     if not year:
         year = datetime.now().year
@@ -274,13 +274,13 @@ def generate_next_write_off_number(db: Session, year: Optional[int] = None) -> s
 
     seq_obj.last_seq += 1
     next_num = seq_obj.last_seq
-    return f"ODP-{year}-{next_num:04d}"
+    return f"ODP-{year}-{next_num:07d}"
 
 
 def generate_next_audit_number(db: Session, year: Optional[int] = None) -> str:
     """
     Atomically increments and retrieves the next physical inventory protocol sequence number (§ 29, 30 ZoÚ).
-    Format: INV-YYYY-XXXX (e.g. INV-2026-0001)
+    Format: INV-YYYY-XXXXXXX (e.g. INV-2026-0000001)
     """
     if not year:
         year = datetime.now().year
@@ -303,7 +303,7 @@ def generate_next_audit_number(db: Session, year: Optional[int] = None) -> str:
 
     seq_obj.last_seq += 1
     next_num = seq_obj.last_seq
-    return f"INV-{year}-{next_num:04d}"
+    return f"INV-{year}-{next_num:07d}"
 
 
 class WriteOffItemRequestSchema(BaseModel):
@@ -607,7 +607,7 @@ def submit_inventory_audit(payload: InventoryAuditRequestSchema, db: Session = D
                 detail=f"Fyzické množství nesmí být záporné (zadáno: {it.physical_quantity})."
             )
 
-    now = datetime.now()
+    now = datetime.utcnow()
     audit_id = f"inv_{uuid.uuid4().hex[:12]}"
 
     with atomic_transaction(db):
@@ -829,7 +829,7 @@ def record_deposit_movement(payload: DepositMovementRequestSchema, db: Session =
         qty_delta = payload.quantity
 
     total_val = round(qty_delta * dep_val, 2)
-    now = datetime.now()
+    now = datetime.utcnow()
     mov_id = f"dep_{uuid.uuid4().hex[:12]}"
 
     with atomic_transaction(db):

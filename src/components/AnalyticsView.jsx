@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../utils/dateUtils';
 import React, { useMemo } from 'react';
 import { BarChart3, Download } from 'lucide-react';
 import { useTranslation } from '../i18n/LanguageContext.jsx';
@@ -196,7 +197,7 @@ export default function AnalyticsView({
 
     periodFilteredSales.forEach(sale => {
       const isRefund = sale.isRefund || sale.is_refund;
-      const d = new Date(sale.timestamp || sale.created_at || sale.date);
+      const d = parseSaleTimestamp(sale.timestamp || sale.created_at || sale.date);
       const h = d.getHours();
       const amt = parseFloat(sale.totalAmount !== undefined ? sale.totalAmount : (sale.total_amount || 0)) || 0;
       const target = hours.find(x => x.hour === h);

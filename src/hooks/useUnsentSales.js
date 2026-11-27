@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../utils/dateUtils';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createSaleBackend } from '../api/posApi';
 import { SYNC, needsSync, sendOutcome, applySendResult } from '../utils/saleSync';
@@ -37,7 +38,7 @@ export function useUnsentSales({ salesHistory, setSalesHistory, onSent }) {
         .filter(s => (ids
           ? ids.includes(s.id)
           : s.syncState === SYNC.PENDING || (s.syncState === SYNC.SYNCED && s.pendingRefundUpdate)))
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        .sort((a, b) => parseSaleTimestamp(a.timestamp) - parseSaleTimestamp(b.timestamp));
       for (const sale of targets) {
         const res = await createSaleBackend(sale);
         const outcome = sendOutcome(res);

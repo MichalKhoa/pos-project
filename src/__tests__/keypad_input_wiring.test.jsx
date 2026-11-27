@@ -110,6 +110,12 @@ describe('keypad P2 feedback', () => {
     expect(screen.getByRole('button', { name: /21\s*%/ })).toHaveClass('active');
   });
 
+  it('stepper keys carry their color classes', () => {
+    render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
+    expect(document.querySelector('.keypad-stepper-bar .key-step-down')).toBeTruthy();
+    expect(document.querySelector('.keypad-stepper-bar .key-step-up')).toBeTruthy();
+  });
+
   it('shows a negative total for returns', () => {
     render(<LanguageProvider><Harness onAddToCart={vi.fn()} /></LanguageProvider>);
     ['±', '4', '0'].forEach(click);

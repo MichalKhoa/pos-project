@@ -1,3 +1,4 @@
+import { parseSaleTimestamp } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Minus, X, Building2, Calendar, FileText, Package, AlertCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -248,7 +249,7 @@ export default function SupplierPriceHistoryModal({
           {!isLoading && !error && history.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {history.map((item, idx) => {
-                const dt = item.timestamp ? new Date(item.timestamp) : null;
+                const dt = item.timestamp ? parseSaleTimestamp(item.timestamp) : null;
                 const formattedDate = dt && !isNaN(dt.getTime())
                   ? dt.toLocaleString('cs-CZ', {
                       day: '2-digit',

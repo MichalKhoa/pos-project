@@ -70,7 +70,7 @@ describe('CustomItemModal Component Tests', () => {
     expect(screen.getByTestId('amount-display')).toHaveTextContent('4.5 Kč');
 
     // Inline Backspace
-    fireEvent.click(screen.getByLabelText('Inline Backspace'));
+    fireEvent.click(screen.getByLabelText('Smazat poslední znak (Backspace)'));
     expect(screen.getByTestId('amount-display')).toHaveTextContent('4. Kč');
 
     // Clear key 'C'
@@ -100,15 +100,16 @@ describe('CustomItemModal Component Tests', () => {
     renderModal();
 
     // Stepper +1
+    const badge = () => document.querySelector('.multiplier-badge').textContent;
     fireEvent.click(screen.getByTitle('Zvýšit množství (+1)'));
-    expect(screen.getByText('2×')).toBeInTheDocument();
+    expect(badge()).toBe('2×');
 
     fireEvent.click(screen.getByTitle('Zvýšit množství (+1)'));
-    expect(screen.getByText('3×')).toBeInTheDocument();
+    expect(badge()).toBe('3×');
 
     // Stepper -1
     fireEvent.click(screen.getByTitle('Snížit množství (−1 / Vratka)'));
-    expect(screen.getByText('2×')).toBeInTheDocument();
+    expect(badge()).toBe('2×');
   });
 
   it('toggles return mode via ± button', () => {
@@ -224,7 +225,7 @@ describe('CustomItemModal Component Tests', () => {
     fireEvent.change(nameInput, { target: { value: 'Custom Coffee' } });
     expect(nameInput).toHaveValue('Custom Coffee');
 
-    const clearBtn = screen.getByRole('button', { name: 'Clear name' });
+    const clearBtn = screen.getByRole('button', { name: 'Smazat název' });
     fireEvent.click(clearBtn);
 
     expect(nameInput).toHaveValue('');
@@ -241,9 +242,9 @@ describe('CustomItemModal Component Tests', () => {
 
     click('C');
     ['3', '×'].forEach(click);
-    expect(screen.getByText('3×')).toBeInTheDocument();
+    expect(document.querySelector('.multiplier-badge').textContent).toBe('3×');
     click('C');
-    expect(screen.queryByText('3×')).not.toBeInTheDocument();
+    expect(document.querySelector('.multiplier-badge').textContent).toBe('1×');
   });
 
   it('× keeps return mode started with the stepper', () => {

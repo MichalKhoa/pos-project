@@ -10,6 +10,9 @@
 
 ## Architectural Components
 
+Full diagrams, data model and flows: `docs/ARCHITECTURE.md`. Keep it in sync when adding routers, models or services.
+
+
 ### 1. Desktop Integration (Tauri v2 & IPC Bridge)
 - `src-tauri/src/lib.rs`: Manages sidecar startup on port 8000, background health checks, tray menu, and clean child termination on exit.
 - `src/hooks/useTauri.js`: React IPC bridge with transparent fallback to browser APIs when running on the web.

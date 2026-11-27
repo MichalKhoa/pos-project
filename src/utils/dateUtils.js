@@ -9,12 +9,23 @@
  * @returns {string} 'YYYY-MM-DD'
  */
 export function formatLocalDate(dateInput) {
-  const d = dateInput instanceof Date ? dateInput : (dateInput ? new Date(dateInput) : new Date());
+  const d = dateInput instanceof Date ? dateInput : (dateInput ? parseSaleTimestamp(dateInput) : new Date());
   if (isNaN(d.getTime())) return '';
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Parses a sale timestamp. The server sends UTC without a zone ("2026-11-16T14:00:00"), which
+ * `new Date` reads as local time, so a date-time with no zone counts as UTC (same rule as the printer).
+ * @param {Date|string|number} ts
+ * @returns {Date}
+ */
+export function parseSaleTimestamp(ts) {
+  if (typeof ts === 'string' && /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(ts)) return new Date(`${ts}Z`);
+  return new Date(ts);
 }
 
 /**
